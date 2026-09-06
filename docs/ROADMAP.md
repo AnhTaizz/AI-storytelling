@@ -1,6 +1,6 @@
 # Roadmap
 
-Status: ACCEPTED — TASK 000E.
+Status: ACTIVE — milestone structure accepted in TASK 000E; execution semantics amended in TASK 001A.
 
 Each milestone is intentionally high-level. Detailed execution tasks are created just in time when reaching the relevant milestone, avoiding speculative task explosion.
 

@@ -1,11 +1,11 @@
 # Decisions
 
-Status: ACCEPTED — TASK 000F.
+Status: ACTIVE — initially accepted in TASK 000F; amended in TASK 001A.
 
 This register records decisions that are part of the project contract. Each decision documents what has been frozen, why, and what implementation constraints follow.
 
 **Status semantics:**
-- `ACCEPTED` — Directly supported by accepted foundation documents; future implementation must respect this.
+- `ACCEPTED` — Explicitly approved as part of the project contract, either through the accepted foundation or through a later authorized project decision/task. Future implementation must respect it until superseded.
 - `PROPOSED` — Reasonable direction but not yet authorized to freeze.
 - `PROVISIONAL` — Preferred current direction; may proceed experimentally but requires validation before becoming permanent.
 - `TO_BENCHMARK` — Must be empirically compared before selection.
