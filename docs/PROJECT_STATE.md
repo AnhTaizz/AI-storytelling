@@ -13,10 +13,10 @@ Foundation / Planning
 - Initial documentation skeleton created.
 - Repository foundation published to GitHub.
 - Product Vision reviewed and accepted.
+- MVP boundary reviewed and accepted.
 
 ## Draft / Not Yet Reviewed
 
-- MVP Scope
 - Architectural Principles
 - Roadmap
 - Initial Decisions
@@ -27,7 +27,7 @@ Application implementation has not started.
 
 ## Current Task
 
-TASK 000C — Freeze Initial MVP Boundary
+TASK 000D — Freeze Architectural Principles
 
 ## Current Quality Gate
 
@@ -35,4 +35,4 @@ None.
 
 ## Next Candidate
 
-TASK 000C — Freeze Initial MVP Boundary
+TASK 000D — Freeze Architectural Principles
