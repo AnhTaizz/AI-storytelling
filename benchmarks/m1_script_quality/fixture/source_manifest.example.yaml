@@ -1,0 +1,24 @@
+fixture_id: example_fixture_id
+story_id: example_story_id
+source_type: light_novel
+language: en
+
+source_files:
+  - logical_id: vol_01_ch_01
+    local_path: local/private/path/to/vol1_ch1.txt
+    volume: 1
+    chapter: 1
+    sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    included_in_git: false
+
+scope:
+  start: vol_01_ch_01
+  end: vol_01_ch_05
+
+provenance:
+  edition: "Official English Release"
+  notes: "Contains prologue and first 5 chapters."
+
+usage:
+  repository_contains_source_text: false
+  source_access_mode: local_private

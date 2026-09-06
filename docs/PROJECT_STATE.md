@@ -9,6 +9,7 @@ M1 — Script Quality & Narrative Contract
 M0 Product Foundation complete.
 M1 ready for planning.
 M1 execution uses evidence-driven vertical iteration.
+M1 empirical benchmark fixture established.
 Application implementation has not started.
 
 ## M0 — Verified Completed
@@ -67,8 +68,8 @@ Script Quality Gate: NOT YET EVALUATED
 
 ## Current Task
 
-None — awaiting Project Orchestrator empirical baseline task for M1.
+None — awaiting Golden Story source selection / Baseline A execution task.
 
 ## Next Candidate
 
-M1 — Establish empirical script baseline and research fixture.
+M1 — Select Golden Story source and execute Baseline A.
