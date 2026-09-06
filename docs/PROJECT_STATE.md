@@ -14,10 +14,10 @@ Foundation / Planning
 - Repository foundation published to GitHub.
 - Product Vision reviewed and accepted.
 - MVP boundary reviewed and accepted.
+- Architectural Principles reviewed and accepted.
 
 ## Draft / Not Yet Reviewed
 
-- Architectural Principles
 - Roadmap
 - Initial Decisions
 
@@ -27,7 +27,7 @@ Application implementation has not started.
 
 ## Current Task
 
-TASK 000D — Freeze Architectural Principles
+TASK 000E — Freeze High-Level Roadmap
 
 ## Current Quality Gate
 
@@ -35,4 +35,4 @@ None.
 
 ## Next Candidate
 
-TASK 000D — Freeze Architectural Principles
+TASK 000E — Freeze High-Level Roadmap
