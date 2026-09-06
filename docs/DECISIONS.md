@@ -378,8 +378,9 @@ CONSEQUENCES:
 - The pipeline should degrade gracefully when a human reviews or adjusts an intermediate artifact.
 
 BOUNDARIES:
-- This does not require every run to involve manual review; automation is still the intended default path.
-- This decision protects the option of human intervention, not mandate it.
+- This decision does not require manual review on every run.
+- This decision does not mandate automation as the default mode either. The appropriate degree of automation versus human intervention remains a later product and workflow decision.
+- This decision protects the architectural affordance of human review; it does not prescribe how or how often that affordance is exercised.
 
 RELATED: DEC-014
 
@@ -437,4 +438,8 @@ Not frozen. Framework selection must be justified by observed pipeline complexit
 Not frozen. Depends on Canonical Story Model requirements defined in M2 and observed M5 persistence needs.
 
 **Evaluation Benchmark:**
-Not frozen. Script quality benchmark and retrieval quality metrics must be defined as part of M1 (Script Quality & Narrative Contract).
+Not frozen.
+
+The Script Quality evaluation contract belongs to M1 — Script Quality & Narrative Contract.
+
+Retrieval evaluation metrics remain an open design decision and must be defined by the relevant retrieval work no later than the milestone where they are needed for verification. They may be introduced earlier if an approved benchmark or research design requires them.
