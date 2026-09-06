@@ -1,7 +1,5 @@
 # Project State
 
-Status: Reconciled in TASK 000G.
-
 ## Current Milestone
 
 M0 — Product Foundation
@@ -12,48 +10,29 @@ Foundation / Planning
 
 ## Verified Completed
 
-- Product Vision defined.
-- MVP boundary defined.
-- Architectural Principles defined.
-- High-level roadmap defined.
-- Initial decisions recorded.
+- Initial documentation skeleton created.
+- Repository foundation published to GitHub.
+
+## Draft / Not Yet Reviewed
+
+- Product Vision
+- MVP Scope
+- Architectural Principles
+- Roadmap
+- Initial Decisions
 
 ## Implementation Status
 
 Application implementation has not started.
 
-## Not Yet Implemented
+## Current Task
 
-- Canonical Story Model;
-- Light Novel ingestion;
-- Story Extraction;
-- Persistent Story Memory implementation;
-- vector retrieval;
-- graph persistence;
-- Story Brief;
-- Narrative Planner;
-- Script Writer;
-- validation pipeline.
-
-## Open Decisions
-
-- Script Quality Contract;
-- Canonical Story Model;
-- Narrative Profile model;
-- persistence architecture;
-- Neo4j graph design;
-- embedding strategy;
-- Model Router;
-- evaluation benchmark.
+TASK 000B — Freeze Product Vision
 
 ## Current Quality Gate
 
-No implementation quality gate has been passed yet.
+None.
 
 ## Next Candidate
 
-```text
-M1 — Script Quality & Narrative Contract
-```
-
-M1 is not implemented.
+TASK 000B — Freeze Product Vision

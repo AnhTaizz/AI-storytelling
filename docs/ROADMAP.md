@@ -1,6 +1,6 @@
 # Roadmap
 
-Status: Defined in TASK 000E.
+Status: DRAFT — pending TASK 000E review.
 
 Each milestone is intentionally high-level. Detailed implementation tasks are generated just in time.
 

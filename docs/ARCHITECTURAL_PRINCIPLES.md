@@ -1,6 +1,6 @@
 # Architectural Principles
 
-Status: Defined in TASK 000D.
+Status: DRAFT — pending TASK 000D review.
 
 ## Principles
 

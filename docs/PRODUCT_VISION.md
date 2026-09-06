@@ -1,6 +1,6 @@
 # Product Vision
 
-Status: Defined in TASK 000B.
+Status: DRAFT — pending TASK 000B review.
 
 ## Product
 

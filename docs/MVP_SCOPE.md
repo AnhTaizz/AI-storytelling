@@ -1,6 +1,6 @@
 # MVP Scope
 
-Status: Defined in TASK 000C.
+Status: DRAFT — pending TASK 000C review.
 
 ## MVP Goal
 
