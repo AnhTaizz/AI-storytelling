@@ -1,20 +1,36 @@
 # Product Vision
 
-Status: DRAFT — pending TASK 000B review.
+Status: ACCEPTED — TASK 000B.
 
 ## Product
 
 The Story Intelligence Platform is an AI-powered Story Intelligence and Narrative Production Platform. Its long-term purpose is to help creators transform long-form narrative sources into grounded and engaging storytelling outputs.
 
-Potential sources include Light Novels, Manga, Web Novels, and other long-form narrative media. The first important product outcome is a high-quality YouTube script.
+The platform is not simply a summarization tool. Its goal is to understand complex narrative sources deeply enough to preserve underlying story truth and enable compelling, intentional narrative presentation.
 
-## Problem
+Potential long-term source formats include:
+- Light Novels;
+- Manga;
+- Web Novels;
+- other long-form narrative media.
 
-Long-form stories contain extensive events, characters, relationships, information, and changes over time. Creators need to understand that source material accurately before shaping it into clear, compelling storytelling. A useful platform must preserve important story context and evidence while supporting different presentation goals and voices.
+The first major product outcome is a high-quality grounded YouTube script.
 
-## Long-Term Direction
+## Core Problem
 
-The conceptual flow is:
+Long-form stories contain extensive, interconnected details distributed across many chapters or volumes. Creators face significant friction when trying to analyze and adapt these stories accurately.
+
+Key story context easily lost or distorted includes:
+- events, chronology, and causality;
+- characters, relationships, and changing character states;
+- information asymmetries, secrets, foreshadowing, and reveals;
+- long-range story context and source evidence.
+
+Creators need deep, accurate story understanding before they can shape material into clear, captivating storytelling. A useful platform must preserve source evidence and narrative continuity across the entire work.
+
+## Conceptual Long-Term Pipeline
+
+The conceptual long-term flow is:
 
 ```text
 Source Story
@@ -28,27 +44,43 @@ Source Story
 → Later Production Automation
 ```
 
-## Story Understanding and Storytelling
+This represents the planned end-to-end architecture across future milestones; it does not imply that all stages are currently implemented.
 
-**Story Understanding** answers: “What actually happened in the story?” It establishes factual, temporal, and contextual understanding grounded in the source.
+## Story Understanding vs. Storytelling
 
-**Storytelling** answers: “How should this story be told effectively?” It selects presentation, emphasis, tone, pacing, commentary, and structure for a particular output.
+The platform maintains a strict separation between two fundamental layers:
 
-Storytelling may shape the presentation of a story, but it must not replace or alter the underlying story truth.
+1. **Story Understanding** answers: *“What actually happened?”*
+   - Establishes factual, temporal, causal, and contextual truth grounded directly in source evidence.
+   - Tracks state changes, character knowledge, and canonical story events objectively.
 
-## Potential Outputs
+2. **Storytelling** answers: *“How should we tell it effectively?”*
+   - Governs selection, ordering, emphasis, pacing, tone, commentary, hooks, callbacks, and audience-facing presentation.
+   - Tailors the delivery for a specific format, genre, or channel voice.
 
-Over time, the platform should support:
+**Critical Rule:** Creative storytelling choices may shape how the story is presented, but must never alter or invent factual story truth.
 
-- recap;
-- review;
-- dramatic storytelling;
-- plot explanation;
-- character analysis;
-- lore analysis;
-- different genres;
-- different channel voices.
+## Multiple Storytelling Outputs
 
-The core product must remain general across source formats, genres, channels, and storytelling styles. It is not designed only for romance, romcom, Light Novels, one YouTube channel, or one storytelling style.
+The platform is designed to support diverse narrative intents rather than a single fixed template:
+- Recap
+- Review
+- Dramatic Storytelling
+- Character Analysis
+- Plot Explanation
+- Lore Analysis
 
-RAG, Neo4j, GraphRAG, and LLMs are enabling technologies. They are not the product goal. The product goal is better story understanding and better storytelling.
+It must accommodate different genres, narrative structures, and channel voices. No single storytelling style fits every creator or output.
+
+## Generality and Extensibility
+
+The core platform must remain general and extensible across:
+- **Source formats:** Light Novels are the initial MVP source, but the platform must remain source-agnostic (supporting Manga, Web Novels, etc.).
+- **Genres:** Not limited to romance, romcom, fantasy, or action.
+- **Channels & Voices:** Not built around a single YouTube channel, persona, or editorial style.
+
+## Technology as an Enabler
+
+Technologies such as RAG, GraphRAG, Neo4j, vector databases, and Large Language Models are enabling tools, not the product definition or goal.
+
+The product goal is superior story understanding and grounded storytelling. Specific databases, retrieval frameworks, LLM providers, and infrastructure remain implementation decisions to be evaluated on merit in later milestones rather than frozen in the product vision.
