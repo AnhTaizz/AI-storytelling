@@ -1,6 +1,14 @@
 # Story Intelligence Platform
 
-The project is currently in the planning and foundation phase.
+AI-powered Story Intelligence and Narrative Production Platform.
+
+**Current stage:** Product Foundation complete. Preparing M1 — Script Quality & Narrative Contract.
+
+**Product purpose:** Transform long-form narrative sources (Light Novels, Manga, Web Novels) into grounded, engaging storytelling outputs. The first major product outcome is a high-quality grounded YouTube script.
+
+**Application implementation has not started.**
+
+## Foundation Documents
 
 - [Product Vision](docs/PRODUCT_VISION.md)
 - [MVP Scope](docs/MVP_SCOPE.md)

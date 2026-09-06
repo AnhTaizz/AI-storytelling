@@ -2,38 +2,74 @@
 
 ## Current Milestone
 
-M0 — Product Foundation
+M1 — Script Quality & Narrative Contract
 
 ## Current Status
 
-Foundation / Planning
+M0 Product Foundation complete.
+M1 ready for planning.
+Application implementation has not started.
 
-## Verified Completed
+## M0 — Verified Completed
 
-- Initial documentation skeleton created.
-- Repository foundation published to GitHub.
+- Repository foundation created and published.
 - Product Vision reviewed and accepted.
-- MVP boundary reviewed and accepted.
+- MVP Scope reviewed and accepted.
 - Architectural Principles reviewed and accepted.
-- High-level Roadmap reviewed and accepted.
+- High-Level Roadmap reviewed and accepted.
 - Initial Decisions reviewed and accepted.
+- M0 cross-document consistency audit passed.
 
-## Draft / Not Yet Reviewed
+## M0 Closure
 
-None.
+Status: CLOSED
+
+Foundation commit: 5d6b693697f74ce6f65d646287ff056c0a1e8c70
 
 ## Implementation Status
 
 Application implementation has not started.
 
-## Current Task
+Not yet implemented:
+- Canonical Story Model
+- Light Novel ingestion
+- Story Extraction
+- Persistent Story Memory implementation
+- Retrieval implementation
+- Story Brief generation
+- Narrative Planning
+- Script Generation
+- Validation pipeline
+- Temporal / Graph Story Memory
+- Manga ingestion
+- Production automation
 
-TASK 000G — Reconcile and Close Product Foundation
+## Open Decisions
+
+- Script Quality Contract
+- Canonical Story Model
+- Narrative Profile / behavior specification
+- Persistence architecture
+- Graph representation and persistence technology
+- Embedding strategy
+- Retrieval implementation
+- LLM selection per pipeline stage
+- Model Router / orchestration strategy
+- Evaluation benchmark details
+- Human-vs-automation workflow policy
 
 ## Current Quality Gate
 
-None.
+M0 Foundation Gate: PASSED
+
+Script Quality Gate: NOT YET EVALUATED
+
+## Current Task
+
+None — awaiting Project Orchestrator task for M1.
 
 ## Next Candidate
 
-TASK 000G — Reconcile and Close Product Foundation
+M1 — Script Quality & Narrative Contract
+
+The Project Orchestrator must define the first M1 execution task.
