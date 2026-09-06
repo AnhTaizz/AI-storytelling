@@ -16,10 +16,11 @@ Foundation / Planning
 - MVP boundary reviewed and accepted.
 - Architectural Principles reviewed and accepted.
 - High-level Roadmap reviewed and accepted.
+- Initial Decisions reviewed and accepted.
 
 ## Draft / Not Yet Reviewed
 
-- Initial Decisions
+None.
 
 ## Implementation Status
 
@@ -27,7 +28,7 @@ Application implementation has not started.
 
 ## Current Task
 
-TASK 000F — Freeze Initial Decisions
+TASK 000G — Reconcile and Close Product Foundation
 
 ## Current Quality Gate
 
@@ -35,4 +36,4 @@ None.
 
 ## Next Candidate
 
-TASK 000F — Freeze Initial Decisions
+TASK 000G — Reconcile and Close Product Foundation
