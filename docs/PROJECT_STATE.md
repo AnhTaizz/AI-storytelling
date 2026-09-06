@@ -8,6 +8,7 @@ M1 — Script Quality & Narrative Contract
 
 M0 Product Foundation complete.
 M1 ready for planning.
+M1 execution uses evidence-driven vertical iteration.
 Application implementation has not started.
 
 ## M0 — Verified Completed
@@ -66,10 +67,8 @@ Script Quality Gate: NOT YET EVALUATED
 
 ## Current Task
 
-None — awaiting Project Orchestrator task for M1.
+None — awaiting Project Orchestrator empirical baseline task for M1.
 
 ## Next Candidate
 
-M1 — Script Quality & Narrative Contract
-
-The Project Orchestrator must define the first M1 execution task.
+M1 — Establish empirical script baseline and research fixture.

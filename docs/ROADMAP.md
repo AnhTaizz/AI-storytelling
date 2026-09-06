@@ -4,6 +4,20 @@ Status: ACCEPTED — TASK 000E.
 
 Each milestone is intentionally high-level. Detailed execution tasks are created just in time when reaching the relevant milestone, avoiding speculative task explosion.
 
+## Execution Semantics
+
+Milestones define capability gates and project progression, not strict implementation isolation.
+
+The project may run small vertical prototypes or research spikes that touch capabilities from later milestones in order to obtain early empirical feedback.
+
+Such experimental work does not count as milestone completion.
+
+Execution should prefer short evidence-driven loops:
+
+Prototype → Output → Evaluate → Identify Failure Mode → Refine.
+
+Detailed tasks continue to be created just in time.
+
 ## M0 — Product Foundation
 
 - Purpose: Establish product vision, MVP boundary, architectural principles, and initial decisions.

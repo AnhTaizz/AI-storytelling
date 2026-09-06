@@ -412,6 +412,39 @@ RELATED: DEC-009, DEC-013
 
 ---
 
+## DEC-015 — Evidence-Driven Vertical Iteration
+
+STATUS: ACCEPTED
+
+DECISION:
+Project execution uses evidence-driven vertical iteration. Small end-to-end prototypes, research spikes, and baseline experiments may cross future milestone boundaries when needed to obtain early feedback. Milestones remain capability gates, not strict implementation isolation boundaries.
+
+RATIONALE:
+AI systems are highly empirical. Individual components may appear sound while the combined system produces weak outputs. The project therefore requires short feedback loops using actual generated artifacts before investing deeply in architecture.
+
+EXPECTED LOOP:
+BASELINE → OBSERVATION → FAILURE MODE → HYPOTHESIS → MODIFICATION → EXPERIMENT → RESULT → CONCLUSION
+
+CONSEQUENCES:
+- Real output should be produced as early as practical.
+- Architecture should be refined from observed failure modes.
+- Complex components should require evidence-based justification.
+- Research spikes may temporarily use simplified or disposable implementations.
+- Experimental code must not be confused with production capability.
+- Milestone completion remains governed by milestone-specific acceptance criteria.
+- Documentation should evolve from empirical evidence rather than speculation alone.
+
+BOUNDARIES:
+- This decision does NOT change the M0–M14 roadmap sequence.
+- This decision does NOT create a new M1.5 milestone.
+- This decision does NOT mark future milestones complete.
+- This decision does NOT authorize architectural shortcuts to become permanent without review.
+- This decision does NOT remove quality gates.
+- This decision does NOT remove provenance or grounding requirements.
+- This decision does NOT weaken accepted M0 architectural principles.
+
+---
+
 ## Open Technology Decisions
 
 The following technology choices are not frozen. They require dedicated technical decision records supported by empirical evidence or benchmarks before becoming project commitments.
