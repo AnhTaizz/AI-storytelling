@@ -22,6 +22,9 @@ Baseline showed generally adequate event comprehension but weak creator-oriented
 Human / Project Owner qualitative review remains pending.
 No advanced retrieval/memory architecture is justified by this single-chapter run.
 
+H1 stronger-narrative-instructions experiment executed as RUN_0002.
+RUN_0001 and RUN_0002 are ready for comparative Orchestrator / Project Owner review.
+
 ## M0 — Verified Completed
 
 - Repository foundation created and published.
@@ -78,8 +81,8 @@ Script Quality Gate: NOT YET EVALUATED
 
 ## Current Task
 
-None — awaiting Project Owner qualitative review of RUN_0001 and Orchestrator failure analysis.
+None — awaiting comparative review of RUN_0001 vs RUN_0002.
 
 ## Next Candidate
 
-M1 — Convert RUN_0001 findings + Project Owner feedback into the first controlled improvement hypothesis.
+M1 — Evaluate whether stronger narrative instructions materially improve script quality before adding Story Brief or Narrative Planning stages.

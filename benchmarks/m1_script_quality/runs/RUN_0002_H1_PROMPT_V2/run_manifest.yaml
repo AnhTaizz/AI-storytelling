@@ -1,0 +1,68 @@
+run_id: RUN_0002_H1_PROMPT_V2
+experiment: H1_STRONGER_NARRATIVE_INSTRUCTIONS
+baseline_family: direct_source_generation
+
+comparison:
+  reference_run: RUN_0001_BASELINE_A
+  primary_variable: prompt_version
+  reference_prompt: PROMPT_V1
+  candidate_prompt: PROMPT_V2
+
+source:
+  path: data/sample/otonari_no_tenshi/wn_jp/raw/chapter_001.txt
+  language: ja
+  sha256: 917ec0448e01dbb3eff0564280f2abd13d42db507cbf34e9bb716af0f538fe45
+
+context:
+  chapters_in_generation_context:
+    - 1
+  future_chapters_available_but_excluded:
+    - 2
+    - 3
+    - 4
+    - 5
+
+translation_stage:
+  used: false
+
+story_brief_stage:
+  used: false
+
+narrative_plan_stage:
+  used: false
+
+retrieval_stage:
+  used: false
+
+generation:
+  execution_mode: agent_runtime
+  provider: Google
+  model: Gemini 3.1 Pro (High)
+  settings:
+
+prompt:
+  version: V2
+  path: benchmarks/m1_script_quality/baselines/baseline_a/prompts/PROMPT_V2.md
+
+target:
+  output_language: vi
+  perspective: third_person
+  audience: "15-25"
+  target_output_words: "900-1100"
+
+result:
+  output_path: benchmarks/m1_script_quality/runs/RUN_0002_H1_PROMPT_V2/script.md
+  output_word_count: 1045
+  target_range_met: true
+
+human_review:
+  status: PENDING_PROJECT_OWNER
+
+comparison_quality:
+  same_source: true
+  same_prompt_except_version: true
+  same_architecture: true
+  same_model_runtime: true
+  strict_context_isolation_machine_enforced: false
+
+controlled_comparison_status: CONTROLLED_WITH_AGENT_RUNTIME_LIMITATION
