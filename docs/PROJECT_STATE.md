@@ -17,6 +17,10 @@ Tracked sample corpus available for Chapters 1–5.
 RUN_0001_BASELINE_A executed using Chapter 1 only.
 First real Vietnamese storytelling script produced.
 Project Owner human review pending.
+RUN_0001 Baseline A received preliminary Orchestrator failure analysis.
+Baseline showed generally adequate event comprehension but weak creator-oriented narrative transformation.
+Human / Project Owner qualitative review remains pending.
+No advanced retrieval/memory architecture is justified by this single-chapter run.
 
 ## M0 — Verified Completed
 
@@ -74,8 +78,8 @@ Script Quality Gate: NOT YET EVALUATED
 
 ## Current Task
 
-None — awaiting Project Owner review of RUN_0001_BASELINE_A.
+None — awaiting Project Owner qualitative review of RUN_0001 and Orchestrator failure analysis.
 
 ## Next Candidate
 
-M1 — Review Baseline A output and record observed failure modes.
+M1 — Convert RUN_0001 findings + Project Owner feedback into the first controlled improvement hypothesis.
