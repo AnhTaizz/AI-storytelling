@@ -66,3 +66,14 @@ comparison_quality:
   strict_context_isolation_machine_enforced: false
 
 controlled_comparison_status: CONTROLLED_WITH_AGENT_RUNTIME_LIMITATION
+
+mechanical_checks:
+  non_vietnamese_script_contamination_detected: true
+  contamination:
+    - script: Cyrillic
+      example: "сосе"
+  automatic_correction_applied: false
+
+git:
+  base_commit: c0ee5c7f77883ee3b4ea7d739454f10c06fcbdf5
+  run_commit: f31aa71f5750420df942b08d508132df9f390d80
