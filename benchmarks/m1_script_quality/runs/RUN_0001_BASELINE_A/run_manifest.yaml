@@ -3,7 +3,7 @@ baseline: direct_source_generation
 
 git:
   base_commit: a873440b5e8250e0634668f60a18a19576374029
-  run_commit: pending
+  run_commit: 31db7ea80fafd4382f1d8013daef232396a1c969
 
 golden_story_fixture_id: GS_OTONARI_TENSHI_CH01_V1
 
@@ -50,6 +50,13 @@ result:
   target_range_met: false
   length_deviation: "+25 words above provisional upper bound"
 
+methodology:
+  model_input_isolation: declared_by_agent_runtime
+  limitation: >
+    RUN_0001 used the coding agent runtime rather than a dedicated isolated
+    generation runner. The task instructed the agent to use Chapter 1 only,
+    but strict machine-enforced context isolation was not independently
+    verified.
 human_review:
   status: PENDING_PROJECT_OWNER
   artifact: benchmarks/m1_script_quality/runs/RUN_0001_BASELINE_A/HUMAN_REVIEW.md
