@@ -1,0 +1,56 @@
+source_storage:
+  tracked_sample_source: true
+  tracked_sample_scope: "chapters 1-5"
+  bulk_source_policy: local_private
+
+source_files:
+  - logical_id: chapter_001
+    repository_path: data/sample/otonari_no_tenshi/wn_jp/raw/chapter_001.txt
+    chapter: 1
+    language: ja
+    sha256: 917EC0448E01DBB3EFF0564280F2ABD13D42DB507CBF34E9BB716AF0F538FE45
+    byte_size: 8324
+    character_count: 2926
+    line_count: 226
+    included_in_git: true
+    role: sample_source
+  - logical_id: chapter_002
+    repository_path: data/sample/otonari_no_tenshi/wn_jp/raw/chapter_002.txt
+    chapter: 2
+    language: ja
+    sha256: FA3540EDFB0AABFC38D58D7EE6E893C7A41274EBF734044393E5D40C7F1AC35E
+    byte_size: 8366
+    character_count: 2972
+    line_count: 274
+    included_in_git: true
+    role: sample_source
+  - logical_id: chapter_003
+    repository_path: data/sample/otonari_no_tenshi/wn_jp/raw/chapter_003.txt
+    chapter: 3
+    language: ja
+    sha256: 9C907A851A0018C748613356A8C3ED9E699D4D7854077704D1B402F8DB00973F
+    byte_size: 12221
+    character_count: 4303
+    line_count: 342
+    included_in_git: true
+    role: sample_source
+  - logical_id: chapter_004
+    repository_path: data/sample/otonari_no_tenshi/wn_jp/raw/chapter_004.txt
+    chapter: 4
+    language: ja
+    sha256: 6539B73367673A91CD99236D818811702982759CF033B5A179CDF001AE20F525
+    byte_size: 7951
+    character_count: 2799
+    line_count: 222
+    included_in_git: true
+    role: sample_source
+  - logical_id: chapter_005
+    repository_path: data/sample/otonari_no_tenshi/wn_jp/raw/chapter_005.txt
+    chapter: 5
+    language: ja
+    sha256: D7AFE58AAE4B5086C4EA88B99B9CAEE3CDE4EE9FD26DF5971B75A122FA345FD5
+    byte_size: 4335
+    character_count: 1531
+    line_count: 127
+    included_in_git: true
+    role: sample_source

@@ -1,24 +1,23 @@
 # Golden Story
 
 GOLDEN STORY STATUS:
-WAITING_FOR_PROJECT_OWNER_SOURCE
-
-A Golden Story is a controlled narrative case that the creator understands sufficiently well to evaluate factual correctness, chronology, relationships, causality, callbacks, reveals, emotional importance, and pacing.
+SELECTED — BASELINE A EXECUTED
 
 ## Contract / Details
 
-- Golden Story ID: TBD — requires Project Owner input
-- Title: TBD — requires Project Owner input
-- Source Type: TBD — requires Project Owner input
-- Language: TBD — requires Project Owner input
-- Source Ownership / Usage Status: TBD — requires Project Owner input
-- Selected Volume(s): TBD — requires Project Owner input
-- Selected Chapter(s): TBD — requires Project Owner input
-- Approximate Source Length: TBD — requires Project Owner input
-- Creator Familiarity: TBD — requires Project Owner input
-- Spoiler Boundary: TBD — requires Project Owner input
-- Target Video Type: TBD — requires Project Owner input
-- Target Audience: TBD — requires Project Owner input
+- Golden Story ID: GS_OTONARI_TENSHI_CH01_V1
+- Title: Otonari no Tenshi-sama ni Itsunomanika Dame Ningen ni Sareteita Ken
+- Working Vietnamese Title: Thiên Sứ Nhà Bên
+- Source Type: Japanese Web Novel
+- Language: ja
+- Source Ownership / Usage Status: Available Sample Chapters: 1–5
+- Selected Volume(s): 1
+- Selected Chapter(s): 1
+- Approximate Source Length: ~3000 chars
+- Creator Familiarity: Baseline A
+- Spoiler Boundary: Chapter 1 only
+- Target Video Type: Third-person romantic storytelling / recap
+- Target Audience: 15–25
 
 ## Rationale for Selection
 

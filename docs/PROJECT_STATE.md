@@ -12,6 +12,12 @@ M1 execution uses evidence-driven vertical iteration.
 M1 empirical benchmark fixture established.
 Application implementation has not started.
 
+Golden Story v0 selected: Otonari no Tenshi-sama Japanese Web Novel Chapter 1.
+Tracked sample corpus available for Chapters 1–5.
+RUN_0001_BASELINE_A executed using Chapter 1 only.
+First real Vietnamese storytelling script produced.
+Project Owner human review pending.
+
 ## M0 — Verified Completed
 
 - Repository foundation created and published.
@@ -68,8 +74,8 @@ Script Quality Gate: NOT YET EVALUATED
 
 ## Current Task
 
-None — awaiting Golden Story source selection / Baseline A execution task.
+None — awaiting Project Owner review of RUN_0001_BASELINE_A.
 
 ## Next Candidate
 
-M1 — Select Golden Story source and execute Baseline A.
+M1 — Review Baseline A output and record observed failure modes.

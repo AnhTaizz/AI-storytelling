@@ -1,0 +1,53 @@
+run_id: RUN_0001_BASELINE_A
+baseline: direct_source_generation
+
+git:
+  base_commit: a873440b5e8250e0634668f60a18a19576374029
+  run_commit: pending
+
+golden_story_fixture_id: GS_OTONARI_TENSHI_CH01_V1
+
+source:
+  path: data/sample/otonari_no_tenshi/wn_jp/raw/chapter_001.txt
+  language: ja
+  sha256: 917EC0448E01DBB3EFF0564280F2ABD13D42DB507CBF34E9BB716AF0F538FE45
+  byte_size: 8324
+  character_count: 2926
+  line_count: 226
+
+context:
+  chapters_in_generation_context:
+    - 1
+  future_chapters_available_but_excluded:
+    - 2
+    - 3
+    - 4
+    - 5
+
+translation_stage:
+  used: false
+
+prompt:
+  version: V1
+  path: benchmarks/m1_script_quality/baselines/baseline_a/prompts/PROMPT_V1.md
+
+generation:
+  execution_mode: agent_runtime
+  provider: Google
+  model: Gemini 3.1 Pro (High)
+  settings: default
+
+target:
+  output_language: vi
+  perspective: third_person
+  audience: "15-25"
+  mode: romantic_story_retelling
+  target_output_words: "900-1100"
+
+result:
+  output_path: benchmarks/m1_script_quality/runs/RUN_0001_BASELINE_A/script.md
+  output_word_count: 1125
+
+human_review:
+  status: PENDING_PROJECT_OWNER
+  artifact: benchmarks/m1_script_quality/runs/RUN_0001_BASELINE_A/HUMAN_REVIEW.md
