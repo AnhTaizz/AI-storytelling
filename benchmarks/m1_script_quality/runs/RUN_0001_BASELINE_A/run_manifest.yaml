@@ -47,6 +47,8 @@ target:
 result:
   output_path: benchmarks/m1_script_quality/runs/RUN_0001_BASELINE_A/script.md
   output_word_count: 1125
+  target_range_met: false
+  length_deviation: "+25 words above provisional upper bound"
 
 human_review:
   status: PENDING_PROJECT_OWNER
