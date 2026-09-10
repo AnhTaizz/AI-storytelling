@@ -10,7 +10,7 @@ Hypothesis:
 Stronger narrative instructions can improve creator-oriented storytelling quality without adding architectural complexity.
 
 Result:
-Strong narrative prompting successfully reshaped the narrative structure, improved the hook, and achieved a more engaging conversational style. However, it introduced a tradeoff by increasing factual drift and creative exaggeration. Furthermore, it failed to prevent output language corruption.
+Strong narrative prompting improved narrative transformation in the observed experiment, but did not reliably enforce factual fidelity or output integrity.
 
 Supported improvements:
 - Time to inciting situation / Pacing (F004)
@@ -24,11 +24,11 @@ Remaining failures:
 
 Regressions:
 - Fidelity regression (hair color changed from flaxen to chestnut)
-- Introduced an `ENTERTAINMENT_FIDELITY_TRADEOFF` where increased dramatic flair led to slight spoilers or over-interpretations of the ending.
+- Introduced an `OBSERVED_ENTERTAINMENT_FIDELITY_TENSION` where increased dramatic flair coincided with slight spoilers or over-interpretations of the ending.
 
 Verdict:
 PARTIALLY_SUPPORTED
 Strong narrative prompting is a valuable low-cost improvement and should remain part of the system, but it cannot by itself reliably enforce factual truth and output integrity.
 
 Next implication:
-The `ENTERTAINMENT_FIDELITY_TRADEOFF` justifies exploring H2 (Separate Story Brief) to separate "what is true" from "how to tell it". The persistent language corruption justifies exploring H5 (Output Validator).
+The `OBSERVED_ENTERTAINMENT_FIDELITY_TENSION` justifies exploring H2 (Separate Story Brief) to TEST whether a separate factual stage can better separate "what is true" from "how to tell it". The persistent language corruption justifies exploring H5 (Output Validator) to flag mechanical violations.
