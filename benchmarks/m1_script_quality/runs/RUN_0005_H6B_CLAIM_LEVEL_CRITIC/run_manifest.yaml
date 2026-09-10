@@ -1,0 +1,59 @@
+run_id: RUN_0005_H6B_CLAIM_LEVEL_CRITIC
+experiment: H6B_CLAIM_LEVEL_FACTUAL_CRITIC
+
+comparison:
+  reference_critic_run: RUN_0004_H6_CRITIC
+  shared_writer_input: RUN_0003_H2_STORY_BRIEF
+  primary_variable: critic_audit_procedure
+
+inputs:
+  story_brief: benchmarks/m1_script_quality/runs/RUN_0003_H2_STORY_BRIEF/story_brief.yaml
+  script: benchmarks/m1_script_quality/runs/RUN_0003_H2_STORY_BRIEF/script.md
+
+critic:
+  prompt: benchmarks/m1_script_quality/experiments/h6b/prompts/CLAIM_LEVEL_FACTUAL_CRITIC_PROMPT_V2.md
+  output: benchmarks/m1_script_quality/runs/RUN_0005_H6B_CLAIM_LEVEL_CRITIC/claim_audit.yaml
+
+context_control:
+  raw_japanese_deliberately_provided: false
+  critic_v1_report_deliberately_provided: false
+  prior_failure_reviews_deliberately_provided: false
+  orchestrator_known_miss_list_deliberately_provided: false
+  run_0004_revised_script_deliberately_provided: false
+
+architecture:
+  story_brief_reused: true
+  writer_generation: false
+  claim_level_critic: true
+  revision_stage: false
+  narrative_plan_stage: false
+  retrieval_stage: false
+  story_memory_stage: false
+  graph_stage: false
+
+generation:
+  execution_mode: agent_runtime
+  provider: Google
+  model: Gemini 3.1 Pro (High)
+  settings: default
+
+result:
+  review_units: 14
+  atomic_claims: 14
+  problematic_claims: 10
+  yaml_parse: PASS
+  schema_conformance: PASS
+
+formal_evaluation:
+  precision: NOT_EVALUATED
+  recall: NOT_EVALUATED
+  h6b_verdict: PENDING_ORCHESTRATOR_REVIEW
+
+methodology:
+  strict_machine_context_isolation: false
+  limitation: >
+    Agent-runtime declared contexts were instructed but were not independently
+    machine-enforced.
+
+git:
+  base_commit: 929783d798eed063daa0648de8c6d4d81b8d4457

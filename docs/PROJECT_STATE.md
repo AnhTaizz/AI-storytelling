@@ -95,8 +95,20 @@ Script Quality Gate: NOT YET EVALUATED
 
 ## Current Task
 
-None — awaiting Project Owner preference and selection/execution of the next controlled experiment.
+H6b Claim-Level Factual Critic experiment executed as RUN_0005.
+
+RUN_0005 reuses the frozen RUN_0003 Story Brief and original Writer script,
+and replaces the sparse free-form Critic procedure with explicit claim-level
+enumeration and Story-Brief support classification.
+
+No Revision stage was executed.
+
+H6b verdict pending independent Orchestrator evaluation.
+
+## Current Task
+
+None — awaiting Orchestrator evaluation of Claim-Level Critic detection quality and coverage.
 
 ## Next Candidate
 
-M1 — Controlled H6b Claim-Level Factual Critic experiment to test whether explicit claim coverage improves detection of Writer drift.
+M1 — Compare Critic V1 vs Claim-Level Critic V2 on the same RUN_0003 script and determine whether explicit claim enumeration improves useful detection coverage.

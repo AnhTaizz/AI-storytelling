@@ -1,0 +1,219 @@
+```yaml
+critic_version: CLAIM_LEVEL_FC_V2
+
+coverage:
+  script_reviewed_from_start_to_end: true
+  review_units_count: 14
+  atomic_claim_count: 14
+
+review_units:
+  - unit_id: S001
+    script_excerpt: "Cuộc sống của Amane có lẽ sẽ cứ êm đềm trôi qua... ở căn hộ ngay bên phải phòng cậu, có một thiên thần đang sinh sống."
+    claims:
+      - claim_id: C001
+        claim_type: LOCATION
+        normalized_claim: "Mahiru lives in the apartment immediately to the right of Amane's."
+        classification: QUESTIONABLE
+        brief_support: null
+        severity: LOW
+        explanation: "The Brief states they are neighbors (隣のマンションの部屋), but does not specify 'immediately to the right'."
+        recommended_action: SOFTEN
+
+  - unit_id: S002
+    script_excerpt: "sống mũi cao thanh tú"
+    claims:
+      - claim_id: C002
+        claim_type: PHYSICAL_DESCRIPTION
+        normalized_claim: "Mahiru has a high, straight nose."
+        classification: QUESTIONABLE
+        brief_support: null
+        severity: LOW
+        explanation: "The Brief describes her hair, skin, and eyes, but does not explicitly mention her nose shape."
+        recommended_action: KEEP
+
+  - unit_id: S003
+    script_excerpt: "Cậu tự biết thân biết phận, khoảng cách giữa một người bình thường và một \"thiên thần\" là quá lớn."
+    claims:
+      - claim_id: C003
+        claim_type: INTERNAL_STATE
+        normalized_claim: "Amane felt a sense of inferiority and believed the distance between a normal person and an 'angel' was too large."
+        classification: UNSUPPORTED
+        brief_support: null
+        severity: HIGH
+        explanation: "The Brief does not contain any inferiority motive for Amane avoiding Mahiru. It states he had no romantic feelings and avoided involvement."
+        recommended_action: REMOVE
+
+  - unit_id: S004
+    script_excerpt: "Hơn nữa, cậu biết tỏng nếu dính líu đến Mahiru thì kiểu gì cũng chuốc lấy sự ghen tị từ đám con trai trong trường."
+    claims:
+      - claim_id: C004
+        claim_type: INTERNAL_STATE
+        normalized_claim: "Amane feared jealousy from other boys in the school."
+        classification: UNSUPPORTED
+        brief_support: null
+        severity: MEDIUM
+        explanation: "The Brief mentions boys confessing to her, but does not establish Amane's fear of jealousy as a motive."
+        recommended_action: REMOVE
+
+  - unit_id: S005
+    script_excerpt: "ngước khuôn mặt tái nhợt vì lạnh lên"
+    claims:
+      - claim_id: C005
+        claim_type: PHYSICAL_STATE
+        normalized_claim: "Mahiru's face was pale from the cold."
+        classification: QUESTIONABLE
+        brief_support: null
+        severity: LOW
+        explanation: "The Brief says she was sitting in the rain, but does not explicitly describe her face as pale from cold."
+        recommended_action: KEEP
+
+  - unit_id: S006
+    script_excerpt: "\"Với cái kiểu này thì cảm lạnh chắc luôn,\" Amane thầm nghĩ."
+    claims:
+      - claim_id: C006
+        claim_type: CERTAINTY_LEVEL
+        normalized_claim: "Amane thought she would definitely catch a cold."
+        classification: STRONGER_THAN_BRIEF
+        brief_support: null
+        severity: MEDIUM
+        explanation: "The Brief says Amane gave the umbrella so he wouldn't feel bad if she caught a cold. The script makes it a certainty."
+        recommended_action: SOFTEN
+
+  - unit_id: S007
+    script_excerpt: "Cậu vò đầu bứt tai, cảm thấy nếu cứ thế bỏ mặc cô gái này thì tối nay chắc chắn cậu sẽ mất ngủ vì cắn rứt."
+    claims:
+      - claim_id: C007
+        claim_type: INTERNAL_STATE
+        normalized_claim: "Amane felt he would definitely lose sleep from guilt if he left her."
+        classification: STRONGER_THAN_BRIEF
+        brief_support: null
+        severity: MEDIUM
+        explanation: "The Brief says his conscience hurt (良心が咎めた), but 'definitely losing sleep' intensifies this beyond the Brief."
+        recommended_action: SOFTEN
+
+  - unit_id: S008
+    script_excerpt: "\"Không có việc gì cả,\" Amane nhún vai, đáp lại gọn lỏn."
+    claims:
+      - claim_id: C008
+        claim_type: ACTION
+        normalized_claim: "Amane shrugged."
+        classification: QUESTIONABLE
+        brief_support: null
+        severity: LOW
+        explanation: "The Brief does not mention Amane shrugging. It is a minor unsupported staging detail."
+        recommended_action: KEEP
+
+  - unit_id: S009
+    script_excerpt: "Cậu biết tỏng là cô nàng đang có tâm sự gì đó rất nặng nề, nhưng cậu cũng chẳng có ý định đào sâu hay hỏi han thêm."
+    claims:
+      - claim_id: C009
+        claim_type: KNOWLEDGE_STATE
+        normalized_claim: "Amane knew she had something heavy on her mind."
+        classification: DIRECTLY_SUPPORTED
+        brief_support: "important_details"
+        severity: null
+        explanation: "Supported by his observation that her face looked distorted as if about to cry."
+        recommended_action: KEEP
+
+  - unit_id: S010
+    script_excerpt: "Lương tâm của cậu chỉ thúc giục đến mức ra hỏi thăm một câu là kịch kim rồi. Giờ thì nhiệm vụ hoàn thành, cậu hoàn toàn có thể quay lưng bước đi mà không thấy tội lỗi nữa."
+    claims:
+      - claim_id: C010
+        claim_type: INTERNAL_STATE
+        normalized_claim: "Amane thought his duty was done just by asking, and he could leave without feeling guilty."
+        classification: UNSUPPORTED
+        brief_support: null
+        severity: MEDIUM
+        explanation: "The Brief shows he leaves his umbrella because he would feel bad if she caught a cold. The script invents a temporary resolution of guilt before he gives the umbrella."
+        recommended_action: REMOVE
+
+  - unit_id: S011
+    script_excerpt: "Thế nhưng, khi chuẩn bị rời đi, nhìn cô gái nhỏ bé ướt sũng nước mưa ngồi co ro trên xích đu, Amane lại cảm thấy... không đành lòng."
+    claims:
+      - claim_id: C011
+        claim_type: PHYSICAL_STATE
+        normalized_claim: "Mahiru was sitting huddled on the swing."
+        classification: QUESTIONABLE
+        brief_support: null
+        severity: LOW
+        explanation: "The Brief says she was sitting on the swing, but 'huddled' (co ro) is an unsupported physical embellishment."
+        recommended_action: KEEP
+
+  - unit_id: S012
+    script_excerpt: "Việc làm đó dường như đã rửa sạch mọi sự cắn rứt trong lòng cậu."
+    claims:
+      - claim_id: C012
+        claim_type: EMOTIONAL_STATE
+        normalized_claim: "Giving the umbrella cleared all his guilt."
+        classification: SUPPORTED_INFERENCE
+        brief_support: "events.E3.explicit_or_supported_motivation"
+        severity: null
+        explanation: "Inferred from his motive to give the umbrella to avoid feeling bad."
+        recommended_action: KEEP
+
+  - unit_id: S013
+    script_excerpt: "Amane tin chắc rằng, sau sự việc ngày hôm nay, mối quan hệ giữa hai người sẽ quay trở về vạch xuất phát: những người hàng xóm không quen biết. Sẽ chẳng có chuyện gì xảy ra tiếp theo đâu. Một lần và mãi mãi."
+    claims:
+      - claim_id: C013
+        claim_type: FUTURE_EVENT
+        normalized_claim: "Amane believed their relationship would return to being strangers with no future interaction."
+        classification: DIRECTLY_SUPPORTED
+        brief_support: "ending_state.factual_state"
+        severity: null
+        explanation: "Directly matches '周は傘を貸して一人で帰路につき、これで関わりは終わりだと思っている。'"
+        recommended_action: KEEP
+
+  - unit_id: S014
+    script_excerpt: "Ít nhất là, vào lúc đó, thanh niên Amane của chúng ta đã ngây thơ nghĩ như vậy."
+    claims:
+      - claim_id: C014
+        claim_type: FORESHADOW_INTERPRETATION
+        normalized_claim: "The narrator implies Amane is wrong and they will interact again."
+        classification: DIRECTLY_SUPPORTED
+        brief_support: "ending_state.unresolved_implication"
+        severity: null
+        explanation: "Matches the unresolved implication that they will continue to interact."
+        recommended_action: KEEP
+
+problematic_claims:
+  - claim_id: C001
+    classification: QUESTIONABLE
+    severity: LOW
+    recommended_action: SOFTEN
+  - claim_id: C002
+    classification: QUESTIONABLE
+    severity: LOW
+    recommended_action: KEEP
+  - claim_id: C003
+    classification: UNSUPPORTED
+    severity: HIGH
+    recommended_action: REMOVE
+  - claim_id: C004
+    classification: UNSUPPORTED
+    severity: MEDIUM
+    recommended_action: REMOVE
+  - claim_id: C005
+    classification: QUESTIONABLE
+    severity: LOW
+    recommended_action: KEEP
+  - claim_id: C006
+    classification: STRONGER_THAN_BRIEF
+    severity: MEDIUM
+    recommended_action: SOFTEN
+  - claim_id: C007
+    classification: STRONGER_THAN_BRIEF
+    severity: MEDIUM
+    recommended_action: SOFTEN
+  - claim_id: C008
+    classification: QUESTIONABLE
+    severity: LOW
+    recommended_action: KEEP
+  - claim_id: C010
+    classification: UNSUPPORTED
+    severity: MEDIUM
+    recommended_action: REMOVE
+  - claim_id: C011
+    classification: QUESTIONABLE
+    severity: LOW
+    recommended_action: KEEP
+```
