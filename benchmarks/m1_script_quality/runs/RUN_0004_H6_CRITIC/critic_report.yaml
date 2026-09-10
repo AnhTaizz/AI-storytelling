@@ -1,0 +1,46 @@
+critic_version: FC_V1
+
+input:
+  story_brief: benchmarks/m1_script_quality/runs/RUN_0003_H2_STORY_BRIEF/story_brief.yaml
+  script: benchmarks/m1_script_quality/runs/RUN_0003_H2_STORY_BRIEF/script.md
+
+summary:
+  factual_adherence: POOR. Multiple invented internal states and motivations for Amane.
+  epistemic_adherence: FAIR. Mahiru's unknown motive was preserved, but Amane's thoughts were made overly certain.
+  compression_adherence: FAIL. The script is 1648 words against a 900-1100 target.
+
+violations:
+  - id: V1
+    severity: HIGH
+    category: invented_internal_state
+    script_excerpt: "Cậu tự biết thân biết phận, khoảng cách giữa một người bình thường và một 'thiên thần' là quá lớn."
+    classification: UNSUPPORTED
+    brief_support: None. Brief only states he has no romantic feelings and avoids involvement.
+    explanation: The script invents a specific psychological reason (knowing his place/inferiority) not supported by the brief.
+    recommended_action: REMOVE
+
+  - id: V2
+    severity: MEDIUM
+    category: invented_internal_state
+    script_excerpt: "tối nay chắc chắn cậu sẽ mất ngủ vì cắn rứt."
+    classification: STRONGER_THAN_BRIEF
+    brief_support: "良心が咎めた" (conscience troubled).
+    explanation: Losing sleep is an overly specific and strong emotional consequence invented by the writer.
+    recommended_action: SOFTEN
+
+safe_creative_elements:
+  - script_excerpt: "Một con búp bê sống được chế tác thủ công cực kỳ tinh xảo"
+    reason: Harmless stylistic metaphor emphasizing her beauty, categorized as CREATIVE_BUT_SAFE.
+  - script_excerpt: "buổi chiều định mệnh"
+    reason: Harmless narrative hook.
+
+compression_findings:
+  excessive_sections:
+    - The first 4-5 paragraphs overly elaborate on Mahiru's beauty, reputation, and Amane's philosophy of avoiding her before the inciting incident occurs.
+  repetition_patterns:
+    - Repeatedly emphasizing how detached Amane wants to be and how he doesn't want trouble.
+
+revision_priorities:
+  - Compress the initial exposition to reach the park scene faster.
+  - Remove unsupported internal monologues about Amane's inferiority.
+  - Trim repetitive statements to hit the ~1000 word target.

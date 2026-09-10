@@ -1,0 +1,73 @@
+run_id: RUN_0004_H6_CRITIC
+experiment: H6_FACTUAL_SCRIPT_CRITIC
+
+reference:
+  source_run: RUN_0003_H2_STORY_BRIEF
+  original_script_words: 1648
+
+inputs:
+  story_brief: benchmarks/m1_script_quality/runs/RUN_0003_H2_STORY_BRIEF/story_brief.yaml
+  original_script: benchmarks/m1_script_quality/runs/RUN_0003_H2_STORY_BRIEF/script.md
+
+architecture:
+  story_brief_stage_reused: true
+  critic_stage: true
+  revision_stage: true
+  narrative_plan_stage: false
+  retrieval_stage: false
+  graph_stage: false
+  story_memory_stage: false
+
+critic:
+  prompt: benchmarks/m1_script_quality/experiments/h6/prompts/FACTUAL_CRITIC_PROMPT_V1.md
+  input:
+    - story_brief
+    - original_script
+  raw_source_deliberately_provided: false
+  previous_failure_reports_deliberately_provided: false
+
+revision:
+  prompt: benchmarks/m1_script_quality/experiments/h6/prompts/CRITIC_GUIDED_REVISION_PROMPT_V1.md
+  input:
+    - story_brief
+    - original_script
+    - critic_report
+  raw_source_deliberately_provided: false
+
+generation:
+  critic:
+    execution_mode: agent_runtime
+    provider: Google
+    model: Gemini 3.1 Pro (High)
+    settings:
+      temperature: default
+  revision:
+    execution_mode: agent_runtime
+    provider: Google
+    model: Gemini 3.1 Pro (High)
+    settings:
+      temperature: default
+
+target:
+  output_language: vi
+  target_words: "900-1100"
+
+result:
+  critic_report: benchmarks/m1_script_quality/runs/RUN_0004_H6_CRITIC/critic_report.yaml
+  revised_script: benchmarks/m1_script_quality/runs/RUN_0004_H6_CRITIC/revised_script.md
+  revised_word_count: 1074
+  target_range_met: true
+
+mechanical_checks:
+  non_vietnamese_script_contamination_detected: false
+  contamination: null
+  automatic_correction_applied: false
+
+human_review:
+  status: PENDING_PROJECT_OWNER
+
+methodology:
+  strict_machine_context_isolation: false
+  limitation: >
+    Agent-runtime declared contexts were instructed but were not independently
+    machine-enforced.
