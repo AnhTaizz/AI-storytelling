@@ -32,10 +32,12 @@ RUN_0003 introduces a minimal factual Story Brief between source understanding a
 H2 verdict: PARTIALLY_SUPPORTED. Story Brief showed factual utility, but Writer adherence remains a problem.
 Project Owner preference pending.
 
-H6 Factual Script Critic experiment executed as RUN_0004.
-The experiment applies one factual critic pass and one critic-guided revision
-to frozen RUN_0003 using the Story Brief as the declared factual boundary.
-H6 verdict pending independent review.
+H6 Factual Script Critic formally evaluated.
+H6 verdict: PARTIALLY_SUPPORTED.
+Critic detected genuine Writer deviations but coverage remained incomplete.
+Critic-guided revision achieved 1021 words from the original 1565 and corrected
+some flagged drift, while some unsupported or stronger-than-Brief claims remained.
+Project Owner preference remains pending.
 
 ## M0 — Verified Completed
 
@@ -93,8 +95,8 @@ Script Quality Gate: NOT YET EVALUATED
 
 ## Current Task
 
-None — awaiting Orchestrator review of critic detection accuracy and revised-script quality.
+None — awaiting Project Owner preference and selection/execution of the next controlled experiment.
 
 ## Next Candidate
 
-M1 — Evaluate whether H6 detects Writer drift and improves adherence/compression without unacceptable narrative degradation.
+M1 — Controlled H6b Claim-Level Factual Critic experiment to test whether explicit claim coverage improves detection of Writer drift.
