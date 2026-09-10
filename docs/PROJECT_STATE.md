@@ -92,4 +92,4 @@ None — awaiting Project Owner comparison preference and selection of next cont
 
 ## Next Candidate
 
-M1 — H6 Factual Script Critic / Validation Loop (to enforce Writer adherence to the Story Brief).
+M1 — Controlled H6 Factual Script Critic experiment to test detection/reduction of Writer drift against the Story Brief.
