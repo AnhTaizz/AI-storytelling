@@ -1,0 +1,82 @@
+story_brief_version: SB_V1
+
+source_scope:
+  story: "お隣の天使様にいつの間にか駄目人間にされていた件"
+  chapter: "01"
+  language: "ja"
+  spoiler_boundary: "Chapter 1 only"
+
+characters:
+  - name: "藤宮周"
+    aliases: ["周", "あまね", "Amane"]
+    explicit_facts:
+      - "高校一年生 (L14)"
+      - "今年から一人暮らしを始めた (L14)"
+      - "真昼と同じ高校、同学年だがクラスは違う (L26-34)"
+      - "真昼の隣のマンションの部屋に住んでいる (L14)"
+    current_state: "真昼との関わりを望んでいなかったが、雨の中傘を貸した (L204)"
+  - name: "椎名真昼"
+    aliases: ["真昼", "天使様", "Mahiru"]
+    explicit_facts:
+      - "美しい可憐な少女。亜麻色のストレートヘアー、乳白色の肌、大きな瞳 (L18-22)"
+      - "文武両道、成績優秀（常に一位）、体育でもエース並み (L26-30)"
+      - "謙虚で大人しい性格 (L36)"
+      - "学校の男子から告白やアプローチをよく受けている (L148)"
+    current_state: "雨の公園で一人、傘をささずにブランコに座り、ずぶ濡れになっていた (L74-94)"
+
+relationships:
+  - entities: ["藤宮周", "椎名真昼"]
+    relationship_type: "隣人、同じ高校の同学年"
+    source_supported_state: "これまで接触はなかった。真昼は周の名字を知っており、顔を見かけたことはある程度の認識。周は真昼に恋愛感情はなく、関わりを避けていた。 (L52-62, L132-142)"
+
+setting:
+  locations:
+    - "学校とマンションの間にある公園 (L74)"
+  time_context: "雨が降りしきる放課後または夕方 (L74)"
+
+events:
+  - id: E1
+    order: 1
+    factual_description: "周が雨の公園で真昼を見つける"
+    participants: ["藤宮周", "椎名真昼"]
+    location: "公園"
+    observed_actions: "真昼は傘をささず、ブランコに腰かけてどこかをぼんやり見ていた。周は公園の横を通り抜けようとした。"
+    explicit_or_supported_motivation: "真昼の動機はUNKNOWN。周は最初関わるつもりがなかった。"
+    consequences: "周は真昼の顔が泣きそうに歪んだように見え、良心が咎めた。(L102-110)"
+  
+  - id: E2
+    order: 2
+    factual_description: "周が真昼に声をかける"
+    participants: ["藤宮周", "椎名真昼"]
+    location: "公園"
+    observed_actions: "周が「なにやってるんだ」と声をかける。真昼は警戒した態度で「私に何かご用で？」と応じる。"
+    explicit_or_supported_motivation: "周：放っておくのは良心が痛んだから (L110)。真昼：急に話しかけられたことに対する警戒 (L134)。"
+    consequences: "真昼は「ここに居たいから居る」と拒絶の意を示す (L154)。"
+
+  - id: E3
+    order: 3
+    factual_description: "周が傘を押し付けて去る"
+    participants: ["藤宮周", "椎名真昼"]
+    location: "公園"
+    observed_actions: "周は自分の傘を真昼に押し付け、返さなくていいと言って足早に立ち去る。"
+    explicit_or_supported_motivation: "周：風邪を引かれると寝覚めが悪い、居心地が悪いから (L190-200)。"
+    consequences: "真昼の小さな声が背後から聞こえたが、周は振り返らず帰路に就く (L208-214)。"
+
+important_details:
+  - "真昼が雨の中で座っていた理由は明かされていない (UNKNOWN)。"
+  - "真昼の表情は「泣きそうに歪んだように見えた」(L102) と周には映ったが、真相は不明。"
+
+scene_state_constraints:
+  - "真昼はずっと『ブランコに座っていた』。立っていない。(L74)"
+
+unknowns:
+  - "真昼が雨に濡れていた本当の理由。"
+  - "真昼の家庭の事情や過去。"
+
+ending_state:
+  factual_state: "周は傘を貸して一人で帰路につき、これで関わりは終わりだと思っている。"
+  unresolved_implication: "「その時は」(L226) という記述により、周の『これっきりだ』という推測が外れ、今後も関わりが続くことが強く示唆されている。"
+
+forbidden_inferences:
+  - "周の部屋が散らかっている、または彼の生活がだらしないといった描写はない。"
+  - "真昼が泣いていたと断定してはならない（泣きそうに見えただけ）。"

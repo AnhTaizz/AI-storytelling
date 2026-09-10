@@ -27,6 +27,11 @@ Prompt V2 improved narrative transformation, pacing, and spoken style, while fac
 H1 verdict: PARTIALLY_SUPPORTED.
 Project Owner A/B preference remains pending.
 
+H2 Separate Story Brief experiment executed as RUN_0003.
+RUN_0003 introduces a minimal factual Story Brief between source understanding and narrative generation.
+H2 verdict is pending comparative review.
+This experiment does not freeze Story Brief or the schema as permanent architecture.
+
 ## M0 — Verified Completed
 
 - Repository foundation created and published.
@@ -83,8 +88,8 @@ Script Quality Gate: NOT YET EVALUATED
 
 ## Current Task
 
-None — awaiting Project Owner A/B preference and next controlled hypothesis selection.
+None — awaiting Orchestrator comparison of RUN_0002 vs RUN_0003 and Story Brief fidelity review.
 
 ## Next Candidate
 
-M1 — Design a controlled H2 Story Brief experiment to separate factual understanding from creative storytelling.
+M1 — Evaluate whether the Story Brief improves factual fidelity while preserving narrative quality.
