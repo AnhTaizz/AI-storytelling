@@ -13,6 +13,7 @@ AI-powered Story Intelligence and Narrative Production Platform.
 - [Product Vision](docs/PRODUCT_VISION.md)
 - [MVP Scope](docs/MVP_SCOPE.md)
 - [Architectural Principles](docs/ARCHITECTURAL_PRINCIPLES.md)
+- [Target Architecture](docs/TARGET_ARCHITECTURE.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Decisions](docs/DECISIONS.md)
 - [Project State](docs/PROJECT_STATE.md)
