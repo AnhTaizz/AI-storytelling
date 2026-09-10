@@ -8,7 +8,11 @@ reference_run:
 source:
   path: data/sample/otonari_no_tenshi/wn_jp/raw/chapter_001.txt
   language: ja
-  sha256: unknown
+  sha256: 917ec0448e01dbb3eff0564280f2abd13d42db507cbf34e9bb716af0f538fe45
+
+git:
+  base_commit: 8350781524b03880d7f086e164893f80c32b3ec9
+  run_commit: f80664e55b8929e3d2860bb7492aed10afd8b3f3
 
 architecture:
   story_brief_stage: true
@@ -62,6 +66,13 @@ human_review:
 
 methodology:
   strict_machine_context_isolation: false
+  declared_stage_a_context: story_brief_prompt_plus_chapter_1
+  declared_stage_b_context: script_prompt_plus_story_brief_only
+  prior_experiment_influence_excluded: false
   limitation: >
-    Agent-runtime execution was used; declared generation contexts were
-    instructed but were not independently machine-enforced.
+    Agent-runtime execution was used. The declared generation contexts were
+    instructed but were not independently machine-enforced. The generated
+    Story Brief contains at least one source-negative constraint resembling
+    a prior-run failure pattern, so prior-experiment influence cannot be
+    independently ruled out. This does not establish that such influence
+    occurred.
