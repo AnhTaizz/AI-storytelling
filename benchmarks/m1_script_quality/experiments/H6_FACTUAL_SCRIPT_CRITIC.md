@@ -12,15 +12,15 @@ Evidence:
 - Compared against `RUN_0003_H2_STORY_BRIEF` inputs.
 
 Critic result:
-Detected major internal state deviations (Amane's sense of inferiority, excessive guilt) and diagnosed structural compression needs accurately. However, it missed several smaller factual and staging deviations (e.g., park size, character actions).
+Critic V1 detected the two explicit high-impact internal-state deviations recorded in its report and correctly diagnosed compression problems. Independent review also found several meaningful original-script deviations that Critic V1 did not flag, including unsupported/questionable staging actions, physical-state embellishment, certainty strengthening around catching cold, and unsupported guilt-resolution logic.
 
 Revision result:
-Successfully removed or softened the detected deviations without narrative degradation. The script was compressed from the canonical recorded 1648 words to 1074 words, meeting the target length while retaining strong pacing and emotional flow.
+The revision removed or reduced the two Critic-flagged deviations and achieved the recorded 1074-word target-compliant output. No obvious severe narrative degradation was observed in the research review, while final creator preference remains pending Project Owner review.
 
 Benefits:
-- Resolved the most jarring invented internal states.
-- Reached the required word count.
-- Maintained natural narrative quality.
+- Targeted high-impact Writer drift was removed or reduced.
+- Target-length compliance was restored.
+- Creator-oriented narrative elements remained observable.
 
 Misses:
 - Sparse Critic coverage left minor factual drift untouched.
@@ -31,10 +31,10 @@ Regressions / revision risks:
 - These were minor in this run but show that the Revision stage can itself introduce drift.
 
 Verdict:
-PARTIALLY_SUPPORTED. The validation loop works well for major thematic issues and compression, but current Critic prompts lack comprehensive claim coverage.
+PARTIALLY_SUPPORTED. The validation loop showed useful effects on targeted Writer deviations and compression in this run, but Critic coverage was incomplete and Revision itself introduced minor drift.
 
 Architecture implication:
-The validation loop structure is promising. The Story Brief works well as a reference. However, the Critic stage requires more rigorous extraction mechanics to be production-ready.
+Story Brief remains useful as a declared factual reference. Semantic Critic shows experimental utility. Critic V1 is not production-ready. One-pass Revision is not production-ready. H6b is motivated for another controlled experiment.
 
 Next hypothesis:
 H6b — Claim-Level Factual Critic (Testing whether explicit claim enumeration improves detection coverage).
