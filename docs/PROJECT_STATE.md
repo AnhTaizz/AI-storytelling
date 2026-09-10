@@ -29,8 +29,8 @@ Project Owner A/B preference remains pending.
 
 H2 Separate Story Brief experiment executed as RUN_0003.
 RUN_0003 introduces a minimal factual Story Brief between source understanding and narrative generation.
-H2 verdict is pending comparative review.
-This experiment does not freeze Story Brief or the schema as permanent architecture.
+H2 verdict: PARTIALLY_SUPPORTED. Story Brief showed factual utility, but Writer adherence remains a problem.
+Project Owner preference pending.
 
 ## M0 — Verified Completed
 
@@ -88,8 +88,8 @@ Script Quality Gate: NOT YET EVALUATED
 
 ## Current Task
 
-None — awaiting Orchestrator comparison of RUN_0002 vs RUN_0003 and Story Brief fidelity review.
+None — awaiting Project Owner comparison preference and selection of next controlled experiment.
 
 ## Next Candidate
 
-M1 — Evaluate whether the Story Brief improves factual fidelity while preserving narrative quality.
+M1 — H6 Factual Script Critic / Validation Loop (to enforce Writer adherence to the Story Brief).
