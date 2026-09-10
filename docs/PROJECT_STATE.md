@@ -35,7 +35,7 @@ Project Owner preference pending.
 H6 Factual Script Critic formally evaluated.
 H6 verdict: PARTIALLY_SUPPORTED.
 Critic detected genuine Writer deviations but coverage remained incomplete.
-Critic-guided revision achieved 1021 words from the original 1565 and corrected
+Critic-guided revision achieved the recorded output length of 1074 words from 1648 and corrected
 some flagged drift, while some unsupported or stronger-than-Brief claims remained.
 Project Owner preference remains pending.
 

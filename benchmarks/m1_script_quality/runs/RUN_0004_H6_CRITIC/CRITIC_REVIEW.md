@@ -19,18 +19,17 @@ No frozen gold annotation set exists, so precision and recall are not formally m
 None explicitly flagged as questionable by the Critic in its violations list, though its compression findings were accurate.
 
 ## Critic False Positives
-The Critic did not flag any False Positives in its violations list.
+Independent review identified no false positive among the two explicit factual violations emitted by Critic V1.
 
 ## Missed Violations
 The Critic missed several meaningful violations in RUN_0003:
-- "khu công viên nhỏ" (small park) — Physical detail absent from the Brief (which only says "公園" - park).
-- "nhún vai" (shrug) — Physical action not in the Brief. (Questionable/staging).
-- "ngồi co ro" (huddled) — Physical state embellishment not in the Brief.
-- "cô ấy chắc chắn sẽ bị cảm lạnh" (she will definitely catch a cold) — Converts the possibility of catching a cold into a certainty. (Stronger than Brief).
-- "giờ đã hỏi thăm xong nên có thể rời đi mà không thấy tội lỗi" (now that I asked, I can leave without feeling guilty) — Invented internal logic/resolution not supported by the Brief.
+- "nhún vai" (shrug) — Physical action not in the Brief. (QUESTIONABLE / UNSUPPORTED_STAGING).
+- "ngồi co ro" (huddled) — Physical state embellishment not in the Brief. (QUESTIONABLE / UNSUPPORTED_PHYSICAL_STATE).
+- "cô ấy chắc chắn sẽ bị cảm lạnh" (she will definitely catch a cold) — Converts the possibility of catching a cold into a certainty. (STRONGER_THAN_BRIEF).
+- "giờ đã hỏi thăm xong nên có thể rời đi mà không thấy tội lỗi" (now that I asked, I can leave without feeling guilty) — Invented internal logic/resolution not supported by the Brief. (UNSUPPORTED_INTERNAL_STATE).
 
 ## Qualitative Detection Coverage
-The Critic has **HIGH_PRECISION_LOW_COVERAGE**. It correctly identified two major internal state deviations (V1 and V2) but missed numerous smaller physical, staging, and emotional certainty deviations throughout the script.
+**USEFUL_BUT_INCOMPLETE**. Both explicit factual violations listed by Critic V1 were judged true positives in this review, and no false positive was identified among those two findings. However, this sample is too small and lacks a frozen gold set, so precision is not formally characterized. Multiple meaningful original-script violations were missed, demonstrating incomplete coverage.
 
 ## Compression Diagnosis
 The Critic accurately diagnosed the excessive exposition and repetition patterns in the first half of the script, correctly noting the need to compress the initial exposition to reach the park scene faster.

@@ -15,7 +15,7 @@ Critic result:
 Detected major internal state deviations (Amane's sense of inferiority, excessive guilt) and diagnosed structural compression needs accurately. However, it missed several smaller factual and staging deviations (e.g., park size, character actions).
 
 Revision result:
-Successfully removed or softened the detected deviations without narrative degradation. The script was compressed from 1565 to 1021 words (mechanically measured), meeting the target length while retaining strong pacing and emotional flow.
+Successfully removed or softened the detected deviations without narrative degradation. The script was compressed from the canonical recorded 1648 words to 1074 words, meeting the target length while retaining strong pacing and emotional flow.
 
 Benefits:
 - Resolved the most jarring invented internal states.
@@ -25,8 +25,10 @@ Benefits:
 Misses:
 - Sparse Critic coverage left minor factual drift untouched.
 
-Regressions:
-- None observed. The revision was safe and did not introduce harmful new factual claims.
+Regressions / revision risks:
+- At least one minor revision-introduced physical detail was observed ("khu công viên nhỏ").
+- The revision may also narrow an ambiguous time context ("放課後または夕方" → "sau giờ học").
+- These were minor in this run but show that the Revision stage can itself introduce drift.
 
 Verdict:
 PARTIALLY_SUPPORTED. The validation loop works well for major thematic issues and compression, but current Critic prompts lack comprehensive claim coverage.
