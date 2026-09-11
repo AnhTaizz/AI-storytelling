@@ -1,0 +1,456 @@
+adjudication_version: H6B_GOLD_CANDIDATE_V3
+status: CANDIDATE_READY_FOR_FREEZE_REVIEW
+truth_boundary:
+  story_brief_path: benchmarks/m1_script_quality/runs/RUN_0003_H2_STORY_BRIEF/story_brief.yaml
+  story_brief_sha256: 3db5c684a8b7c97164c980958f9a8ff456d42d79cdfb959756c42cc874b73bae
+script:
+  path: benchmarks/m1_script_quality/runs/RUN_0003_H2_STORY_BRIEF/script.md
+  sha256: d7fa7a39ec836165210c8084dd241a65f363acdffb743dc42c2ec5926b6f0f61
+segmentation:
+  version: PARAGRAPH_V1
+  review_units_path: benchmarks/m1_script_quality/runs/RUN_0006_H6B_DETERMINISTIC_CLAIM_AUDIT/review_units.yaml
+  unit_count: 32
+methodology:
+  raw_source_used: false
+  critic_v1_output_used: false
+  run5_output_used: false
+  run6_semantic_output_used: false
+  run7_output_used: false
+  truth_boundary: STORY_BRIEF_ONLY
+units:
+- unit_id: P001
+  issues: []
+- unit_id: P002
+  issues:
+  - issue_id: G001
+    claim_type: LOCATION
+    script_excerpt: căn hộ ngay bên phải phòng cậu
+    normalized_issue: Mahiru lives in the apartment immediately to the right of Amane's
+      room.
+    classification: UNSUPPORTED
+    severity: LOW
+    brief_basis:
+    - 真昼の隣のマンションの部屋に住んでいる (L14)
+    rationale: The brief states she is a neighbor, but does not specify that her room
+      is to the right.
+- unit_id: P003
+  issues:
+  - issue_id: G002
+    claim_type: PHYSICAL_DESCRIPTION
+    script_excerpt: sống mũi cao thanh tú
+    normalized_issue: Mahiru has a high elegant nose.
+    classification: UNSUPPORTED
+    severity: LOW
+    brief_basis:
+    - 亜麻色のストレートヘアー、乳白色の肌、大きな瞳 (L18-22)
+    rationale: The brief describes her hair, skin, and large eyes, but does not mention
+      her nose.
+  - issue_id: G003
+    claim_type: PHYSICAL_DESCRIPTION
+    script_excerpt: hàng mi dài
+    normalized_issue: Mahiru has long eyelashes.
+    classification: UNSUPPORTED
+    severity: LOW
+    brief_basis:
+    - 亜麻色のストレートヘアー、乳白色の肌、大きな瞳 (L18-22)
+    rationale: The brief does not mention long eyelashes.
+- unit_id: P004
+  issues: []
+- unit_id: P005
+  issues: []
+- unit_id: P006
+  issues:
+  - issue_id: G004
+    claim_type: INTERNAL_THOUGHT
+    script_excerpt: khoảng cách giữa một người bình thường và một "thiên thần" là
+      quá lớn
+    normalized_issue: Amane believes the gap between a normal person like him and
+      an angel is too large.
+    classification: UNSUPPORTED
+    severity: MEDIUM
+    brief_basis:
+    - 周は真昼に恋愛感情はなく、関わりを避けていた。 (L52-62, L132-142)
+    rationale: The brief states he avoided her and had no romantic feelings, but does
+      not attribute this to feeling an inferiority gap.
+  - issue_id: G005
+    claim_type: MOTIVE
+    script_excerpt: biết tỏng nếu dính líu đến Mahiru thì kiểu gì cũng chuốc lấy sự
+      ghen tị từ đám con trai trong trường
+    normalized_issue: Amane avoids getting involved with Mahiru because he fears jealousy
+      from other boys.
+    classification: UNSUPPORTED
+    severity: MEDIUM
+    brief_basis:
+    - 周は真昼に恋愛感情はなく、関わりを避けていた。 (L52-62, L132-142)
+    rationale: The brief does not mention fearing jealousy as his motive for avoiding
+      her.
+  - issue_id: G006
+    claim_type: INTERNAL_THOUGHT
+    script_excerpt: chỉ coi Mahiru như một tác phẩm nghệ thuật để ngắm nhìn từ xa
+      là đủ
+    normalized_issue: Amane only considers Mahiru as a piece of art to admire from
+      afar.
+    classification: UNSUPPORTED
+    severity: LOW
+    brief_basis:
+    - 周は真昼に恋愛感情はなく、関わりを避けていた。 (L52-62, L132-142)
+    rationale: The brief does not support the idea that he actively admires her from
+      afar as art.
+- unit_id: P007
+  issues: []
+- unit_id: P008
+  issues: []
+- unit_id: P009
+  issues:
+  - issue_id: G007
+    claim_type: PHYSICAL_STATE
+    script_excerpt: bộ đồng phục trường
+    normalized_issue: Mahiru is wearing her school uniform.
+    classification: QUESTIONABLE
+    severity: LOW
+    brief_basis:
+    - 雨の公園で一人、傘をささずにブランコに座り、ずぶ濡れになっていた (L74-94)
+    rationale: The brief does not specify her clothing, though it is after school
+      so it is a borderline inference.
+- unit_id: P010
+  issues: []
+- unit_id: P011
+  issues:
+  - issue_id: G008
+    claim_type: INTENTION
+    script_excerpt: cũng chẳng có ý định tìm chỗ trú
+    normalized_issue: Mahiru has no intention of finding shelter.
+    classification: STRONGER_THAN_BRIEF
+    severity: MEDIUM
+    brief_basis:
+    - 真昼の動機はUNKNOWN
+    rationale: The brief states she sat without an umbrella, but her intention not
+      to seek shelter is an unsupported inference since her motives are explicitly
+      UNKNOWN. Appearance does not equal known intention.
+  - issue_id: G009
+    claim_type: EMOTIONAL_STATE
+    script_excerpt: ánh mắt vô hồn
+    normalized_issue: Mahiru looks with lifeless/soulless eyes.
+    classification: STRONGER_THAN_BRIEF
+    severity: LOW
+    brief_basis:
+    - どこかをぼんやり見ていた
+    rationale: The phrase "lifeless eyes" materially strengthens the supported action
+      of "looking vacantly/absentmindedly" into a heavier emotional state.
+  - issue_id: G010
+    claim_type: PHYSICAL_STATE
+    script_excerpt: khuôn mặt tái nhợt vì lạnh
+    normalized_issue: Mahiru's face is pale from the cold.
+    classification: UNSUPPORTED
+    severity: LOW
+    brief_basis:
+    - ずぶ濡れになっていた (L74-94)
+    rationale: The brief states she is soaked, but does not explicitly describe her
+      face as pale from the cold.
+- unit_id: P012
+  issues:
+  - issue_id: G011
+    claim_type: CERTAINTY_LEVEL
+    script_excerpt: cảm lạnh chắc luôn
+    normalized_issue: Amane is certain Mahiru will catch a cold.
+    classification: STRONGER_THAN_BRIEF
+    severity: MEDIUM
+    brief_basis:
+    - 風邪を引かれると寝覚めが悪い、居心地が悪いから
+    rationale: The brief establishes concern about the possibility/consequences of
+      her catching a cold, not the certainty that she will.
+- unit_id: P013
+  issues:
+  - issue_id: G012
+    claim_type: INTERNAL_THOUGHT
+    script_excerpt: mà người ta muốn dầm mưa thì là chuyện của người ta
+    normalized_issue: Amane assumes Mahiru wants to stay/get soaked in the rain.
+    classification: UNSUPPORTED
+    severity: MEDIUM
+    brief_basis:
+    - 真昼の動機はUNKNOWN
+    rationale: The brief explicitly states Mahiru's underlying motivation is UNKNOWN.
+      Amane attributing to her a desire to stay soaked is an unsupported attribution
+      of hidden intention.
+- unit_id: P014
+  issues:
+  - issue_id: G013
+    claim_type: ACTION
+    script_excerpt: Cậu vò đầu bứt tai
+    normalized_issue: Amane scratches his head and pulls his ears in frustration.
+    classification: UNSUPPORTED
+    severity: LOW
+    brief_basis:
+    - 周は真昼の顔が泣きそうに歪んだように見え、良心が咎めた。(L102-110)
+    rationale: The brief states his conscience bothered him, but does not specify
+      this physical action.
+  - issue_id: G014
+    claim_type: CERTAINTY_LEVEL
+    script_excerpt: tối nay chắc chắn cậu sẽ mất ngủ vì cắn rứt
+    normalized_issue: Amane is certain he will lose sleep tonight out of guilt.
+    classification: STRONGER_THAN_BRIEF
+    severity: MEDIUM
+    brief_basis:
+    - 良心が咎めた
+    rationale: Being troubled by conscience establishes motivation but does not establish
+      the certainty of losing sleep that night.
+- unit_id: P015
+  issues:
+  - issue_id: G015
+    claim_type: INTENTION
+    script_excerpt: cố gắng giữ giọng điệu lạnh lùng nhất có thể để đối phương không
+      hiểu lầm
+    normalized_issue: Amane intentionally tries to keep his tone cold so Mahiru won't
+      misunderstand.
+    classification: UNSUPPORTED
+    severity: MEDIUM
+    brief_basis:
+    - 周が「なにやってるんだ」と声をかける。
+    rationale: The brief states he calls out to her, but does not mention a deliberate
+      intention to sound cold.
+- unit_id: P016
+  issues: []
+- unit_id: P017
+  issues:
+  - issue_id: G016
+    claim_type: EMOTIONAL_STATE
+    script_excerpt: giật mình
+    normalized_issue: Mahiru startles.
+    classification: UNSUPPORTED
+    severity: LOW
+    brief_basis:
+    - 真昼は警戒した態度で「私に何かご用で？」と応じる。
+    rationale: The brief mentions her wary attitude but does not specify an emotional/physical
+      startle reaction. Turning around is a safely implied action to respond.
+  - issue_id: G017
+    claim_type: PHYSICAL_STATE
+    script_excerpt: nhợt nhạt
+    normalized_issue: Mahiru is pale.
+    classification: UNSUPPORTED
+    severity: LOW
+    brief_basis:
+    - ずぶ濡れになっていた (L74-94)
+    rationale: Repeated unsupported physical detail not found in the brief.
+- unit_id: P018
+  issues:
+  - issue_id: G018
+    claim_type: RELATIONSHIP
+    script_excerpt: hay chạm mặt vào buổi sáng
+    normalized_issue: Amane and Mahiru often run into each other in the morning.
+    classification: UNSUPPORTED
+    severity: MEDIUM
+    brief_basis:
+    - 顔を見かけたことはある程度の認識。
+    rationale: The brief states she knows his face to some extent, but not that they
+      frequently encounter each other in the morning.
+- unit_id: P019
+  issues: []
+- unit_id: P020
+  issues:
+  - issue_id: G019
+    claim_type: INTERNAL_THOUGHT
+    script_excerpt: Amane hơi bất ngờ vì cô nhớ tên họ của mình
+    normalized_issue: Amane is surprised that Mahiru remembers his last name.
+    classification: UNSUPPORTED
+    severity: LOW
+    brief_basis:
+    - 真昼は周の名字を知っており
+    rationale: The brief states Mahiru knows his name, but does not mention Amane's
+      internal reaction to it.
+  - issue_id: G020
+    claim_type: REPUTATION_OR_HEARSAY
+    script_excerpt: lúc nào cũng bị đám con trai làm phiền
+    normalized_issue: Mahiru is always bothered by boys.
+    classification: STRONGER_THAN_BRIEF
+    severity: LOW
+    brief_basis:
+    - 学校の男子から告白やアプローチをよく受けている
+    rationale: Receiving frequent confessions does not necessarily mean she is "always
+      bothered" (harassed).
+  - issue_id: G021
+    claim_type: CAUSALITY
+    script_excerpt: một cô gái lúc nào cũng bị đám con trai làm phiền thì cảnh giác
+      là chuyện đương nhiên
+    normalized_issue: Mahiru's wariness is a natural consequence of frequently being
+      bothered by boys.
+    classification: UNSUPPORTED
+    severity: MEDIUM
+    brief_basis:
+    - 急に話しかけられたことに対する警戒 (L134)。
+    rationale: The brief states she is wary because she was suddenly approached, without
+      explicitly linking this to past experiences with boys.
+  - issue_id: G022
+    claim_type: INTERNAL_THOUGHT
+    script_excerpt: Chắc cô nàng đang nghĩ Amane nhân cơ hội này để bắt chuyện tán
+      tỉnh đây mà
+    normalized_issue: Amane assumes Mahiru thinks he is using this opportunity to
+      hit on her.
+    classification: UNSUPPORTED
+    severity: MEDIUM
+    brief_basis:
+    - 真昼：急に話しかけられたことに対する警戒 (L134)。
+    rationale: The brief states she is wary, but does not attribute this specific
+      assumption to Amane's thoughts.
+- unit_id: P021
+  issues:
+  - issue_id: G023
+    claim_type: ACTION
+    script_excerpt: Amane nhún vai
+    normalized_issue: Amane shrugs.
+    classification: UNSUPPORTED
+    severity: LOW
+    brief_basis:
+    - 周：放っておくのは良心が痛んだから (L110)。
+    rationale: The brief does not describe him shrugging.
+- unit_id: P022
+  issues: []
+- unit_id: P023
+  issues: []
+- unit_id: P024
+  issues:
+  - issue_id: G024
+    claim_type: KNOWLEDGE_STATE
+    script_excerpt: Cậu biết tỏng là cô nàng đang có tâm sự gì đó rất nặng nề
+    normalized_issue: Amane knows Mahiru has something heavy on her mind.
+    classification: UNSUPPORTED
+    severity: HIGH
+    brief_basis:
+    - 真相は不明
+    - 真昼の表情は「泣きそうに歪んだように見えた」
+    - 真昼の動機はUNKNOWN
+    rationale: The brief explicitly states her true state/motive is UNKNOWN. Amane
+      knowing she has something heavy on her mind crosses the appearance-versus-knowledge
+      epistemic boundary.
+- unit_id: P025
+  issues:
+  - issue_id: G025
+    claim_type: CHARACTER_ATTRIBUTE
+    script_excerpt: Amane vốn dĩ là người rất sợ rắc rối
+    normalized_issue: Amane is inherently someone who fears trouble.
+    classification: UNSUPPORTED
+    severity: MEDIUM
+    brief_basis:
+    - 周は真昼に恋愛感情はなく、関わりを避けていた。
+    rationale: The brief states he avoided her specifically, but does not support
+      that he generally fears trouble as an inherent character trait.
+  - issue_id: G026
+    claim_type: INTERNAL_THOUGHT
+    script_excerpt: Lương tâm của cậu chỉ thúc giục đến mức ra hỏi thăm một câu là
+      kịch kim rồi.
+    normalized_issue: Amane's conscience only compelled him to ask a single question
+      as its maximum limit.
+    classification: UNSUPPORTED
+    severity: LOW
+    brief_basis:
+    - 放っておくのは良心が痛んだから (L110)。
+    rationale: The brief notes conscience as the driver but does not impose a strict
+      "one question maximum" limit on it.
+  - issue_id: G027
+    claim_type: EMOTIONAL_STATE
+    script_excerpt: hoàn toàn có thể quay lưng bước đi mà không thấy tội lỗi nữa
+    normalized_issue: Amane can leave completely free of guilt after asking his question.
+    classification: UNSUPPORTED
+    severity: MEDIUM
+    brief_basis:
+    - 風邪を引かれると寝覚めが悪い、居心地が悪いから (L190-200)
+    rationale: The Story Brief does not explicitly state his emotional state at this
+      exact moment; it establishes he later acts to avoid feeling bad. This is an
+      unsupported assertion, not a direct text contradiction.
+- unit_id: P026
+  issues:
+  - issue_id: G028
+    claim_type: PHYSICAL_STATE
+    script_excerpt: ngồi co ro
+    normalized_issue: Mahiru is sitting huddled/curled up.
+    classification: UNSUPPORTED
+    severity: LOW
+    brief_basis:
+    - 真昼はずっと『ブランコに座っていた』。立っていない。(L74)
+    rationale: The brief confirms she was sitting, but does not specify she was huddled.
+- unit_id: P027
+  issues:
+  - issue_id: G029
+    claim_type: CERTAINTY_LEVEL
+    script_excerpt: Cứ thế này thì ốm mất.
+    normalized_issue: Amane is certain she will get sick if she stays like this.
+    classification: STRONGER_THAN_BRIEF
+    severity: MEDIUM
+    brief_basis:
+    - 風邪を引かれると寝覚めが悪い、居心地が悪いから
+    rationale: This is another occurrence of escalating his concern about the possibility
+      of catching a cold into an absolute certainty.
+- unit_id: P028
+  issues:
+  - issue_id: G030
+    claim_type: ACTION
+    script_excerpt: Trước khi cô nàng kịp mở miệng phản đối hay nói thêm lời nào
+    normalized_issue: Amane leaves before Mahiru can open her mouth to object.
+    classification: UNSUPPORTED
+    severity: LOW
+    brief_basis:
+    - 周は自分の傘を真昼に押し付け、返さなくていいと言って足早に立ち去る。
+    rationale: The brief does not state Mahiru attempted or was about to object before
+      he left.
+- unit_id: P029
+  issues:
+  - issue_id: G031
+    claim_type: INTERNAL_THOUGHT
+    script_excerpt: cũng chẳng bận tâm xem cô nói gì
+    normalized_issue: Amane doesn't care what Mahiru says.
+    classification: UNSUPPORTED
+    severity: LOW
+    brief_basis:
+    - 周は振り返らず帰路に就く
+    rationale: Not turning back is a physical action; not caring about what she said
+      is an unsupported internal state inference.
+- unit_id: P030
+  issues:
+  - issue_id: G032
+    claim_type: INTERNAL_THOUGHT
+    script_excerpt: Cậu đã làm hết sức rồi
+    normalized_issue: Amane believes he has done his best/utmost.
+    classification: UNSUPPORTED
+    severity: LOW
+    brief_basis:
+    - 風邪を引かれると寝覚めが悪い、居心地が悪いから
+    rationale: The brief supports giving the umbrella to avoid discomfort, but not
+      a belief that he exerted maximum effort.
+  - issue_id: G033
+    claim_type: EMOTIONAL_STATE
+    script_excerpt: rửa sạch mọi sự cắn rứt trong lòng cậu
+    normalized_issue: Giving the umbrella completely washed away all his guilt/troubled
+      conscience.
+    classification: STRONGER_THAN_BRIEF
+    severity: MEDIUM
+    brief_basis:
+    - 風邪を引かれると寝覚めが悪い、居心地が悪いから
+    rationale: The brief establishes his motive to avoid feeling bad, but does not
+      explicitly declare that complete emotional resolution was achieved.
+- unit_id: P031
+  issues:
+  - issue_id: G034
+    claim_type: INTENTION
+    script_excerpt: nghĩa là cô ấy cũng chẳng muốn dính dáng gì đến cậu
+    normalized_issue: Amane believes Mahiru generally does not want anything to do
+      with him.
+    classification: UNSUPPORTED
+    severity: MEDIUM
+    brief_basis:
+    - これで関わりは終わりだと思っている
+    rationale: The brief states Amane believes their involvement is over, but does
+      not support attributing a generalized broader intention of avoidance to Mahiru
+      herself based on her rejection in the park.
+- unit_id: P032
+  issues: []
+summary:
+  units_reviewed: 32
+  units_with_issues: 21
+  total_candidate_issues: 34
+  by_classification:
+    UNSUPPORTED: 26
+    QUESTIONABLE: 1
+    STRONGER_THAN_BRIEF: 7
+  by_severity:
+    LOW: 18
+    MEDIUM: 15
+    HIGH: 1

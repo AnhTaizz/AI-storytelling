@@ -102,8 +102,8 @@ H6b verdict: PENDING_ORCHESTRATOR_REVIEW.
 
 ## Current Task
 
-H6b adjudication V2 produced after independent Orchestrator review; awaiting final acceptance/freeze before Critic comparison.
+H6b adjudication V3 created and ready for final Orchestrator freeze review.
 
 ## Next Candidate
 
-M1 — Freeze accepted H6b reference set, then compare Critic V1 and RUN_0007 against the same reference set.
+M1 — Freeze H6b reference set and compare Critic V1 vs RUN_0007 using primary robust-gold metrics plus QUESTIONABLE sensitivity analysis.
