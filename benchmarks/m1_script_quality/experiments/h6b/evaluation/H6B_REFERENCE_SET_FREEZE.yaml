@@ -1,0 +1,44 @@
+reference_set:
+  name: H6B_RUN3_REFERENCE_V1
+  status: ACCEPTED_FROZEN
+  source_artifact:
+    path: benchmarks/m1_script_quality/experiments/h6b/evaluation/H6B_RUN3_ADJUDICATION_CANDIDATE_V3.yaml
+    git_commit: 47c7bdd9afd01e7e67a4a9a7deda8cb3f712822f
+    sha256: d03135131ffbc7c8e61c00d334e479d5700919a1e75c21017db5f1fa6a79862f
+truth_boundary:
+  type: STORY_BRIEF_ONLY
+  story_brief_path: benchmarks/m1_script_quality/runs/RUN_0003_H2_STORY_BRIEF/story_brief.yaml
+  story_brief_sha256: 3db5c684a8b7c97164c980958f9a8ff456d42d79cdfb959756c42cc874b73bae
+script:
+  path: benchmarks/m1_script_quality/runs/RUN_0003_H2_STORY_BRIEF/script.md
+  sha256: d7fa7a39ec836165210c8084dd241a65f363acdffb743dc42c2ec5926b6f0f61
+segmentation:
+  version: PARAGRAPH_V1
+  unit_count: 32
+counts:
+  total_issues: 34
+  robust_gold_issues: 33
+  questionable_issues: 1
+  units_with_issues: 21
+  by_classification:
+    UNSUPPORTED: 26
+    QUESTIONABLE: 1
+    STRONGER_THAN_BRIEF: 7
+  by_severity:
+    LOW: 18
+    MEDIUM: 15
+    HIGH: 1
+evaluation_policy:
+  primary_gold_classes:
+  - UNSUPPORTED
+  - CONTRADICTS_BRIEF
+  - STRONGER_THAN_BRIEF
+  sensitivity_classes:
+  - QUESTIONABLE
+immutability:
+  source_artifact_must_not_change: true
+  post_freeze_semantic_edits_allowed: false
+  future_corrections_require_new_reference_version: true
+orchestrator_verdict:
+  task_001n_a_final: ACCEPTED
+  accepted_for_critic_comparison: true
