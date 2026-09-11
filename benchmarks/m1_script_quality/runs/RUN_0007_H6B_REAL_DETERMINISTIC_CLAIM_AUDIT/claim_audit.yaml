@@ -1,0 +1,653 @@
+critic_version: CLAIM_LEVEL_FC_V3
+
+input_contract:
+  segmentation_version: PARAGRAPH_V1
+  expected_unit_count: 32
+
+audit_units:
+  - unit_id: P001
+    source_unit_sha256: "a11b9966a860498b82ccedbad643875549a19ab83bf27c357762171d67f19cfd"
+    claims:
+      - claim_id: C001
+        claim_type: CAUSALITY
+        normalized_claim: "Amane Fujimiya gets involved in unexpected events because he acted on his conscience to help someone."
+        classification: SUPPORTED_INFERENCE
+        brief_support:
+          - "周は真昼の顔が泣きそうに歪んだように見え、良心が咎めた。(L102-110)"
+          - "今後も関わりが続くことが強く示唆されている。"
+        severity: null
+        explanation: "The brief states he acted because his conscience was bothered, and strongly implies this leads to continued involvement."
+        recommended_action: null
+    no_claim_reason: null
+
+  - unit_id: P002
+    source_unit_sha256: "81e30506339832739a3a1adcac9afbdd81356ead766b7b5da86e59b632e4a942"
+    claims:
+      - claim_id: C002
+        claim_type: CHARACTER_ATTRIBUTE
+        normalized_claim: "Amane is a first-year high school student."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "高校一年生 (L14)"
+        severity: null
+        explanation: "Directly matches the character explicit facts."
+        recommended_action: null
+      - claim_id: C003
+        claim_type: PHYSICAL_STATE
+        normalized_claim: "Amane just started living alone in an apartment."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "今年から一人暮らしを始めた (L14)"
+        severity: null
+        explanation: "Directly matches the character explicit facts."
+        recommended_action: null
+      - claim_id: C004
+        claim_type: LOCATION
+        normalized_claim: "An 'angel' (Mahiru) lives in the apartment immediately to the right of Amane's room."
+        classification: UNSUPPORTED
+        brief_support:
+          - "真昼の隣のマンションの部屋に住んでいる (L14)"
+        severity: LOW
+        explanation: "The brief states they live in adjacent rooms, but does not specify that her room is to the right of his."
+        recommended_action: REMOVE
+    no_claim_reason: null
+
+  - unit_id: P003
+    source_unit_sha256: "6b0ce7fa345975048af2dbb8d5c9f3c0f1da21d5f97e6b52ffa06b75f02c7da3"
+    claims:
+      - claim_id: C005
+        claim_type: CHARACTER_IDENTITY
+        normalized_claim: "Amane's neighbor is named Shiina Mahiru."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "真昼の隣のマンションの部屋に住んでいる (L14)"
+          - "椎名真昼"
+        severity: null
+        explanation: "Matches the brief directly."
+        recommended_action: null
+      - claim_id: C006
+        claim_type: PHYSICAL_DESCRIPTION
+        normalized_claim: "Mahiru has straight flaxen hair, milky white skin, and large eyes."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "亜麻色のストレートヘアー、乳白色の肌、大きな瞳 (L18-22)"
+        severity: null
+        explanation: "Matches physical description verbatim."
+        recommended_action: null
+      - claim_id: C007
+        claim_type: PHYSICAL_DESCRIPTION
+        normalized_claim: "Mahiru has a high elegant nose and long eyelashes."
+        classification: UNSUPPORTED
+        brief_support: []
+        severity: LOW
+        explanation: "The brief mentions her hair, skin, and large eyes, but does not mention her nose or eyelashes."
+        recommended_action: REMOVE
+      - claim_id: C008
+        claim_type: PHYSICAL_DESCRIPTION
+        normalized_claim: "Mahiru looks like a meticulously crafted living doll."
+        classification: CREATIVE_BUT_SAFE
+        brief_support:
+          - "美しい可憐な少女"
+        severity: null
+        explanation: "A safe metaphor for 'beautiful and delicate girl'."
+        recommended_action: null
+    no_claim_reason: null
+
+  - unit_id: P004
+    source_unit_sha256: "e4239c3a3d06fc383a5e9ff76f80abd1fddc0e3c4209a8141f33fa4f52af5e60"
+    claims:
+      - claim_id: C009
+        claim_type: RELATIONSHIP
+        normalized_claim: "Mahiru attends the same high school and is in the same grade as Amane."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "真昼と同じ高校、同学年だがクラスは違う (L26-34)"
+        severity: null
+        explanation: "Matches the relationship and character facts."
+        recommended_action: null
+      - claim_id: C010
+        claim_type: CHARACTER_ATTRIBUTE
+        normalized_claim: "Mahiru is excellent in academics and sports, always ranking first in studies and performing like an ace in PE."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "文武両道、成績優秀（常に一位）、体育でもエース並み (L26-30)"
+        severity: null
+        explanation: "Directly translates the brief's facts."
+        recommended_action: null
+      - claim_id: C011
+        claim_type: CHARACTER_ATTRIBUTE
+        normalized_claim: "Mahiru has a humble and well-behaved personality."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "謙虚で大人しい性格 (L36)"
+        severity: null
+        explanation: "Directly matches the personality description."
+        recommended_action: null
+      - claim_id: C012
+        claim_type: REPUTATION_OR_HEARSAY
+        normalized_claim: "Mahiru frequently receives confessions and approaches from boys at school."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "学校の男子から告白やアプローチをよく受けている (L148)"
+        severity: null
+        explanation: "Matches the brief exactly."
+        recommended_action: null
+    no_claim_reason: null
+
+  - unit_id: P005
+    source_unit_sha256: "755081986377a2f65b3f924695ed715086b1786c772707a14b76573014d219f0"
+    claims:
+      - claim_id: C013
+        claim_type: MOTIVE
+        normalized_claim: "Amane avoids romantic involvement and keeps his distance."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "周は真昼に恋愛感情はなく、関わりを避けていた。"
+        severity: null
+        explanation: "Matches his stance towards Mahiru."
+        recommended_action: null
+    no_claim_reason: null
+
+  - unit_id: P006
+    source_unit_sha256: "f5c37bf6c860456b7b7bcbf92b0c8e05b2eaf5a9c9b66c20d0b1c63af7ab1f77"
+    claims:
+      - claim_id: C014
+        claim_type: MOTIVE
+        normalized_claim: "Amane has no intention to approach or get close to Mahiru."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "周は真昼に恋愛感情はなく、関わりを避けていた。"
+        severity: null
+        explanation: "Matches his explicit motive to avoid involvement."
+        recommended_action: null
+      - claim_id: C015
+        claim_type: INTERNAL_THOUGHT
+        normalized_claim: "Amane thinks the gap between him and Mahiru is too large and wants to avoid jealousy from other boys."
+        classification: UNSUPPORTED
+        brief_support: []
+        severity: LOW
+        explanation: "The brief says he avoids her and has no romantic feelings, but it does not specify feeling a 'gap' or fearing 'jealousy'."
+        recommended_action: REMOVE
+      - claim_id: C016
+        claim_type: RELATIONSHIP
+        normalized_claim: "Amane and Mahiru had no prior communication despite living next door."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "これまで接触はなかった。"
+        severity: null
+        explanation: "Directly matches the supported state of their relationship."
+        recommended_action: null
+    no_claim_reason: null
+
+  - unit_id: P007
+    source_unit_sha256: "bbd145bdb42f41d353bc8fd9fd8c47c70d3ca5e2181ed10b9223f8f66795c1cd"
+    claims: []
+    no_claim_reason: "Transition sentence with no material facts."
+
+  - unit_id: P008
+    source_unit_sha256: "23f821eae0438c695f5d54016fca67caaa8ceb709a781bb6b6770e36f75a09ee"
+    claims:
+      - claim_id: C017
+        claim_type: TIME
+        normalized_claim: "It was raining heavily."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "雨が降りしきる放課後または夕方 (L74)"
+        severity: null
+        explanation: "Directly matches the weather in the time context."
+        recommended_action: null
+      - claim_id: C018
+        claim_type: LOCATION
+        normalized_claim: "Amane stops at a park located between the school and the apartment complex."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "学校とマンションの間にある公園 (L74)"
+        severity: null
+        explanation: "Matches the location facts."
+        recommended_action: null
+    no_claim_reason: null
+
+  - unit_id: P009
+    source_unit_sha256: "cd221ea94bec6c779a76b42b9f6de5023dfa6680f508ad0bd4d464d28a77d542"
+    claims:
+      - claim_id: C019
+        claim_type: EVENT
+        normalized_claim: "Amane sees Mahiru in the rain."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "周が雨の公園で真昼を見つける"
+        severity: null
+        explanation: "Matches Event 1 description."
+        recommended_action: null
+    no_claim_reason: null
+
+  - unit_id: P010
+    source_unit_sha256: "71b16a0cce73a193517fbd3343eecbd0799c534eafb2becf42c2837ac94c65fd"
+    claims: []
+    no_claim_reason: "Rhetorical question reflecting internal thought, no new facts."
+
+  - unit_id: P011
+    source_unit_sha256: "548e2576e676307da9f733329daeb481ace24cc560c1c8412aad9b2be17a4397"
+    claims:
+      - claim_id: C020
+        claim_type: SCENE_STATE
+        normalized_claim: "Mahiru is sitting on a swing in the rain without an umbrella, getting soaked."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "真昼は傘をささず、ブランコに腰かけて"
+          - "ずぶ濡れになっていた"
+        severity: null
+        explanation: "Matches the observed actions in Event 1 and scene constraints."
+        recommended_action: null
+      - claim_id: C021
+        claim_type: ACTION
+        normalized_claim: "Mahiru is looking blankly into space."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "どこかをぼんやり見ていた"
+        severity: null
+        explanation: "Matches the observed actions in Event 1."
+        recommended_action: null
+      - claim_id: C022
+        claim_type: PHYSICAL_STATE
+        normalized_claim: "Mahiru's face is pale from the cold."
+        classification: UNSUPPORTED
+        brief_support: []
+        severity: LOW
+        explanation: "The brief mentions she is soaked, but does not state her face was pale from cold."
+        recommended_action: REMOVE
+    no_claim_reason: null
+
+  - unit_id: P012
+    source_unit_sha256: "543f8598bae3823a87bc3b6a4fc39c60d170ca66b690b919d366cc948f75d7e2"
+    claims:
+      - claim_id: C023
+        claim_type: INTERNAL_THOUGHT
+        normalized_claim: "Amane thinks Mahiru will definitely catch a cold."
+        classification: SUPPORTED_INFERENCE
+        brief_support:
+          - "風邪を引かれると寝覚めが悪い"
+        severity: null
+        explanation: "Amane giving her the umbrella because he doesn't want her to catch a cold infers he thought she would."
+        recommended_action: null
+    no_claim_reason: null
+
+  - unit_id: P013
+    source_unit_sha256: "d6b3e2692455a6a54bd7ea34123eb923c97e44c84206e2e05f9cd7e7c8a572de"
+    claims:
+      - claim_id: C024
+        claim_type: INTENTION
+        normalized_claim: "Amane initially intends to ignore Mahiru and go straight home."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "周は最初関わるつもりがなかった"
+          - "周は公園の横を通り抜けようとした"
+        severity: null
+        explanation: "Matches Amane's initial motivation and actions."
+        recommended_action: null
+      - claim_id: C025
+        claim_type: OBSERVATION
+        normalized_claim: "Amane sees Mahiru's face look distorted as if she is about to cry."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "真昼の顔が泣きそうに歪んだように見え"
+        severity: null
+        explanation: "Matches the consequences of Event 1 exactly."
+        recommended_action: null
+    no_claim_reason: null
+
+  - unit_id: P014
+    source_unit_sha256: "a28d6269b6af6b1a70687daea402bf20743940c78132f761a516c77ebd60dfb3"
+    claims:
+      - claim_id: C026
+        claim_type: MOTIVE
+        normalized_claim: "Amane decides not to ignore Mahiru because his conscience bothers him."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "良心が咎めた。(L102-110)"
+          - "放っておくのは良心が痛んだから (L110)"
+        severity: null
+        explanation: "Directly matches his explicit motivation in Event 1 and Event 2."
+        recommended_action: null
+    no_claim_reason: null
+
+  - unit_id: P015
+    source_unit_sha256: "ded57c451a40ee2e2e07bc4e095f6f70f88e617463da913a37443ddbecf0e258"
+    claims:
+      - claim_id: C027
+        claim_type: EVENT
+        normalized_claim: "Amane approaches Mahiru."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "周が真昼に声をかける"
+        severity: null
+        explanation: "Matches Event 2 description."
+        recommended_action: null
+      - claim_id: C028
+        claim_type: INTENTION
+        normalized_claim: "Amane intentionally uses a cold tone to avoid misunderstanding."
+        classification: UNSUPPORTED
+        brief_support: []
+        severity: LOW
+        explanation: "The brief does not state that Amane consciously used a cold tone to avoid misunderstanding."
+        recommended_action: REMOVE
+    no_claim_reason: null
+
+  - unit_id: P016
+    source_unit_sha256: "2f711857fb5f53d9e26f7544fd8c304d68982aaed7f6f7bba4eb2c881b458ae3"
+    claims:
+      - claim_id: C029
+        claim_type: ACTION
+        normalized_claim: "Amane asks Mahiru what she is doing."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "周が「なにやってるんだ」と声をかける"
+        severity: null
+        explanation: "Matches the observed action in Event 2."
+        recommended_action: null
+    no_claim_reason: null
+
+  - unit_id: P017
+    source_unit_sha256: "58982b3396fc30b981e424a54f6b9e24fc7a7c71ce46b4703a1522fac3d04e71"
+    claims:
+      - claim_id: C030
+        claim_type: PHYSICAL_STATE
+        normalized_claim: "Mahiru's face is pale."
+        classification: UNSUPPORTED
+        brief_support: []
+        severity: LOW
+        explanation: "Pale face is an unsupported detail."
+        recommended_action: REMOVE
+      - claim_id: C031
+        claim_type: PHYSICAL_STATE
+        normalized_claim: "Mahiru's heavy wet hair sticks to her cheeks."
+        classification: CREATIVE_BUT_SAFE
+        brief_support:
+          - "ずぶ濡れになっていた"
+        severity: null
+        explanation: "A safe descriptive detail of being soaked."
+        recommended_action: null
+    no_claim_reason: null
+
+  - unit_id: P018
+    source_unit_sha256: "7b5a8bdf46d1e0229812a85923ad839e1c69f725212d66b640ad9cbe6d3de03b"
+    claims:
+      - claim_id: C032
+        claim_type: KNOWLEDGE_STATE
+        normalized_claim: "Mahiru recognizes Amane as her neighbor."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "真昼は周の名字を知っており、顔を見かけたことはある程度の認識。"
+        severity: null
+        explanation: "Matches her knowledge state from the relationships section."
+        recommended_action: null
+      - claim_id: C033
+        claim_type: EVENT
+        normalized_claim: "Mahiru and Amane often run into each other in the morning."
+        classification: UNSUPPORTED
+        brief_support: []
+        severity: LOW
+        explanation: "The brief says she knows his face to some extent, not that they often run into each other in the morning."
+        recommended_action: REMOVE
+      - claim_id: C034
+        claim_type: EMOTIONAL_STATE
+        normalized_claim: "Mahiru is highly vigilant when Amane approaches."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "真昼は警戒した態度で"
+        severity: null
+        explanation: "Matches her reaction in Event 2."
+        recommended_action: null
+    no_claim_reason: null
+
+  - unit_id: P019
+    source_unit_sha256: "c78fa8ff305c0fc62444e2961cfa2d9e2fceae69c15a28334c7b879369cc801b"
+    claims:
+      - claim_id: C035
+        claim_type: ACTION
+        normalized_claim: "Mahiru asks Amane if he has business with her and addresses him by his last name, Fujimiya."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "「私に何かご用で？」と応じる"
+          - "真昼は周の名字を知っており"
+        severity: null
+        explanation: "Matches her dialogue in Event 2, combined with her knowing his last name."
+        recommended_action: null
+    no_claim_reason: null
+
+  - unit_id: P020
+    source_unit_sha256: "081a865bf4ad44e9eb0923c2e622ea9d9b01ff18f639ec162d96c50cd187f90c"
+    claims:
+      - claim_id: C036
+        claim_type: INTERNAL_THOUGHT
+        normalized_claim: "Amane is surprised that Mahiru remembers his last name."
+        classification: UNSUPPORTED
+        brief_support: []
+        severity: LOW
+        explanation: "The brief does not state Amane's reaction to her knowing his name."
+        recommended_action: REMOVE
+      - claim_id: C037
+        claim_type: INTERNAL_THOUGHT
+        normalized_claim: "Amane assumes Mahiru thinks he is using this opportunity to hit on her."
+        classification: UNSUPPORTED
+        brief_support: []
+        severity: LOW
+        explanation: "The brief does not attribute this specific thought to Amane, only that Mahiru is wary."
+        recommended_action: REMOVE
+    no_claim_reason: null
+
+  - unit_id: P021
+    source_unit_sha256: "c8381b7d994a0d9457d2ecffe7e61ede6b0749b678929235a109755b069a2442"
+    claims:
+      - claim_id: C038
+        claim_type: ACTION
+        normalized_claim: "Amane tells Mahiru he has no business but was bothered by seeing her alone in the rain."
+        classification: SUPPORTED_INFERENCE
+        brief_support:
+          - "放っておくのは良心が痛んだから (L110)"
+        severity: null
+        explanation: "Paraphrases him acting out of a pained conscience."
+        recommended_action: null
+    no_claim_reason: null
+
+  - unit_id: P022
+    source_unit_sha256: "fb6fe557903c593a75f7ea65730f4463d01dbc9c413e9028207a90afb71066da"
+    claims:
+      - claim_id: C039
+        claim_type: ACTION
+        normalized_claim: "Mahiru tells Amane she is there because she wants to be and asks him not to mind her."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "真昼は「ここに居たいから居る」と拒絶の意を示す (L154)"
+        severity: null
+        explanation: "Directly matches her dialogue and consequence in Event 2."
+        recommended_action: null
+    no_claim_reason: null
+
+  - unit_id: P023
+    source_unit_sha256: "1047b1eca13fe817ebbf6abf7e92ad882dd592ab1819470695595b89aed5d2ab"
+    claims:
+      - claim_id: C040
+        claim_type: INTENTION
+        normalized_claim: "Mahiru firmly rejects Amane's involvement."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "拒絶の意を示す (L154)"
+        severity: null
+        explanation: "Matches her intention to reject him."
+        recommended_action: null
+    no_claim_reason: null
+
+  - unit_id: P024
+    source_unit_sha256: "0baa0db2fd62d22408c1a16417f2edf5c007bd5289777d8cf8d9f61fa3af528a"
+    claims:
+      - claim_id: C041
+        claim_type: INTERNAL_THOUGHT
+        normalized_claim: "Amane infers Mahiru has something heavy on her mind but has no intention of prying."
+        classification: SUPPORTED_INFERENCE
+        brief_support:
+          - "真昼の顔が泣きそうに歪んだように見え"
+          - "周は最初関わるつもりがなかった"
+        severity: null
+        explanation: "A reasonable inference from his observation of her face and his desire not to get deeply involved."
+        recommended_action: null
+    no_claim_reason: null
+
+  - unit_id: P025
+    source_unit_sha256: "22de26de03c4a2f5564437cdbb03b0e53c1a9cf6fa1773a0f8bd0b20a8a60c12"
+    claims:
+      - claim_id: C042
+        claim_type: CHARACTER_ATTRIBUTE
+        normalized_claim: "Amane hates trouble and feels his conscience only requires him to ask if she is okay."
+        classification: CREATIVE_BUT_SAFE
+        brief_support:
+          - "周は真昼に恋愛感情はなく、関わりを避けていた。"
+        severity: null
+        explanation: "Stylistic phrasing that aligns with his established reluctance to get involved."
+        recommended_action: null
+    no_claim_reason: null
+
+  - unit_id: P026
+    source_unit_sha256: "179bfd800e4d77f5584767a403c4c94cbb870d737398e609fcf1ba792f2d54eb"
+    claims:
+      - claim_id: C043
+        claim_type: EMOTIONAL_STATE
+        normalized_claim: "Amane feels unable to leave Mahiru soaked in the rain."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "風邪を引かれると寝覚めが悪い、居心地が悪いから"
+        severity: null
+        explanation: "Matches his motive for giving her the umbrella."
+        recommended_action: null
+    no_claim_reason: null
+
+  - unit_id: P027
+    source_unit_sha256: "206cb06235bee0443f4c45c9e369f5a02aeec2b1fe8d7769211e09e7b1cc2d35"
+    claims:
+      - claim_id: C044
+        claim_type: ACTION
+        normalized_claim: "Amane tells Mahiru she'll get sick, gives her his umbrella, and tells her not to return it."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "周は自分の傘を真昼に押し付け、返さなくていいと言って"
+        severity: null
+        explanation: "Directly matches Event 3 actions."
+        recommended_action: null
+    no_claim_reason: null
+
+  - unit_id: P028
+    source_unit_sha256: "cc0272a15ec11095bf0ba3c3aa0790acc5c491aed2b51cdbda6aff8d3d341ac3"
+    claims:
+      - claim_id: C045
+        claim_type: ACTION
+        normalized_claim: "Amane forces his umbrella into Mahiru's hand and quickly walks away into the rain."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "周は自分の傘を真昼に押し付け... 足早に立ち去る"
+        severity: null
+        explanation: "Directly matches Event 3 actions."
+        recommended_action: null
+    no_claim_reason: null
+
+  - unit_id: P029
+    source_unit_sha256: "7b45afd1c25f56197b1b088d12923e7ee2e45785f4d1e85cbbac666af60c4d8e"
+    claims:
+      - claim_id: C046
+        claim_type: EVENT
+        normalized_claim: "Amane hears Mahiru's small voice from behind as he leaves but does not look back."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "真昼の小さな声が背後から聞こえたが、周は振り返らず帰路に就く"
+        severity: null
+        explanation: "Matches the consequence of Event 3."
+        recommended_action: null
+    no_claim_reason: null
+
+  - unit_id: P030
+    source_unit_sha256: "43dfc6fa7244829923f004ccf5f32a06ec187958389b7680b5b989c64332bd89"
+    claims:
+      - claim_id: C047
+        claim_type: INTERNAL_THOUGHT
+        normalized_claim: "Amane hopes Mahiru won't catch a cold to clear his conscience."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "風邪を引かれると寝覚めが悪い、居心地が悪いから"
+        severity: null
+        explanation: "Matches his motivation in Event 3."
+        recommended_action: null
+    no_claim_reason: null
+
+  - unit_id: P031
+    source_unit_sha256: "1c792959f987dffe48c76578ccf57c89868b7c0df46b573ff3ea884a569e3deb"
+    claims:
+      - claim_id: C048
+        claim_type: INTERNAL_THOUGHT
+        normalized_claim: "Amane believes this is the end of their interaction and they will return to being strangers."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "周は傘を貸して一人で帰路につき、これで関わりは終わりだと思っている。"
+        severity: null
+        explanation: "Directly matches the factual state at the end."
+        recommended_action: null
+    no_claim_reason: null
+
+  - unit_id: P032
+    source_unit_sha256: "ca1b116200561a7240dacb98ec96cc9516c03cb99e6ee37b2562d2fa9bb7453b"
+    claims:
+      - claim_id: C049
+        claim_type: FORESHADOW_INTERPRETATION
+        normalized_claim: "Amane's belief that this is their last interaction will be proven wrong."
+        classification: DIRECTLY_SUPPORTED
+        brief_support:
+          - "周の『これっきりだ』という推測が外れ、今後も関わりが続くことが強く示唆されている。"
+        severity: null
+        explanation: "Matches the unresolved implication of the ending state."
+        recommended_action: null
+    no_claim_reason: null
+
+problematic_claims:
+  - claim_id: C004
+    unit_id: P002
+    classification: UNSUPPORTED
+    severity: LOW
+    recommended_action: REMOVE
+  - claim_id: C007
+    unit_id: P003
+    classification: UNSUPPORTED
+    severity: LOW
+    recommended_action: REMOVE
+  - claim_id: C015
+    unit_id: P006
+    classification: UNSUPPORTED
+    severity: LOW
+    recommended_action: REMOVE
+  - claim_id: C022
+    unit_id: P011
+    classification: UNSUPPORTED
+    severity: LOW
+    recommended_action: REMOVE
+  - claim_id: C028
+    unit_id: P015
+    classification: UNSUPPORTED
+    severity: LOW
+    recommended_action: REMOVE
+  - claim_id: C030
+    unit_id: P017
+    classification: UNSUPPORTED
+    severity: LOW
+    recommended_action: REMOVE
+  - claim_id: C033
+    unit_id: P018
+    classification: UNSUPPORTED
+    severity: LOW
+    recommended_action: REMOVE
+  - claim_id: C036
+    unit_id: P020
+    classification: UNSUPPORTED
+    severity: LOW
+    recommended_action: REMOVE
+  - claim_id: C037
+    unit_id: P020
+    classification: UNSUPPORTED
+    severity: LOW
+    recommended_action: REMOVE

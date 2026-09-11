@@ -1,0 +1,46 @@
+run_id: RUN_0007_H6B_REAL_DETERMINISTIC_CLAIM_AUDIT
+
+experiment:
+  hypothesis: H6b
+  purpose: real_semantic_claim_level_critic
+
+relationship:
+  prior_attempt: RUN_0005_H6B_CLAIM_LEVEL_CRITIC
+  prior_attempt_status: PROTOCOL_INCOMPLETE
+  protocol_harness: RUN_0006_H6B_DETERMINISTIC_CLAIM_AUDIT
+  protocol_harness_status: SYNTHETIC_PROTOCOL_HARNESS
+
+execution:
+  environment: Antigravity
+  model_display_name: Gemini 3.1 Pro High
+  fresh_conversation: true
+  semantic_llm_invocation_performed: true
+  primary_attempts: 1
+  quality_based_regenerations: 0
+  manual_semantic_edits: 0
+
+methodology:
+  conversational_context_isolation: fresh_conversation
+  strict_machine_context_isolation: NOT_VERIFIABLE
+
+formal_evaluation:
+  precision: NOT_EVALUATED
+  recall: NOT_EVALUATED
+  h6b_verdict: PENDING_ORCHESTRATOR_REVIEW
+
+context_control:
+  fresh_antigravity_conversation: true
+  prior_project_chat_deliberately_provided: false
+  raw_japanese_deliberately_provided: false
+  critic_v1_report_deliberately_provided: false
+  run_0005_audit_deliberately_provided: false
+  run_0006_synthetic_audit_deliberately_provided: false
+  known_miss_list_deliberately_provided: false
+  external_search_requested: false
+
+hashes:
+  frozen_packet: e9bf3cccfc45f94be1e1d33ac774c916d87a3acd24d699bf918e9565edaf805b
+  prompt_v3: da175ef7f6e82f128864ed5b7127812bd764464a778b8faf9fd660a142da99a4
+  story_brief: d7fa7a39ec836165210c8084dd241a65f363acdffb743dc42c2ec5926b6f0f61
+  review_units: 5f44c7ed6f827c43dbedb47bd53070799de084e93e97c796e2c610efcd63e2e3
+  raw_response: 5c58b44e6b4c13224f49b8b1168bc9e2f5195a96133795dd1c6b4665e4bbc358

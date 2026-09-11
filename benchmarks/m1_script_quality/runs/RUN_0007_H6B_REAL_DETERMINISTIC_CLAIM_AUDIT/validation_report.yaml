@@ -1,0 +1,67 @@
+raw_output:
+  sha256: 5c58b44e6b4c13224f49b8b1168bc9e2f5195a96133795dd1c6b4665e4bbc358
+  byte_length: 27207
+  direct_yaml_parse: true
+segmentation:
+  segmentation_version: PARAGRAPH_V1
+  expected_unit_count: 32
+  source_sha256: d7fa7a39ec836165210c8084dd241a65f363acdffb743dc42c2ec5926b6f0f61
+  equivalent_to_run_0006: true
+  reconstruction_match: true
+coverage:
+  expected_unit_count: 32
+  output_unit_count: 32
+  exact_unit_set_match: true
+  missing_unit_ids: []
+  unexpected_unit_ids: []
+  duplicate_output_unit_ids: []
+  unit_order_match: true
+  source_hash_mismatches: []
+claims:
+  total_claims: 49
+  problematic_claims: 9
+  claims_per_unit:
+    P001: 1
+    P002: 3
+    P003: 4
+    P004: 4
+    P005: 1
+    P006: 3
+    P007: 0
+    P008: 2
+    P009: 1
+    P010: 0
+    P011: 3
+    P012: 1
+    P013: 2
+    P014: 1
+    P015: 2
+    P016: 1
+    P017: 2
+    P018: 3
+    P019: 1
+    P020: 2
+    P021: 1
+    P022: 1
+    P023: 1
+    P024: 1
+    P025: 1
+    P026: 1
+    P027: 1
+    P028: 1
+    P029: 1
+    P030: 1
+    P031: 1
+    P032: 1
+  duplicate_claim_ids: []
+  invalid_claim_types:
+  - claim_id: C025
+    type: OBSERVATION
+  invalid_classifications: []
+  invalid_actions: []
+  invalid_severity_values: []
+  broken_problematic_claim_refs: []
+schema_status:
+  fully_conformant: false
+coverage_status:
+  mechanically_complete: true
