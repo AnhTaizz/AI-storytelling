@@ -95,20 +95,14 @@ Script Quality Gate: NOT YET EVALUATED
 
 ## Current Task
 
-H6b Claim-Level Factual Critic experiment executed as RUN_0005.
+None — awaiting Orchestrator evaluation of RUN_0006 Claim-Level Critic semantic accuracy and comparison against Critic V1.
 
-RUN_0005 reuses the frozen RUN_0003 Story Brief and original Writer script,
-and replaces the sparse free-form Critic procedure with explicit claim-level
-enumeration and Story-Brief support classification.
+RUN_0005 attempted H6b Claim-Level Factual Critic but is retained as a protocol-incomplete attempt. The Critic controlled its own segmentation, selected only 14 review units from the full RUN_0003 script, and the stored `.yaml` output contained Markdown fences despite the manifest reporting YAML parse success. No H6b hypothesis verdict is derived from RUN_0005.
 
-No Revision stage was executed.
+RUN_0006 reworks H6b using deterministic paragraph segmentation and mechanical input/output unit coverage validation. The run was mechanically complete.
 
-H6b verdict pending independent Orchestrator evaluation.
-
-## Current Task
-
-None — awaiting Orchestrator evaluation of Claim-Level Critic detection quality and coverage.
+H6b verdict remains: PENDING_ORCHESTRATOR_REVIEW.
 
 ## Next Candidate
 
-M1 — Compare Critic V1 vs Claim-Level Critic V2 on the same RUN_0003 script and determine whether explicit claim enumeration improves useful detection coverage.
+M1 — Independently evaluate RUN_0006 claims against the frozen Story Brief and compare useful detection coverage with Critic V1.

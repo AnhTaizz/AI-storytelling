@@ -1,0 +1,28 @@
+segmentation:
+  source_sha256: d7fa7a39ec836165210c8084dd241a65f363acdffb743dc42c2ec5926b6f0f61
+  expected_units: 32
+  reconstruction_match: PASS
+  duplicate_input_unit_ids: 0
+raw_output:
+  present: true
+  byte_length: 14523
+  yaml_parse: PASS
+coverage:
+  expected_unit_count: 32
+  output_unit_count: 32
+  exact_unit_set_match: true
+  missing_unit_ids: []
+  unexpected_unit_ids: []
+  duplicate_output_unit_ids: []
+  unit_order_match: true
+  source_hash_mismatches: []
+claims:
+  total_claims: 32
+  duplicate_claim_ids: []
+  invalid_claim_types: []
+  invalid_classifications: []
+  invalid_actions: []
+  invalid_severity_values: []
+  broken_problematic_claim_refs: []
+coverage_status:
+  mechanically_complete: true

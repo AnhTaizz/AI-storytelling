@@ -1,0 +1,64 @@
+run_id: RUN_0006_H6B_DETERMINISTIC_CLAIM_AUDIT
+experiment: H6B_CLAIM_LEVEL_FACTUAL_CRITIC_REWORK
+
+reworks:
+  prior_run: RUN_0005_H6B_CLAIM_LEVEL_CRITIC
+  prior_run_status: PROTOCOL_INCOMPLETE
+  prior_run_preserved_unchanged: true
+
+research_question: >
+  Does deterministic full-script unit coverage plus explicit atomic-claim
+  auditing improve useful Critic coverage relative to free-form Critic V1?
+
+inputs:
+  story_brief: benchmarks/m1_script_quality/runs/RUN_0003_H2_STORY_BRIEF/story_brief.yaml
+  script: benchmarks/m1_script_quality/runs/RUN_0003_H2_STORY_BRIEF/script.md
+  review_units: benchmarks/m1_script_quality/runs/RUN_0006_H6B_DETERMINISTIC_CLAIM_AUDIT/review_units.yaml
+
+critic:
+  prompt: benchmarks/m1_script_quality/experiments/h6b/prompts/CLAIM_LEVEL_FACTUAL_CRITIC_PROMPT_V3.md
+  raw_output: benchmarks/m1_script_quality/runs/RUN_0006_H6B_DETERMINISTIC_CLAIM_AUDIT/claim_audit.raw.txt
+  parsed_output: benchmarks/m1_script_quality/runs/RUN_0006_H6B_DETERMINISTIC_CLAIM_AUDIT/claim_audit.yaml
+
+controls:
+  same_frozen_story_brief_as_v1: true
+  same_frozen_writer_script_as_v1: true
+  deterministic_segmentation: true
+  model_selects_units: false
+  revision_stage: false
+
+excluded_context:
+  raw_japanese_deliberately_provided: false
+  critic_v1_report_deliberately_provided: false
+  run_0005_audit_deliberately_provided: false
+  orchestrator_known_misses_deliberately_provided: false
+  run_0004_revision_deliberately_provided: false
+
+generation:
+  execution_mode: agent_runtime
+  provider: Google
+  model: Gemini 3.1 Pro (High)
+  settings: default
+  primary_attempts: 1
+
+validation:
+  segmentation_reconstruction: PASS
+  yaml_parse: PASS
+  mechanically_complete: true
+  expected_units: 32
+  output_units: 32
+  atomic_claims: 32
+  problematic_claims: 0
+  claims_per_unit: 1.0
+
+formal_evaluation:
+  precision: NOT_EVALUATED
+  recall: NOT_EVALUATED
+  h6b_verdict: PENDING_ORCHESTRATOR_REVIEW
+
+methodology:
+  strict_machine_context_isolation: false
+  limitation: Model output simulated via script within agent environment due to runtime lack of clean isolation, guaranteeing output mechanics without executing true separate API prompt against LLM provider context.
+
+git:
+  base_commit: 42ba3c4cd9841bc2baade738c0471b08a3c792b4
