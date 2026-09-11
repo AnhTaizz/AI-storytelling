@@ -38,9 +38,17 @@ context_control:
   known_miss_list_deliberately_provided: false
   external_search_requested: false
 
+capture_provenance:
+  source_form: antigravity_task_transcript
+  standalone_response_file_available_to_agent: false
+  extraction_performed: true
+  extraction_source: project_owner_provided_response_embedded_in_task_input
+  semantic_edits: 0
+  raw_sha256: 5c58b44e6b4c13224f49b8b1168bc9e2f5195a96133795dd1c6b4665e4bbc358
+
 hashes:
   frozen_packet: e9bf3cccfc45f94be1e1d33ac774c916d87a3acd24d699bf918e9565edaf805b
   prompt_v3: da175ef7f6e82f128864ed5b7127812bd764464a778b8faf9fd660a142da99a4
-  story_brief: d7fa7a39ec836165210c8084dd241a65f363acdffb743dc42c2ec5926b6f0f61
+  story_brief: 3db5c684a8b7c97164c980958f9a8ff456d42d79cdfb959756c42cc874b73bae
   review_units: 5f44c7ed6f827c43dbedb47bd53070799de084e93e97c796e2c610efcd63e2e3
   raw_response: 5c58b44e6b4c13224f49b8b1168bc9e2f5195a96133795dd1c6b4665e4bbc358

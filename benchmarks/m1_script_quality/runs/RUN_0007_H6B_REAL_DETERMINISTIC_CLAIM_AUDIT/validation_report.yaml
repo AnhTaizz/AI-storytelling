@@ -8,6 +8,7 @@ segmentation:
   source_sha256: d7fa7a39ec836165210c8084dd241a65f363acdffb743dc42c2ec5926b6f0f61
   equivalent_to_run_0006: true
   reconstruction_match: true
+  reconstruction_revalidated_in_run_0007: true
 coverage:
   expected_unit_count: 32
   output_unit_count: 32
