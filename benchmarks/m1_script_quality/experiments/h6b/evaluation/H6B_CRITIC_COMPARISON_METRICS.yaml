@@ -12,13 +12,29 @@ critics:
       robust_gold_missed: 31
       questionable_total: 1
       questionable_detected: 0
+    false_negative_count: 31
+    false_positive_count: 0
+    unit_detection:
+      robust_positive_units_total: 20
+      detected_positive_units: 2
+      missed_positive_units: 18
     metrics:
       primary_precision: 1.0
       primary_recall: 0.0606
       primary_f1: 0.1143
+      sensitivity_precision: 1.0
       sensitivity_recall: 0.0588
       classification_exact_agreement: 1.0
+      severity_exact_agreement: 0.5
       unit_recall: 0.1
+    classification_exact_agreement:
+      comparable_matched_gold_issues: 2
+      exact_matches: 2
+      exact_agreement_rate: 1.0
+    severity_exact_agreement:
+      comparable_matched_gold_issues: 2
+      exact_matches: 1
+      exact_agreement_rate: 0.5
   run_0007:
     prediction_counts:
       total_problematic_predictions: 9
@@ -32,13 +48,29 @@ critics:
       robust_gold_missed: 22
       questionable_total: 1
       questionable_detected: 0
+    false_negative_count: 22
+    false_positive_count: 0
+    unit_detection:
+      robust_positive_units_total: 20
+      detected_positive_units: 8
+      missed_positive_units: 12
     metrics:
       primary_precision: 1.0
       primary_recall: 0.3333
       primary_f1: 0.5
+      sensitivity_precision: 1.0
       sensitivity_recall: 0.3235
       classification_exact_agreement: 1.0
+      severity_exact_agreement: 0.5455
       unit_recall: 0.4
+    classification_exact_agreement:
+      comparable_matched_gold_issues: 11
+      exact_matches: 11
+      exact_agreement_rate: 1.0
+    severity_exact_agreement:
+      comparable_matched_gold_issues: 11
+      exact_matches: 6
+      exact_agreement_rate: 0.5455
 comparison:
   recall_absolute_difference: 0.2727
   recall_ratio: 5.5

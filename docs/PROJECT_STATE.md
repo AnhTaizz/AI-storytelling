@@ -102,10 +102,11 @@ H6b verdict: PENDING_ORCHESTRATOR_REVIEW.
 
 ## Current Task
 
-H6b Critic V1 vs RUN_0007 comparison completed against frozen
-H6B_RUN3_REFERENCE_V1; awaiting independent Orchestrator review of mappings
-and metrics.
+H6b Critic comparison evidence completed with full TP/FN/FP mapping,
+classification/severity agreement, and sensitivity analysis; awaiting final
+independent Orchestrator evidence verdict.
 
 ## Next Candidate
 
-M1 — Independently verify H6b mapping/metrics and issue final H6b evidence verdict.
+M1 — Issue final H6b evidence verdict and architecture implication from the
+frozen comparison.

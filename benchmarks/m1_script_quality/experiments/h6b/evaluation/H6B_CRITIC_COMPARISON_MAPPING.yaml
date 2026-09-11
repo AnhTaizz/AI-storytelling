@@ -24,6 +24,197 @@ critics:
       matched_gold_ids:
       - G014
       rationale: Matches semantic target perfectly.
+    false_negatives:
+    - issue_id: G001
+      unit_id: P002
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_issue: Mahiru lives in the apartment immediately to the right of
+        Amane's room.
+    - issue_id: G002
+      unit_id: P003
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_issue: Mahiru has a high elegant nose.
+    - issue_id: G003
+      unit_id: P003
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_issue: Mahiru has long eyelashes.
+    - issue_id: G005
+      unit_id: P006
+      classification: UNSUPPORTED
+      severity: MEDIUM
+      normalized_issue: Amane avoids getting involved with Mahiru because he fears
+        jealousy from other boys.
+    - issue_id: G006
+      unit_id: P006
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_issue: Amane only considers Mahiru as a piece of art to admire from
+        afar.
+    - issue_id: G008
+      unit_id: P011
+      classification: STRONGER_THAN_BRIEF
+      severity: MEDIUM
+      normalized_issue: Mahiru has no intention of finding shelter.
+    - issue_id: G009
+      unit_id: P011
+      classification: STRONGER_THAN_BRIEF
+      severity: LOW
+      normalized_issue: Mahiru looks with lifeless/soulless eyes.
+    - issue_id: G010
+      unit_id: P011
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_issue: Mahiru's face is pale from the cold.
+    - issue_id: G011
+      unit_id: P012
+      classification: STRONGER_THAN_BRIEF
+      severity: MEDIUM
+      normalized_issue: Amane is certain Mahiru will catch a cold.
+    - issue_id: G012
+      unit_id: P013
+      classification: UNSUPPORTED
+      severity: MEDIUM
+      normalized_issue: Amane assumes Mahiru wants to stay/get soaked in the rain.
+    - issue_id: G013
+      unit_id: P014
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_issue: Amane scratches his head and pulls his ears in frustration.
+    - issue_id: G015
+      unit_id: P015
+      classification: UNSUPPORTED
+      severity: MEDIUM
+      normalized_issue: Amane intentionally tries to keep his tone cold so Mahiru
+        won't misunderstand.
+    - issue_id: G016
+      unit_id: P017
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_issue: Mahiru startles.
+    - issue_id: G017
+      unit_id: P017
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_issue: Mahiru is pale.
+    - issue_id: G018
+      unit_id: P018
+      classification: UNSUPPORTED
+      severity: MEDIUM
+      normalized_issue: Amane and Mahiru often run into each other in the morning.
+    - issue_id: G019
+      unit_id: P020
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_issue: Amane is surprised that Mahiru remembers his last name.
+    - issue_id: G020
+      unit_id: P020
+      classification: STRONGER_THAN_BRIEF
+      severity: LOW
+      normalized_issue: Mahiru is always bothered by boys.
+    - issue_id: G021
+      unit_id: P020
+      classification: UNSUPPORTED
+      severity: MEDIUM
+      normalized_issue: Mahiru's wariness is a natural consequence of frequently being
+        bothered by boys.
+    - issue_id: G022
+      unit_id: P020
+      classification: UNSUPPORTED
+      severity: MEDIUM
+      normalized_issue: Amane assumes Mahiru thinks he is using this opportunity to
+        hit on her.
+    - issue_id: G023
+      unit_id: P021
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_issue: Amane shrugs.
+    - issue_id: G024
+      unit_id: P024
+      classification: UNSUPPORTED
+      severity: HIGH
+      normalized_issue: Amane knows Mahiru has something heavy on her mind.
+    - issue_id: G025
+      unit_id: P025
+      classification: UNSUPPORTED
+      severity: MEDIUM
+      normalized_issue: Amane is inherently someone who fears trouble.
+    - issue_id: G026
+      unit_id: P025
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_issue: Amane's conscience only compelled him to ask a single question
+        as its maximum limit.
+    - issue_id: G027
+      unit_id: P025
+      classification: UNSUPPORTED
+      severity: MEDIUM
+      normalized_issue: Amane can leave completely free of guilt after asking his
+        question.
+    - issue_id: G028
+      unit_id: P026
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_issue: Mahiru is sitting huddled/curled up.
+    - issue_id: G029
+      unit_id: P027
+      classification: STRONGER_THAN_BRIEF
+      severity: MEDIUM
+      normalized_issue: Amane is certain she will get sick if she stays like this.
+    - issue_id: G030
+      unit_id: P028
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_issue: Amane leaves before Mahiru can open her mouth to object.
+    - issue_id: G031
+      unit_id: P029
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_issue: Amane doesn't care what Mahiru says.
+    - issue_id: G032
+      unit_id: P030
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_issue: Amane believes he has done his best/utmost.
+    - issue_id: G033
+      unit_id: P030
+      classification: STRONGER_THAN_BRIEF
+      severity: MEDIUM
+      normalized_issue: Giving the umbrella completely washed away all his guilt/troubled
+        conscience.
+    - issue_id: G034
+      unit_id: P031
+      classification: UNSUPPORTED
+      severity: MEDIUM
+      normalized_issue: Amane believes Mahiru generally does not want anything to
+        do with him.
+    false_positives: []
+    unresolved_predictions: []
+    sensitivity_only_predictions: []
+    classification_matches:
+    - prediction_id: V1_1
+      gold_issue_id: G004
+      critic_classification: UNSUPPORTED
+      gold_classification: UNSUPPORTED
+      exact_match: true
+    - prediction_id: V1_2
+      gold_issue_id: G014
+      critic_classification: STRONGER_THAN_BRIEF
+      gold_classification: STRONGER_THAN_BRIEF
+      exact_match: true
+    severity_matches:
+    - prediction_id: V1_1
+      gold_issue_id: G004
+      critic_severity: HIGH
+      gold_severity: MEDIUM
+      exact_match: false
+    - prediction_id: V1_2
+      gold_issue_id: G014
+      critic_severity: MEDIUM
+      gold_severity: MEDIUM
+      exact_match: true
   run_0007:
     source: benchmarks/m1_script_quality/runs/RUN_0007_H6B_REAL_DETERMINISTIC_CLAIM_AUDIT/claim_audit.yaml
     predictions:
@@ -113,3 +304,235 @@ critics:
       matched_gold_ids:
       - G022
       rationale: Matches semantic target perfectly.
+    false_negatives:
+    - issue_id: G006
+      unit_id: P006
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_issue: Amane only considers Mahiru as a piece of art to admire from
+        afar.
+    - issue_id: G008
+      unit_id: P011
+      classification: STRONGER_THAN_BRIEF
+      severity: MEDIUM
+      normalized_issue: Mahiru has no intention of finding shelter.
+    - issue_id: G009
+      unit_id: P011
+      classification: STRONGER_THAN_BRIEF
+      severity: LOW
+      normalized_issue: Mahiru looks with lifeless/soulless eyes.
+    - issue_id: G011
+      unit_id: P012
+      classification: STRONGER_THAN_BRIEF
+      severity: MEDIUM
+      normalized_issue: Amane is certain Mahiru will catch a cold.
+    - issue_id: G012
+      unit_id: P013
+      classification: UNSUPPORTED
+      severity: MEDIUM
+      normalized_issue: Amane assumes Mahiru wants to stay/get soaked in the rain.
+    - issue_id: G013
+      unit_id: P014
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_issue: Amane scratches his head and pulls his ears in frustration.
+    - issue_id: G014
+      unit_id: P014
+      classification: STRONGER_THAN_BRIEF
+      severity: MEDIUM
+      normalized_issue: Amane is certain he will lose sleep tonight out of guilt.
+    - issue_id: G016
+      unit_id: P017
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_issue: Mahiru startles.
+    - issue_id: G020
+      unit_id: P020
+      classification: STRONGER_THAN_BRIEF
+      severity: LOW
+      normalized_issue: Mahiru is always bothered by boys.
+    - issue_id: G021
+      unit_id: P020
+      classification: UNSUPPORTED
+      severity: MEDIUM
+      normalized_issue: Mahiru's wariness is a natural consequence of frequently being
+        bothered by boys.
+    - issue_id: G023
+      unit_id: P021
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_issue: Amane shrugs.
+    - issue_id: G024
+      unit_id: P024
+      classification: UNSUPPORTED
+      severity: HIGH
+      normalized_issue: Amane knows Mahiru has something heavy on her mind.
+    - issue_id: G025
+      unit_id: P025
+      classification: UNSUPPORTED
+      severity: MEDIUM
+      normalized_issue: Amane is inherently someone who fears trouble.
+    - issue_id: G026
+      unit_id: P025
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_issue: Amane's conscience only compelled him to ask a single question
+        as its maximum limit.
+    - issue_id: G027
+      unit_id: P025
+      classification: UNSUPPORTED
+      severity: MEDIUM
+      normalized_issue: Amane can leave completely free of guilt after asking his
+        question.
+    - issue_id: G028
+      unit_id: P026
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_issue: Mahiru is sitting huddled/curled up.
+    - issue_id: G029
+      unit_id: P027
+      classification: STRONGER_THAN_BRIEF
+      severity: MEDIUM
+      normalized_issue: Amane is certain she will get sick if she stays like this.
+    - issue_id: G030
+      unit_id: P028
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_issue: Amane leaves before Mahiru can open her mouth to object.
+    - issue_id: G031
+      unit_id: P029
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_issue: Amane doesn't care what Mahiru says.
+    - issue_id: G032
+      unit_id: P030
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_issue: Amane believes he has done his best/utmost.
+    - issue_id: G033
+      unit_id: P030
+      classification: STRONGER_THAN_BRIEF
+      severity: MEDIUM
+      normalized_issue: Giving the umbrella completely washed away all his guilt/troubled
+        conscience.
+    - issue_id: G034
+      unit_id: P031
+      classification: UNSUPPORTED
+      severity: MEDIUM
+      normalized_issue: Amane believes Mahiru generally does not want anything to
+        do with him.
+    false_positives: []
+    unresolved_predictions: []
+    sensitivity_only_predictions: []
+    classification_matches:
+    - prediction_id: C004
+      gold_issue_id: G001
+      critic_classification: UNSUPPORTED
+      gold_classification: UNSUPPORTED
+      exact_match: true
+    - prediction_id: C007
+      gold_issue_id: G002
+      critic_classification: UNSUPPORTED
+      gold_classification: UNSUPPORTED
+      exact_match: true
+    - prediction_id: C007
+      gold_issue_id: G003
+      critic_classification: UNSUPPORTED
+      gold_classification: UNSUPPORTED
+      exact_match: true
+    - prediction_id: C015
+      gold_issue_id: G004
+      critic_classification: UNSUPPORTED
+      gold_classification: UNSUPPORTED
+      exact_match: true
+    - prediction_id: C015
+      gold_issue_id: G005
+      critic_classification: UNSUPPORTED
+      gold_classification: UNSUPPORTED
+      exact_match: true
+    - prediction_id: C022
+      gold_issue_id: G010
+      critic_classification: UNSUPPORTED
+      gold_classification: UNSUPPORTED
+      exact_match: true
+    - prediction_id: C028
+      gold_issue_id: G015
+      critic_classification: UNSUPPORTED
+      gold_classification: UNSUPPORTED
+      exact_match: true
+    - prediction_id: C030
+      gold_issue_id: G017
+      critic_classification: UNSUPPORTED
+      gold_classification: UNSUPPORTED
+      exact_match: true
+    - prediction_id: C033
+      gold_issue_id: G018
+      critic_classification: UNSUPPORTED
+      gold_classification: UNSUPPORTED
+      exact_match: true
+    - prediction_id: C036
+      gold_issue_id: G019
+      critic_classification: UNSUPPORTED
+      gold_classification: UNSUPPORTED
+      exact_match: true
+    - prediction_id: C037
+      gold_issue_id: G022
+      critic_classification: UNSUPPORTED
+      gold_classification: UNSUPPORTED
+      exact_match: true
+    severity_matches:
+    - prediction_id: C004
+      gold_issue_id: G001
+      critic_severity: LOW
+      gold_severity: LOW
+      exact_match: true
+    - prediction_id: C007
+      gold_issue_id: G002
+      critic_severity: LOW
+      gold_severity: LOW
+      exact_match: true
+    - prediction_id: C007
+      gold_issue_id: G003
+      critic_severity: LOW
+      gold_severity: LOW
+      exact_match: true
+    - prediction_id: C015
+      gold_issue_id: G004
+      critic_severity: LOW
+      gold_severity: MEDIUM
+      exact_match: false
+    - prediction_id: C015
+      gold_issue_id: G005
+      critic_severity: LOW
+      gold_severity: MEDIUM
+      exact_match: false
+    - prediction_id: C022
+      gold_issue_id: G010
+      critic_severity: LOW
+      gold_severity: LOW
+      exact_match: true
+    - prediction_id: C028
+      gold_issue_id: G015
+      critic_severity: LOW
+      gold_severity: MEDIUM
+      exact_match: false
+    - prediction_id: C030
+      gold_issue_id: G017
+      critic_severity: LOW
+      gold_severity: LOW
+      exact_match: true
+    - prediction_id: C033
+      gold_issue_id: G018
+      critic_severity: LOW
+      gold_severity: MEDIUM
+      exact_match: false
+    - prediction_id: C036
+      gold_issue_id: G019
+      critic_severity: LOW
+      gold_severity: LOW
+      exact_match: true
+    - prediction_id: C037
+      gold_issue_id: G022
+      critic_severity: LOW
+      gold_severity: MEDIUM
+      exact_match: false
