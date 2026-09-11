@@ -63,7 +63,7 @@ sequenceDiagram
     Orchestrator->>LLM Provider: Write Script
     LLM Provider-->>Orchestrator: Script
     
-    Orchestrator->>Validation Layer: Validate Script
+    Orchestrator->>Validation Layer: Validate Script against Story Brief / Evidence Context
     Validation Layer-->>Orchestrator: Validation Report
     
     Orchestrator-->>User: Present Script & Report for Human Review
@@ -86,6 +86,9 @@ The domain model must not be defined by storage technology. The correct directio
 `Canonical Story Model → Storage Adapter → Vector / relational / graph implementations`
 
 ## 4. Evidence Context Package (Example)
+
+The architecture distinguishes between raw ingestion and semantic intelligence:
+`Source Evidence ≠ Extracted Story Intelligence ≠ Request-Scoped Evidence Context Package`
 
 The Evidence Context Package is a disposable, request-scoped retrieval result assembled for downstream generation. It is distinct from the Persistent Story Memory, which is the long-lived historical story intelligence.
 
@@ -124,11 +127,23 @@ context_package:
 
 ## 5. Contracts Between Architectural Layers
 
-1. **Ingestion ↔ Story Memory**: Ingestion must produce canonical representations that the storage adapter can index.
-2. **Story Memory ↔ Retrieval Interface**: Memory provides queryable facets. Baseline retrieval focuses on simple contextual retrieval, while advanced temporal/graph memory will be introduced when observed cross-chapter/structural failures justify it.
-3. **Retrieval Interface ↔ Story Brief**: Must supply a valid Evidence Context Package.
-4. **Story Brief ↔ Narrative Plan**: The Story Brief serves as a declared, reviewable factual boundary for downstream narrative stages. It should preserve evidence, uncertainty, and spoiler scope, but remains subject to extraction error and validation. It defines what is currently supported, unknown, uncertain, and in scope. The Narrative Plan decides how supported material should be presented (ordering, pacing, emphasis, hook, callbacks). The Plan may NOT independently create canonical story truth.
-5. **Narrative Plan ↔ Script Writer**: The Writer realizes the Narrative Plan while remaining bounded by the Story Brief and Evidence Context. It may use stylistic freedom where that freedom does not introduce unsupported story truth.
+1. **Source Adapter / Ingestion ↔ Canonical Story Representation**: The ingestion layer preserves source evidence/provenance and converts source-specific material into the shared source-independent representation required by downstream Story Intelligence.
+2. **Canonical Story Representation ↔ Story Understanding / Extraction**: Extraction derives grounded entities, events, relationships, information, state changes, and other narrative facts while preserving references to source evidence.
+3. **Story Understanding / Extraction ↔ Persistent Story Memory**: Only grounded story understanding that conforms to the Canonical Story Model and required provenance/validation contracts should be persisted as Story Memory.
+4. **Persistent Story Memory ↔ Retrieval Interface**: Memory exposes retrievable story evidence and structured context through storage-independent interfaces.
+5. **Retrieval Interface ↔ Story Brief**: Must supply a valid Evidence Context Package.
+6. **Story Brief ↔ Narrative Plan**: The Story Brief serves as a declared, reviewable factual boundary for downstream narrative stages. It should preserve evidence, uncertainty, and spoiler scope, but remains subject to extraction error and validation. It defines what is currently supported, unknown, uncertain, and in scope. The Narrative Plan decides how supported material should be presented (ordering, pacing, emphasis, hook, callbacks). The Plan may NOT independently create canonical story truth.
+7. **Narrative Plan ↔ Script Writer**: The Writer realizes the Narrative Plan while remaining bounded by the Story Brief and Evidence Context. It may use stylistic freedom where that freedom does not introduce unsupported story truth.
+8. **Script Writer ↔ Validation / Critic**: Generated Script is evaluated against the declared Story Brief/evidence boundary and applicable Narrative Plan/output contracts. Validation attempts to detect violations but does not guarantee correctness.
+
+### 5.1 Validation Input Contract
+Validation inputs are task-dependent, but factual validation must have access to the declared factual boundary and/or corresponding evidence. The Validation / Critic layer cannot validate a Script in isolation. It receives at minimum:
+- Generated Script
+- declared factual boundary (Story Brief)
+
+And, where needed:
+- Evidence Context Package / provenance references
+- Narrative Plan / output contract
 
 ## 6. Implementation Stages & MVP
 
@@ -137,11 +152,18 @@ Evidence gathering around script quality and narrative contracts. M1 research sp
 
 ### 6.2 MVP Capability Path
 Capabilities needed to reach verified script quality through M9.
-- Basic ingestion and canonical representation.
-- Simple Story Memory and foundational Retrieval Interface.
-- Generation pipeline: Story Brief → Narrative Plan → Script Writer.
-- Human Review: Human inspection is a cross-cutting product principle, not a replacement for a specific milestone. The architecture supports optional review points for key intermediate artifacts.
-- Validation / Critic: Validation attempts to detect factual, temporal, contract, and presentation violations. It is a validation layer, not an infallible guarantee of correctness; unresolved uncertainty or failures may still require human review.
+- Controlled ingestion
+- Canonical representation
+- Grounded story understanding / extraction
+- Persistent Story Memory
+- Retrieval
+- Story Brief
+- Narrative Plan
+- Script
+- Validation
+
+**Human Review**: Human inspection is a cross-cutting product principle, not a replacement for a specific milestone. The architecture supports optional review points for key intermediate artifacts.
+**Validation / Critic**: Validation attempts to detect factual, temporal, contract, and presentation violations. It is a validation layer, not an infallible guarantee of correctness; unresolved uncertainty or failures may still require human review.
 
 ### 6.3 Script Quality Gate
 M9 must establish verified script quality and factual reliability before advanced retrieval expansion, additional source formats, or downstream production automation are treated as progression-ready.
