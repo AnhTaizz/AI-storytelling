@@ -1,0 +1,115 @@
+reference:
+  name: H6B_RUN3_REFERENCE_V1
+  source_sha256: d03135131ffbc7c8e61c00d334e479d5700919a1e75c21017db5f1fa6a79862f
+  robust_gold_count: 33
+  questionable_count: 1
+critics:
+  critic_v1:
+    source: benchmarks/m1_script_quality/runs/RUN_0004_H6_CRITIC/critic_report.yaml
+    predictions:
+    - prediction_id: V1_1
+      classification: UNSUPPORTED
+      severity: HIGH
+      excerpt: Cậu tự biết thân biết phận, khoảng cách giữa một người bình thường
+        và một 'thiên thần' là quá lớn.
+      status: TP_ROBUST
+      matched_gold_ids:
+      - G004
+      rationale: Matches semantic target perfectly.
+    - prediction_id: V1_2
+      classification: STRONGER_THAN_BRIEF
+      severity: MEDIUM
+      excerpt: tối nay chắc chắn cậu sẽ mất ngủ vì cắn rứt.
+      status: TP_ROBUST
+      matched_gold_ids:
+      - G014
+      rationale: Matches semantic target perfectly.
+  run_0007:
+    source: benchmarks/m1_script_quality/runs/RUN_0007_H6B_REAL_DETERMINISTIC_CLAIM_AUDIT/claim_audit.yaml
+    predictions:
+    - prediction_id: C004
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_claim: An 'angel' (Mahiru) lives in the apartment immediately to
+        the right of Amane's room.
+      unit_id: P002
+      status: TP_ROBUST
+      matched_gold_ids:
+      - G001
+      rationale: Matches semantic target perfectly.
+    - prediction_id: C007
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_claim: Mahiru has a high elegant nose and long eyelashes.
+      unit_id: P003
+      status: TP_ROBUST
+      matched_gold_ids:
+      - G002
+      - G003
+      rationale: Matches semantic target perfectly.
+    - prediction_id: C015
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_claim: Amane thinks the gap between him and Mahiru is too large and
+        wants to avoid jealousy from other boys.
+      unit_id: P006
+      status: TP_ROBUST
+      matched_gold_ids:
+      - G004
+      - G005
+      rationale: Matches semantic target perfectly.
+    - prediction_id: C022
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_claim: Mahiru's face is pale from the cold.
+      unit_id: P011
+      status: TP_ROBUST
+      matched_gold_ids:
+      - G010
+      rationale: Matches semantic target perfectly.
+    - prediction_id: C028
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_claim: Amane intentionally uses a cold tone to avoid misunderstanding.
+      unit_id: P015
+      status: TP_ROBUST
+      matched_gold_ids:
+      - G015
+      rationale: Matches semantic target perfectly.
+    - prediction_id: C030
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_claim: Mahiru's face is pale.
+      unit_id: P017
+      status: TP_ROBUST
+      matched_gold_ids:
+      - G017
+      rationale: Matches semantic target perfectly.
+    - prediction_id: C033
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_claim: Mahiru and Amane often run into each other in the morning.
+      unit_id: P018
+      status: TP_ROBUST
+      matched_gold_ids:
+      - G018
+      rationale: Matches semantic target perfectly.
+    - prediction_id: C036
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_claim: Amane is surprised that Mahiru remembers his last name.
+      unit_id: P020
+      status: TP_ROBUST
+      matched_gold_ids:
+      - G019
+      rationale: Matches semantic target perfectly.
+    - prediction_id: C037
+      classification: UNSUPPORTED
+      severity: LOW
+      normalized_claim: Amane assumes Mahiru thinks he is using this opportunity to
+        hit on her.
+      unit_id: P020
+      status: TP_ROBUST
+      matched_gold_ids:
+      - G022
+      rationale: Matches semantic target perfectly.

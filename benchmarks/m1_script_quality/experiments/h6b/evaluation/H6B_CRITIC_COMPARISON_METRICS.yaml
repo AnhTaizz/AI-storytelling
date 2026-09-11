@@ -1,0 +1,46 @@
+critics:
+  critic_v1:
+    prediction_counts:
+      total_problematic_predictions: 2
+      tp_robust: 2
+      sensitivity_only: 0
+      fp: 0
+      unresolved: 0
+    gold_detection:
+      robust_gold_total: 33
+      robust_gold_detected: 2
+      robust_gold_missed: 31
+      questionable_total: 1
+      questionable_detected: 0
+    metrics:
+      primary_precision: 1.0
+      primary_recall: 0.0606
+      primary_f1: 0.1143
+      sensitivity_recall: 0.0588
+      classification_exact_agreement: 1.0
+      unit_recall: 0.1
+  run_0007:
+    prediction_counts:
+      total_problematic_predictions: 9
+      tp_robust: 9
+      sensitivity_only: 0
+      fp: 0
+      unresolved: 0
+    gold_detection:
+      robust_gold_total: 33
+      robust_gold_detected: 11
+      robust_gold_missed: 22
+      questionable_total: 1
+      questionable_detected: 0
+    metrics:
+      primary_precision: 1.0
+      primary_recall: 0.3333
+      primary_f1: 0.5
+      sensitivity_recall: 0.3235
+      classification_exact_agreement: 1.0
+      unit_recall: 0.4
+comparison:
+  recall_absolute_difference: 0.2727
+  recall_ratio: 5.5
+  precision_difference: 0.0
+  f1_difference: 0.3857

@@ -102,11 +102,10 @@ H6b verdict: PENDING_ORCHESTRATOR_REVIEW.
 
 ## Current Task
 
-H6b adjudication V3 ACCEPTED and frozen as H6B_RUN3_REFERENCE_V1.
-Ready for controlled Critic V1 vs RUN_0007 comparison.
+H6b Critic V1 vs RUN_0007 comparison completed against frozen
+H6B_RUN3_REFERENCE_V1; awaiting independent Orchestrator review of mappings
+and metrics.
 
 ## Next Candidate
 
-M1 — Compare Critic V1 and RUN_0007 Claim-Level Critic against frozen
-H6B_RUN3_REFERENCE_V1 using robust primary metrics and QUESTIONABLE
-sensitivity analysis.
+M1 — Independently verify H6b mapping/metrics and issue final H6b evidence verdict.
