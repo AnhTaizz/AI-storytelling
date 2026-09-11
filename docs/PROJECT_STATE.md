@@ -98,15 +98,18 @@ RUN_0007 executed the first real deterministic full-coverage H6b semantic Critic
 mechanical coverage PASS.
 raw YAML parse PASS.
 schema conformance FAIL (violations preserved).
-H6b verdict: PENDING_ORCHESTRATOR_REVIEW.
+
+## Hypothesis Status
+
+- H6b (Claim-Level Factual Critic vs Baseline Critic): SUPPORTED — on the frozen RUN3 controlled instance,
+deterministic claim-level auditing substantially improved useful detection
+coverage over Critic V1, but remained incomplete (11/33 robust issues detected).
 
 ## Current Task
 
-H6b Critic comparison evidence completed with full TP/FN/FP mapping,
-classification/severity agreement, and sensitivity analysis; awaiting final
-independent Orchestrator evidence verdict.
+H6b CLOSED. Final evidence verdict recorded.
 
 ## Next Candidate
 
-M1 — Issue final H6b evidence verdict and architecture implication from the
-frozen comparison.
+M1 — Design the next smallest validation experiment targeting RUN7's residual
+semantic misses before introducing retrieval/graph/memory complexity.

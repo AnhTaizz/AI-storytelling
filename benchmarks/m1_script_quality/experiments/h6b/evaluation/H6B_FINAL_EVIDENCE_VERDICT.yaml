@@ -1,0 +1,47 @@
+experiment:
+  id: H6b
+  hypothesis_family: claim_level_factual_critic
+  verdict: SUPPORTED
+  scope: CONTROLLED_RUN3_INSTANCE
+
+reference:
+  name: H6B_RUN3_REFERENCE_V1
+  sha256: d03135131ffbc7c8e61c00d334e479d5700919a1e75c21017db5f1fa6a79862f
+
+results:
+  critic_v1:
+    robust_detected: 2
+    robust_total: 33
+    precision: 1.0000
+    recall: 0.0606
+    f1: 0.1143
+  run_0007:
+    robust_detected: 11
+    robust_total: 33
+    precision: 1.0000
+    recall: 0.3333
+    f1: 0.5000
+  comparison:
+    recall_absolute_difference: 0.2727
+    recall_ratio: 5.5000
+    f1_difference: 0.3857
+
+interpretation:
+  comparative_hypothesis_supported: true
+  factual_fidelity_solved: false
+  generalization_established: false
+  sole_validation_gate_justified: false
+
+architecture_implication:
+  validation_critic_layer: JUSTIFIED
+  deterministic_claim_level_audit: EMPIRICALLY_MOTIVATED
+  graph_memory_from_h6b: NOT_JUSTIFIED
+  rag_from_h6b: NOT_JUSTIFIED
+  next_research_target: residual_semantic_misses
+
+limitations:
+  robust_gold_missed_by_run7: 22
+  run7_schema_conformant: false
+  invalid_claim_type: C025_OBSERVATION
+  strict_machine_context_isolation: NOT_VERIFIABLE
+  primary_semantic_attempts: 1
