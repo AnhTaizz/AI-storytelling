@@ -95,14 +95,8 @@ Script Quality Gate: NOT YET EVALUATED
 
 ## Current Task
 
-None — awaiting Orchestrator evaluation of RUN_0006 Claim-Level Critic semantic accuracy and comparison against Critic V1.
+None — H6b semantic experiment blocked until a real LLM invocation path is available.
 
-RUN_0005 attempted H6b Claim-Level Factual Critic but is retained as a protocol-incomplete attempt. The Critic controlled its own segmentation, selected only 14 review units from the full RUN_0003 script, and the stored `.yaml` output contained Markdown fences despite the manifest reporting YAML parse success. No H6b hypothesis verdict is derived from RUN_0005.
+RUN_0005 is retained as a protocol-incomplete H6b attempt.
 
-RUN_0006 reworks H6b using deterministic paragraph segmentation and mechanical input/output unit coverage validation. The run was mechanically complete.
-
-H6b verdict remains: PENDING_ORCHESTRATOR_REVIEW.
-
-## Next Candidate
-
-M1 — Independently evaluate RUN_0006 claims against the frozen Story Brief and compare useful detection coverage with Critic V1.
+RUN_0006 successfully validated the deterministic segmentation and mechanical coverage harness, but no real semantic LLM Critic invocation occurred. Its audit output was synthetic and therefore RUN_0006 cannot be used to evaluate H6b.
