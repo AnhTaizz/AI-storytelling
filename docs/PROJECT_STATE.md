@@ -102,8 +102,8 @@ H6b verdict: PENDING_ORCHESTRATOR_REVIEW.
 
 ## Current Task
 
-None — awaiting independent Orchestrator semantic evaluation of RUN_0007 against the frozen Story Brief and Critic V1.
+H6b semantic adjudication candidate created from RUN3 Script + frozen Story Brief only; awaiting independent Orchestrator review before Critic comparison.
 
 ## Next Candidate
 
-M1 — Evaluate RUN_0007 claim extraction/classification accuracy and compare useful detection coverage against Critic V1.
+M1 — Review/freeze H6b adjudication candidate, then compare Critic V1 against RUN_0007 Claim-Level Critic using the accepted reference set.
