@@ -3,7 +3,7 @@ run:
   experiment: H7
   stage: A
   role: EXPLORATORY_DEVELOPMENT_SET
-  run_status: PROJECT_OWNER_RAW_CAPTURED_PENDING_VALIDATION
+  run_status: MECHANICAL_VALIDATION_COMPLETE_WITH_RAW_FORMAT_VIOLATION
 
 execution:
   semantic_executor: PROJECT_OWNER
@@ -88,10 +88,11 @@ sanity:
   contains_markdown_yaml_fence: true
 
 validation:
-  yaml_parsing_performed: false
-  mechanical_schema_validation_performed: false
+  yaml_parsing_performed: true
+  mechanical_schema_validation_performed: true
   semantic_scoring_performed: false
   gold_mapping_performed: false
+  mechanical_status: PAYLOAD_VALID_BUT_RAW_FORMAT_INVALID
 
 interpretation:
   development_only: true

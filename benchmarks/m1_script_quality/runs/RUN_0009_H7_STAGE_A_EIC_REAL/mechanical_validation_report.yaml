@@ -1,0 +1,59 @@
+run_id: RUN_0009_H7_STAGE_A_EIC_REAL
+validator:
+  task: TASK_001Q_D
+  semantic_repair_performed: false
+  gold_used: false
+  model_invoked: false
+input:
+  raw_path: benchmarks/m1_script_quality/runs/RUN_0009_H7_STAGE_A_EIC_REAL/critic_output.raw.txt
+  expected_canonical_sha256: 377330029df65f8e6c9faeb989f7d8d794514bd4f938d9742ab2291de4ede3f4
+  actual_canonical_sha256: 377330029df65f8e6c9faeb989f7d8d794514bd4f938d9742ab2291de4ede3f4
+  sha_match: true
+raw_format:
+  starts_with_yaml_fence: true
+  ends_with_fence: true
+  prose_before: false
+  prose_after: false
+  raw_yaml_only_contract: FAIL
+payload_extraction:
+  performed: true
+  method: STRIP_SINGLE_OUTER_MARKDOWN_FENCE_ONLY
+  semantic_edits: 0
+yaml_parse:
+  attempted: true
+  result: PASS
+  error: null
+top_level:
+  pass: true
+units:
+  expected_count: 32
+  actual_count: 32
+  unit_id_set_match: true
+  unit_order_match: true
+  source_hash_match_count: 32
+  source_hash_mismatch_units: []
+findings:
+  total: 5
+  duplicate_ids: []
+  invalid_id_format: []
+  invalid_target_dimensions: []
+  invalid_claim_types: []
+  invalid_classifications: []
+  severity_violations: []
+  action_violations: []
+  required_field_violations: []
+  no_target_claim_reason_violations: []
+problematic_index:
+  body_problematic_count: 5
+  index_count: 5
+  missing_from_index: []
+  extra_in_index: []
+  metadata_mismatches: []
+duplicate_keys:
+  check_performed: true
+  violations: []
+result:
+  mechanical_status: PAYLOAD_VALID_BUT_RAW_FORMAT_INVALID
+  strict_frozen_output_contract_pass: false
+  semantic_evaluability_not_decided_here: true
+  h7_verdict: NOT_EVALUATED

@@ -107,8 +107,10 @@ coverage over Critic V1, but remained incomplete (11/33 robust issues detected).
 
 ## Current Task
 
-Project-Owner-supplied real H7 Stage A response captured as RUN_0009;
-semantic content preserved without repair; mechanical validation pending.
+RUN_0009 mechanical validation completed: inner YAML payload satisfies the
+mechanical contract, but raw response violated frozen raw-YAML-only format due
+to Markdown fencing. No semantic repair performed. Gold evaluation not yet
+performed.
 
 Historical note:
 
@@ -117,5 +119,6 @@ generation was confirmed.
 
 ## Next Candidate
 
-M1 — Mechanically validate RUN_0009 against the frozen H7_EIC_V1 output
-contract without semantic repair or gold scoring.
+M1 — Perform exploratory Stage A mapping of RUN_0009 predictions to the frozen
+RUN3 H6b reference using the preregistered H7 rules, without modifying model
+output.
