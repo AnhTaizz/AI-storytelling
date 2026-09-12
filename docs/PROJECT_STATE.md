@@ -107,10 +107,9 @@ coverage over Critic V1, but remained incomplete (11/33 robust issues detected).
 
 ## Current Task
 
-RUN_0009 mechanical validation completed: inner YAML payload satisfies the
-mechanical contract, but raw response violated frozen raw-YAML-only format due
-to Markdown fencing. No semantic repair performed. Gold evaluation not yet
-performed.
+H7 Stage A baseline + targeted predictions aggregated and deduplicated under the
+pre-registered gold-blind rule; final union frozen before gold access. RUN9
+still carries a raw-format protocol violation.
 
 Historical note:
 
@@ -119,6 +118,6 @@ generation was confirmed.
 
 ## Next Candidate
 
-M1 — Perform exploratory Stage A mapping of RUN_0009 predictions to the frozen
-RUN3 H6b reference using the preregistered H7 rules, without modifying model
-output.
+M1 — Map the frozen Stage A union against H6B_RUN3_REFERENCE_V1 and calculate
+exploratory semantic metrics, while reporting the RUN9 format violation
+separately.
