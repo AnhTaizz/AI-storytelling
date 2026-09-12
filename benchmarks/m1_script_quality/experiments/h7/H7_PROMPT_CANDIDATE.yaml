@@ -2,7 +2,7 @@ prompt:
   path: benchmarks/m1_script_quality/experiments/h7/prompts/H7_EPISTEMIC_INTENT_CERTAINTY_PROMPT_V1.md
   version: H7_EIC_V1
   status: CANDIDATE_PENDING_ORCHESTRATOR_REVIEW
-  sha256: d53510869d8a9f6db3e033be44ebb35c38d7f6ea7fd7d6313b79f25b69156f76
+  sha256: 8ef0e5baa5ff4559d1b7077e4e0cf465941371ae48d5c8985d997b2cd08e77bc
 
 protocol:
   experiment: H7

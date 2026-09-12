@@ -27,14 +27,14 @@ Detect unsupported attribution of intention, desire, belief, private assumption,
 Detect when the script strengthens possibility, risk, concern, expectation, or uncertain prediction into certainty, inevitability, definite outcome, or absolute knowledge, without Brief support.
 **Core Principle:** Possible != Certain. Preserve uncertainty levels encoded in the Story Brief. Look for qualifiers like "definitely", "certainly", "surely", "must", or "knows".
 
-# AVOID OVER-FLAGGING
-Explicitly protect precision. Do NOT flag merely because:
-- a sentence uses expressive prose
-- a character makes an explicitly marked guess
-- uncertainty is preserved (e.g., "He wondered whether she was upset" is safe, but "He knew she was upset because of X" is unsafe)
-- a harmless inference is clearly framed as inference
-- narration adds style without asserting hidden truth
-Plausible != Supported. Natural storytelling != Factual support.
+# AVOID OVER-FLAGGING & THE HEDGING RULE
+Explicitly protect precision. 
+
+**Proposition uncertainty:** If the script merely preserves uncertainty about an external proposition, this may be safe (e.g., "Perhaps Mira was upset"). This does not assert Mira's hidden state as known fact.
+
+**Invented private cognition:** However, hedging does NOT automatically support an invented private mental event. "Jon privately guessed that Mira wanted to leave" contains two claims (Jon made a guess; Mira wanted to leave). If the Brief does not establish Jon's private thought/intention, the first claim may itself be unsupported even though the embedded proposition is hedged. **HEDGING != SUPPORT.** Modals like maybe, perhaps, might, wondered, or guessed reduce certainty but do not by themselves provide Story Brief support for an invented character thought, intention, motive, or belief.
+
+**Narrator uncertainty:** Do NOT flag purely narrator-level uncertainty that does not materially assert a character's private cognition or hidden truth. The goal is precision, not blanket rejection of uncertainty.
 
 # EXAMPLES
 **Example 1 (EPISTEMIC KNOWLEDGE OVERCLAIM)**
@@ -47,9 +47,14 @@ Story Brief: "Ken worried she might get sick."
 Script: "Ken knew she would definitely get sick."
 Reason: Possibility was strengthened into certainty.
 
+**Example 3 (HEDGING AND PRIVATE COGNITION)**
+Script: "He wondered whether she was upset."
+Reason: It is safer epistemically than "He knew she was upset." BUT whether the "wondered" claim itself is supported depends on whether the script is materially asserting an invented private thought for him.
+
 # EXTRACTION RULE
 For EACH review unit, extract only claims relevant to the three target dimensions above.
-If no targeted claim exists, return an empty `findings` list and a concise `no_target_claim_reason`.
+If no targeted claim exists, return an empty `findings` list and a concise string `no_target_claim_reason`.
+If `findings` contains one or more entries, `no_target_claim_reason` MUST be the YAML null scalar (not the quoted string "null").
 Do NOT turn this into a general factual critic. Do NOT extract every factual claim.
 
 # ENUMS
@@ -70,7 +75,7 @@ Do NOT turn this into a general factual critic. Do NOT extract every factual cla
 **Classification (`classification`):**
 - `DIRECTLY_SUPPORTED`: Brief explicitly supports it.
 - `SUPPORTED_PARAPHRASE`: Equivalent meaning, no epistemic strengthening.
-- `SUPPORTED_INFERENCE`: Reasonable inference, script clearly preserves its inferential/uncertain nature. Be conservative.
+- `SUPPORTED_INFERENCE`: Reasonable inference anchored in information present in the Story Brief AND preserves the inferential/uncertain nature of the proposition. Do NOT classify a claim as SUPPORTED_INFERENCE merely because it is plausible. Plausibility alone is insufficient.
 - `CREATIVE_BUT_SAFE`: Stylistic wording that does not alter who knows what, who intends what, certainty level, or hidden mental state.
 - `QUESTIONABLE`: Boundary is genuinely ambiguous.
 - `UNSUPPORTED`: Hidden mental/knowledge/intention assertion lacks Brief support.
@@ -107,6 +112,8 @@ You must return raw YAML only. No Markdown fences. No prose before YAML. No pros
 
 For EVERY provided review unit, you MUST output exactly one corresponding audit unit in the exact order provided. You must preserve exactly the `unit_id` and `source_unit_sha256`. Do NOT omit, merge, split, renumber, reorder, or invent review units. Every unit must appear once even if no targeted semantic claim exists.
 
+`problematic_findings` must contain EVERY and ONLY finding whose classification is one of: QUESTIONABLE, UNSUPPORTED, CONTRADICTS_BRIEF, STRONGER_THAN_BRIEF. For each indexed finding, its metadata fields must agree exactly with its audit-unit record. Valid findings must NOT appear in `problematic_findings`.
+
 # OUTPUT SCHEMA
 ```yaml
 critic_version: H7_EIC_V1
@@ -129,7 +136,7 @@ audit_units:
         severity: <HIGH|MEDIUM|LOW|null>
         explanation: "<reason>"
         recommended_action: <KEEP|SOFTEN|REMOVE|REWRITE|null>
-    no_target_claim_reason: "<concise reason if findings is empty, else null>"
+    no_target_claim_reason: null # or a concise string if findings is []
 
 problematic_findings:
   - finding_id: E001
@@ -145,7 +152,10 @@ Before returning your output, verify internally:
 - expected unit count == actual audit unit count
 - all input unit IDs represented exactly once
 - all source hashes preserved
-- all finding IDs unique
+- all finding IDs globally unique
 - all enums valid
-- `problematic_findings` exactly matches the problematic findings in `audit_units`.
+- empty `findings` => non-empty string `no_target_claim_reason`
+- non-empty `findings` => `no_target_claim_reason` is YAML null (not quoted "null")
+- `problematic_findings` index contains EVERY and ONLY problematic finding (QUESTIONABLE, UNSUPPORTED, CONTRADICTS_BRIEF, STRONGER_THAN_BRIEF)
+- index metadata agrees exactly with body records
 Do NOT print your self-check reasoning. Return ONLY the raw YAML output.
