@@ -107,10 +107,15 @@ coverage over Critic V1, but remained incomplete (11/33 robust issues detected).
 
 ## Current Task
 
-RUN_0008 preserved but rejected as real H7 semantic evidence because execution
-provenance confirms synthetic/local generation.
+Project-Owner-supplied real H7 Stage A response captured as RUN_0009;
+semantic content preserved without repair; mechanical validation pending.
+
+Historical note:
+
+RUN_0008 remains preserved and invalid for semantic evaluation because synthetic
+generation was confirmed.
 
 ## Next Candidate
 
-M1 — Design a clean replacement Stage A execution as a NEW run ID. Do not
-overwrite or reuse RUN_0008.
+M1 — Mechanically validate RUN_0009 against the frozen H7_EIC_V1 output
+contract without semantic repair or gold scoring.
