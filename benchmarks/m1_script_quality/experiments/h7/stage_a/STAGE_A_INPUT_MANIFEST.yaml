@@ -1,0 +1,46 @@
+experiment:
+  id: H7
+  stage: A
+  role: EXPLORATORY_DEVELOPMENT_SET
+  semantic_execution_performed_in_this_task: false
+execution_target:
+  environment: Antigravity
+  model_display_name: Gemini 3.1 Pro High
+inputs:
+  critic_prompt:
+    path: benchmarks/m1_script_quality/experiments/h7/prompts/H7_EPISTEMIC_INTENT_CERTAINTY_PROMPT_V1.md
+    version: H7_EIC_V1
+    canonical_sha256: 8ef0e5baa5ff4559d1b7077e4e0cf465941371ae48d5c8985d997b2cd08e77bc
+    freeze_record: benchmarks/m1_script_quality/experiments/h7/H7_PROMPT_FREEZE.yaml
+  story_brief:
+    path: benchmarks/m1_script_quality/runs/RUN_0003_H2_STORY_BRIEF/story_brief.yaml
+    canonical_sha256: 3db5c684a8b7c97164c980958f9a8ff456d42d79cdfb959756c42cc874b73bae
+  review_units:
+    path: benchmarks/m1_script_quality/runs/RUN_0006_H6B_DETERMINISTIC_CLAIM_AUDIT/review_units.yaml
+    git_blob_sha: 174a003f289de50f1a77bae9aeeb9f0ba2d4903f
+    canonical_sha256: 0e6c09f17551a7f0f046e9eb8bc202161b7efcf920b196d9ee8af79cd34259fa
+    legacy_recorded_sha256: 5f44c7ed6f827c43dbedb47bd53070799de084e93e97c796e2c610efcd63e2e3
+    legacy_hash_status: LEGACY_WORKTREE_LINE_ENDING_HASH_CONFIRMED
+    segmentation_version: PARAGRAPH_V1
+    unit_count: 32
+packet:
+  path: benchmarks/m1_script_quality/experiments/h7/stage_a/STAGE_A_ANTIGRAVITY_INPUT_PACKET.md
+  canonical_sha256: 11663022b808a06192410cd3e4b52a36d8289afb984d6cd3fc9ed44863ef33bf
+context_policy:
+  fresh_conversation_required: true
+  prior_project_chat_allowed: false
+  external_search_allowed: false
+  baseline_critic_output_allowed: false
+  previous_critic_outputs_allowed: false
+  gold_reference_allowed: false
+  known_miss_list_allowed: false
+  residual_analysis_allowed: false
+attempt_policy:
+  primary_semantic_attempts: 1
+  quality_based_regeneration: 0
+stage_a_interpretation:
+  development_only: true
+  confirmatory_evidence: false
+experiment_status:
+  stage_a_semantic_model_invocation: NOT_EXECUTED
+  h7_verdict: NOT_EVALUATED

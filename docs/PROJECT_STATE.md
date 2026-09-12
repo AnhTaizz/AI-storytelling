@@ -107,10 +107,10 @@ coverage over Critic V1, but remained incomplete (11/33 robust issues detected).
 
 ## Current Task
 
-H7 targeted prompt H7_EIC_V1 accepted and frozen for experimental use;
-H7 experiment not yet executed.
+H7 Stage A isolated packet prepared using canonical Git-byte provenance;
+semantic execution not yet performed.
 
 ## Next Candidate
 
-M1 — Prepare an isolated Stage A protocol/mechanical-check packet using the
-frozen H7_EIC_V1 prompt. Do not modify the frozen treatment.
+M1 — Execute exactly one exploratory H7 Stage A semantic attempt from the
+frozen packet and capture the raw response without correction.
