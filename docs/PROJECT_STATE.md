@@ -107,10 +107,10 @@ coverage over Critic V1, but remained incomplete (11/33 robust issues detected).
 
 ## Current Task
 
-H6b CLOSED; residual semantic failure analysis completed and next minimal
-validation experiment designed.
+H6b CLOSED; residual failure analysis and next validation experiment design
+refined after Orchestrator review.
 
 ## Next Candidate
 
-M1 — Execute the approved targeted validation experiment only after
-Orchestrator review of the experimental design.
+M1 — Execute the proposed validation experiment only after final Orchestrator
+approval of the pre-registered protocol.

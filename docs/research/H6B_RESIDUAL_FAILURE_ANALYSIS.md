@@ -1,78 +1,127 @@
 # H6b Residual Failure Analysis
 
 ## Purpose
-Analyze the 22 robust false negatives systematically missed by RUN7 to identify semantic failure families and design the next minimal validation experiment.
+Analyze the 22 robust false negatives systematically missed by RUN7 to identify semantic failure families, rigorously classify them, and design the next minimal validation experiment.
 
-## Residual False Negatives Taxonomy
+## Full 22-Issue Residual Inventory
 
-### MOTIVE_OR_INTERNAL_STATE_INVENTION (7 misses, 31.82%)
-- **Severities:** {"LOW": 4, "MEDIUM": 3}
+| Issue ID | Unit | Claim Type | Gold Class | Severity | Normalized Issue | Primary Failure Family | Rationale |
+|---|---|---|---|---|---|---|---|
+| `G006` | `P006` | `INTERNAL_THOUGHT` | `UNSUPPORTED` | `LOW` | Amane only considers Mahiru as a piece of art to admire from afar. | `MOTIVE_OR_INTERNAL_STATE_INVENTION` | Invents an absolute limit/motive on Amane's feelings. |
+| `G008` | `P011` | `INTENTION` | `STRONGER_THAN_BRIEF` | `MEDIUM` | Mahiru has no intention of finding shelter. | `HIDDEN_INTENTION_INFERENCE` | Infers hidden intention (no intention to find shelter). |
+| `G009` | `P011` | `EMOTIONAL_STATE` | `STRONGER_THAN_BRIEF` | `LOW` | Mahiru looks with lifeless/soulless eyes. | `PHYSICAL_OR_EMOTIONAL_STATE_INVENTION` | Invents physical/emotional state (lifeless eyes). |
+| `G011` | `P012` | `CERTAINTY_LEVEL` | `STRONGER_THAN_BRIEF` | `MEDIUM` | Amane is certain Mahiru will catch a cold. | `CERTAINTY_INFLATION` | Asserts absolute certainty (Amane is certain) rather than expectation. |
+| `G012` | `P013` | `INTERNAL_THOUGHT` | `UNSUPPORTED` | `MEDIUM` | Amane assumes Mahiru wants to stay/get soaked in the rain. | `HIDDEN_INTENTION_INFERENCE` | Infers Mahiru wants to stay soaked (hidden intention). |
+| `G013` | `P014` | `ACTION` | `UNSUPPORTED` | `LOW` | Amane scratches his head and pulls his ears in frustration. | `UNSUPPORTED_ACTION_OR_STAGING` | Invents specific physical staging (pulls ears). |
+| `G014` | `P014` | `CERTAINTY_LEVEL` | `STRONGER_THAN_BRIEF` | `MEDIUM` | Amane is certain he will lose sleep tonight out of guilt. | `CERTAINTY_INFLATION` | Asserts absolute certainty regarding future sleep loss. |
+| `G016` | `P017` | `EMOTIONAL_STATE` | `UNSUPPORTED` | `LOW` | Mahiru startles. | `UNSUPPORTED_ACTION_OR_STAGING` | Invents physical reaction (startles). |
+| `G020` | `P020` | `REPUTATION_OR_HEARSAY` | `STRONGER_THAN_BRIEF` | `LOW` | Mahiru is always bothered by boys. | `REPUTATION_OR_FREQUENCY_STRENGTHENING` | Strengthens frequency (always). |
+| `G021` | `P020` | `CAUSALITY` | `UNSUPPORTED` | `MEDIUM` | Mahiru's wariness is a natural consequence of frequently being bothered by boys. | `CAUSALITY_INVENTION` | Invents causality (natural consequence). |
+| `G023` | `P021` | `ACTION` | `UNSUPPORTED` | `LOW` | Amane shrugs. | `UNSUPPORTED_ACTION_OR_STAGING` | Invents physical action (shrugs). |
+| `G024` | `P024` | `KNOWLEDGE_STATE` | `UNSUPPORTED` | `HIGH` | Amane knows Mahiru has something heavy on her mind. | `EPISTEMIC_KNOWLEDGE_OVERCLAIM` | Amane is asserted to know something internal to Mahiru, overclaiming his epistemic bounds. |
+| `G025` | `P025` | `CHARACTER_ATTRIBUTE` | `UNSUPPORTED` | `MEDIUM` | Amane is inherently someone who fears trouble. | `MOTIVE_OR_INTERNAL_STATE_INVENTION` | Invents an inherent trait/motive regarding fear of trouble. |
+| `G026` | `P025` | `INTERNAL_THOUGHT` | `UNSUPPORTED` | `LOW` | Amane's conscience only compelled him to ask a single question as its maximum limit. | `MOTIVE_OR_INTERNAL_STATE_INVENTION` | Invents a strict limit on his conscience. |
+| `G027` | `P025` | `EMOTIONAL_STATE` | `UNSUPPORTED` | `MEDIUM` | Amane can leave completely free of guilt after asking his question. | `MOTIVE_OR_INTERNAL_STATE_INVENTION` | Invents absolute freedom from guilt. |
+| `G028` | `P026` | `PHYSICAL_STATE` | `UNSUPPORTED` | `LOW` | Mahiru is sitting huddled/curled up. | `UNSUPPORTED_ACTION_OR_STAGING` | Invents specific posture (curled up). |
+| `G029` | `P027` | `CERTAINTY_LEVEL` | `STRONGER_THAN_BRIEF` | `MEDIUM` | Amane is certain she will get sick if she stays like this. | `CERTAINTY_INFLATION` | Asserts absolute certainty regarding future sickness. |
+| `G030` | `P028` | `ACTION` | `UNSUPPORTED` | `LOW` | Amane leaves before Mahiru can open her mouth to object. | `UNSUPPORTED_ACTION_OR_STAGING` | Invents sequence/staging (before she can object). |
+| `G031` | `P029` | `INTERNAL_THOUGHT` | `UNSUPPORTED` | `LOW` | Amane doesn't care what Mahiru says. | `MOTIVE_OR_INTERNAL_STATE_INVENTION` | Invents a lack of care as an internal state. |
+| `G032` | `P030` | `INTERNAL_THOUGHT` | `UNSUPPORTED` | `LOW` | Amane believes he has done his best/utmost. | `MOTIVE_OR_INTERNAL_STATE_INVENTION` | Invents an internal belief about doing his best. |
+| `G033` | `P030` | `EMOTIONAL_STATE` | `STRONGER_THAN_BRIEF` | `MEDIUM` | Giving the umbrella completely washed away all his guilt/troubled conscience. | `MOTIVE_OR_INTERNAL_STATE_INVENTION` | Invents the total washing away of guilt. |
+| `G034` | `P031` | `INTENTION` | `UNSUPPORTED` | `MEDIUM` | Amane believes Mahiru generally does not want anything to do with him. | `HIDDEN_INTENTION_INFERENCE` | Infers Mahiru's general intentions toward Amane. |
+
+## Ranked Failure Families
+
+### MOTIVE_OR_INTERNAL_STATE_INVENTION
+- **Count:** 7 misses
+- **Severity Profile:** {"LOW": 4, "MEDIUM": 3}
 - **Affected Units:** P006, P025, P029, P030
-- **Issue IDs:** G006, G025, G026, G027, G031, G032, G033
 
-### UNSUPPORTED_ACTION_OR_STAGING (5 misses, 22.73%)
-- **Severities:** {"LOW": 5}
+### UNSUPPORTED_ACTION_OR_STAGING
+- **Count:** 5 misses
+- **Severity Profile:** {"LOW": 5}
 - **Affected Units:** P014, P017, P021, P026, P028
-- **Issue IDs:** G013, G016, G023, G028, G030
 
-### CERTAINTY_INFLATION (3 misses, 13.64%)
-- **Severities:** {"MEDIUM": 3}
+### CERTAINTY_INFLATION
+- **Count:** 3 misses
+- **Severity Profile:** {"MEDIUM": 3}
 - **Affected Units:** P012, P014, P027
-- **Issue IDs:** G011, G014, G029
 
-### HIDDEN_INTENTION_INFERENCE (3 misses, 13.64%)
-- **Severities:** {"MEDIUM": 3}
+### HIDDEN_INTENTION_INFERENCE
+- **Count:** 3 misses
+- **Severity Profile:** {"MEDIUM": 3}
 - **Affected Units:** P011, P013, P031
-- **Issue IDs:** G008, G012, G034
 
-### EPISTEMIC_KNOWLEDGE_OVERCLAIM (1 misses, 4.55%)
-- **Severities:** {"HIGH": 1}
+### EPISTEMIC_KNOWLEDGE_OVERCLAIM
+- **Count:** 1 misses
+- **Severity Profile:** {"HIGH": 1}
 - **Affected Units:** P024
-- **Issue IDs:** G024
 
-### CAUSALITY_INVENTION (1 misses, 4.55%)
-- **Severities:** {"MEDIUM": 1}
+### CAUSALITY_INVENTION
+- **Count:** 1 misses
+- **Severity Profile:** {"MEDIUM": 1}
 - **Affected Units:** P020
-- **Issue IDs:** G021
 
-### PHYSICAL_OR_EMOTIONAL_STATE_INVENTION (1 misses, 4.55%)
-- **Severities:** {"LOW": 1}
+### PHYSICAL_OR_EMOTIONAL_STATE_INVENTION
+- **Count:** 1 misses
+- **Severity Profile:** {"LOW": 1}
 - **Affected Units:** P011
-- **Issue IDs:** G009
 
-### REPUTATION_OR_FREQUENCY_STRENGTHENING (1 misses, 4.55%)
-- **Severities:** {"LOW": 1}
+### REPUTATION_OR_FREQUENCY_STRENGTHENING
+- **Count:** 1 misses
+- **Severity Profile:** {"LOW": 1}
 - **Affected Units:** P020
-- **Issue IDs:** G020
 
-## Candidate Interventions
+## Candidate Interventions Comparison
 
-### 1. Explicit Motive/Internal State Audit Pass
-- **Targeted Family:** MOTIVE_OR_INTERNAL_STATE_INVENTION (Largest cluster: 7 misses)
-- **Why RUN7 missed it:** Current prompt audits 'claims' generally, which often biases LLMs toward physical facts or explicit dialogue. Nuanced internal monologue or limit-setting (e.g., 'maximum limit of his conscience') slips through if the LLM considers it 'creative narration' rather than a hard factual claim.
-- **Expected Benefit:** Direct reduction in the largest semantic hallucination category in this dataset.
-- **Added Complexity:** One additional deterministic LLM pass specifically querying whether the brief explicitly supports the character's internal motives/beliefs in each paragraph.
-- **Risk / Cost:** Mildly increased prompt cost; risk of over-flagging safe internal monologue.
-- **Requires Architecture Change:** No.
+### A. Explicit Motive/Internal State Audit Pass
+- **Targeted Families:** MOTIVE_OR_INTERNAL_STATE_INVENTION
+- **Exact Target IDs:** G006, G025, G026, G027, G031, G032, G033
+- **Target Count:** 7 misses
+- **Severity Profile:** 3 MEDIUM, 4 LOW
+- **Affected Units:** P006, P025, P029, P030
+- **Working Hypothesis:** The generic audit might insufficiently foreground internal-state verification, treating it as harmless creative narration.
+- **Procedure Delta:** A targeted secondary pass focused on claims involving motives or internal feelings.
+- **Relative Cost:** TARGETED_SECOND_PASS (Moderate API/token addition).
+- **False Positive Risk:** Moderate. Risk of flagging benign internal transitions.
+- **Confound Risk:** Low.
+- **Architecture Change:** NO.
+- **Expected Failure Mode:** Might ignore high-severity epistemic/certainty assertions.
 
-### 2. Unsupported Action/Staging Checklist
-- **Targeted Family:** UNSUPPORTED_ACTION_OR_STAGING (5 misses)
-- **Why RUN7 missed it:** Harmless-seeming staging elements (shrugging, sitting curled up, pulling ears) are often accepted as safe creative elements under the `CREATIVE_BUT_SAFE` policy by the LLM unless specifically warned about staging additions.
-- **Expected Benefit:** Better alignment with strict screenplay staging fidelity.
-- **Added Complexity:** Checklist item added to the existing prompt or a secondary pass for physical staging.
-- **Risk / Cost:** Very high risk of false positives, as minor blocking (e.g., turning around) is usually safely implied.
-- **Requires Architecture Change:** No.
+### B. Epistemic, Intent, and Certainty Audit Pass
+- **Targeted Families:** CERTAINTY_INFLATION, HIDDEN_INTENTION_INFERENCE, EPISTEMIC_KNOWLEDGE_OVERCLAIM
+- **Exact Target IDs:** G011, G014, G029, G008, G012, G034, G024
+- **Target Count:** 7 misses
+- **Severity Profile:** 1 HIGH, 6 MEDIUM
+- **Affected Units:** P011, P012, P013, P014, P024, P027, P031
+- **Working Hypothesis:** LLMs may struggle to distinguish boundaries between reasonable expectation ('think') and absolute certainty ('know'). An explicit logical framing checklist may correct this.
+- **Procedure Delta:** A targeted secondary pass focused specifically on words/claims asserting absolute certainty, knowing the unknowable, or deducing hidden intent.
+- **Relative Cost:** TARGETED_SECOND_PASS (Moderate API/token addition).
+- **False Positive Risk:** Moderate to High. Difficult prompt engineering required to avoid over-flagging.
+- **Confound Risk:** Low.
+- **Architecture Change:** NO.
+- **Expected Failure Mode:** High FP rate if the LLM cannot parse nuance.
 
-### 3. Epistemic and Certainty Pass (Hidden Intent / Knowledge / Certainty)
-- **Targeted Family:** CERTAINTY_INFLATION, HIDDEN_INTENTION_INFERENCE, EPISTEMIC_KNOWLEDGE_OVERCLAIM (7 misses combined)
-- **Why RUN7 missed it:** LLMs struggle to distinguish between 'Amane thought she might be sad' and 'Amane knows she has something heavy on her mind'. Epistemic boundaries require specific logical framing to evaluate.
-- **Expected Benefit:** Captures highest-severity structural inference errors.
-- **Added Complexity:** A secondary audit pass focused purely on epistemic bounds and certainty qualifiers.
-- **Risk / Cost:** High prompt design complexity; medium false positive risk.
-- **Requires Architecture Change:** No.
+### C. Unsupported Action/Staging Checklist
+- **Targeted Families:** UNSUPPORTED_ACTION_OR_STAGING
+- **Exact Target IDs:** G013, G016, G023, G028, G030
+- **Target Count:** 5 misses
+- **Severity Profile:** 5 LOW
+- **Affected Units:** P014, P017, P021, P026, P028
+- **Working Hypothesis:** The LLM's `CREATIVE_BUT_SAFE` tolerance currently accepts unwritten minor physical movements.
+- **Procedure Delta:** A secondary pass evaluating physical action.
+- **Relative Cost:** TARGETED_SECOND_PASS.
+- **False Positive Risk:** Extremely High.
+- **Confound Risk:** High.
+- **Architecture Change:** NO.
+- **Expected Failure Mode:** Floods output with minor physical blocking flags, destroying precision.
+
+## A-vs-B Trade-Off Evaluation
+Candidate A (Internal State) targets the single largest homogenous family (7 misses). Candidate B (Epistemic/Certainty) targets a composite of three closely related epistemic failure mechanisms, also covering 7 misses, but with a significantly higher severity profile (1 HIGH, 6 MEDIUM vs 3 MEDIUM, 4 LOW). Candidate B represents a more critical risk class for factual integrity (e.g., asserting a character knows a secret). However, Candidate B is much harder to engineer as one coherent pass without severe false positives.
 
 ## Recommended Next Intervention
-
-- **Name:** Explicit Motive/Internal State Audit Pass
-- **Targeted Failure Family:** MOTIVE_OR_INTERNAL_STATE_INVENTION
-- **Why this is the smallest justified intervention:** It directly addresses the largest coherent cluster of false negatives (7 misses, >31% of all residual errors). It requires no new infrastructure, retrieval, or graph memory—only an additional deterministic prompt iteration scoped to internal states.
+- **Name:** Epistemic, Intent, and Certainty Audit Pass
+- **Target IDs:** G011, G014, G029, G008, G012, G034, G024
+- **Target Count:** 7 misses
+- **Severity Profile:** 1 HIGH, 6 MEDIUM
+- **Why Selected:** Although Candidate A is a single neat category, Candidate B targets the same volume of misses but with vastly higher severity. Resolving epistemic overclaim is a higher-value architectural milestone for safety than policing internal monologues. It remains achievable as a targeted secondary pass without requiring Graph/RAG.

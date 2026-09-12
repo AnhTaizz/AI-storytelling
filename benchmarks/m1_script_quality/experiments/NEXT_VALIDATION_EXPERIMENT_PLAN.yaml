@@ -1,30 +1,51 @@
 experiment_design:
   id: H7
-  name: Targeted Semantic Validation Pass (Motive/Internal State)
-  hypothesis: Adding an explicit motive/internal-state validation pass after deterministic
+  status: PROPOSED_PENDING_ORCHESTRATOR_APPROVAL
+  name: Targeted Semantic Validation Pass (Epistemic/Certainty)
+  hypothesis: Adding an explicit epistemic and certainty validation pass after deterministic
     claim-level auditing increases robust semantic recall without materially reducing
     precision.
-  target_failure_family: MOTIVE_OR_INTERNAL_STATE_INVENTION
-  justification: Largest observed failure cluster (7 of 22 misses) in RUN7, achievable
-    within existing boundaries without RAG/Graph complexity.
-  data_splits:
-    exploratory_development_set: RUN3_H2_STORY_BRIEF
-    confirmatory_holdout: FRESH_CONTROLLED_STORY_REQUIRED
-  architecture_requirements:
-    rag_required: false
-    graph_required: false
-    story_memory_required: false
+  primary_variable: Validation audit procedure (secondary targeted pass)
+  stage_a_exploratory:
+    dataset: RUN3
+    role: EXPLORATORY_DEVELOPMENT_SET
+    purpose: Protocol debugging and exploratory analysis; adjusting prompt to manage
+      FP risk.
+    baseline: H6B_RUN3_REFERENCE_V1
+    candidate: Targeted H7 Critic Output
+    scoring_reference: Frozen H6B_RUN3_REFERENCE_V1
+    interpretation_limit: No improvement on RUN3 alone may be used as confirmatory
+      evidence.
+  stage_b_confirmatory:
+    dataset: FRESH_CONTROLLED_STORY_REQUIRED
+    role: CONFIRMATORY_HOLDOUT
+    baseline: Unchanged baseline deterministic claim-level Critic on the fresh holdout
+    candidate: H7 procedure on the fresh holdout
+    reference_freeze_requirement: An independent holdout reference set MUST be created
+      and frozen BEFORE formal comparison scoring.
+    primary_attempt_policy: 1 attempt
+    regeneration_policy: 0 quality-based regenerations
+  architecture_decision_rule: If targeted validation improves residual recall on the
+    fresh holdout, continue within the existing Story Brief + Validation boundary.
+    Escalate architecture only when a controlled experiment demonstrates a failure
+    that cannot reasonably be addressed within that simpler boundary.
+  metrics:
+  - robust issue recall
+  - prediction-level precision
+  - F1
+  - false-positive count
+  - unit recall
+  - classification agreement
+  - severity agreement
+  - schema conformance
+  - mechanical coverage
+  - primary semantic attempts
+  - quality-based regenerations
   success_criteria:
-    baseline_metrics:
-      primary_precision: 1.0
-      primary_recall: 0.3333
-      primary_f1: 0.5
-    target_metrics:
-      primary_recall_improvement: '> 0.0'
-      primary_precision_degradation: < 0.05
-      false_positives: < 3
-      schema_conformance: PASS
-      mechanical_coverage: 100%
-    protocol:
-      primary_semantic_attempts: 1
-      quality_based_regeneration: 0
+    confirmatory_success_rule: 'Requires ALL of the following on the fresh holdout:'
+    conditions:
+    - H7 robust issue recall > holdout baseline robust issue recall
+    - H7 F1 > holdout baseline F1
+    - Precision degradation < 0.05 (Operational Tolerance)
+    - Protocol/schema validity PASS
+    - 0 quality-based regenerations
