@@ -107,9 +107,9 @@ coverage over Critic V1, but remained incomplete (11/33 robust issues detected).
 
 ## Current Task
 
-H7_EIC_V2 accepted and frozen for a controlled Stage A rerun. V2 is a
-format-only revision of V1; semantic scope is unchanged. No model execution has
-occurred under V2.
+Isolated H7_EIC_V2 Stage A rerun packet prepared from the frozen V2 prompt,
+the same RUN3 Story Brief, and the same deterministic review units. No semantic
+execution has occurred.
 
 Historical note:
 
@@ -126,6 +126,6 @@ NOT_AUTHORIZED
 
 ## Next Candidate
 
-M1 — Prepare an isolated H7_EIC_V2 Stage A rerun packet using the same RUN3
-Story Brief and deterministic review units, without exposing gold, baseline
-output, prior H7 output, residual analysis, or Stage A metrics.
+M1 — Project Owner executes exactly one H7_EIC_V2 Stage A semantic attempt in a
+fresh Antigravity conversation using Gemini 3.1 Pro High and the frozen V2
+packet; raw response must be preserved without repair.
