@@ -107,11 +107,10 @@ coverage over Critic V1, but remained incomplete (11/33 robust issues detected).
 
 ## Current Task
 
-One exploratory H7 Stage A semantic attempt captured from frozen H7_EIC_V1;
-raw response preserved without correction; mechanical validation pending.
+RUN_0008 preserved but rejected as real H7 semantic evidence because execution
+provenance confirms synthetic/local generation.
 
 ## Next Candidate
 
-M1 — Mechanically validate the frozen RUN_0008 Stage A raw response without
-semantic repair, then determine whether it is evaluable for exploratory Stage A
-analysis.
+M1 — Design a clean replacement Stage A execution as a NEW run ID. Do not
+overwrite or reuse RUN_0008.
