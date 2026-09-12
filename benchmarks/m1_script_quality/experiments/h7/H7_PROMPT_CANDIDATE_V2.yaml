@@ -1,0 +1,16 @@
+prompt:
+  path: benchmarks/m1_script_quality/experiments/h7/prompts/H7_EPISTEMIC_INTENT_CERTAINTY_PROMPT_V2.md
+  version: H7_EIC_V2
+  status: CANDIDATE_PENDING_ORCHESTRATOR_REVIEW
+  canonical_sha256: 5d758fbc75927a260b8615478b836788b406368372f0f97f9a531558892a2fc9
+
+change_control:
+  derived_from: H7_EIC_V1
+  revision_record: benchmarks/m1_script_quality/experiments/h7/H7_V2_FORMAT_REVISION.yaml
+  semantic_scope_changed: false
+  format_only_revision: true
+
+execution:
+  model_invoked: false
+  stage_a_v2_executed: false
+  stage_b_executed: false

@@ -1,0 +1,32 @@
+revision:
+  experiment: H7
+  from_version: H7_EIC_V1
+  to_version: H7_EIC_V2
+  stage: PRE_STAGE_B_DEVELOPMENT_REVISION
+  revision_type: FORMAT_ONLY
+  semantic_scope_changed: false
+
+motivation:
+  run: RUN_0009_H7_STAGE_A_EIC_REAL
+  observed_mechanical_status: PAYLOAD_VALID_BUT_RAW_FORMAT_INVALID
+  failure: MARKDOWN_OUTER_FENCE
+  inner_payload_mechanically_valid: true
+
+semantic_invariants:
+  targeted_dimensions_unchanged: true
+  truth_boundary_unchanged: true
+  classification_policy_unchanged: true
+  severity_policy_unchanged: true
+  safe_harbor_policy_unchanged: true
+  problematic_index_policy_unchanged: true
+  gold_specific_tuning_performed: false
+
+allowed_change:
+  output_envelope_hardening_only: true
+
+lifecycle:
+  v1_remains_historical_and_immutable: true
+  v2_status: CANDIDATE_PENDING_ORCHESTRATOR_REVIEW
+  v2_must_be_frozen_before_execution: true
+  stage_a_rerun_required_before_stage_b: true
+  stage_b_authorized: false

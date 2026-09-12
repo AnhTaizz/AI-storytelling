@@ -107,13 +107,9 @@ coverage over Critic V1, but remained incomplete (11/33 robust issues detected).
 
 ## Current Task
 
-H7 Stage A gold mapping and exploratory semantic analysis completed against
-H6B_RUN3_REFERENCE_V1; final union remained frozen during scoring.
-Semantic signal was highly favorable (robust recall increased from 0.3333 to
-0.4242, F1 increased from 0.5000 to 0.5957, precision remained 1.0000).
-
-RUN9 explicitly retains its raw-format protocol violation.
-H7 confirmatory verdict remains NOT_EVALUATED.
+H7_EIC_V2 format-only candidate drafted after the Stage A Markdown-wrapper
+protocol failure. V1 remains immutable. No semantic scope change. V2 has not
+been executed or frozen.
 
 Historical note:
 
@@ -122,6 +118,5 @@ generation was confirmed.
 
 ## Next Candidate
 
-M1 — Decide the minimal pre-Stage-B protocol/prompt correction required to make
-the H7 targeted output fully frozen-contract compliant, without expanding H7
-semantic scope.
+M1 — Orchestrator review of H7_EIC_V2; if accepted, freeze exact V2 SHA and
+prepare an isolated Stage A V2 rerun packet before any Stage B activity.
