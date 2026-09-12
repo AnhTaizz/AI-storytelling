@@ -2,33 +2,44 @@ experiment_design:
   id: H7
   status: APPROVED_PROTOCOL_NOT_EXECUTED
   name: Targeted Semantic Validation Pass (Epistemic/Certainty)
-  hypothesis: Adding an explicit epistemic and certainty validation pass after deterministic claim-level auditing increases robust semantic recall without materially reducing precision.
-  primary_variable: validation audit procedure (presence/absence of the targeted pass)
-  
+  hypothesis: Adding an explicit epistemic and certainty validation pass after deterministic
+    claim-level auditing increases robust semantic recall without materially reducing
+    precision.
+  primary_variable: Validation audit procedure (presence/absence of the targeted pass)
   targeted_pass_scope:
-    description: >
-      The targeted pass must audit for ONLY:
-      1. EPISTEMIC KNOWLEDGE OVERCLAIM: appearance/inference presented as knowledge; character asserted to know hidden state without Brief support.
-      2. HIDDEN INTENTION / MENTAL-STATE ATTRIBUTION: hidden desire, intention, belief, motive attributed without support; observed action must not automatically imply intention.
-      3. CERTAINTY INFLATION: possibility/concern/prediction strengthened into certainty; qualifiers such as definitely, certainly, surely, must, knows, etc.
-    constraints: The pass must preserve the same Story Brief truth boundary. Do NOT expand into general factual auditing.
-  
+    description: 'The targeted pass must audit for ONLY:
+
+      1. EPISTEMIC KNOWLEDGE OVERCLAIM: appearance/inference presented as knowledge;
+      character asserted to know hidden state without Brief support.
+
+      2. HIDDEN INTENTION / MENTAL-STATE ATTRIBUTION: hidden desire, intention, belief,
+      motive attributed without support; observed action must not automatically imply
+      intention.
+
+      3. CERTAINTY INFLATION: possibility/concern/prediction strengthened into certainty;
+      qualifiers such as definitely, certainly, surely, must, knows, etc.'
+    constraints: The pass must preserve the same Story Brief truth boundary. Do NOT
+      expand into general factual auditing.
   targeted_pass_inputs:
-    description: >
-      For both Stage A and Stage B, the targeted pass receives the same Story Brief, same Writer Script, same deterministic review units, and its own targeted H7 prompt. It MUST inspect every deterministic review unit independently.
-  
+    description: For both Stage A and Stage B, the targeted pass receives the same
+      Story Brief, same Writer Script, same deterministic review units, and its own
+      targeted H7 prompt. It MUST inspect every deterministic review unit independently.
   information_exclusions:
-    description: >
-      Do NOT provide gold issue IDs, gold descriptions, false-negative lists, prior adjudication, baseline Critic output, prior H7 output, or Orchestrator miss analysis to the targeted pass. The targeted pass must NOT see the baseline Critic output.
-
+    description: Do NOT provide gold issue IDs, gold descriptions, false-negative
+      lists, prior adjudication, baseline Critic output, prior H7 output, or Orchestrator
+      miss analysis to the targeted pass. The targeted pass must NOT see the baseline
+      Critic output.
   aggregation_policy:
-    description: >
-      H7_FINAL_PREDICTIONS = UNION(BASELINE_PROBLEMATIC_PREDICTIONS, TARGETED_PASS_PROBLEMATIC_PREDICTIONS). Do NOT remove a baseline prediction because H7 disagrees with it. Do NOT select predictions after observing gold.
-  
+    description: H7_FINAL_PREDICTIONS = UNION(BASELINE_PROBLEMATIC_PREDICTIONS, TARGETED_PASS_PROBLEMATIC_PREDICTIONS).
+      Do NOT remove a baseline prediction because H7 disagrees with it. Do NOT select
+      predictions after observing gold.
   deduplication_policy:
-    description: >
-      Deduplicate only when two predictions identify substantially the same material factual/epistemic problem. Two predictions are duplicates only if they identify substantially the same material assertion in the same semantic context. Same paragraph or character alone is insufficient. If uncertain, preserve both and resolve during frozen mapping/adjudication. Do NOT use gold knowledge to deduplicate.
-
+    description: Deduplicate only when two predictions identify substantially the
+      same material factual/epistemic problem. Two predictions are duplicates only
+      if they identify substantially the same material assertion in the same semantic
+      context. Same paragraph or character alone is insufficient. If uncertain, preserve
+      both and resolve during frozen mapping/adjudication. Do NOT use gold knowledge
+      to deduplicate.
   stage_a_exploratory:
     dataset: RUN3
     role: EXPLORATORY_DEVELOPMENT_SET
@@ -36,83 +47,96 @@ experiment_design:
     targeted_pass: H7 epistemic/intent/certainty pass
     candidate_system: deduplicated union of baseline + targeted pass
     scoring_reference: frozen H6B_RUN3_REFERENCE_V1
-    allowed_use: protocol debugging, prompt debugging, exploratory error analysis
-    forbidden_use: confirmatory H7 verdict, generalization claim
-
+    allowed_use: protocol/mechanical debugging, exploratory error analysis
+    forbidden_use: Silent mutation of the frozen H7 prompt. Confirmatory H7 verdict.
+      Generalization claim.
   stage_b_confirmatory:
     dataset: FRESH_CONTROLLED_STORY_REQUIRED
     role: CONFIRMATORY_HOLDOUT
-    controls: Both HOLDOUT_BASELINE and HOLDOUT_H7 must use the SAME fresh Story Brief, fresh Writer Script, deterministic segmentation, truth boundary, LLM provider, model, model settings, and primary-attempt policy.
+    controls: Both HOLDOUT_BASELINE and HOLDOUT_H7 must use the SAME fresh Story Brief,
+      fresh Writer Script, deterministic segmentation, truth boundary, LLM provider,
+      model, model settings, and primary-attempt policy.
     baseline: one unchanged deterministic claim-level audit
-    candidate: the same baseline audit + one independent targeted epistemic/intent/certainty pass + pre-registered union/deduplication rule
-
+    candidate: the same baseline audit + one independent targeted epistemic/intent/certainty
+      pass + pre-registered union/deduplication rule
   model_controls:
     same_model_required: true
     same_provider_required: true
     same_settings_required: true
-    enforcement: If execution cannot satisfy these controls, BLOCK the experiment and report it. Do not silently substitute another model.
-
+    enforcement: If execution cannot satisfy these controls, BLOCK the experiment
+      and report it. Do not silently substitute another model.
   holdout_reference_integrity:
-    description: >
-      Before formal scoring: 1. create independent holdout reference; 2. freeze it; 3. record SHA-256 and commit; 4. only then map baseline and H7 predictions. The adjudicator constructing the holdout reference must not use baseline Critic output, H7 targeted output, or comparison metrics as semantic evidence.
-      
+    description: 'Before formal scoring: 1. create independent holdout reference;
+      2. freeze it; 3. record SHA-256 and commit; 4. only then map baseline and H7
+      predictions. The adjudicator constructing the holdout reference must not use
+      baseline Critic output, H7 targeted output, or comparison metrics as semantic
+      evidence.'
   metrics:
     confirmatory:
-      - robust issue recall
-      - prediction-level precision (measured on the final deduplicated union)
-      - F1
-      - false-positive count
-      - unit recall (secondary metric)
-      - classification agreement
-      - severity agreement
+    - robust issue recall
+    - prediction-level precision (measured on the final deduplicated union)
+    - F1
+    - false-positive count
+    - unit recall (secondary metric)
+    - classification agreement
+    - severity agreement
     reporting_only:
-      - baseline prediction count
-      - targeted-pass prediction count
-      - deduplicated H7 prediction count
-      - new unique predictions added by targeted pass
-      - robust gold detected
-      - robust gold missed
+    - baseline prediction count
+    - targeted-pass prediction count
+    - deduplicated H7 prediction count
+    - new unique predictions added by targeted pass
+    - robust gold detected
+    - robust gold missed
     protocol:
-      - schema conformance
-      - mechanical coverage
-      - primary semantic attempts
-      - quality-based regenerations
-
+    - schema conformance
+    - mechanical coverage
+    - primary semantic attempts
+    - quality-based regenerations
   success_criteria:
-    confirmatory_success_rule: Requires ALL of the following on the fresh holdout:
+    confirmatory_success_rule: 'Requires ALL of the following on the fresh holdout:'
     conditions:
-      - H7 robust recall > holdout baseline robust recall
-      - H7 F1 > holdout baseline F1
-      - H7 prediction precision degradation < 0.05 absolute (OPERATIONAL_TOLERANCE)
-      - both required H7 outputs satisfy protocol/schema requirements
-      - 0 quality-based regeneration
-
+    - H7 robust recall > holdout baseline robust recall
+    - H7 F1 > holdout baseline F1
+    - H7 prediction precision degradation < 0.05 absolute (OPERATIONAL_TOLERANCE)
+    - both required H7 outputs satisfy protocol/schema requirements
+    - 0 quality-based regeneration
   outcome_interpretation:
     not_supported_f1: If recall improves but F1 does not, NOT_SUPPORTED.
     not_supported_precision: If recall/F1 improve but precision guardrail fails, NOT_SUPPORTED.
     not_evaluable: If protocol/schema invalid, NOT_EVALUABLE.
     not_supported_holdout: If Stage A improves but Stage B does not, NOT_SUPPORTED_ON_HOLDOUT.
-    supported: If Stage B satisfies all conditions, SUPPORTED_ON_ONE_FRESH_CONTROLLED_HOLDOUT. Do not claim universal support.
-
+    supported: If Stage B satisfies all conditions, SUPPORTED_ON_ONE_FRESH_CONTROLLED_HOLDOUT.
+      Do not claim universal support.
+  prompt_lifecycle:
+    before_stage_a: Freeze an exact H7 targeted prompt version and record prompt path,
+      version, SHA-256, and Git commit.
+    during_stage_a: Stage A must NOT silently mutate the frozen H7 prompt.
+    if_changes_required: 1. Stage A result is developmental only; 2. create NEW prompt
+      version; 3. record protocol revision; 4. freeze new prompt SHA; 5. rerun Stage
+      A as needed; 6. only the final frozen prompt enters Stage B.
+    stage_b_invariant: Once Stage B begins, NO prompt modification.
   execution_order:
-    - A. finalize/freeze H7 prompt
-    - B. execute Stage A only if desired for protocol debugging
-    - C. do not tune after seeing Stage B
-    - D. select fresh holdout
-    - E. build Writer Script / Story Brief under controlled benchmark process
-    - F. build and freeze independent holdout reference
-    - G. freeze deterministic review units
-    - H. execute HOLDOUT_BASELINE once
-    - I. execute H7 targeted pass once
-    - J. mechanically validate outputs
-    - K. apply frozen union/dedup policy
-    - L. map against frozen holdout gold
-    - M. calculate metrics
-    - N. Orchestrator issues verdict
-
+  - A. create final candidate H7 targeted prompt
+  - B. freeze prompt version/SHA/commit
+  - C. optional Stage A protocol/mechanical check
+  - D. if prompt changes are required, version + refreeze and repeat Stage A as needed
+  - E. lock final Stage B prompt
+  - F. select fresh holdout
+  - G. build controlled holdout Story Brief / Writer Script
+  - H. build and freeze independent holdout reference
+  - I. freeze deterministic review units
+  - J. execute HOLDOUT_BASELINE once
+  - K. execute H7 targeted pass once
+  - L. mechanically validate outputs
+  - M. apply frozen union/dedup rule
+  - N. map against frozen holdout gold
+  - O. calculate metrics
+  - P. Orchestrator issues verdict
   architecture_decision_rule:
     rag_required: false
     graph_required: false
     story_memory_required: false
-    description: >
-      If targeted validation improves residual recall on the fresh holdout, continue within the existing Story Brief + Validation boundary. Escalate architecture only when a controlled experiment demonstrates a failure that cannot reasonably be addressed within that simpler boundary.
+    description: If targeted validation improves residual recall on the fresh holdout,
+      continue within the existing Story Brief + Validation boundary. Escalate architecture
+      only when a controlled experiment demonstrates a failure that cannot reasonably
+      be addressed within that simpler boundary.

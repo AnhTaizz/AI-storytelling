@@ -7,9 +7,9 @@ Analyze the 22 robust false negatives systematically missed by RUN7 to identify 
 
 | Issue ID | Unit | Claim Type | Gold Class | Severity | Normalized Issue | Primary Failure Family | Rationale |
 |---|---|---|---|---|---|---|---|
-| `G006` | `P006` | `CHARACTER_ATTRIBUTE` | `UNSUPPORTED` | `MEDIUM` | Amane only considers Mahiru as a piece of art to admire from afar. | `MOTIVE_OR_INTERNAL_STATE_INVENTION` | Invents an absolute limit/motive on Amane's feelings. |
+| `G006` | `P006` | `INTERNAL_THOUGHT` | `UNSUPPORTED` | `LOW` | Amane only considers Mahiru as a piece of art to admire from afar. | `MOTIVE_OR_INTERNAL_STATE_INVENTION` | Invents an absolute limit/motive on Amane's feelings. |
 | `G008` | `P011` | `INTENTION` | `STRONGER_THAN_BRIEF` | `MEDIUM` | Mahiru has no intention of finding shelter. | `HIDDEN_INTENTION_INFERENCE` | Infers hidden intention (no intention to find shelter). |
-| `G009` | `P011` | `PHYSICAL_STATE` | `STRONGER_THAN_BRIEF` | `LOW` | Mahiru looks with lifeless/soulless eyes. | `PHYSICAL_OR_EMOTIONAL_STATE_INVENTION` | Invents physical/emotional state (lifeless eyes). |
+| `G009` | `P011` | `EMOTIONAL_STATE` | `STRONGER_THAN_BRIEF` | `LOW` | Mahiru looks with lifeless/soulless eyes. | `PHYSICAL_OR_EMOTIONAL_STATE_INVENTION` | Invents physical/emotional state (lifeless eyes). |
 | `G011` | `P012` | `CERTAINTY_LEVEL` | `STRONGER_THAN_BRIEF` | `MEDIUM` | Amane is certain Mahiru will catch a cold. | `CERTAINTY_INFLATION` | Asserts absolute certainty (Amane is certain) rather than expectation. |
 | `G012` | `P013` | `INTERNAL_THOUGHT` | `UNSUPPORTED` | `MEDIUM` | Amane assumes Mahiru wants to stay/get soaked in the rain. | `HIDDEN_INTENTION_INFERENCE` | Infers Mahiru wants to stay soaked (hidden intention). |
 | `G013` | `P014` | `ACTION` | `UNSUPPORTED` | `LOW` | Amane scratches his head and pulls his ears in frustration. | `UNSUPPORTED_ACTION_OR_STAGING` | Invents specific physical staging (pulls ears). |
@@ -78,7 +78,7 @@ Analyze the 22 robust false negatives systematically missed by RUN7 to identify 
 - **Targeted Families:** MOTIVE_OR_INTERNAL_STATE_INVENTION
 - **Exact Target IDs:** G006, G025, G026, G027, G031, G032, G033
 - **Target Count:** 7 misses
-- **Severity Profile:** 3 MEDIUM, 4 LOW
+- **Severity Profile:** {'LOW': 4, 'MEDIUM': 3}
 - **Affected Units:** P006, P025, P029, P030
 - **Working Hypothesis:** The generic audit might insufficiently foreground internal-state verification, treating it as harmless creative narration.
 - **Procedure Delta:** A targeted secondary pass focused on claims involving motives or internal feelings.
@@ -92,7 +92,7 @@ Analyze the 22 robust false negatives systematically missed by RUN7 to identify 
 - **Targeted Families:** CERTAINTY_INFLATION, HIDDEN_INTENTION_INFERENCE, EPISTEMIC_KNOWLEDGE_OVERCLAIM
 - **Exact Target IDs:** G011, G014, G029, G008, G012, G034, G024
 - **Target Count:** 7 misses
-- **Severity Profile:** 1 HIGH, 6 MEDIUM
+- **Severity Profile:** {'MEDIUM': 6, 'HIGH': 1}
 - **Affected Units:** P011, P012, P013, P014, P024, P027, P031
 - **Working Hypothesis:** LLMs may struggle to distinguish boundaries between reasonable expectation ('think') and absolute certainty ('know'). An explicit logical framing checklist may correct this.
 - **Procedure Delta:** A targeted secondary pass focused specifically on words/claims asserting absolute certainty, knowing the unknowable, or deducing hidden intent.
@@ -106,7 +106,7 @@ Analyze the 22 robust false negatives systematically missed by RUN7 to identify 
 - **Targeted Families:** UNSUPPORTED_ACTION_OR_STAGING
 - **Exact Target IDs:** G013, G016, G023, G028, G030
 - **Target Count:** 5 misses
-- **Severity Profile:** 5 LOW
+- **Severity Profile:** {'LOW': 5}
 - **Affected Units:** P014, P017, P021, P026, P028
 - **Working Hypothesis:** The LLM's `CREATIVE_BUT_SAFE` tolerance currently accepts unwritten minor physical movements.
 - **Procedure Delta:** A secondary pass evaluating physical action.
@@ -117,13 +117,13 @@ Analyze the 22 robust false negatives systematically missed by RUN7 to identify 
 - **Expected Failure Mode:** Floods output with minor physical blocking flags, destroying precision.
 
 ## A-vs-B Trade-Off Evaluation
-Candidate A (Internal State) targets the single largest homogenous family (7 misses). Candidate B (Epistemic/Certainty) targets a composite of three closely related epistemic failure mechanisms, also covering 7 misses, but with a significantly higher severity profile (1 HIGH, 6 MEDIUM vs 3 MEDIUM, 4 LOW). Candidate B represents a more critical risk class for factual integrity (e.g., asserting a character knows a secret). However, Candidate B is much harder to engineer as one coherent pass without severe false positives.
+Candidate A (Internal State) targets the single largest homogenous family (7 misses). Candidate B (Epistemic/Certainty) targets a composite of three closely related epistemic failure mechanisms, also covering 7 misses, but with a significantly higher severity profile (1 HIGH, 6 MEDIUM vs 4 LOW, 3 MEDIUM). Candidate B represents a more critical risk class for factual integrity (e.g., asserting a character knows a secret). However, Candidate B is much harder to engineer as one coherent pass without severe false positives.
 
 ## Recommended Next Intervention
 - **Name:** Epistemic, Intent, and Certainty Audit Pass
 - **Target IDs:** G011, G014, G029, G008, G012, G034, G024
 - **Target Count:** 7 misses
-- **Severity Profile:** 1 HIGH, 6 MEDIUM
+- **Severity Profile:** {'MEDIUM': 6, 'HIGH': 1}
 - **Why Selected:** Although Candidate A is a single neat category, Candidate B targets the same volume of misses but with vastly higher severity. Resolving epistemic overclaim is a higher-value architectural milestone for safety than policing internal monologues. It remains achievable as a targeted secondary pass without requiring Graph/RAG.
 
 > Orchestrator review accepted Candidate B as the intervention selected for H7 protocol testing.
