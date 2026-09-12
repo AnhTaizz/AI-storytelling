@@ -7,9 +7,9 @@ Analyze the 22 robust false negatives systematically missed by RUN7 to identify 
 
 | Issue ID | Unit | Claim Type | Gold Class | Severity | Normalized Issue | Primary Failure Family | Rationale |
 |---|---|---|---|---|---|---|---|
-| `G006` | `P006` | `INTERNAL_THOUGHT` | `UNSUPPORTED` | `LOW` | Amane only considers Mahiru as a piece of art to admire from afar. | `MOTIVE_OR_INTERNAL_STATE_INVENTION` | Invents an absolute limit/motive on Amane's feelings. |
+| `G006` | `P006` | `CHARACTER_ATTRIBUTE` | `UNSUPPORTED` | `MEDIUM` | Amane only considers Mahiru as a piece of art to admire from afar. | `MOTIVE_OR_INTERNAL_STATE_INVENTION` | Invents an absolute limit/motive on Amane's feelings. |
 | `G008` | `P011` | `INTENTION` | `STRONGER_THAN_BRIEF` | `MEDIUM` | Mahiru has no intention of finding shelter. | `HIDDEN_INTENTION_INFERENCE` | Infers hidden intention (no intention to find shelter). |
-| `G009` | `P011` | `EMOTIONAL_STATE` | `STRONGER_THAN_BRIEF` | `LOW` | Mahiru looks with lifeless/soulless eyes. | `PHYSICAL_OR_EMOTIONAL_STATE_INVENTION` | Invents physical/emotional state (lifeless eyes). |
+| `G009` | `P011` | `PHYSICAL_STATE` | `STRONGER_THAN_BRIEF` | `LOW` | Mahiru looks with lifeless/soulless eyes. | `PHYSICAL_OR_EMOTIONAL_STATE_INVENTION` | Invents physical/emotional state (lifeless eyes). |
 | `G011` | `P012` | `CERTAINTY_LEVEL` | `STRONGER_THAN_BRIEF` | `MEDIUM` | Amane is certain Mahiru will catch a cold. | `CERTAINTY_INFLATION` | Asserts absolute certainty (Amane is certain) rather than expectation. |
 | `G012` | `P013` | `INTERNAL_THOUGHT` | `UNSUPPORTED` | `MEDIUM` | Amane assumes Mahiru wants to stay/get soaked in the rain. | `HIDDEN_INTENTION_INFERENCE` | Infers Mahiru wants to stay soaked (hidden intention). |
 | `G013` | `P014` | `ACTION` | `UNSUPPORTED` | `LOW` | Amane scratches his head and pulls his ears in frustration. | `UNSUPPORTED_ACTION_OR_STAGING` | Invents specific physical staging (pulls ears). |
@@ -125,3 +125,5 @@ Candidate A (Internal State) targets the single largest homogenous family (7 mis
 - **Target Count:** 7 misses
 - **Severity Profile:** 1 HIGH, 6 MEDIUM
 - **Why Selected:** Although Candidate A is a single neat category, Candidate B targets the same volume of misses but with vastly higher severity. Resolving epistemic overclaim is a higher-value architectural milestone for safety than policing internal monologues. It remains achievable as a targeted secondary pass without requiring Graph/RAG.
+
+> Orchestrator review accepted Candidate B as the intervention selected for H7 protocol testing.

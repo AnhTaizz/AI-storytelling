@@ -107,10 +107,9 @@ coverage over Critic V1, but remained incomplete (11/33 robust issues detected).
 
 ## Current Task
 
-H6b CLOSED; residual failure analysis and next validation experiment design
-refined after Orchestrator review.
+H7 protocol approved and pre-registered; experiment not yet executed.
 
 ## Next Candidate
 
-M1 — Execute the proposed validation experiment only after final Orchestrator
-approval of the pre-registered protocol.
+M1 — Freeze H7 targeted prompt and prepare Stage A protocol check / fresh
+Stage B holdout workflow according to the approved pre-registration.
