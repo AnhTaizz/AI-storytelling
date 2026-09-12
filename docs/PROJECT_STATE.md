@@ -107,16 +107,25 @@ coverage over Critic V1, but remained incomplete (11/33 robust issues detected).
 
 ## Current Task
 
-H7_EIC_V2 format-only candidate drafted after the Stage A Markdown-wrapper
-protocol failure. V1 remains immutable. No semantic scope change. V2 has not
-been executed or frozen.
+H7_EIC_V2 accepted and frozen for a controlled Stage A rerun. V2 is a
+format-only revision of V1; semantic scope is unchanged. No model execution has
+occurred under V2.
 
 Historical note:
 
-RUN_0008 remains preserved and invalid for semantic evaluation because synthetic
-generation was confirmed.
+RUN9 remains valid only as Stage A developmental semantic evidence and retains
+its raw-format protocol violation under V1.
+
+H7 confirmatory verdict:
+
+NOT_EVALUATED
+
+Stage B:
+
+NOT_AUTHORIZED
 
 ## Next Candidate
 
-M1 — Orchestrator review of H7_EIC_V2; if accepted, freeze exact V2 SHA and
-prepare an isolated Stage A V2 rerun packet before any Stage B activity.
+M1 — Prepare an isolated H7_EIC_V2 Stage A rerun packet using the same RUN3
+Story Brief and deterministic review units, without exposing gold, baseline
+output, prior H7 output, residual analysis, or Stage A metrics.

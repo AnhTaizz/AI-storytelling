@@ -1,0 +1,64 @@
+freeze:
+  experiment: H7
+  status: FROZEN_FOR_STAGE_A_RERUN
+  prompt_version: H7_EIC_V2
+
+  prompt_path:
+    benchmarks/m1_script_quality/experiments/h7/prompts/H7_EPISTEMIC_INTENT_CERTAINTY_PROMPT_V2.md
+
+  canonical_sha256:
+    5d758fbc75927a260b8615478b836788b406368372f0f97f9a531558892a2fc9
+
+  accepted_source_commit:
+    b762af192f9bbb4a01f4445cab74ed57e17efa66
+
+  approval:
+    orchestrator_verdict: ACCEPTED
+    accepted_task: TASK_001Q_F_A
+
+revision_binding:
+  from_version: H7_EIC_V1
+  revision_type: FORMAT_ONLY
+
+  revision_record:
+    benchmarks/m1_script_quality/experiments/h7/H7_V2_FORMAT_REVISION.yaml
+
+  motivation:
+    MARKDOWN_OUTER_FENCE
+
+  semantic_scope_changed: false
+  gold_specific_tuning_performed: false
+
+protocol_binding:
+  plan_path:
+    benchmarks/m1_script_quality/experiments/NEXT_VALIDATION_EXPERIMENT_PLAN.yaml
+
+  intervention:
+    EPISTEMIC_INTENT_AND_CERTAINTY_AUDIT
+
+  stage:
+    PRE_STAGE_B_DEVELOPMENT
+
+  stage_a_rerun_required: true
+  stage_b_authorized: false
+
+  baseline_output_visible_to_targeted_pass: false
+  gold_visible_to_targeted_pass: false
+
+mutation_policy:
+  frozen_prompt_bytes_mutable: false
+
+  any_future_prompt_change_requires_new_version: true
+
+  semantic_change_requires_orchestrator_review: true
+
+  once_stage_b_begins_prompt_change_allowed: false
+
+execution:
+  model_execution_performed_by_this_task: false
+  stage_a_v2_executed: false
+  stage_b_executed: false
+
+historical:
+  v1_freeze_remains_valid_for_run9_history: true
+  v1_replaced_or_modified: false

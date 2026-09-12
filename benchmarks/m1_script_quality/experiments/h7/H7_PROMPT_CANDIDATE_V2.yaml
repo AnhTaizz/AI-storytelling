@@ -1,8 +1,12 @@
 prompt:
   path: benchmarks/m1_script_quality/experiments/h7/prompts/H7_EPISTEMIC_INTENT_CERTAINTY_PROMPT_V2.md
   version: H7_EIC_V2
-  status: CANDIDATE_PENDING_ORCHESTRATOR_REVIEW
+  status: ACCEPTED_AND_FROZEN
   canonical_sha256: 5d758fbc75927a260b8615478b836788b406368372f0f97f9a531558892a2fc9
+
+approval:
+  orchestrator_verdict: ACCEPTED
+  freeze_record: benchmarks/m1_script_quality/experiments/h7/H7_PROMPT_FREEZE_V2.yaml
 
 change_control:
   derived_from: H7_EIC_V1

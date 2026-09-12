@@ -26,7 +26,7 @@ allowed_change:
 
 lifecycle:
   v1_remains_historical_and_immutable: true
-  v2_status: CANDIDATE_PENDING_ORCHESTRATOR_REVIEW
+  v2_status: FROZEN_FOR_STAGE_A_RERUN
   v2_must_be_frozen_before_execution: true
   stage_a_rerun_required_before_stage_b: true
   stage_b_authorized: false
