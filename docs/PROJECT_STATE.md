@@ -107,9 +107,13 @@ coverage over Critic V1, but remained incomplete (11/33 robust issues detected).
 
 ## Current Task
 
-H7 Stage A baseline + targeted predictions aggregated and deduplicated under the
-pre-registered gold-blind rule; final union frozen before gold access. RUN9
-still carries a raw-format protocol violation.
+H7 Stage A gold mapping and exploratory semantic analysis completed against
+H6B_RUN3_REFERENCE_V1; final union remained frozen during scoring.
+Semantic signal was highly favorable (robust recall increased from 0.3333 to
+0.4242, F1 increased from 0.5000 to 0.5957, precision remained 1.0000).
+
+RUN9 explicitly retains its raw-format protocol violation.
+H7 confirmatory verdict remains NOT_EVALUATED.
 
 Historical note:
 
@@ -118,6 +122,6 @@ generation was confirmed.
 
 ## Next Candidate
 
-M1 — Map the frozen Stage A union against H6B_RUN3_REFERENCE_V1 and calculate
-exploratory semantic metrics, while reporting the RUN9 format violation
-separately.
+M1 — Decide the minimal pre-Stage-B protocol/prompt correction required to make
+the H7 targeted output fully frozen-contract compliant, without expanding H7
+semantic scope.

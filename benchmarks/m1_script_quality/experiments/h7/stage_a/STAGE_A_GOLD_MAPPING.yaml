@@ -1,0 +1,325 @@
+reference:
+  path: benchmarks/m1_script_quality/experiments/h6b/evaluation/H6B_RUN3_ADJUDICATION_CANDIDATE_V3.yaml
+  identity: d03135131ffbc7c8e61c00d334e479d5700919a1e75c21017db5f1fa6a79862f
+union_freeze:
+  path: benchmarks/m1_script_quality/experiments/h7/stage_a/STAGE_A_UNION_DEDUP_FREEZE.yaml
+mappings:
+- union_id: U001
+  source_system: BASELINE_RUN7
+  source_prediction_id: C004
+  unit_id: P002
+  normalized_claim: An 'angel' (Mahiru) lives in the apartment immediately to the
+    right of Amane's room.
+  critic_classification: UNSUPPORTED
+  critic_severity: LOW
+  status: TP_ROBUST
+  matched_gold_ids:
+  - G001
+  matched_gold_details:
+  - gold_id: G001
+    gold_classification: UNSUPPORTED
+    gold_severity: LOW
+    classification_exact_match: true
+    severity_exact_match: true
+  mapping_rationale: Matches gold issue regarding apartment location.
+- union_id: U002
+  source_system: BASELINE_RUN7
+  source_prediction_id: C007
+  unit_id: P003
+  normalized_claim: Mahiru has a high elegant nose and long eyelashes.
+  critic_classification: UNSUPPORTED
+  critic_severity: LOW
+  status: TP_ROBUST
+  matched_gold_ids:
+  - G002
+  - G003
+  matched_gold_details:
+  - gold_id: G002
+    gold_classification: UNSUPPORTED
+    gold_severity: LOW
+    classification_exact_match: true
+    severity_exact_match: true
+  - gold_id: G003
+    gold_classification: UNSUPPORTED
+    gold_severity: LOW
+    classification_exact_match: true
+    severity_exact_match: true
+  mapping_rationale: Matches gold issues regarding nose and eyelashes.
+- union_id: U003
+  source_system: BASELINE_RUN7
+  source_prediction_id: C015
+  unit_id: P006
+  normalized_claim: Amane thinks the gap between him and Mahiru is too large and wants
+    to avoid jealousy from other boys.
+  critic_classification: UNSUPPORTED
+  critic_severity: LOW
+  status: TP_ROBUST
+  matched_gold_ids:
+  - G004
+  - G005
+  matched_gold_details:
+  - gold_id: G004
+    gold_classification: UNSUPPORTED
+    gold_severity: MEDIUM
+    classification_exact_match: true
+    severity_exact_match: false
+  - gold_id: G005
+    gold_classification: UNSUPPORTED
+    gold_severity: MEDIUM
+    classification_exact_match: true
+    severity_exact_match: false
+  mapping_rationale: Matches gold issues regarding gap and jealousy.
+- union_id: U010
+  source_system: TARGETED_H7_RUN9
+  source_prediction_id: E001
+  unit_id: P006
+  normalized_claim: Amane avoided Mahiru because he felt the gap between them was
+    too large, feared jealousy from other boys, and viewed her merely as an artwork.
+  critic_classification: UNSUPPORTED
+  critic_severity: LOW
+  status: TP_ROBUST
+  matched_gold_ids:
+  - G004
+  - G005
+  - G006
+  matched_gold_details:
+  - gold_id: G004
+    gold_classification: UNSUPPORTED
+    gold_severity: MEDIUM
+    classification_exact_match: true
+    severity_exact_match: false
+  - gold_id: G005
+    gold_classification: UNSUPPORTED
+    gold_severity: MEDIUM
+    classification_exact_match: true
+    severity_exact_match: false
+  - gold_id: G006
+    gold_classification: UNSUPPORTED
+    gold_severity: LOW
+    classification_exact_match: true
+    severity_exact_match: true
+  mapping_rationale: Matches gold issues regarding gap, jealousy, and viewing as artwork.
+- union_id: U004
+  source_system: BASELINE_RUN7
+  source_prediction_id: C022
+  unit_id: P011
+  normalized_claim: Mahiru's face is pale from the cold.
+  critic_classification: UNSUPPORTED
+  critic_severity: LOW
+  status: TP_ROBUST
+  matched_gold_ids:
+  - G010
+  matched_gold_details:
+  - gold_id: G010
+    gold_classification: UNSUPPORTED
+    gold_severity: LOW
+    classification_exact_match: true
+    severity_exact_match: true
+  mapping_rationale: Matches gold issue regarding pale face from cold.
+- union_id: U011
+  source_system: TARGETED_H7_RUN9
+  source_prediction_id: E002
+  unit_id: P011
+  normalized_claim: Mahiru had no intention of seeking shelter.
+  critic_classification: UNSUPPORTED
+  critic_severity: LOW
+  status: TP_ROBUST
+  matched_gold_ids:
+  - G008
+  matched_gold_details:
+  - gold_id: G008
+    gold_classification: STRONGER_THAN_BRIEF
+    gold_severity: MEDIUM
+    classification_exact_match: false
+    severity_exact_match: false
+  mapping_rationale: Matches gold issue regarding lack of intention to seek shelter.
+- union_id: U005
+  source_system: BASELINE_RUN7
+  source_prediction_id: C028
+  unit_id: P015
+  normalized_claim: Amane intentionally uses a cold tone to avoid misunderstanding.
+  critic_classification: UNSUPPORTED
+  critic_severity: LOW
+  status: TP_ROBUST
+  matched_gold_ids:
+  - G015
+  matched_gold_details:
+  - gold_id: G015
+    gold_classification: UNSUPPORTED
+    gold_severity: MEDIUM
+    classification_exact_match: true
+    severity_exact_match: false
+  mapping_rationale: Matches gold issue regarding intentional cold tone.
+- union_id: U006
+  source_system: BASELINE_RUN7
+  source_prediction_id: C030
+  unit_id: P017
+  normalized_claim: Mahiru's face is pale.
+  critic_classification: UNSUPPORTED
+  critic_severity: LOW
+  status: TP_ROBUST
+  matched_gold_ids:
+  - G017
+  matched_gold_details:
+  - gold_id: G017
+    gold_classification: UNSUPPORTED
+    gold_severity: LOW
+    classification_exact_match: true
+    severity_exact_match: true
+  mapping_rationale: Matches gold issue regarding pale face.
+- union_id: U007
+  source_system: BASELINE_RUN7
+  source_prediction_id: C033
+  unit_id: P018
+  normalized_claim: Mahiru and Amane often run into each other in the morning.
+  critic_classification: UNSUPPORTED
+  critic_severity: LOW
+  status: TP_ROBUST
+  matched_gold_ids:
+  - G018
+  matched_gold_details:
+  - gold_id: G018
+    gold_classification: UNSUPPORTED
+    gold_severity: MEDIUM
+    classification_exact_match: true
+    severity_exact_match: false
+  mapping_rationale: Matches gold issue regarding often running into each other in
+    the morning.
+- union_id: U008
+  source_system: BASELINE_RUN7
+  source_prediction_id: C036
+  unit_id: P020
+  normalized_claim: Amane is surprised that Mahiru remembers his last name.
+  critic_classification: UNSUPPORTED
+  critic_severity: LOW
+  status: TP_ROBUST
+  matched_gold_ids:
+  - G019
+  matched_gold_details:
+  - gold_id: G019
+    gold_classification: UNSUPPORTED
+    gold_severity: LOW
+    classification_exact_match: true
+    severity_exact_match: true
+  mapping_rationale: Matches gold issue regarding surprise at remembering last name.
+- union_id: U009
+  source_system: BASELINE_RUN7
+  source_prediction_id: C037
+  unit_id: P020
+  normalized_claim: Amane assumes Mahiru thinks he is using this opportunity to hit
+    on her.
+  critic_classification: UNSUPPORTED
+  critic_severity: LOW
+  status: TP_ROBUST
+  matched_gold_ids:
+  - G022
+  matched_gold_details:
+  - gold_id: G022
+    gold_classification: UNSUPPORTED
+    gold_severity: MEDIUM
+    classification_exact_match: true
+    severity_exact_match: false
+  mapping_rationale: Matches gold issue regarding assuming she thinks he is hitting
+    on her.
+- union_id: U012
+  source_system: TARGETED_H7_RUN9
+  source_prediction_id: E005
+  unit_id: P024
+  normalized_claim: Amane knew fully well that Mahiru was dealing with a heavy emotional
+    burden.
+  critic_classification: UNSUPPORTED
+  critic_severity: MEDIUM
+  status: TP_ROBUST
+  matched_gold_ids:
+  - G024
+  matched_gold_details:
+  - gold_id: G024
+    gold_classification: UNSUPPORTED
+    gold_severity: HIGH
+    classification_exact_match: true
+    severity_exact_match: false
+  mapping_rationale: Matches gold issue regarding knowing she has something heavy
+    on her mind.
+summary:
+  fp_predictions: []
+  sensitivity_only: []
+  unresolved: []
+  robust_detected_ids:
+  - G001
+  - G002
+  - G003
+  - G004
+  - G005
+  - G006
+  - G008
+  - G010
+  - G015
+  - G017
+  - G018
+  - G019
+  - G022
+  - G024
+  robust_missed_ids:
+  - G009
+  - G011
+  - G012
+  - G013
+  - G014
+  - G016
+  - G020
+  - G021
+  - G023
+  - G025
+  - G026
+  - G027
+  - G028
+  - G029
+  - G030
+  - G031
+  - G032
+  - G033
+  - G034
+  robust_positive_units:
+  - P002
+  - P003
+  - P006
+  - P011
+  - P012
+  - P013
+  - P014
+  - P015
+  - P017
+  - P018
+  - P020
+  - P021
+  - P024
+  - P025
+  - P026
+  - P027
+  - P028
+  - P029
+  - P030
+  - P031
+  detected_units:
+  - P002
+  - P003
+  - P006
+  - P011
+  - P015
+  - P017
+  - P018
+  - P020
+  - P024
+  missed_units:
+  - P012
+  - P013
+  - P014
+  - P021
+  - P025
+  - P026
+  - P027
+  - P028
+  - P029
+  - P030
+  - P031
+protocol_note: RUN9 mechanical_status is PAYLOAD_VALID_BUT_RAW_FORMAT_INVALID

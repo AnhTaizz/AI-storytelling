@@ -1,0 +1,72 @@
+experiment:
+  id: H7
+  stage: A
+  role: EXPLORATORY_DEVELOPMENT_SET
+reference:
+  name: H6B_RUN3_REFERENCE_V1
+  robust_gold_total: 33
+  questionable_total: 1
+baseline:
+  prediction_count: 9
+  tp_predictions: 9
+  fp_predictions: 0
+  robust_gold_detected: 11
+  robust_gold_missed: 22
+  precision: 1.0
+  recall: 0.3333
+  f1: 0.5
+  unit_recall: 0.4
+  classification_exact_agreement:
+    comparable_pairs: 11
+    exact_pairs: 11
+    agreement_rate: 1.0
+  severity_exact_agreement:
+    comparable_pairs: 11
+    exact_pairs: 6
+    agreement_rate: 0.5455
+h7_final_union:
+  prediction_count: 12
+  tp_predictions: 12
+  fp_predictions: 0
+  sensitivity_only_predictions: 0
+  unresolved_predictions: 0
+  robust_gold_detected: 14
+  robust_gold_missed: 19
+  precision: 1.0
+  recall: 0.4242
+  f1: 0.5957
+  unit_recall: 0.45
+  classification_exact_agreement:
+    comparable_pairs: 16
+    exact_pairs: 15
+    agreement_rate: 0.9375
+  severity_exact_agreement:
+    comparable_pairs: 16
+    exact_pairs: 7
+    agreement_rate: 0.4375
+targeted_contribution:
+  targeted_raw_predictions: 5
+  targeted_deduplicated_to_baseline: 2
+  targeted_unique_retained: 3
+  new_robust_gold_ids:
+  - G006
+  - G008
+  - G024
+  new_robust_gold_count: 3
+deltas:
+  recall_absolute: 0.0909
+  precision_absolute: 0.0
+  f1_absolute: 0.0957
+  unit_recall_absolute: 0.05
+  precision_degradation_absolute: 0.0
+protocol:
+  run9_mechanical_status: PAYLOAD_VALID_BUT_RAW_FORMAT_INVALID
+  strict_frozen_output_contract_pass: false
+  confirmatory_schema_success: false
+  quality_based_regeneration: 0
+interpretation:
+  semantic_signal: H7 detected 3 new robust gold issues, increasing robust recall
+    from 0.3333 to 0.4242, with no false positives, yielding a pure F1 increase from
+    0.5000 to 0.5957.
+  stage_a_only: true
+  h7_confirmatory_verdict: NOT_EVALUATED
