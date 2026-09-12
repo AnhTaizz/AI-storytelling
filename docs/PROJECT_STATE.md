@@ -107,10 +107,11 @@ coverage over Critic V1, but remained incomplete (11/33 robust issues detected).
 
 ## Current Task
 
-H7 Stage A isolated packet prepared using canonical Git-byte provenance;
-semantic execution not yet performed.
+One exploratory H7 Stage A semantic attempt captured from frozen H7_EIC_V1;
+raw response preserved without correction; mechanical validation pending.
 
 ## Next Candidate
 
-M1 — Execute exactly one exploratory H7 Stage A semantic attempt from the
-frozen packet and capture the raw response without correction.
+M1 — Mechanically validate the frozen RUN_0008 Stage A raw response without
+semantic repair, then determine whether it is evaluable for exploratory Stage A
+analysis.

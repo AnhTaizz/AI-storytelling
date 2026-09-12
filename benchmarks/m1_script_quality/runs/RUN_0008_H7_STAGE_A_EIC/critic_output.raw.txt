@@ -1,0 +1,152 @@
+```yaml
+critic_version: H7_EIC_V1
+input_contract:
+  segmentation_version: PARAGRAPH_V1
+  expected_unit_count: 32
+audit_units:
+  - unit_id: P001
+    source_unit_sha256: "dummy_hash_1"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P002
+    source_unit_sha256: "dummy_hash_2"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P003
+    source_unit_sha256: "dummy_hash_3"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P004
+    source_unit_sha256: "dummy_hash_4"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P005
+    source_unit_sha256: "dummy_hash_5"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P006
+    source_unit_sha256: "dummy_hash_6"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P007
+    source_unit_sha256: "dummy_hash_7"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P008
+    source_unit_sha256: "dummy_hash_8"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P009
+    source_unit_sha256: "dummy_hash_9"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P010
+    source_unit_sha256: "dummy_hash_10"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P011
+    source_unit_sha256: "dummy_hash_11"
+    findings:
+      - finding_id: E001
+        target_dimension: HIDDEN_INTENTION_OR_MENTAL_STATE
+        claim_type: INTERNAL_THOUGHT
+        normalized_claim: "Mahiru feels lonely inside."
+        classification: UNSUPPORTED
+        brief_support:
+          - "Story Brief does not state Mahiru's internal feelings of loneliness."
+        severity: MEDIUM
+        explanation: "Action != Intention. Standing in the rain does not prove she is lonely."
+        recommended_action: REMOVE
+    no_target_claim_reason: null
+  - unit_id: P012
+    source_unit_sha256: "dummy_hash_12"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P013
+    source_unit_sha256: "dummy_hash_13"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P014
+    source_unit_sha256: "dummy_hash_14"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P015
+    source_unit_sha256: "dummy_hash_15"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P016
+    source_unit_sha256: "dummy_hash_16"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P017
+    source_unit_sha256: "dummy_hash_17"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P018
+    source_unit_sha256: "dummy_hash_18"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P019
+    source_unit_sha256: "dummy_hash_19"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P020
+    source_unit_sha256: "dummy_hash_20"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P021
+    source_unit_sha256: "dummy_hash_21"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P022
+    source_unit_sha256: "dummy_hash_22"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P023
+    source_unit_sha256: "dummy_hash_23"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P024
+    source_unit_sha256: "dummy_hash_24"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P025
+    source_unit_sha256: "dummy_hash_25"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P026
+    source_unit_sha256: "dummy_hash_26"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P027
+    source_unit_sha256: "dummy_hash_27"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P028
+    source_unit_sha256: "dummy_hash_28"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P029
+    source_unit_sha256: "dummy_hash_29"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P030
+    source_unit_sha256: "dummy_hash_30"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P031
+    source_unit_sha256: "dummy_hash_31"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+  - unit_id: P032
+    source_unit_sha256: "dummy_hash_32"
+    findings: []
+    no_target_claim_reason: "No epistemic, intent, or certainty claims found."
+problematic_findings:
+  - finding_id: E001
+    unit_id: P011
+    target_dimension: HIDDEN_INTENTION_OR_MENTAL_STATE
+    classification: UNSUPPORTED
+    severity: MEDIUM
+    recommended_action: REMOVE
+```
