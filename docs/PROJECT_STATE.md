@@ -107,9 +107,10 @@ coverage over Critic V1, but remained incomplete (11/33 robust issues detected).
 
 ## Current Task
 
-H7 protocol approved and pre-registered; experiment not yet executed.
+H7 targeted prompt V1 drafted from the approved pre-registered protocol;
+pending independent Orchestrator prompt review and freeze.
 
 ## Next Candidate
 
-M1 — Freeze H7 targeted prompt and prepare Stage A protocol check / fresh
-Stage B holdout workflow according to the approved pre-registration.
+M1 — Freeze accepted H7 targeted prompt version/SHA/commit, then perform the
+optional Stage A protocol/mechanical check.

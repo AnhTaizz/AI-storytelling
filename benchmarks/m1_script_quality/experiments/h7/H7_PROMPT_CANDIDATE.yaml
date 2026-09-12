@@ -1,0 +1,20 @@
+prompt:
+  path: benchmarks/m1_script_quality/experiments/h7/prompts/H7_EPISTEMIC_INTENT_CERTAINTY_PROMPT_V1.md
+  version: H7_EIC_V1
+  status: CANDIDATE_PENDING_ORCHESTRATOR_REVIEW
+  sha256: d53510869d8a9f6db3e033be44ebb35c38d7f6ea7fd7d6313b79f25b69156f76
+
+protocol:
+  experiment: H7
+  experiment_status: APPROVED_PROTOCOL_NOT_EXECUTED
+  targeted_scope:
+    - EPISTEMIC_KNOWLEDGE
+    - HIDDEN_INTENTION_OR_MENTAL_STATE
+    - CERTAINTY_INFLATION
+  deterministic_unit_coverage_required: true
+  baseline_output_visible: false
+  gold_visible: false
+
+provenance:
+  base_commit: 68e4e1b6ccab39e8d141da7022963b0561df425a
+  derived_from_interface: benchmarks/m1_script_quality/experiments/h6b/prompts/CLAIM_LEVEL_FACTUAL_CRITIC_PROMPT_V3.md
