@@ -1,0 +1,28 @@
+freeze:
+  experiment: H7
+  status: FROZEN_FOR_EXPERIMENT
+  prompt_version: H7_EIC_V1
+  prompt_path: benchmarks/m1_script_quality/experiments/h7/prompts/H7_EPISTEMIC_INTENT_CERTAINTY_PROMPT_V1.md
+  canonical_sha256: 8ef0e5baa5ff4559d1b7077e4e0cf465941371ae48d5c8985d997b2cd08e77bc
+  accepted_source_commit: da43b6babda24ec787ee9a53af124f735160e6cd
+  approval:
+    orchestrator_verdict: ACCEPTED
+    accepted_task: TASK_001P_A_FIX
+
+protocol_binding:
+  experiment_status: APPROVED_PROTOCOL_NOT_EXECUTED
+  plan_path: benchmarks/m1_script_quality/experiments/NEXT_VALIDATION_EXPERIMENT_PLAN.yaml
+  intervention: EPISTEMIC_INTENT_AND_CERTAINTY_AUDIT
+  baseline_output_visible: false
+  gold_visible: false
+
+mutation_policy:
+  frozen_prompt_bytes_mutable: false
+  semantic_change_requires_new_version: true
+  semantic_change_requires_orchestrator_review: true
+  stage_b_prompt_change_allowed: false
+
+execution:
+  model_execution_performed_by_this_task: false
+  stage_a_executed: false
+  stage_b_executed: false

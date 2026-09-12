@@ -107,10 +107,10 @@ coverage over Critic V1, but remained incomplete (11/33 robust issues detected).
 
 ## Current Task
 
-H7 targeted prompt V1 drafted from the approved pre-registered protocol;
-pending independent Orchestrator prompt review and freeze.
+H7 targeted prompt H7_EIC_V1 accepted and frozen for experimental use;
+H7 experiment not yet executed.
 
 ## Next Candidate
 
-M1 — Freeze accepted H7 targeted prompt version/SHA/commit, then perform the
-optional Stage A protocol/mechanical check.
+M1 — Prepare an isolated Stage A protocol/mechanical-check packet using the
+frozen H7_EIC_V1 prompt. Do not modify the frozen treatment.
