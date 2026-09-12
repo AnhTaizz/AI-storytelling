@@ -107,9 +107,10 @@ coverage over Critic V1, but remained incomplete (11/33 robust issues detected).
 
 ## Current Task
 
-H6b CLOSED. Final evidence verdict recorded.
+H6b CLOSED; residual semantic failure analysis completed and next minimal
+validation experiment designed.
 
 ## Next Candidate
 
-M1 — Design the next smallest validation experiment targeting RUN7's residual
-semantic misses before introducing retrieval/graph/memory complexity.
+M1 — Execute the approved targeted validation experiment only after
+Orchestrator review of the experimental design.
