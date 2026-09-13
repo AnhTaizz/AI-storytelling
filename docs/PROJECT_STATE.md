@@ -107,24 +107,15 @@ coverage over Critic V1, but remained incomplete (11/33 robust issues detected).
 
 ## Current Task
 
-The corrected V2 Stage A union was frozen before gold access.
-The accepted frozen RUN3 reference was used.
-V2 exploratory gold mapping and metrics were completed.
-RUN10 remained mechanically valid.
-No external semantic model was invoked for mapping.
-This is Stage A developmental evidence only.
+H7 V2 Stage A: CLOSED
 
-Reference provenance reconciliation completed.
-Reference content remained identical to the accepted source commit at Git blob level.
-Legacy frozen SHA declaration: d0313513...
-Canonical Git-byte SHA: 5f723e49...
-Exact historical hash byte-domain: NOT_ESTABLISHED
-No mapping or metric values changed.
+Prompt: H7_EIC_V2
+Prompt status: LOCKED_FOR_FUTURE_STAGE_B_CANDIDATE
 
-Exploratory signal on RUN3 development instance:
-- Baseline precision: 1.0000, recall: 0.3333, F1: 0.5000
-- H7 V2 Final Union precision: 1.0000, recall: 0.4242, F1: 0.5957
-- Targeted prediction unique contribution: 3 new robust gold issues.
+Stage A exploratory signal:
+- Baseline: P 1.0000 R 0.3333 F1 0.5000
+- H7 V2: P 1.0000 R 0.4242 F1 0.5957
+- New robust gold: G006, G008, G024
 
 H7 confirmatory verdict:
 NOT_EVALUATED
@@ -141,5 +132,5 @@ format violation.
 
 ## Next Candidate
 
-M1 — Orchestrator review of the provenance-corrected H7 V2 Stage A evidence and
-decision whether H7_EIC_V2 is ready to lock for a future fresh holdout.
+M1 — resume 30-chapter local/private integration-corpus work by freezing a
+metadata/hash manifest WITHOUT committing raw chapters 006-030.

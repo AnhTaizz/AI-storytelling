@@ -1,0 +1,69 @@
+experiment:
+  id: H7
+  stage: A
+  iteration: V2
+  status: CLOSED
+prompt_lock:
+  prompt_version: H7_EIC_V2
+  prompt_path: benchmarks/m1_script_quality/experiments/h7/prompts/H7_EPISTEMIC_INTENT_CERTAINTY_PROMPT_V2.md
+  canonical_sha256: 5d758fbc75927a260b8615478b836788b406368372f0f97f9a531558892a2fc9
+  status: LOCKED_FOR_FUTURE_STAGE_B_CANDIDATE
+  prompt_revision_required_before_stage_b: false
+mechanical_evidence:
+  run: RUN_0010_H7_STAGE_A_V2_EIC_REAL
+  strict_frozen_output_contract_pass: true
+  semantic_attempts: 1
+  quality_based_regenerations: 0
+candidate_union:
+  baseline_problematic: 9
+  targeted_problematic: 5
+  targeted_deduplicated: 2
+  targeted_unique: 3
+  final_union_predictions: 12
+exploratory_metrics:
+  baseline:
+    precision: 1.0
+    recall: 0.3333
+    f1: 0.5
+    unit_recall: 0.4
+  h7_v2:
+    precision: 1.0
+    recall: 0.4242
+    f1: 0.5957
+    unit_recall: 0.45
+  new_robust_gold_ids:
+  - G006
+  - G008
+  - G024
+reference_provenance:
+  content_unchanged_at_git_blob_level: true
+  legacy_freeze_declared_sha256: d03135131ffbc7c8e61c00d334e479d5700919a1e75c21017db5f1fa6a79862f
+  canonical_git_bytes_sha256: 5f723e49e2982346cf71266399a76473ab39b2059d95cf1370a16b4c4be79fba
+  legacy_hash_byte_domain: NOT_ESTABLISHED
+interpretation:
+  stage_a_signal: FAVORABLE_EXPLORATORY_SIGNAL
+  confirmatory_evidence: false
+  h7_confirmatory_verdict: NOT_EVALUATED
+  generalization_claim_allowed: false
+future_stage_b:
+  authorized: false
+  executed: false
+  candidate_prompt_locked: true
+  required_before_execution:
+  - explicit_orchestrator_authorization
+  - fresh_controlled_story
+  - same_provider_model_settings_if_available
+  - independent_holdout_reference_created_and_frozen_before_prediction_mapping
+  - deterministic_review_units_frozen
+  - baseline_and_targeted_pass_run_under_same_controlled_conditions
+  - zero_quality_based_regeneration
+architecture:
+  rag_required_by_h7_stage_a: false
+  graph_required_by_h7_stage_a: false
+  story_memory_required_by_h7_stage_a: false
+closure_provenance:
+  source_commit: 7aa7e0e5fcb7a7845fb62d94bce04ce944bde17e
+  semantic_model_invoked: false
+  metrics_rescored: false
+  mappings_changed: false
+  prompt_modified: false
