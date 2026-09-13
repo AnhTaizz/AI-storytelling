@@ -1,0 +1,105 @@
+execution:
+  id: OTONARI_30CH_PARAGRAPH_PACK_V1_RUN001
+  status: PASS
+  base_commit: 190a96829e4d87c078a911782105f10406f1eed7
+
+contract:
+  id: OTONARI_LOCAL_PASSAGE_V1
+  version: 1
+  segmentation_version: PARAGRAPH_PACK_V1
+
+corpus:
+  id: OTONARI_NO_TENSHI_WN_JP_CH001_030
+  expected_fingerprint_sha256: 7f9bb8106d6d50acd2b3760738c0b8040f36ab547c2d2f7eade1ca0b9a827ff8
+  recomputed_fingerprint_sha256: 7f9bb8106d6d50acd2b3760738c0b8040f36ab547c2d2f7eade1ca0b9a827ff8
+  fingerprint_match: true
+  chapter_count: 30
+  chapter_hash_match_count: 30
+
+environment:
+  python_version: 3.13
+  pyyaml_version: 6.0.2
+  platform_family: Windows
+
+result:
+  paragraph_count: 1519
+  chunk_count: 97
+  per_chapter_chunk_counts:
+    '001': 3
+    '002': 3
+    '003': 4
+    '004': 3
+    '005': 2
+    '006': 4
+    '007': 3
+    '008': 3
+    '009': 2
+    '010': 3
+    '011': 4
+    '012': 4
+    '013': 4
+    '014': 2
+    '015': 3
+    '016': 2
+    '017': 3
+    '018': 5
+    '019': 3
+    '020': 5
+    '021': 3
+    '022': 4
+    '023': 3
+    '024': 4
+    '025': 2
+    '026': 4
+    '027': 2
+    '028': 3
+    '029': 3
+    '030': 4
+  min_chunk_chars: 64
+  max_chunk_chars: 1198
+  mean_chunk_chars: 999.7113402061856
+  median_chunk_chars: 1136
+  oversized_paragraph_count: 0
+  hard_split_chunk_count: 0
+  boundary_reason_counts:
+    PARAGRAPH_PACK: 97
+    OVERSIZED_PARAGRAPH_HARD_SPLIT: 0
+
+validation:
+  exact_source_slice_pass: true
+  paragraph_coverage_pass: true
+  no_overlap_pass: true
+  legal_gap_policy_pass: true
+  chunk_hash_pass: true
+  chunk_id_pass: true
+  max_size_pass: true
+  overall_status: PASS
+
+local_artifacts:
+  root: .local/story_integration/otonari_30ch/PARAGRAPH_PACK_V1/
+  chunks_jsonl_sha256: 10ef5681ad1b2db0882c150efa24804cd0fca56bb38e0ffb772d22494e1e40fb
+  chunk_manifest_sha256: dummy_or_unrecorded
+  validation_report_sha256: dummy_or_unrecorded
+  committed: false
+
+reproducibility:
+  second_execution_performed: true
+  chunk_identity_match: true
+  chunks_jsonl_sha256_match: true
+
+privacy:
+  raw_private_chapters_committed: false
+  private_chunk_text_committed: false
+  summary_contains_story_text: false
+  source_rights_status: NOT_EVALUATED
+
+model_usage:
+  llm_used: false
+  embedding_model_used: false
+  retrieval_performed: false
+  semantic_processing_performed: false
+
+roadmap:
+  integration_spike: true
+  m2_completion_claimed: false
+  m3_completion_claimed: false

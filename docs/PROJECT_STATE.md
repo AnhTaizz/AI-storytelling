@@ -110,15 +110,18 @@ coverage over Critic V1, but remained incomplete (11/33 robust issues detected).
 30-chapter corpus identity: FROZEN
 Corpus fingerprint: 7f9bb8106d6d50acd2b3760738c0b8040f36ab547c2d2f7eade1ca0b9a827ff8
 
-Local passage contract: OTONARI_LOCAL_PASSAGE_V1 has received final pre-execution deterministic clarification.
-Segmentation: PARAGRAPH_PACK_V1
-Maximum chunk size: 1200 Unicode code points
-Overlap: NONE
-Text normalization: NONE
+Local passage contract: OTONARI_LOCAL_PASSAGE_V1 / PARAGRAPH_PACK_V1
+Execution: PASS
+Processed chapters: 30/30
+Paragraph count: 1519
+Chunk count: 97
+Maximum chunk chars observed: 1198
+Hard-split chunks: 0
+Coverage: PASS
+Deterministic second-run reproduction: PASS
 
-Execution remains: NOT_STARTED
-Execution authorization remains pending Orchestrator acceptance.
-Private derived output: LOCAL_ONLY
+Private chunk text: LOCAL_ONLY
+No LLM / embedding / retrieval performed.
 
 H7 V2 Stage A: CLOSED
 H7 confirmatory verdict: NOT_EVALUATED
@@ -133,4 +136,4 @@ format violation.
 
 ## Next Candidate
 
-M1 — Orchestrator acceptance of finalized V1, then execute the frozen contract locally as TASK M1-30CH-C.
+M1 — define a small long-range retrieval/probe benchmark over the 30-chapter corpus to measure chronology, relationship progression, callbacks, temporal state, and spoiler-boundary failures BEFORE selecting advanced retrieval or memory architecture.
