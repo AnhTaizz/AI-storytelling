@@ -107,34 +107,17 @@ coverage over Critic V1, but remained incomplete (11/33 robust issues detected).
 
 ## Current Task
 
-Orchestrator review identified an over-deduplication in the initial H7 V2
-Stage A freeze: E001 had been merged into C015 despite materially additional
-semantic content.
+The corrected V2 Stage A union was frozen before gold access.
+The accepted frozen RUN3 reference was used.
+V2 exploratory gold mapping and metrics were completed.
+RUN10 remained mechanically valid.
+No external semantic model was invoked for mapping.
+This is Stage A developmental evidence only.
 
-The union was corrected gold-blind before any reference mapping.
-
-Corrected frozen counts:
-
-baseline problematic:
-9
-
-RUN10 targeted problematic:
-5
-
-deduplicated:
-2
-
-targeted unique:
-3
-
-final union:
-12
-
-gold accessed:
-NO
-
-semantic scoring performed:
-NO
+Exploratory signal on RUN3 development instance:
+- Baseline precision: 1.0000, recall: 0.3333, F1: 0.5000
+- H7 V2 Final Union precision: 1.0000, recall: 0.4242, F1: 0.5957
+- Targeted prediction unique contribution: 3 new robust gold issues.
 
 H7 confirmatory verdict:
 NOT_EVALUATED
@@ -151,5 +134,5 @@ format violation.
 
 ## Next Candidate
 
-M1 — Orchestrator review of the corrected gold-blind H7 V2 Stage A union before
-any gold mapping.
+M1 — Orchestrator review of H7 V2 Stage A exploratory evidence and decision whether
+the prompt is ready to lock for a future fresh Stage B holdout.
