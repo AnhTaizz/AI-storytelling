@@ -142,5 +142,58 @@ class TestParagraphPack(unittest.TestCase):
         result = execute_corpus()
         self.assertFalse(result)
 
+    def test_validation_fails_on_overlap(self):
+        text = "P1\n\n" + "A" * 1200 + "\n\nP2\n"
+        lines = split_lines_with_offsets(text)
+        paras = parse_paragraphs(lines, text)
+        chunks = chunk_chapter(paras, text, 1, "test.txt", "abc", "def")
+        # Force overlap
+        chunks[1].char_start = chunks[0].char_end_exclusive - 1
+        val = validate_chapter_chunks(chunks, paras, text)
+        self.assertFalse(val["pass"])
+        self.assertTrue(any("OVERLAPPING_CHUNK_SPANS" in issue for issue in val["issues"]))
+        self.assertGreater(val["metrics"]["overlap_count"], 0)
+
+    def test_validation_fails_on_hash_mismatch(self):
+        text = "P1\n\nP2\n"
+        lines = split_lines_with_offsets(text)
+        paras = parse_paragraphs(lines, text)
+        chunks = chunk_chapter(paras, text, 1, "test.txt", "abc", "def")
+        # Force mismatch
+        chunks[0].chunk_text_sha256 = "wrong"
+        val = validate_chapter_chunks(chunks, paras, text)
+        self.assertFalse(val["pass"])
+        self.assertTrue(any("CHUNK_HASH_MISMATCH" in issue for issue in val["issues"]))
+
+    def test_validation_fails_on_duplicate_coverage(self):
+        text = "P1\n\n" + "A" * 1200 + "\n\nP2\n"
+        lines = split_lines_with_offsets(text)
+        paras = parse_paragraphs(lines, text)
+        chunks = chunk_chapter(paras, text, 1, "test.txt", "abc", "def")
+        # Duplicate coverage of the first char
+        chunks[1].char_start = chunks[0].char_start
+        chunks[1].text = text[chunks[1].char_start:chunks[1].char_end_exclusive]
+        chunks[1].char_count = chunks[1].char_end_exclusive - chunks[1].char_start
+        chunks[1].chunk_text_sha256 = sha256_bytes(chunks[1].text.encode("utf-8"))
+        val = validate_chapter_chunks(chunks, paras, text)
+        self.assertFalse(val["pass"])
+        self.assertTrue(any("PARAGRAPH_CHARACTER_DUPLICATED" in issue for issue in val["issues"]))
+        self.assertGreater(val["metrics"]["paragraph_character_duplicated"], 0)
+
+    def test_validation_fails_on_illegal_gap(self):
+        text = "P1\n\n" + "A" * 1200 + "\n\nP2\n"
+        lines = split_lines_with_offsets(text)
+        paras = parse_paragraphs(lines, text)
+        chunks = chunk_chapter(paras, text, 1, "test.txt", "abc", "def")
+        # Make chunk 1 skip the 'P' in P2
+        chunks[1].char_start += 1
+        chunks[1].text = text[chunks[1].char_start:chunks[1].char_end_exclusive]
+        chunks[1].char_count = chunks[1].char_end_exclusive - chunks[1].char_start
+        chunks[1].chunk_text_sha256 = sha256_bytes(chunks[1].text.encode("utf-8"))
+        val = validate_chapter_chunks(chunks, paras, text)
+        self.assertFalse(val["pass"])
+        self.assertTrue(any("ILLEGAL_GAP" in issue for issue in val["issues"]))
+        self.assertGreater(val["metrics"]["illegal_gap_count"], 0)
+
 if __name__ == "__main__":
     unittest.main()

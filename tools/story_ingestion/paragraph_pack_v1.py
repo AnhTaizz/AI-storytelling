@@ -251,7 +251,11 @@ def validate_chapter_chunks(chunks: List[ChunkInfo], paragraphs: List[ParagraphI
     # previous chunk end -> next chunk start
     # last chunk -> chapter end
     
+    legal_blank_gap_count = 0
+    illegal_gap_count = 0
+    
     def check_gap(start, end):
+        nonlocal legal_blank_gap_count, illegal_gap_count
         if start >= end:
             return
         gap_text = text[start:end]
@@ -263,6 +267,9 @@ def validate_chapter_chunks(chunks: List[ChunkInfo], paragraphs: List[ParagraphI
                 break
         if intersects or gap_text.strip() != "":
             issues.append(f"ILLEGAL_GAP_{start}_{end}")
+            illegal_gap_count += 1
+        else:
+            legal_blank_gap_count += 1
             
     if chunks:
         check_gap(0, chunks[0].char_start)
@@ -272,9 +279,56 @@ def validate_chapter_chunks(chunks: List[ChunkInfo], paragraphs: List[ParagraphI
     else:
         check_gap(0, len(text))
         
+    overlap_count = 0
+    for i in range(1, len(chunks)):
+        if chunks[i].char_start < chunks[i-1].char_end_exclusive:
+            overlap_count += 1
+
+    exact_source_slice_match_count = 0
+    chunk_hash_match_count = 0
+    empty_chunk_count = 0
+    for c in chunks:
+        if c.text == text[c.char_start:c.char_end_exclusive]:
+            exact_source_slice_match_count += 1
+        else:
+            issues.append(f"CHUNK_TEXT_MISMATCH_{c.chunk_id}")
+            
+        if c.char_count == 0:
+            empty_chunk_count += 1
+            
+        if c.char_count != c.char_end_exclusive - c.char_start:
+            issues.append(f"CHUNK_COUNT_MISMATCH_{c.chunk_id}")
+            
+        if c.char_count < 1 or c.char_count > 1200:
+            issues.append(f"CHUNK_SIZE_INVALID_{c.chunk_id}")
+            
+        actual_hash = sha256_bytes(c.text.encode("utf-8"))
+        if actual_hash == c.chunk_text_sha256:
+            chunk_hash_match_count += 1
+        else:
+            issues.append(f"CHUNK_HASH_MISMATCH_{c.chunk_id}")
+
+    paragraph_character_omitted = 0
+    paragraph_character_duplicated = 0
+    for k, v in coverage.items():
+        if v == 0:
+            paragraph_character_omitted += 1
+        elif v > 1:
+            paragraph_character_duplicated += 1
+
     return {
         "pass": len(issues) == 0,
-        "issues": issues
+        "issues": issues,
+        "metrics": {
+            "overlap_count": overlap_count,
+            "exact_source_slice_match_count": exact_source_slice_match_count,
+            "chunk_hash_match_count": chunk_hash_match_count,
+            "empty_chunk_count": empty_chunk_count,
+            "paragraph_character_omitted": paragraph_character_omitted,
+            "paragraph_character_duplicated": paragraph_character_duplicated,
+            "legal_blank_gap_count": legal_blank_gap_count,
+            "illegal_gap_count": illegal_gap_count
+        }
     }
 
 def compute_corpus_fingerprint(hashes: List[str]) -> str:
@@ -332,6 +386,17 @@ def execute_corpus(repro_dir: Optional[str] = None):
     
     validation_failures = []
     
+    total_metrics = {
+        "overlap_count": 0,
+        "exact_source_slice_match_count": 0,
+        "chunk_hash_match_count": 0,
+        "empty_chunk_count": 0,
+        "paragraph_character_omitted": 0,
+        "paragraph_character_duplicated": 0,
+        "legal_blank_gap_count": 0,
+        "illegal_gap_count": 0
+    }
+    
     for ch in chapter_info:
         lines = split_lines_with_offsets(ch["text"])
         paragraphs = parse_paragraphs(lines, ch["text"])
@@ -340,41 +405,82 @@ def execute_corpus(repro_dir: Optional[str] = None):
         if not val["pass"]:
             validation_failures.append(f"Chapter {ch['number']} validation failed: {val['issues']}")
             
+        for k, v in val["metrics"].items():
+            total_metrics[k] += v
+            
         all_chunks.extend(chunks)
         all_paragraphs.extend(paragraphs)
         
-    if validation_failures:
-        print("Validation failures found:", validation_failures)
-        return False
+    chunk_ids = [c.chunk_id for c in all_chunks]
+    chunk_id_unique = len(set(chunk_ids)) == len(chunk_ids)
+    
+    chunk_indices_sequential = True
+    no_cross_chapter_chunks = True
+    boundary_reason_enum_valid = True
+    max_chunk_size_valid = True
+    
+    for i, c in enumerate(all_chunks):
+        if not (1 <= c.char_count <= 1200):
+            max_chunk_size_valid = False
+            
+        if c.boundary_reason not in ["PARAGRAPH_PACK", "OVERSIZED_PARAGRAPH_HARD_SPLIT"]:
+            boundary_reason_enum_valid = False
+            
+        if i > 0:
+            prev = all_chunks[i-1]
+            if c.chapter_number == prev.chapter_number:
+                if c.chunk_index != prev.chunk_index + 1:
+                    chunk_indices_sequential = False
+            else:
+                if c.chunk_index != 1:
+                    chunk_indices_sequential = False
+                    
+        # Check cross chapter chunk: if chapter_number of chunk != current chapter iteration 
+        # (which is guaranteed since we create chunks per chapter).
         
+    paragraph_coverage_pass = total_metrics["paragraph_character_omitted"] == 0 and total_metrics["paragraph_character_duplicated"] == 0
+    
+    overall_pass = True
+    if len(validation_failures) > 0: overall_pass = False
+    if not chunk_id_unique: overall_pass = False
+    if not chunk_indices_sequential: overall_pass = False
+    if not boundary_reason_enum_valid: overall_pass = False
+    if total_metrics["empty_chunk_count"] > 0: overall_pass = False
+    if total_metrics["exact_source_slice_match_count"] != len(all_chunks): overall_pass = False
+    if total_metrics["chunk_hash_match_count"] != len(all_chunks): overall_pass = False
+    if not paragraph_coverage_pass: overall_pass = False
+    if total_metrics["illegal_gap_count"] > 0: overall_pass = False
+    if total_metrics["overlap_count"] > 0: overall_pass = False
+    if not max_chunk_size_valid: overall_pass = False
+    
     # Validation report
     validation_report = {
         "input_corpus_fingerprint_match": True,
         "recomputed_corpus_fingerprint_sha256": computed_fingerprint,
         "corpus_fingerprint_match": True,
         "chapter_count_match": True,
-        "processed_chapter_count": 30,
-        "chapter_hash_match_count": 30,
+        "processed_chapter_count": len(chapter_info),
+        "chapter_hash_match_count": len(chapter_info),
         "all_chapter_hashes_match": True,
         "paragraph_count": len(all_paragraphs),
         "chunk_count": len(all_chunks),
-        "chunk_id_unique": len(set(c.chunk_id for c in all_chunks)) == len(all_chunks),
-        "chunk_indices_sequential": True, # basic assumption from our loop
-        "no_cross_chapter_chunks": True,
-        "max_chunk_size_valid": all(1 <= c.char_count <= 1200 for c in all_chunks),
-        "empty_chunk_count": 0,
-        "exact_source_slice_match_count": len(all_chunks),
-        "chunk_hash_match_count": len(all_chunks),
-        "paragraph_coverage_pass": True,
-        "nonblank_coverage_complete": True,
-        "duplicate_nonblank_coverage_detected": False,
-        "illegal_nonblank_gaps_detected": False,
-        "legal_blank_gap_count": len(all_chunks) - 30, # just a dummy metric for passing
-        "illegal_gap_count": 0,
-        "overlap_count": 0,
-        "boundary_reason_enum_valid": all(c.boundary_reason in ["PARAGRAPH_PACK", "OVERSIZED_PARAGRAPH_HARD_SPLIT"] for c in all_chunks),
+        "chunk_id_unique": chunk_id_unique,
+        "chunk_indices_sequential": chunk_indices_sequential,
+        "no_cross_chapter_chunks": no_cross_chapter_chunks,
+        "max_chunk_size_valid": max_chunk_size_valid,
+        "empty_chunk_count": total_metrics["empty_chunk_count"],
+        "exact_source_slice_match_count": total_metrics["exact_source_slice_match_count"],
+        "chunk_hash_match_count": total_metrics["chunk_hash_match_count"],
+        "paragraph_coverage_pass": paragraph_coverage_pass,
+        "nonblank_coverage_complete": total_metrics["paragraph_character_omitted"] == 0,
+        "duplicate_nonblank_coverage_detected": total_metrics["paragraph_character_duplicated"] > 0,
+        "illegal_nonblank_gaps_detected": total_metrics["illegal_gap_count"] > 0,
+        "legal_blank_gap_count": total_metrics["legal_blank_gap_count"],
+        "illegal_gap_count": total_metrics["illegal_gap_count"],
+        "overlap_count": total_metrics["overlap_count"],
+        "boundary_reason_enum_valid": boundary_reason_enum_valid,
         "model_invoked": False,
-        "overall_status": "PASS"
+        "overall_status": "PASS" if overall_pass else "FAIL"
     }
     
     # Chunk manifest
@@ -437,11 +543,20 @@ def execute_corpus(repro_dir: Optional[str] = None):
     chunks_sha256 = sha256_bytes(jsonl_path.read_bytes())
     chunk_manifest["chunks_jsonl_sha256"] = chunks_sha256
     
-    with open(out_dir / "chunk_manifest.yaml", "w", encoding="utf-8") as f:
-        yaml.dump(chunk_manifest, f, sort_keys=False)
+    manifest_yaml = yaml.dump(chunk_manifest, sort_keys=False)
+    manifest_path_out = out_dir / "chunk_manifest.yaml"
+    with open(manifest_path_out, "w", encoding="utf-8") as f:
+        f.write(manifest_yaml)
         
-    with open(out_dir / "validation_report.yaml", "w", encoding="utf-8") as f:
-        yaml.dump(validation_report, f, sort_keys=False)
+    report_yaml = yaml.dump(validation_report, sort_keys=False)
+    report_path_out = out_dir / "validation_report.yaml"
+    with open(report_path_out, "w", encoding="utf-8") as f:
+        f.write(report_yaml)
+        
+    print(f"overall_status: {validation_report['overall_status']}")
+    if validation_failures:
+        print("Validation failures found:", validation_failures)
+        return False
         
     return True
 

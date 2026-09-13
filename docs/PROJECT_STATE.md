@@ -119,6 +119,7 @@ Maximum chunk chars observed: 1198
 Hard-split chunks: 0
 Coverage: PASS
 Deterministic second-run reproduction: PASS
+Validation Evidence: REPAIRED (evidence-derived metrics replacing dummy assumptions)
 
 Private chunk text: LOCAL_ONLY
 No LLM / embedding / retrieval performed.
