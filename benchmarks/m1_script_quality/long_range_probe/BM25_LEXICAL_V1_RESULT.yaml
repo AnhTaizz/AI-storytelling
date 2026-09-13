@@ -1,0 +1,242 @@
+baseline_id: BM25_LEXICAL_V1
+status: EXECUTED
+benchmark_id: LONG_RANGE_PROBE_V1
+probe_file_sha256: 24ca1f9c92531a19f59d409c7d3e68ef90b91ab24aab6d7854f0c52667c136e2
+chunks_jsonl_sha256: 10ef5681ad1b2db0882c150efa24804cd0fca56bb38e0ffb772d22494e1e40fb
+retriever_parameters:
+  k1: 1.2
+  b: 0.75
+tokenizer_id: JP_SIMPLE_LEXICAL_V1
+CUTOFF_FILTERED:
+  overall:
+    hit@1: 0.06666666666666667
+    hit@3: 0.2
+    hit@5: 0.2
+    hit@10: 0.2
+    recall@1: 0.03333333333333333
+    recall@3: 0.08888888888888888
+    recall@5: 0.08888888888888888
+    recall@10: 0.08888888888888888
+    success@1: 0.0
+    success@3: 0.0
+    success@5: 0.0
+    success@10: 0.0
+    spoiler_violation@1: 0.0
+    spoiler_violation@3: 0.0
+    spoiler_violation@5: 0.0
+    spoiler_violation@10: 0.0
+    mrr: 0.13333333333333333
+  per_category:
+    CHRONOLOGY:
+      hit@1: 0.0
+      hit@3: 0.0
+      hit@5: 0.0
+      hit@10: 0.0
+      recall@1: 0.0
+      recall@3: 0.0
+      recall@5: 0.0
+      recall@10: 0.0
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.0
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.0
+    RELATIONSHIP_PROGRESSION:
+      hit@1: 0.0
+      hit@3: 0.3333333333333333
+      hit@5: 0.3333333333333333
+      hit@10: 0.3333333333333333
+      recall@1: 0.0
+      recall@3: 0.1111111111111111
+      recall@5: 0.1111111111111111
+      recall@10: 0.1111111111111111
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.0
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.16666666666666666
+    CALLBACK:
+      hit@1: 0.0
+      hit@3: 0.0
+      hit@5: 0.0
+      hit@10: 0.0
+      recall@1: 0.0
+      recall@3: 0.0
+      recall@5: 0.0
+      recall@10: 0.0
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.0
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.0
+    TEMPORAL_STATE:
+      hit@1: 0.3333333333333333
+      hit@3: 0.3333333333333333
+      hit@5: 0.3333333333333333
+      hit@10: 0.3333333333333333
+      recall@1: 0.16666666666666666
+      recall@3: 0.16666666666666666
+      recall@5: 0.16666666666666666
+      recall@10: 0.16666666666666666
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.0
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.3333333333333333
+    SPOILER_BOUNDARY:
+      hit@1: 0.0
+      hit@3: 0.3333333333333333
+      hit@5: 0.3333333333333333
+      hit@10: 0.3333333333333333
+      recall@1: 0.0
+      recall@3: 0.16666666666666666
+      recall@5: 0.16666666666666666
+      recall@10: 0.16666666666666666
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.0
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.16666666666666666
+  diagnostics:
+    zero_positive_candidate_probe_count: 8
+    average_positive_score_candidate_count: 0.6666666666666666
+    median_positive_score_candidate_count: 0
+GLOBAL_DIAGNOSTIC:
+  overall:
+    hit@1: 0.06666666666666667
+    hit@3: 0.2
+    hit@5: 0.2
+    hit@10: 0.2
+    recall@1: 0.03333333333333333
+    recall@3: 0.08888888888888888
+    recall@5: 0.08888888888888888
+    recall@10: 0.08888888888888888
+    success@1: 0.0
+    success@3: 0.0
+    success@5: 0.0
+    success@10: 0.0
+    spoiler_violation@1: 0.0
+    spoiler_violation@3: 0.0
+    spoiler_violation@5: 0.0
+    spoiler_violation@10: 0.0
+    mrr: 0.13333333333333333
+  per_category:
+    CHRONOLOGY:
+      hit@1: 0.0
+      hit@3: 0.0
+      hit@5: 0.0
+      hit@10: 0.0
+      recall@1: 0.0
+      recall@3: 0.0
+      recall@5: 0.0
+      recall@10: 0.0
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.0
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.0
+    RELATIONSHIP_PROGRESSION:
+      hit@1: 0.0
+      hit@3: 0.3333333333333333
+      hit@5: 0.3333333333333333
+      hit@10: 0.3333333333333333
+      recall@1: 0.0
+      recall@3: 0.1111111111111111
+      recall@5: 0.1111111111111111
+      recall@10: 0.1111111111111111
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.0
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.16666666666666666
+    CALLBACK:
+      hit@1: 0.0
+      hit@3: 0.0
+      hit@5: 0.0
+      hit@10: 0.0
+      recall@1: 0.0
+      recall@3: 0.0
+      recall@5: 0.0
+      recall@10: 0.0
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.0
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.0
+    TEMPORAL_STATE:
+      hit@1: 0.3333333333333333
+      hit@3: 0.3333333333333333
+      hit@5: 0.3333333333333333
+      hit@10: 0.3333333333333333
+      recall@1: 0.16666666666666666
+      recall@3: 0.16666666666666666
+      recall@5: 0.16666666666666666
+      recall@10: 0.16666666666666666
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.0
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.3333333333333333
+    SPOILER_BOUNDARY:
+      hit@1: 0.0
+      hit@3: 0.3333333333333333
+      hit@5: 0.3333333333333333
+      hit@10: 0.3333333333333333
+      recall@1: 0.0
+      recall@3: 0.16666666666666666
+      recall@5: 0.16666666666666666
+      recall@10: 0.16666666666666666
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.0
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.16666666666666666
+  diagnostics:
+    zero_positive_candidate_probe_count: 8
+    average_positive_score_candidate_count: 0.6666666666666666
+    median_positive_score_candidate_count: 0
+detailed_results_sha256:
+  cutoff_filtered_per_probe.jsonl: db4a4a0cc1423492deaef8402de61dc4d82373dc1aecbd6eda1f3f521d3d40a6
+  global_diagnostic_per_probe.jsonl: db4a4a0cc1423492deaef8402de61dc4d82373dc1aecbd6eda1f3f521d3d40a6
+deterministic_reproduction_status: PASS
+privacy_status: PASS

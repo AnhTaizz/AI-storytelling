@@ -112,14 +112,6 @@ Corpus fingerprint: 7f9bb8106d6d50acd2b3760738c0b8040f36ab547c2d2f7eade1ca0b9a82
 
 Local passage contract: OTONARI_LOCAL_PASSAGE_V1 / PARAGRAPH_PACK_V1
 Execution: PASS
-Processed chapters: 30/30
-Paragraph count: 1519
-Chunk count: 97
-Maximum chunk chars observed: 1198
-Hard-split chunks: 0
-Coverage: PASS
-Deterministic second-run reproduction: PASS
-Validation Evidence: REPAIRED (evidence-derived metrics replacing dummy assumptions)
 
 LONG_RANGE_PROBE_V1: FROZEN
 - 15 probes
@@ -128,20 +120,15 @@ LONG_RANGE_PROBE_V1: FROZEN
 - Validator: PASS
 - Freeze integrity: PASS
 
-Private chunk text: LOCAL_ONLY
-No LLM / embedding / retrieval performed.
+M1-30CH-E — BM25_LEXICAL_V1: EXECUTED
+- Baseline Identity: JP_SIMPLE_LEXICAL_V1 Tokenizer, pure deterministic BM25
+- CUTOFF_FILTERED overall metrics: Hit@10 = 20%, MRR = 0.133
+- GLOBAL_DIAGNOSTIC overall metrics: Identical to Cutoff Filtered
+- Zero positive-score candidates for 8/15 probes.
+- Lexical retrieval heavily limited on raw Japanese prose without semantic understanding or morphological analyzers.
 
-H7 V2 Stage A: CLOSED
-H7 confirmatory verdict: NOT_EVALUATED
-Stage B: NOT_AUTHORIZED
-
-Historical note:
-
-RUN8 remains invalid synthetic evidence.
-
-RUN9 remains the preserved V1 developmental run with its Markdown-wrapper
-format violation.
+Private chunk text and probes remain LOCAL_ONLY. No LLM / embedding / retrieval external API performed.
 
 ## Next Candidate
 
-M1 — define a small long-range retrieval/probe benchmark over the 30-chapter corpus to measure chronology, relationship progression, callbacks, temporal state, and spoiler-boundary failures BEFORE selecting advanced retrieval or memory architecture.
+Review BM25_LEXICAL_V1 evidence and choose the smallest justified next retrieval baseline (e.g. a multilingual dense retrieval baseline) to measure semantic retrieval capacity over the 30-chapter corpus.
