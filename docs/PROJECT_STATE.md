@@ -107,15 +107,19 @@ coverage over Critic V1, but remained incomplete (11/33 robust issues detected).
 
 ## Current Task
 
-H7 V2 Stage A: CLOSED
+30-chapter local/private integration corpus identity frozen.
 
-Prompt: H7_EIC_V2
-Prompt status: LOCKED_FOR_FUTURE_STAGE_B_CANDIDATE
+Corpus:
+chapter range: 001-030
+tracked sample: 001-005
+local/private ignored: 006-030
+chapter count: 30
+corpus fingerprint: 7f9bb8106d6d50acd2b3760738c0b8040f36ab547c2d2f7eade1ca0b9a827ff8
 
-Stage A exploratory signal:
-- Baseline: P 1.0000 R 0.3333 F1 0.5000
-- H7 V2: P 1.0000 R 0.4242 F1 0.5957
-- New robust gold: G006, G008, G024
+Raw private chapters committed: NO
+Semantic processing: NOT_STARTED
+
+H7 V2 Stage A remains CLOSED.
 
 H7 confirmatory verdict:
 NOT_EVALUATED
@@ -132,5 +136,6 @@ format violation.
 
 ## Next Candidate
 
-M1 — resume 30-chapter local/private integration-corpus work by freezing a
-metadata/hash manifest WITHOUT committing raw chapters 006-030.
+M1 — define and freeze deterministic local ingestion/chunking contract for the
+30-chapter corpus, with derived text artifacts remaining local/private and only
+code/config/metadata eligible for Git.
