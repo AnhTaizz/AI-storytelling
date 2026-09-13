@@ -1,10 +1,11 @@
 import json
 import yaml
+import sys
 import hashlib
 import time
 from pathlib import Path
 from collections import defaultdict
-from tools.story_benchmark.bm25_lexical_v1 import BM25LexicalV1, calculate_metrics
+from tools.story_benchmark.bm25_lexical_v1 import BM25LexicalV1, calculate_metrics, jp_simple_lexical_v1
 
 def compute_spoiler_violations(probe: dict, ranked: list, chunk_meta: dict) -> dict:
     cutoff = probe["cutoff_chapter"]
@@ -98,6 +99,7 @@ def run_baseline(probes_path: Path, chunks_path: Path, out_dir: Path):
         
         zero_pos = 0
         total_cand = 0
+        total_q_tok = 0
         cand_counts = []
         
         for p, m, cand_len in metrics_list:
@@ -106,6 +108,7 @@ def run_baseline(probes_path: Path, chunks_path: Path, out_dir: Path):
             if cand_len == 0:
                 zero_pos += 1
             total_cand += cand_len
+            total_q_tok += len(jp_simple_lexical_v1(p["question"]))
             cand_counts.append(cand_len)
             
             for k in keys:
@@ -127,7 +130,8 @@ def run_baseline(probes_path: Path, chunks_path: Path, out_dir: Path):
             "diagnostics": {
                 "zero_positive_candidate_probe_count": zero_pos,
                 "average_positive_score_candidate_count": total_cand / n,
-                "median_positive_score_candidate_count": med_cand
+                "median_positive_score_candidate_count": med_cand,
+                "average_query_lexical_token_count": total_q_tok / n
             }
         }
         
@@ -161,6 +165,17 @@ def run_baseline(probes_path: Path, chunks_path: Path, out_dir: Path):
         
     return agg
 
+def verify_determinism(agg1, agg2):
+    d1 = agg1["detailed_results_sha256"]["cutoff_filtered_per_probe.jsonl"]
+    d2 = agg2["detailed_results_sha256"]["cutoff_filtered_per_probe.jsonl"]
+    g1 = agg1["detailed_results_sha256"]["global_diagnostic_per_probe.jsonl"]
+    g2 = agg2["detailed_results_sha256"]["global_diagnostic_per_probe.jsonl"]
+    
+    agg1_str = json.dumps(agg1, sort_keys=True)
+    agg2_str = json.dumps(agg2, sort_keys=True)
+    
+    return d1 == d2 and g1 == g2 and agg1_str == agg2_str
+
 if __name__ == "__main__":
     base_dir = Path("e:/ProjectDE/AI-storytelling")
     probes = base_dir / ".local/story_integration/otonari_30ch/LONG_RANGE_PROBE_V1/probes.yaml"
@@ -175,15 +190,11 @@ if __name__ == "__main__":
     agg2 = run_baseline(probes, chunks, out_dir)
     print("Run 2 complete.")
     
-    d1 = agg1["detailed_results_sha256"]["cutoff_filtered_per_probe.jsonl"]
-    d2 = agg2["detailed_results_sha256"]["cutoff_filtered_per_probe.jsonl"]
-    g1 = agg1["detailed_results_sha256"]["global_diagnostic_per_probe.jsonl"]
-    g2 = agg2["detailed_results_sha256"]["global_diagnostic_per_probe.jsonl"]
-    
-    if d1 != d2 or g1 != g2:
+    if not verify_determinism(agg1, agg2):
         print("FAIL: Determinism check failed!")
-    else:
-        print("PASS: Determinism verified.")
+        sys.exit(1)
+    
+    print("PASS: Determinism verified.")
         
     # Also dump the summary for public track
     pub_dir = base_dir / "benchmarks/m1_script_quality/long_range_probe"

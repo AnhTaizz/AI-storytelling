@@ -1,5 +1,7 @@
 import unittest
 from tools.story_benchmark.bm25_lexical_v1 import jp_simple_lexical_v1, BM25LexicalV1, calculate_metrics
+from tools.story_benchmark.run_bm25_lexical_v1 import compute_spoiler_violations, verify_determinism
+import copy
 
 class TestBM25LexicalV1(unittest.TestCase):
     def test_latin_tokenization(self):
@@ -89,6 +91,57 @@ class TestBM25LexicalV1(unittest.TestCase):
         
         # MRR -> doc2 is at index 1 (rank 2) -> 0.5
         self.assertEqual(m["mrr"], 0.5)
+
+    def test_spoiler_violation(self):
+        probe = {"cutoff_chapter": 1}
+        ranked = ["ch01", "ch02"]
+        chunk_meta = {"ch01": 1, "ch02": 2}
+        
+        m = compute_spoiler_violations(probe, ranked, chunk_meta)
+        self.assertEqual(m["spoiler_violation@1"], 0)
+        self.assertEqual(m["spoiler_violation@3"], 1)
+        
+    def test_global_diagnostic_future_retrieval(self):
+        bm25 = BM25LexicalV1()
+        bm25.add_document("c1", "apple") # chapter 1
+        bm25.add_document("c2", "apple apple") # chapter 2
+        bm25.build()
+        
+        # GLOBAL_DIAGNOSTIC returns future chunk because it matches better
+        res_global = bm25.score("apple")
+        self.assertEqual(res_global[0][0], "c2")
+        
+        # CUTOFF_FILTERED restricts allowed docs
+        res_cutoff = bm25.score("apple", allowed_doc_ids={"c1"})
+        self.assertEqual(len(res_cutoff), 1)
+        self.assertEqual(res_cutoff[0][0], "c1")
+        
+    def test_determinism_failure_gate(self):
+        agg1 = {
+            "detailed_results_sha256": {
+                "cutoff_filtered_per_probe.jsonl": "abc",
+                "global_diagnostic_per_probe.jsonl": "def"
+            },
+            "other_metric": 1.0
+        }
+        
+        # Exact identical -> True
+        self.assertTrue(verify_determinism(agg1, agg1))
+        
+        # Cutoff mismatch -> False
+        agg2 = copy.deepcopy(agg1)
+        agg2["detailed_results_sha256"]["cutoff_filtered_per_probe.jsonl"] = "zzz"
+        self.assertFalse(verify_determinism(agg1, agg2))
+        
+        # Global mismatch -> False
+        agg3 = copy.deepcopy(agg1)
+        agg3["detailed_results_sha256"]["global_diagnostic_per_probe.jsonl"] = "zzz"
+        self.assertFalse(verify_determinism(agg1, agg3))
+        
+        # Metric mismatch -> False
+        agg4 = copy.deepcopy(agg1)
+        agg4["other_metric"] = 2.0
+        self.assertFalse(verify_determinism(agg1, agg4))
 
 if __name__ == '__main__':
     unittest.main()
