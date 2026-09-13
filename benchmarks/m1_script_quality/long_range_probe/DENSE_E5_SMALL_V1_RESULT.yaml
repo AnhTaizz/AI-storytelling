@@ -5,11 +5,13 @@ probe_file_sha256: 24ca1f9c92531a19f59d409c7d3e68ef90b91ab24aab6d7854f0c52667c13
 chunks_jsonl_sha256: 10ef5681ad1b2db0882c150efa24804cd0fca56bb38e0ffb772d22494e1e40fb
 model_info:
   model_id: intfloat/multilingual-e5-small
+  model_revision: 614241f622f53c4eeff9890bdc4f31cfecc418b3
+  model_weight_filename: model.safetensors
+  model_weight_sha256: 1a55775f53449dac10a2bcbc312469fac40b96d53198c407081a831f81c98477
   embedding_dimension: 384
   sentence_transformers_version: 6.0.1
   transformers_version: 5.17.0
-  torch_version: !!python/object/new:torch.torch_version.TorchVersion
-  - 2.14.0+cpu
+  torch_version: 2.14.0+cpu
   execution_device: cpu
 CUTOFF_FILTERED:
   overall:
@@ -244,8 +246,8 @@ dense_diagnostics:
   passage_count: 97
   query_truncation_count: 0
   passage_truncation_count: 77
-  encoding_runtime_sec: 13.52
-  retrieval_evaluation_runtime_sec: 0.723
+  encoding_runtime_sec: 55.209
+  retrieval_evaluation_runtime_sec: 2.011
 detailed_results_sha256:
   cutoff_filtered_per_probe.jsonl: b4a2f7479853276205fca17e7230ef878a07e299aedf94d83ea2c8b2169d824f
   global_diagnostic_per_probe.jsonl: d5e46c2bbda47fbabc150c95dbe762697a4368f969c731d73c6b277e479d7248

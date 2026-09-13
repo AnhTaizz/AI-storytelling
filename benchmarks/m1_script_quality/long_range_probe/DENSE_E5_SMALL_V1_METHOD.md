@@ -32,3 +32,10 @@ This baseline tests pure semantic embedding retrieval. It explicitly avoids:
 ## Privacy and Reproducibility
 - Execution is fully deterministic (`model.eval()`, fixed seed). Two runs must yield exact binary/hash reproduction.
 - Embeddings and detailed retrieval rankings remain strictly local. No private chunk text or questions are committed.
+
+## Model Identity and Environment
+- **Model Revision**: Frozen to exact Hugging Face snapshot SHA: `614241f622f53c4eeff9890bdc4f31cfecc418b3`
+- **Model Weight Identity**: Verified by calculating SHA-256 over `model.safetensors` from the snapshot (`1a55775f53449dac10a2bcbc312469fac40b96d53198c407081a831f81c98477`).
+- **Execution Target**: Explicitly `cpu` only (to eliminate CUDA-specific floating-point non-determinism).
+- **Environment**: Tracked plain-string dependency versions for `sentence-transformers`, `transformers`, and `torch` in results yaml.
+- **Reproducibility Contract**: Any reproduction attempt must run two back-to-back scoring passes on the local benchmark. Both runs must generate exactly identical detail and aggregate JSON/YAML structures (ignoring minor runtime measurements). Missing or differing hashes result in a mechanical FAIL.

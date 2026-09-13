@@ -19,8 +19,14 @@ class DenseE5SmallV1:
         torch.use_deterministic_algorithms(True, warn_only=True)
         
         self.model_name = "intfloat/multilingual-e5-small"
+        self.model_revision = "614241f622f53c4eeff9890bdc4f31cfecc418b3"
         self.device = "cpu"
-        self.model = SentenceTransformer(self.model_name, device=self.device)
+        
+        self.model = SentenceTransformer(
+            self.model_name,
+            revision=self.model_revision,
+            device=self.device
+        )
         self.model.max_seq_length = 512
         self.model.eval()
         
@@ -41,10 +47,13 @@ class DenseE5SmallV1:
         # This is best-effort local resolution.
         return {
             "model_id": self.model_name,
+            "model_revision": self.model_revision,
+            "model_weight_filename": "model.safetensors",
+            "model_weight_sha256": "1a55775f53449dac10a2bcbc312469fac40b96d53198c407081a831f81c98477",
             "embedding_dimension": self.model.get_sentence_embedding_dimension(),
-            "sentence_transformers_version": sentence_transformers.__version__,
-            "transformers_version": transformers.__version__,
-            "torch_version": torch.__version__,
+            "sentence_transformers_version": str(sentence_transformers.__version__),
+            "transformers_version": str(transformers.__version__),
+            "torch_version": str(torch.__version__),
             "execution_device": self.device
         }
 
@@ -79,9 +88,11 @@ class DenseE5SmallV1:
             return self.model.encode(prefixed, convert_to_numpy=True, normalize_embeddings=True, show_progress_bar=False)
             
     def score(self, query: str, allowed_doc_ids: Set[str] = None) -> List[Tuple[str, float]]:
-        # Single query scoring
+        # Single query scoring (legacy backwards compatible)
         q_emb = self.encode_queries([query])[0]
-        
+        return self.score_embedding(q_emb, allowed_doc_ids)
+
+    def score_embedding(self, q_emb: np.ndarray, allowed_doc_ids: Set[str] = None) -> List[Tuple[str, float]]:
         scores = {}
         # compute dot product over all docs (they are normalized, so it's cosine sim)
         sims = np.dot(self.doc_embeddings, q_emb)

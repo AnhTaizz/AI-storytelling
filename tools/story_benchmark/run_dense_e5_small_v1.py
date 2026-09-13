@@ -42,9 +42,12 @@ def run_dense_baseline(probes_path: Path, chunks_path: Path, out_dir: Path):
     eval_t0 = time.time()
     
     for probe in probes:
+        # Encode query once
+        q_emb = dense.encode_queries([probe["question"]])[0]
+        
         # CUTOFF FILTERED
         allowed_docs = {cid for cid, chap in chunk_meta.items() if chap <= probe["cutoff_chapter"]}
-        ranked_cutoff = dense.score(probe["question"], allowed_doc_ids=allowed_docs)
+        ranked_cutoff = dense.score_embedding(q_emb, allowed_doc_ids=allowed_docs)
         ranked_ids_cutoff = [x[0] for x in ranked_cutoff]
         m_cutoff = calculate_metrics(probe, ranked_ids_cutoff)
         m_cutoff.update(compute_spoiler_violations(probe, ranked_ids_cutoff, chunk_meta))
@@ -61,7 +64,7 @@ def run_dense_baseline(probes_path: Path, chunks_path: Path, out_dir: Path):
         cutoff_filtered_metrics.append((probe, m_cutoff, ranked_cutoff))
         
         # GLOBAL DIAGNOSTIC
-        ranked_global = dense.score(probe["question"], allowed_doc_ids=None)
+        ranked_global = dense.score_embedding(q_emb, allowed_doc_ids=None)
         ranked_ids_global = [x[0] for x in ranked_global]
         m_global = calculate_metrics(probe, ranked_ids_global)
         m_global.update(compute_spoiler_violations(probe, ranked_ids_global, chunk_meta))
