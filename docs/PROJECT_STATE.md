@@ -107,25 +107,21 @@ coverage over Critic V1, but remained incomplete (11/33 robust issues detected).
 
 ## Current Task
 
-30-chapter local/private integration corpus identity frozen.
+30-chapter corpus identity: FROZEN
+Corpus fingerprint: 7f9bb8106d6d50acd2b3760738c0b8040f36ab547c2d2f7eade1ca0b9a827ff8
 
-Corpus:
-chapter range: 001-030
-tracked sample: 001-005
-local/private ignored: 006-030
-chapter count: 30
-corpus fingerprint: 7f9bb8106d6d50acd2b3760738c0b8040f36ab547c2d2f7eade1ca0b9a827ff8
+Local passage contract: OTONARI_LOCAL_PASSAGE_V1
+Segmentation: PARAGRAPH_PACK_V1
+Maximum chunk size: 1200 Unicode code points
+Overlap: NONE
+Text normalization: NONE
 
-Raw private chapters committed: NO
-Semantic processing: NOT_STARTED
+Ingestion execution: NOT_STARTED
+Private derived text: LOCAL_ONLY
 
-H7 V2 Stage A remains CLOSED.
-
-H7 confirmatory verdict:
-NOT_EVALUATED
-
-Stage B:
-NOT_AUTHORIZED
+H7 V2 Stage A: CLOSED
+H7 confirmatory verdict: NOT_EVALUATED
+Stage B: NOT_AUTHORIZED
 
 Historical note:
 
@@ -136,6 +132,6 @@ format violation.
 
 ## Next Candidate
 
-M1 — define and freeze deterministic local ingestion/chunking contract for the
-30-chapter corpus, with derived text artifacts remaining local/private and only
-code/config/metadata eligible for Git.
+M1 — implement and execute OTONARI_LOCAL_PASSAGE_V1 locally against the frozen
+30-chapter corpus, producing private chunks + a privacy-safe tracked execution
+summary only.

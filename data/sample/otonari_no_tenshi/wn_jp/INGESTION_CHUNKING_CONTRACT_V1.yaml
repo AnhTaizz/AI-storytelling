@@ -1,0 +1,74 @@
+contract:
+  id: OTONARI_LOCAL_PASSAGE_V1
+  version: 1
+  segmentation_version: PARAGRAPH_PACK_V1
+  status: FROZEN_FOR_LOCAL_EXECUTION
+scope:
+  integration_spike: true
+  milestone_completion_claimed: false
+  optimization_claimed: false
+input:
+  corpus_manifest_path: data/sample/otonari_no_tenshi/wn_jp/CORPUS_30CH_LOCAL_MANIFEST.yaml
+  corpus_id: OTONARI_NO_TENSHI_WN_JP_CH001_030
+  corpus_fingerprint_sha256: 7f9bb8106d6d50acd2b3760738c0b8040f36ab547c2d2f7eade1ca0b9a827ff8
+  chapter_first: 1
+  chapter_last: 30
+  expected_chapter_count: 30
+  encoding: UTF-8
+  decode_errors: STRICT
+normalization:
+  text_normalization: NONE
+  unicode_normalization: NONE
+  whitespace_normalization: NONE
+  newline_normalization: NONE
+paragraphs:
+  parser: MAXIMAL_CONTIGUOUS_NONBLANK_LINES_V1
+  preserve_line_endings: true
+  special_title_handling: false
+  semantic_segmentation: false
+chunking:
+  algorithm: PARAGRAPH_PACK_V1
+  max_chunk_chars: 1200
+  length_unit: UNICODE_CODEPOINTS
+  chapter_crossing_allowed: false
+  overlap_chars: 0
+  overlap_paragraphs: 0
+  overlap_policy: NO_OVERLAP
+  oversized_paragraph_policy: HARD_SPLIT_CODEPOINT_V1
+identifiers:
+  chunk_id_format: ch{chapter_number:03d}_c{chunk_index:04d}
+  chunk_index_start: 1
+hashing:
+  source_hash_algorithm: SHA256_LOCAL_RAW_BYTES
+  chunk_hash_algorithm: SHA256_UTF8_EXACT_SOURCE_SUBSTRING
+coverage:
+  all_nonblank_source_characters_required: true
+  duplicate_nonblank_coverage_allowed: false
+  blank_only_edge_regions_required: false
+  gaps_allowed_only_for_blank_whitespace: true
+privacy:
+  raw_corpus_visibility: LOCAL_PRIVATE
+  derived_chunk_text_visibility: LOCAL_PRIVATE
+  tracked_metadata_allowed: true
+  tracked_raw_text_allowed: false
+  tracked_private_chunk_text_allowed: false
+  tracked_embeddings_allowed: false
+  tracked_vector_index_allowed: false
+future_local_output:
+  root: .local/story_integration/otonari_30ch/PARAGRAPH_PACK_V1/
+  chunks_file: chunks.jsonl
+  chunk_manifest_file: chunk_manifest.yaml
+  validation_report_file: validation_report.yaml
+model_usage:
+  llm_used: false
+  embedding_model_used: false
+  tokenizer_used: false
+rationale:
+  baseline_complexity: SIMPLE
+  overlap_deferred_until_observed_boundary_failure: true
+  chunk_size_empirically_optimal_claimed: false
+execution_status:
+  contract_frozen: true
+  ingestion_executed: false
+  chunking_executed: false
+source_commit: f64ec5caebde6ce67724d7aa52b4a8e795f4182b
