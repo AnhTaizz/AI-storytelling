@@ -1,0 +1,217 @@
+experiment:
+  id: H7
+  stage: A
+  iteration: V2_RERUN
+  role: EXPLORATORY_DEVELOPMENT_SET
+  prompt_version: H7_EIC_V2
+aggregation:
+  policy: UNION_BASELINE_PLUS_TARGETED
+  gold_used_for_aggregation: false
+  gold_used_for_deduplication: false
+  prior_v1_union_used: false
+  prior_h7_output_used_for_decisions: false
+sources:
+  preregistration:
+    path: benchmarks/m1_script_quality/experiments/NEXT_VALIDATION_EXPERIMENT_PLAN.yaml
+    canonical_sha256: 409cda85b27f68640c1c3ab0faf686492d78e871ebfd6553c354671d01b57d07
+  baseline:
+    run: RUN_0007_H6B_REAL_DETERMINISTIC_CLAIM_AUDIT
+    path: benchmarks/m1_script_quality/runs/RUN_0007_H6B_REAL_DETERMINISTIC_CLAIM_AUDIT/claim_audit.yaml
+    canonical_sha256: 3f91e301c85e0b58869c0a876d7261d17c9135bacb33286694024e710160c7a4
+    problematic_count: 9
+  targeted:
+    run: RUN_0010_H7_STAGE_A_V2_EIC_REAL
+    path: benchmarks/m1_script_quality/runs/RUN_0010_H7_STAGE_A_V2_EIC_REAL/critic_output.raw.txt
+    canonical_sha256: 4fb345cd8f3a786f41cb213a1f3441c25957a8c96b988329ca14d9e1fd200ee5
+    problematic_count: 5
+    mechanical_validation_path: benchmarks/m1_script_quality/runs/RUN_0010_H7_STAGE_A_V2_EIC_REAL/mechanical_validation_report.yaml
+    mechanical_validation_sha256: 46a670201c2580b24e0b6ddacd1fbd444aa4eb295dc00205f0345ec271d21ccf
+    strict_frozen_output_contract_pass: true
+deduplication:
+  policy_source: benchmarks/m1_script_quality/experiments/NEXT_VALIDATION_EXPERIMENT_PLAN.yaml
+  uncertain_cases_preserved: true
+  review:
+  - target_prediction_id: E001
+    unit_id: P006
+    normalized_claim: Amane avoided Mahiru because he knew getting involved would
+      attract jealousy and he viewed her only as an art piece to look at from afar.
+    cross_source_candidates:
+    - baseline_prediction_id: C015
+      same_material_assertion: true
+      same_semantic_context: true
+      decision: DEDUPLICATE
+      rationale: Both E001 and C015 identify the same unsupported claim regarding
+        Amane's motives for avoiding Mahiru (to prevent jealousy), within the same
+        semantic context of P006.
+    final_decision: DEDUPLICATE_TO_BASELINE
+    duplicate_of: C015
+  - target_prediction_id: E002
+    unit_id: P011
+    normalized_claim: Mahiru had no intention of finding shelter.
+    cross_source_candidates:
+    - baseline_prediction_id: C022
+      same_material_assertion: false
+      same_semantic_context: true
+      decision: DISTINCT
+      rationale: E002 identifies an unsupported claim about Mahiru's internal intention,
+        which does not overlap with the baseline's focus on her physical state (paleness)
+        in C022.
+    final_decision: KEEP_UNIQUE
+    duplicate_of: null
+  - target_prediction_id: E003
+    unit_id: P015
+    normalized_claim: Amane purposefully kept his tone as cold as possible so that
+      Mahiru would not misunderstand.
+    cross_source_candidates:
+    - baseline_prediction_id: C028
+      same_material_assertion: true
+      same_semantic_context: true
+      decision: DEDUPLICATE
+      rationale: E003 and C028 identify the exact same unsupported claim about Amane's
+        intention behind using a cold tone in P015.
+    final_decision: DEDUPLICATE_TO_BASELINE
+    duplicate_of: C028
+  - target_prediction_id: E004
+    unit_id: P020
+    normalized_claim: Amane guessed that Mahiru was thinking he was using the opportunity
+      to hit on her.
+    cross_source_candidates:
+    - baseline_prediction_id: C037
+      same_material_assertion: true
+      same_semantic_context: true
+      decision: DEDUPLICATE
+      rationale: E004 and C037 identify the exact same unsupported claim about Amane's
+        assumption regarding Mahiru's thoughts in P020.
+    final_decision: DEDUPLICATE_TO_BASELINE
+    duplicate_of: C037
+  - target_prediction_id: E005
+    unit_id: P024
+    normalized_claim: Amane knew clearly that Mahiru had something heavy on her mind.
+    cross_source_candidates: []
+    final_decision: KEEP_UNIQUE
+    duplicate_of: null
+counts:
+  baseline_problematic_input: 9
+  targeted_problematic_input: 5
+  targeted_deduplicated_to_baseline: 3
+  targeted_unique_retained: 2
+  final_union_prediction_count: 11
+final_union:
+- union_id: U001
+  source_system: BASELINE_RUN7
+  source_prediction_id: C004
+  unit_id: P002
+  normalized_claim: An 'angel' (Mahiru) lives in the apartment immediately to the
+    right of Amane's room.
+  classification: UNSUPPORTED
+  severity: LOW
+  recommended_action: REMOVE
+  merged_source_prediction_ids: []
+- union_id: U002
+  source_system: BASELINE_RUN7
+  source_prediction_id: C007
+  unit_id: P003
+  normalized_claim: Mahiru has a high elegant nose and long eyelashes.
+  classification: UNSUPPORTED
+  severity: LOW
+  recommended_action: REMOVE
+  merged_source_prediction_ids: []
+- union_id: U003
+  source_system: BASELINE_RUN7
+  source_prediction_id: C015
+  unit_id: P006
+  normalized_claim: Amane thinks the gap between him and Mahiru is too large and wants
+    to avoid jealousy from other boys.
+  classification: UNSUPPORTED
+  severity: LOW
+  recommended_action: REMOVE
+  merged_source_prediction_ids:
+  - E001
+- union_id: U004
+  source_system: BASELINE_RUN7
+  source_prediction_id: C022
+  unit_id: P011
+  normalized_claim: Mahiru's face is pale from the cold.
+  classification: UNSUPPORTED
+  severity: LOW
+  recommended_action: REMOVE
+  merged_source_prediction_ids: []
+- union_id: U005
+  source_system: TARGETED_H7_RUN10
+  source_prediction_id: E002
+  unit_id: P011
+  normalized_claim: Mahiru had no intention of finding shelter.
+  classification: UNSUPPORTED
+  severity: MEDIUM
+  recommended_action: REMOVE
+  merged_source_prediction_ids: []
+- union_id: U006
+  source_system: BASELINE_RUN7
+  source_prediction_id: C028
+  unit_id: P015
+  normalized_claim: Amane intentionally uses a cold tone to avoid misunderstanding.
+  classification: UNSUPPORTED
+  severity: LOW
+  recommended_action: REMOVE
+  merged_source_prediction_ids:
+  - E003
+- union_id: U007
+  source_system: BASELINE_RUN7
+  source_prediction_id: C030
+  unit_id: P017
+  normalized_claim: Mahiru's face is pale.
+  classification: UNSUPPORTED
+  severity: LOW
+  recommended_action: REMOVE
+  merged_source_prediction_ids: []
+- union_id: U008
+  source_system: BASELINE_RUN7
+  source_prediction_id: C033
+  unit_id: P018
+  normalized_claim: Mahiru and Amane often run into each other in the morning.
+  classification: UNSUPPORTED
+  severity: LOW
+  recommended_action: REMOVE
+  merged_source_prediction_ids: []
+- union_id: U009
+  source_system: BASELINE_RUN7
+  source_prediction_id: C036
+  unit_id: P020
+  normalized_claim: Amane is surprised that Mahiru remembers his last name.
+  classification: UNSUPPORTED
+  severity: LOW
+  recommended_action: REMOVE
+  merged_source_prediction_ids: []
+- union_id: U010
+  source_system: BASELINE_RUN7
+  source_prediction_id: C037
+  unit_id: P020
+  normalized_claim: Amane assumes Mahiru thinks he is using this opportunity to hit
+    on her.
+  classification: UNSUPPORTED
+  severity: LOW
+  recommended_action: REMOVE
+  merged_source_prediction_ids:
+  - E004
+- union_id: U011
+  source_system: TARGETED_H7_RUN10
+  source_prediction_id: E005
+  unit_id: P024
+  normalized_claim: Amane knew clearly that Mahiru had something heavy on her mind.
+  classification: UNSUPPORTED
+  severity: MEDIUM
+  recommended_action: SOFTEN
+  merged_source_prediction_ids: []
+freeze_provenance:
+  source_commit: 4d59d0eea5d40b4c8027cb94777d9a82d69c7092
+  gold_opened_during_task: false
+  prior_v1_union_opened_during_task: false
+  prior_h7_output_opened_during_task: false
+  residual_failure_analysis_opened_during_task: false
+  semantic_model_invoked: false
+  semantic_scoring_performed: false
+interpretation:
+  development_only: true
+  confirmatory_evidence: false
+  h7_confirmatory_verdict: NOT_EVALUATED
+  stage_b_authorized: false

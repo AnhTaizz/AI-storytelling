@@ -107,9 +107,15 @@ coverage over Critic V1, but remained incomplete (11/33 robust issues detected).
 
 ## Current Task
 
-RUN10 H7_EIC_V2 Stage A rerun passed strict mechanical validation against the
-frozen V2 contract. The V2 format-hardening objective succeeded mechanically
-on this developmental rerun. No gold scoring has been performed for RUN10.
+H7_EIC_V2 Stage A RUN10 passed mechanical validation and the V2 candidate
+baseline+targeted union/dedup has now been frozen gold-blind.
+
+- baseline source: unchanged RUN7;
+- targeted source: mechanically valid RUN10;
+- aggregation followed preregistered union/dedup policy;
+- gold was not accessed;
+- no semantic scoring performed;
+- freeze is immutable before gold mapping.
 
 Record:
 
@@ -134,6 +140,6 @@ format violation.
 
 ## Next Candidate
 
-M1 — Freeze a gold-blind Stage A V2 union/dedup using the unchanged RUN7
-baseline and mechanically valid RUN10 targeted-pass output before any gold
-mapping.
+M1 — map the accepted frozen Stage A V2 union against the already-frozen RUN3
+reference and calculate exploratory Stage A V2 metrics without modifying the
+union freeze.
