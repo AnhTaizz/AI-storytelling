@@ -331,6 +331,79 @@ def validate_chapter_chunks(chunks: List[ChunkInfo], paragraphs: List[ParagraphI
         }
     }
 
+def validate_corpus_chunks(chunks: List[ChunkInfo], chapter_info: List[Dict[str, Any]]) -> Dict[str, Any]:
+    issues = []
+    
+    chunk_ids = [c.chunk_id for c in chunks]
+    chunk_id_unique = len(set(chunk_ids)) == len(chunk_ids)
+    if not chunk_id_unique:
+        issues.append("DUPLICATE_CHUNK_ID")
+        
+    chunk_indices_sequential = True
+    no_cross_chapter_chunks = True
+    boundary_reason_enum_valid = True
+    max_chunk_size_valid = True
+    chunk_id_format_valid = True
+    
+    chapter_map = {ch["number"]: ch for ch in chapter_info}
+    
+    chunks_by_chapter = {}
+    for c in chunks:
+        chunks_by_chapter.setdefault(c.chapter_number, []).append(c)
+        
+    for ch_num, ch_chunks in chunks_by_chapter.items():
+        if ch_num not in chapter_map:
+            no_cross_chapter_chunks = False
+            issues.append(f"UNKNOWN_CHAPTER_{ch_num}")
+            continue
+            
+        expected_path = chapter_map[ch_num]["logical_path"]
+        expected_sha256 = chapter_map[ch_num]["sha256"]
+        
+        for i, c in enumerate(ch_chunks):
+            if c.source_logical_path != expected_path:
+                no_cross_chapter_chunks = False
+                issues.append(f"PATH_MISMATCH_{c.chunk_id}")
+            if c.source_chapter_sha256 != expected_sha256:
+                no_cross_chapter_chunks = False
+                issues.append(f"HASH_MISMATCH_{c.chunk_id}")
+                
+            expected_id = f"ch{c.chapter_number:03d}_c{c.chunk_index:04d}"
+            if c.chunk_id != expected_id:
+                chunk_id_format_valid = False
+                issues.append(f"MALFORMED_CHUNK_ID_{c.chunk_id}")
+                
+            if c.boundary_reason not in ["PARAGRAPH_PACK", "OVERSIZED_PARAGRAPH_HARD_SPLIT"]:
+                boundary_reason_enum_valid = False
+                issues.append(f"INVALID_BOUNDARY_REASON_{c.chunk_id}")
+                
+            if not (1 <= c.char_count <= 1200):
+                max_chunk_size_valid = False
+                issues.append(f"INVALID_CHUNK_SIZE_{c.chunk_id}")
+                
+            if i == 0:
+                if c.chunk_index != 1:
+                    chunk_indices_sequential = False
+                    issues.append(f"FIRST_INDEX_NOT_1_CH_{c.chapter_number}")
+            else:
+                prev = ch_chunks[i-1]
+                if c.chunk_index != prev.chunk_index + 1:
+                    chunk_indices_sequential = False
+                    issues.append(f"NON_SEQUENTIAL_INDEX_{c.chunk_id}")
+                    
+    return {
+        "pass": len(issues) == 0,
+        "issues": issues,
+        "metrics": {
+            "chunk_id_unique": chunk_id_unique,
+            "chunk_id_format_valid": chunk_id_format_valid,
+            "chunk_indices_sequential": chunk_indices_sequential,
+            "no_cross_chapter_chunks": no_cross_chapter_chunks,
+            "boundary_reason_enum_valid": boundary_reason_enum_valid,
+            "max_chunk_size_valid": max_chunk_size_valid,
+        }
+    }
+
 def compute_corpus_fingerprint(hashes: List[str]) -> str:
     lines = [f"{i+1:03d}:{h}" for i, h in enumerate(hashes)]
     content = "\n".join(lines).encode("ascii")
@@ -411,47 +484,26 @@ def execute_corpus(repro_dir: Optional[str] = None):
         all_chunks.extend(chunks)
         all_paragraphs.extend(paragraphs)
         
-    chunk_ids = [c.chunk_id for c in all_chunks]
-    chunk_id_unique = len(set(chunk_ids)) == len(chunk_ids)
-    
-    chunk_indices_sequential = True
-    no_cross_chapter_chunks = True
-    boundary_reason_enum_valid = True
-    max_chunk_size_valid = True
-    
-    for i, c in enumerate(all_chunks):
-        if not (1 <= c.char_count <= 1200):
-            max_chunk_size_valid = False
-            
-        if c.boundary_reason not in ["PARAGRAPH_PACK", "OVERSIZED_PARAGRAPH_HARD_SPLIT"]:
-            boundary_reason_enum_valid = False
-            
-        if i > 0:
-            prev = all_chunks[i-1]
-            if c.chapter_number == prev.chapter_number:
-                if c.chunk_index != prev.chunk_index + 1:
-                    chunk_indices_sequential = False
-            else:
-                if c.chunk_index != 1:
-                    chunk_indices_sequential = False
-                    
-        # Check cross chapter chunk: if chapter_number of chunk != current chapter iteration 
-        # (which is guaranteed since we create chunks per chapter).
+    corpus_val = validate_corpus_chunks(all_chunks, chapter_info)
+    if not corpus_val["pass"]:
+        validation_failures.append(f"Corpus validation failed: {corpus_val['issues']}")
         
     paragraph_coverage_pass = total_metrics["paragraph_character_omitted"] == 0 and total_metrics["paragraph_character_duplicated"] == 0
     
     overall_pass = True
     if len(validation_failures) > 0: overall_pass = False
-    if not chunk_id_unique: overall_pass = False
-    if not chunk_indices_sequential: overall_pass = False
-    if not boundary_reason_enum_valid: overall_pass = False
+    if not corpus_val["metrics"]["chunk_id_unique"]: overall_pass = False
+    if not corpus_val["metrics"]["chunk_id_format_valid"]: overall_pass = False
+    if not corpus_val["metrics"]["chunk_indices_sequential"]: overall_pass = False
+    if not corpus_val["metrics"]["no_cross_chapter_chunks"]: overall_pass = False
+    if not corpus_val["metrics"]["boundary_reason_enum_valid"]: overall_pass = False
     if total_metrics["empty_chunk_count"] > 0: overall_pass = False
     if total_metrics["exact_source_slice_match_count"] != len(all_chunks): overall_pass = False
     if total_metrics["chunk_hash_match_count"] != len(all_chunks): overall_pass = False
     if not paragraph_coverage_pass: overall_pass = False
     if total_metrics["illegal_gap_count"] > 0: overall_pass = False
     if total_metrics["overlap_count"] > 0: overall_pass = False
-    if not max_chunk_size_valid: overall_pass = False
+    if not corpus_val["metrics"]["max_chunk_size_valid"]: overall_pass = False
     
     # Validation report
     validation_report = {
@@ -464,10 +516,11 @@ def execute_corpus(repro_dir: Optional[str] = None):
         "all_chapter_hashes_match": True,
         "paragraph_count": len(all_paragraphs),
         "chunk_count": len(all_chunks),
-        "chunk_id_unique": chunk_id_unique,
-        "chunk_indices_sequential": chunk_indices_sequential,
-        "no_cross_chapter_chunks": no_cross_chapter_chunks,
-        "max_chunk_size_valid": max_chunk_size_valid,
+        "chunk_id_unique": corpus_val["metrics"]["chunk_id_unique"],
+        "chunk_id_format_valid": corpus_val["metrics"]["chunk_id_format_valid"],
+        "chunk_indices_sequential": corpus_val["metrics"]["chunk_indices_sequential"],
+        "no_cross_chapter_chunks": corpus_val["metrics"]["no_cross_chapter_chunks"],
+        "max_chunk_size_valid": corpus_val["metrics"]["max_chunk_size_valid"],
         "empty_chunk_count": total_metrics["empty_chunk_count"],
         "exact_source_slice_match_count": total_metrics["exact_source_slice_match_count"],
         "chunk_hash_match_count": total_metrics["chunk_hash_match_count"],
@@ -478,7 +531,7 @@ def execute_corpus(repro_dir: Optional[str] = None):
         "legal_blank_gap_count": total_metrics["legal_blank_gap_count"],
         "illegal_gap_count": total_metrics["illegal_gap_count"],
         "overlap_count": total_metrics["overlap_count"],
-        "boundary_reason_enum_valid": boundary_reason_enum_valid,
+        "boundary_reason_enum_valid": corpus_val["metrics"]["boundary_reason_enum_valid"],
         "model_invoked": False,
         "overall_status": "PASS" if overall_pass else "FAIL"
     }
@@ -554,7 +607,7 @@ def execute_corpus(repro_dir: Optional[str] = None):
         f.write(report_yaml)
         
     print(f"overall_status: {validation_report['overall_status']}")
-    if validation_failures:
+    if not overall_pass:
         print("Validation failures found:", validation_failures)
         return False
         

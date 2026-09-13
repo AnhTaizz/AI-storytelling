@@ -79,7 +79,7 @@ local_artifacts:
   root: .local/story_integration/otonari_30ch/PARAGRAPH_PACK_V1/
   chunks_jsonl_sha256: 10ef5681ad1b2db0882c150efa24804cd0fca56bb38e0ffb772d22494e1e40fb
   chunk_manifest_sha256: 7626dddee312eb67c1fe94ef4f095627110af4a3cefde29aa1ed5f82ea6fc125
-  validation_report_sha256: cc1fa8ffbbbf9a5ccb5684264b0c731e23710f5cd81bd9a1a4280e0271850fa8
+  validation_report_sha256: 2ec98a60f6d17aaa6e8c2541d6c586aa03796b928e69cbe270623e49014cd0d0
   committed: false
 
 reproducibility:

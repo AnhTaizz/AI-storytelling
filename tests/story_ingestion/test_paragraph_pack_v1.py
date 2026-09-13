@@ -10,8 +10,10 @@ from tools.story_ingestion.paragraph_pack_v1 import (
     parse_paragraphs,
     chunk_chapter,
     validate_chapter_chunks,
+    validate_corpus_chunks,
     execute_corpus,
-    sha256_bytes
+    sha256_bytes,
+    ChunkInfo
 )
 
 class TestParagraphPack(unittest.TestCase):
@@ -194,6 +196,66 @@ class TestParagraphPack(unittest.TestCase):
         self.assertFalse(val["pass"])
         self.assertTrue(any("ILLEGAL_GAP" in issue for issue in val["issues"]))
         self.assertGreater(val["metrics"]["illegal_gap_count"], 0)
+
+    def test_corpus_validator_duplicate_id(self):
+        c1 = ChunkInfo(chunk_id="ch001_c0001", chapter_number=1, chunk_index=1, char_count=100, boundary_reason="PARAGRAPH_PACK", source_logical_path="p1", source_chapter_sha256="h1")
+        c2 = ChunkInfo(chunk_id="ch001_c0001", chapter_number=1, chunk_index=1, char_count=100, boundary_reason="PARAGRAPH_PACK", source_logical_path="p1", source_chapter_sha256="h1")
+        ch_info = [{"number": 1, "logical_path": "p1", "sha256": "h1", "text": ""}]
+        val = validate_corpus_chunks([c1, c2], ch_info)
+        self.assertFalse(val["pass"])
+        self.assertFalse(val["metrics"]["chunk_id_unique"])
+        self.assertTrue(any("DUPLICATE_CHUNK_ID" in i for i in val["issues"]))
+
+    def test_corpus_validator_first_index_not_1(self):
+        c1 = ChunkInfo(chunk_id="ch001_c0002", chapter_number=1, chunk_index=2, char_count=100, boundary_reason="PARAGRAPH_PACK", source_logical_path="p1", source_chapter_sha256="h1")
+        ch_info = [{"number": 1, "logical_path": "p1", "sha256": "h1", "text": ""}]
+        val = validate_corpus_chunks([c1], ch_info)
+        self.assertFalse(val["pass"])
+        self.assertFalse(val["metrics"]["chunk_indices_sequential"])
+        self.assertTrue(any("FIRST_INDEX_NOT_1" in i for i in val["issues"]))
+
+    def test_corpus_validator_non_sequential(self):
+        c1 = ChunkInfo(chunk_id="ch001_c0001", chapter_number=1, chunk_index=1, char_count=100, boundary_reason="PARAGRAPH_PACK", source_logical_path="p1", source_chapter_sha256="h1")
+        c2 = ChunkInfo(chunk_id="ch001_c0003", chapter_number=1, chunk_index=3, char_count=100, boundary_reason="PARAGRAPH_PACK", source_logical_path="p1", source_chapter_sha256="h1")
+        ch_info = [{"number": 1, "logical_path": "p1", "sha256": "h1", "text": ""}]
+        val = validate_corpus_chunks([c1, c2], ch_info)
+        self.assertFalse(val["pass"])
+        self.assertFalse(val["metrics"]["chunk_indices_sequential"])
+        self.assertTrue(any("NON_SEQUENTIAL_INDEX" in i for i in val["issues"]))
+
+    def test_corpus_validator_malformed_id(self):
+        c1 = ChunkInfo(chunk_id="bad_id", chapter_number=1, chunk_index=1, char_count=100, boundary_reason="PARAGRAPH_PACK", source_logical_path="p1", source_chapter_sha256="h1")
+        ch_info = [{"number": 1, "logical_path": "p1", "sha256": "h1", "text": ""}]
+        val = validate_corpus_chunks([c1], ch_info)
+        self.assertFalse(val["pass"])
+        self.assertFalse(val["metrics"]["chunk_id_format_valid"])
+        self.assertTrue(any("MALFORMED_CHUNK_ID" in i for i in val["issues"]))
+
+    def test_corpus_validator_cross_chapter(self):
+        # path mismatch
+        c1 = ChunkInfo(chunk_id="ch001_c0001", chapter_number=1, chunk_index=1, char_count=100, boundary_reason="PARAGRAPH_PACK", source_logical_path="wrong", source_chapter_sha256="h1")
+        ch_info = [{"number": 1, "logical_path": "p1", "sha256": "h1", "text": ""}]
+        val = validate_corpus_chunks([c1], ch_info)
+        self.assertFalse(val["pass"])
+        self.assertFalse(val["metrics"]["no_cross_chapter_chunks"])
+        self.assertTrue(any("PATH_MISMATCH" in i for i in val["issues"]))
+
+    @patch("tools.story_ingestion.paragraph_pack_v1.validate_corpus_chunks")
+    def test_aggregate_failure_returns_false(self, mock_val):
+        mock_val.return_value = {
+            "pass": False,
+            "issues": ["FAKE_CORPUS_ISSUE"],
+            "metrics": {
+                "chunk_id_unique": False,
+                "chunk_id_format_valid": True,
+                "chunk_indices_sequential": True,
+                "no_cross_chapter_chunks": True,
+                "boundary_reason_enum_valid": True,
+                "max_chunk_size_valid": True
+            }
+        }
+        result = execute_corpus(".local/test_aggregate")
+        self.assertFalse(result)
 
 if __name__ == "__main__":
     unittest.main()
