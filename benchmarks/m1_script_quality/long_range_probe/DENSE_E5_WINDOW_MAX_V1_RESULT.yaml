@@ -1,0 +1,373 @@
+baseline_id: DENSE_E5_WINDOW_MAX_V1
+status: EXECUTED
+benchmark_id: LONG_RANGE_PROBE_V1
+probe_file_sha256: 24ca1f9c92531a19f59d409c7d3e68ef90b91ab24aab6d7854f0c52667c136e2
+chunks_jsonl_sha256: 10ef5681ad1b2db0882c150efa24804cd0fca56bb38e0ffb772d22494e1e40fb
+model_info:
+  model_id: intfloat/multilingual-e5-small
+  model_revision: 614241f622f53c4eeff9890bdc4f31cfecc418b3
+  model_weight_filename: model.safetensors
+  model_weight_sha256: 1a55775f53449dac10a2bcbc312469fac40b96d53198c407081a831f81c98477
+  embedding_dimension: 384
+  sentence_transformers_version: 6.0.1
+  transformers_version: 5.17.0
+  torch_version: 2.14.0+cpu
+  execution_device: cpu
+window_contract:
+  max_model_tokens: 512
+  content_window_tokens: 448
+  content_overlap_tokens: 64
+  stride: 384
+window_diagnostics:
+  probe_count: 15
+  parent_count: 97
+  window_count: 176
+  parents_with_multiple_windows: 79
+  single_window_parent_count: 18
+  average_windows_per_parent: 1.81
+  maximum_windows_per_parent: 2
+  query_truncation_count: 0
+  passage_truncation_count: 77
+  window_truncation_count: 0
+  zero_truncation_verification: PASS
+  encoding_runtime_sec: 56.139
+  retrieval_evaluation_runtime_sec: 1.414
+CUTOFF_FILTERED:
+  overall:
+    hit@1: 0.06666666666666667
+    hit@3: 0.4
+    hit@5: 0.4666666666666667
+    hit@10: 0.8
+    recall@1: 0.02222222222222222
+    recall@3: 0.18888888888888886
+    recall@5: 0.3
+    recall@10: 0.5222222222222223
+    success@1: 0.0
+    success@3: 0.0
+    success@5: 0.06666666666666667
+    success@10: 0.2
+    spoiler_violation@1: 0.0
+    spoiler_violation@3: 0.0
+    spoiler_violation@5: 0.0
+    spoiler_violation@10: 0.0
+    mrr: 0.2607936507936508
+  per_category:
+    CHRONOLOGY:
+      hit@1: 0.0
+      hit@3: 0.3333333333333333
+      hit@5: 0.3333333333333333
+      hit@10: 1.0
+      recall@1: 0.0
+      recall@3: 0.1111111111111111
+      recall@5: 0.2222222222222222
+      recall@10: 0.6666666666666666
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.3333333333333333
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.19206349206349205
+    RELATIONSHIP_PROGRESSION:
+      hit@1: 0.3333333333333333
+      hit@3: 0.3333333333333333
+      hit@5: 0.3333333333333333
+      hit@10: 0.3333333333333333
+      recall@1: 0.1111111111111111
+      recall@3: 0.2222222222222222
+      recall@5: 0.2222222222222222
+      recall@10: 0.2222222222222222
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.0
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.3738095238095238
+    CALLBACK:
+      hit@1: 0.0
+      hit@3: 0.3333333333333333
+      hit@5: 0.3333333333333333
+      hit@10: 0.6666666666666666
+      recall@1: 0.0
+      recall@3: 0.1111111111111111
+      recall@5: 0.2222222222222222
+      recall@10: 0.38888888888888884
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.0
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.1765873015873016
+    TEMPORAL_STATE:
+      hit@1: 0.0
+      hit@3: 0.6666666666666666
+      hit@5: 0.6666666666666666
+      hit@10: 1.0
+      recall@1: 0.0
+      recall@3: 0.3333333333333333
+      recall@5: 0.3333333333333333
+      recall@10: 0.6666666666666666
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.3333333333333333
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.32539682539682535
+    SPOILER_BOUNDARY:
+      hit@1: 0.0
+      hit@3: 0.3333333333333333
+      hit@5: 0.6666666666666666
+      hit@10: 1.0
+      recall@1: 0.0
+      recall@3: 0.16666666666666666
+      recall@5: 0.5
+      recall@10: 0.6666666666666666
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.3333333333333333
+      success@10: 0.3333333333333333
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.23611111111111108
+  diagnostics:
+    mean_top1_similarity: 0.7953178326288859
+    median_top1_similarity: 0.7990691065788269
+    mean_similarity_margin: 0.0045697569847106935
+GLOBAL_DIAGNOSTIC:
+  overall:
+    hit@1: 0.06666666666666667
+    hit@3: 0.3333333333333333
+    hit@5: 0.3333333333333333
+    hit@10: 0.6666666666666666
+    recall@1: 0.02222222222222222
+    recall@3: 0.15555555555555553
+    recall@5: 0.2
+    recall@10: 0.4222222222222222
+    success@1: 0.0
+    success@3: 0.0
+    success@5: 0.0
+    success@10: 0.13333333333333333
+    spoiler_violation@1: 0.2
+    spoiler_violation@3: 0.2
+    spoiler_violation@5: 0.2
+    spoiler_violation@10: 0.26666666666666666
+    mrr: 0.22184210526315792
+  per_category:
+    CHRONOLOGY:
+      hit@1: 0.0
+      hit@3: 0.3333333333333333
+      hit@5: 0.3333333333333333
+      hit@10: 1.0
+      recall@1: 0.0
+      recall@3: 0.1111111111111111
+      recall@5: 0.2222222222222222
+      recall@10: 0.6666666666666666
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.3333333333333333
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.19206349206349205
+    RELATIONSHIP_PROGRESSION:
+      hit@1: 0.3333333333333333
+      hit@3: 0.3333333333333333
+      hit@5: 0.3333333333333333
+      hit@10: 0.3333333333333333
+      recall@1: 0.1111111111111111
+      recall@3: 0.2222222222222222
+      recall@5: 0.2222222222222222
+      recall@10: 0.2222222222222222
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.0
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.3738095238095238
+    CALLBACK:
+      hit@1: 0.0
+      hit@3: 0.3333333333333333
+      hit@5: 0.3333333333333333
+      hit@10: 0.6666666666666666
+      recall@1: 0.0
+      recall@3: 0.1111111111111111
+      recall@5: 0.2222222222222222
+      recall@10: 0.38888888888888884
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.0
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.1765873015873016
+    TEMPORAL_STATE:
+      hit@1: 0.0
+      hit@3: 0.3333333333333333
+      hit@5: 0.3333333333333333
+      hit@10: 1.0
+      recall@1: 0.0
+      recall@3: 0.16666666666666666
+      recall@5: 0.16666666666666666
+      recall@10: 0.6666666666666666
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.3333333333333333
+      spoiler_violation@1: 0.3333333333333333
+      spoiler_violation@3: 0.3333333333333333
+      spoiler_violation@5: 0.3333333333333333
+      spoiler_violation@10: 0.3333333333333333
+      mrr: 0.21428571428571427
+    SPOILER_BOUNDARY:
+      hit@1: 0.0
+      hit@3: 0.3333333333333333
+      hit@5: 0.3333333333333333
+      hit@10: 0.3333333333333333
+      recall@1: 0.0
+      recall@3: 0.16666666666666666
+      recall@5: 0.16666666666666666
+      recall@10: 0.16666666666666666
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.0
+      spoiler_violation@1: 0.6666666666666666
+      spoiler_violation@3: 0.6666666666666666
+      spoiler_violation@5: 0.6666666666666666
+      spoiler_violation@10: 1.0
+      mrr: 0.15246449456975772
+  diagnostics:
+    mean_top1_similarity: 0.7963118036588033
+    median_top1_similarity: 0.7990691065788269
+    mean_similarity_margin: 0.004000322024027506
+detailed_results_sha256:
+  window_manifest.jsonl: e3f222f0f7303508f8db1e67e3c3cca723153b2823384f2b202db561012df924
+  cutoff_filtered_per_probe.jsonl: 3fc117d44358ced9ce5706f2646a1599bd7a41067e6f0b5aca8bd45643700f21
+  global_diagnostic_per_probe.jsonl: 8dc7a2d69fab636fe26a2a0df1c6ad20b89a852391b4465275e4cd3822f56c7f
+DENSE_E5_SMALL_V1_COMPARISON:
+  overall:
+    Hit@1:
+      G_WINDOW: 0.06666666666666667
+      F_SMALL: 0.13333333333333333
+      delta: -0.06666666666666667
+    Recall@1:
+      G_WINDOW: 0.02222222222222222
+      F_SMALL: 0.05555555555555555
+      delta: -0.03333333333333333
+    Full_Evidence_Success@1:
+      G_WINDOW: 0.0
+      F_SMALL: 0.0
+      delta: 0.0
+    Hit@3:
+      G_WINDOW: 0.4
+      F_SMALL: 0.4
+      delta: 0.0
+    Recall@3:
+      G_WINDOW: 0.18888888888888886
+      F_SMALL: 0.17777777777777776
+      delta: 0.0111111111111111
+    Full_Evidence_Success@3:
+      G_WINDOW: 0.0
+      F_SMALL: 0.0
+      delta: 0.0
+    Hit@5:
+      G_WINDOW: 0.4666666666666667
+      F_SMALL: 0.7333333333333333
+      delta: -0.2666666666666666
+    Recall@5:
+      G_WINDOW: 0.3
+      F_SMALL: 0.38888888888888895
+      delta: -0.08888888888888896
+    Full_Evidence_Success@5:
+      G_WINDOW: 0.06666666666666667
+      F_SMALL: 0.06666666666666667
+      delta: 0.0
+    Hit@10:
+      G_WINDOW: 0.8
+      F_SMALL: 0.9333333333333333
+      delta: -0.1333333333333333
+    Recall@10:
+      G_WINDOW: 0.5222222222222223
+      F_SMALL: 0.5666666666666667
+      delta: -0.0444444444444444
+    Full_Evidence_Success@10:
+      G_WINDOW: 0.2
+      F_SMALL: 0.2
+      delta: 0.0
+    MRR:
+      G_WINDOW: 0.2607936507936508
+      F_SMALL: 0.3446296296296296
+      delta: -0.08383597883597882
+  per_category_Hit10:
+    CHRONOLOGY:
+      G_Hit@10: 1.0
+      F_Hit@10: 1.0
+      delta_Hit@10: 0.0
+      G_Recall@10: 0.6666666666666666
+      F_Recall@10: 0.4444444444444444
+      delta_Recall@10: 0.2222222222222222
+      G_Success@10: 0.3333333333333333
+      F_Success@10: 0.0
+      delta_Success@10: 0.3333333333333333
+    RELATIONSHIP_PROGRESSION:
+      G_Hit@10: 0.3333333333333333
+      F_Hit@10: 0.6666666666666666
+      delta_Hit@10: -0.3333333333333333
+      G_Recall@10: 0.2222222222222222
+      F_Recall@10: 0.5
+      delta_Recall@10: -0.2777777777777778
+      G_Success@10: 0.0
+      F_Success@10: 0.3333333333333333
+      delta_Success@10: -0.3333333333333333
+    CALLBACK:
+      G_Hit@10: 0.6666666666666666
+      F_Hit@10: 1.0
+      delta_Hit@10: -0.33333333333333337
+      G_Recall@10: 0.38888888888888884
+      F_Recall@10: 0.5555555555555555
+      delta_Recall@10: -0.16666666666666663
+      G_Success@10: 0.0
+      F_Success@10: 0.0
+      delta_Success@10: 0.0
+    TEMPORAL_STATE:
+      G_Hit@10: 1.0
+      F_Hit@10: 1.0
+      delta_Hit@10: 0.0
+      G_Recall@10: 0.6666666666666666
+      F_Recall@10: 0.6666666666666666
+      delta_Recall@10: 0.0
+      G_Success@10: 0.3333333333333333
+      F_Success@10: 0.3333333333333333
+      delta_Success@10: 0.0
+    SPOILER_BOUNDARY:
+      G_Hit@10: 1.0
+      F_Hit@10: 1.0
+      delta_Hit@10: 0.0
+      G_Recall@10: 0.6666666666666666
+      F_Recall@10: 0.6666666666666666
+      delta_Recall@10: 0.0
+      G_Success@10: 0.3333333333333333
+      F_Success@10: 0.3333333333333333
+      delta_Success@10: 0.0
+deterministic_reproduction_status: PASS
+privacy_status: PASS
