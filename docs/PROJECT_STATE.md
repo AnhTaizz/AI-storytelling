@@ -127,8 +127,15 @@ M1-30CH-E — BM25_LEXICAL_V1: EXECUTED
 - Zero positive-score candidates for 8/15 probes.
 - Lexical retrieval heavily limited on raw Japanese prose without semantic understanding or morphological analyzers.
 
-Private chunk text and probes remain LOCAL_ONLY. No LLM / embedding / retrieval external API performed.
+M1-30CH-F — DENSE_E5_SMALL_V1: EXECUTED
+- Baseline Identity: `intfloat/multilingual-e5-small` via local sentence-transformers CPU inference
+- CUTOFF_FILTERED overall metrics: Hit@10 = 93.3% (+73.3%), Recall@10 = 56.6% (+47.7%), Full_Evidence_Success@10 = 20.0% (+20.0%), MRR = 0.344 (+0.211)
+- GLOBAL_DIAGNOSTIC overall metrics: Hit@10 = 80.0%, Spoiler_Violation@10 = 40.0%
+- Dense retrieval improves evidence retrieval significantly over lexical BM25 on LONG_RANGE_PROBE_V1.
+- Dense_diagnostics note: 77/97 chunk passages exceeded the 512 token limit and required truncation, but semantic matching still largely succeeded.
+
+Private chunk text, probes, and embeddings remain LOCAL_ONLY. No LLM / embedding / retrieval external API performed.
 
 ## Next Candidate
 
-Review BM25_LEXICAL_V1 evidence and choose the smallest justified next retrieval baseline (e.g. a multilingual dense retrieval baseline) to measure semantic retrieval capacity over the 30-chapter corpus.
+Review DENSE_E5_SMALL_V1 evidence. Potential next steps might include evaluating if dense retrieval is already sufficient, or exploring hybrid retrieval, retrieval decomposition, or multi-evidence retrieval strategies to improve exact recall.
