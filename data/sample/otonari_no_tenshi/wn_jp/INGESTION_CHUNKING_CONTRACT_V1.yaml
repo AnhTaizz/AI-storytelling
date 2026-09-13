@@ -3,6 +3,12 @@ contract:
   version: 1
   segmentation_version: PARAGRAPH_PACK_V1
   status: FROZEN_FOR_LOCAL_EXECUTION
+contract_correction:
+  status: PRE_EXECUTION_CONTRACT_COMPLETENESS_FIX
+  provisional_contract_commit: cd9d5c4b826e17c59749ed7e88f83426d729040d
+  execution_occurred_before_correction: false
+  algorithm_choice_changed: false
+  clarification_only: true
 scope:
   integration_spike: true
   milestone_completion_claimed: false
@@ -16,6 +22,10 @@ input:
   expected_chapter_count: 30
   encoding: UTF-8
   decode_errors: STRICT
+  input_validation:
+    verify_each_chapter_raw_sha256: true
+    chapter_hash_mismatch_policy: BLOCK_ENTIRE_EXECUTION
+    partial_execution_valid: false
 normalization:
   text_normalization: NONE
   unicode_normalization: NONE
@@ -26,6 +36,16 @@ paragraphs:
   preserve_line_endings: true
   special_title_handling: false
   semantic_segmentation: false
+  line_iteration_semantics: source_text.splitlines(keepends=True) against original
+    source_text
+  logical_blank_line_definition: A line where removing terminal line-break sequence
+    and evaluating str.strip() == ""
+  paragraph_definition: A maximal contiguous sequence of one or more logically NON-BLANK
+    lines.
+offsets:
+  offset_unit: PYTHON_UNICODE_CODEPOINT_INDEX
+  offset_base: ZERO_BASED
+  end_semantics: EXCLUSIVE
 chunking:
   algorithm: PARAGRAPH_PACK_V1
   max_chunk_chars: 1200
@@ -35,17 +55,39 @@ chunking:
   overlap_paragraphs: 0
   overlap_policy: NO_OVERLAP
   oversized_paragraph_policy: HARD_SPLIT_CODEPOINT_V1
+  internal_separator_policy: PRESERVE_EXACT_SOURCE_SLICE
+  synthetic_separator_inserted: false
+  packing_strategy: GREEDY_FORWARD_NO_BACKTRACKING
+  oversized_paragraph_hard_split_rule: Split into exact contiguous Unicode-string
+    slices of at most 1200 characters over original-source offsets. Must not merge
+    with neighbors.
 identifiers:
   chunk_id_format: ch{chapter_number:03d}_c{chunk_index:04d}
   chunk_index_start: 1
 hashing:
   source_hash_algorithm: SHA256_LOCAL_RAW_BYTES
   chunk_hash_algorithm: SHA256_UTF8_EXACT_SOURCE_SUBSTRING
+  chunk_text_sha256_definition: SHA256(chunk_text.encode("utf-8")) where chunk_text
+    is exact source substring
 coverage:
   all_nonblank_source_characters_required: true
   duplicate_nonblank_coverage_allowed: false
   blank_only_edge_regions_required: false
   gaps_allowed_only_for_blank_whitespace: true
+  blank_edge_region_chunking_required: false
+  validation_rules:
+  - reconstruct all paragraph spans deterministically from source
+  - collect emitted chunk spans
+  - require chunk spans sorted ascending
+  - require chunks do not overlap
+  - verify each chunk is exact source substring
+  - verify every nonblank character belonging to every paragraph is covered by exactly
+    one chunk
+  - require no nonblank character belongs to two chunks
+  - gap legal ONLY if every character in gap is whitespace and belongs to blank-separator/blank-edge
+    region
+  expected_processed_chapter_count: 30
+  partial_corpus_success_allowed: false
 privacy:
   raw_corpus_visibility: LOCAL_PRIVATE
   derived_chunk_text_visibility: LOCAL_PRIVATE
@@ -54,15 +96,75 @@ privacy:
   tracked_private_chunk_text_allowed: false
   tracked_embeddings_allowed: false
   tracked_vector_index_allowed: false
+  tracked_execution_summary_rules:
+    allowed: aggregate metadata (chapter count, chunk count, lengths, hashes, etc.)
+    forbidden: chunk text, paragraph text, raw excerpts, extracted titles, private
+      source sentences
 future_local_output:
   root: .local/story_integration/otonari_30ch/PARAGRAPH_PACK_V1/
   chunks_file: chunks.jsonl
   chunk_manifest_file: chunk_manifest.yaml
   validation_report_file: validation_report.yaml
+  chunk_record_schema:
+  - chunk_id
+  - contract_id
+  - contract_version
+  - segmentation_version
+  - corpus_fingerprint_sha256
+  - chapter_number
+  - source_logical_path
+  - source_chapter_sha256
+  - chunk_index
+  - char_start
+  - char_end_exclusive
+  - char_count
+  - chunk_text_sha256
+  - first_paragraph_index
+  - last_paragraph_index
+  - boundary_reason
+  - text
+  chunk_record_rules:
+    char_count_rule: char_end_exclusive - char_start == len(text)
+    text_privacy: LOCAL_ONLY
+    hard_split_paragraph_index_rule: first_paragraph_index == last_paragraph_index
+  manifest_required_fields:
+  - contract_id
+  - contract_version
+  - segmentation_version
+  - corpus_fingerprint_sha256
+  - chapter_count
+  - chunk_count
+  - per_chapter_chunk_counts
+  - max_observed_chunk_chars
+  - oversized_paragraph_count
+  - hard_split_chunk_count
+  - chunks_jsonl_sha256
+  validation_report_required_fields:
+  - input_corpus_fingerprint_match
+  - chapter_count_match
+  - chapter_hash_match_count
+  - all_chapter_hashes_match
+  - chunk_id_unique
+  - chunk_indices_sequential
+  - no_cross_chapter_chunks
+  - max_chunk_size_valid
+  - exact_source_slice_match_count
+  - chunk_hash_match_count
+  - nonblank_coverage_complete
+  - duplicate_nonblank_coverage_detected
+  - illegal_nonblank_gaps_detected
+  - overlap_count
+  - model_invoked
+  - overall_status
 model_usage:
   llm_used: false
   embedding_model_used: false
   tokenizer_used: false
+  semantic_chunking_used: false
+  entity_extraction_performed: false
+  story_event_extraction_performed: false
+  summarization_performed: false
+  retrieval_performed: false
 rationale:
   baseline_complexity: SIMPLE
   overlap_deferred_until_observed_boundary_failure: true

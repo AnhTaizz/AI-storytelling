@@ -110,7 +110,10 @@ coverage over Critic V1, but remained incomplete (11/33 robust issues detected).
 30-chapter corpus identity: FROZEN
 Corpus fingerprint: 7f9bb8106d6d50acd2b3760738c0b8040f36ab547c2d2f7eade1ca0b9a827ff8
 
-Local passage contract: OTONARI_LOCAL_PASSAGE_V1
+Local passage contract: OTONARI_LOCAL_PASSAGE_V1 remains PRE-EXECUTION.
+Orchestrator review found the first tracked draft underspecified deterministic paragraph/offset/coverage semantics.
+The V1 contract has now been clarified before any ingestion execution.
+
 Segmentation: PARAGRAPH_PACK_V1
 Maximum chunk size: 1200 Unicode code points
 Overlap: NONE
@@ -132,6 +135,5 @@ format violation.
 
 ## Next Candidate
 
-M1 — implement and execute OTONARI_LOCAL_PASSAGE_V1 locally against the frozen
-30-chapter corpus, producing private chunks + a privacy-safe tracked execution
-summary only.
+M1 — Orchestrator review of corrected OTONARI_LOCAL_PASSAGE_V1 before local
+30-chapter execution.
