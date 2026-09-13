@@ -136,6 +136,15 @@ def validate_probes(probes_path: str, chunks_path: str) -> Dict[str, Any]:
         if cat_counts[cat] != 3:
             issues.append(f"Category {cat} has {cat_counts[cat]} probes, expected 3")
             
+    if multi_chunk_count < 10:
+        issues.append(f"Benchmark quality gate failed: multi_chunk_probe_count ({multi_chunk_count}) < 10")
+    if multi_chap_count < 10:
+        issues.append(f"Benchmark quality gate failed: multi_chapter_probe_count ({multi_chap_count}) < 10")
+    if span_ge_5_count < 10:
+        issues.append(f"Benchmark quality gate failed: span_ge_5_chapter_probe_count ({span_ge_5_count}) < 10")
+    if span_ge_10_count < 1:
+        issues.append(f"Benchmark quality gate failed: span_ge_10_chapter_probe_count ({span_ge_10_count}) < 1")
+            
     metrics = {
         "probe_count": len(probes),
         "per_category_counts": cat_counts,
