@@ -8,6 +8,15 @@ reference:
   robust_gold_total: 33
   questionable_total: 1
   robust_positive_unit_count: 20
+  reference_provenance:
+    legacy_freeze_declared_sha256: d03135131ffbc7c8e61c00d334e479d5700919a1e75c21017db5f1fa6a79862f
+    canonical_git_bytes_sha256: 5f723e49e2982346cf71266399a76473ab39b2059d95cf1370a16b4c4be79fba
+    git_blob_sha: c0d4c3bac9874bf2f3e87c5c7b8a41f4154945fc
+    git_blob_identity_match: true
+    legacy_hash_byte_domain: NOT_ESTABLISHED
+    reference_content_changed_since_freeze: false
+    metrics_rescored_during_fix: false
+    mappings_changed_during_fix: false
 baseline:
   prediction_count: 9
   tp_predictions: 9

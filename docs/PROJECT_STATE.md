@@ -114,6 +114,13 @@ RUN10 remained mechanically valid.
 No external semantic model was invoked for mapping.
 This is Stage A developmental evidence only.
 
+Reference provenance reconciliation completed.
+Reference content remained identical to the accepted source commit at Git blob level.
+Legacy frozen SHA declaration: d0313513...
+Canonical Git-byte SHA: 5f723e49...
+Exact historical hash byte-domain: NOT_ESTABLISHED
+No mapping or metric values changed.
+
 Exploratory signal on RUN3 development instance:
 - Baseline precision: 1.0000, recall: 0.3333, F1: 0.5000
 - H7 V2 Final Union precision: 1.0000, recall: 0.4242, F1: 0.5957
@@ -134,5 +141,5 @@ format violation.
 
 ## Next Candidate
 
-M1 — Orchestrator review of H7 V2 Stage A exploratory evidence and decision whether
-the prompt is ready to lock for a future fresh Stage B holdout.
+M1 — Orchestrator review of the provenance-corrected H7 V2 Stage A evidence and
+decision whether H7_EIC_V2 is ready to lock for a future fresh holdout.

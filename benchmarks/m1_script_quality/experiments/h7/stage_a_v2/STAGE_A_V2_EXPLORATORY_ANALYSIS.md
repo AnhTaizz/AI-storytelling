@@ -16,6 +16,7 @@ This document presents the Stage A exploratory signal for the H7 V2 format-harde
 - **Candidate Commit**: `a21da38dfc644161ce58b651326f38820f393ef0`
 - **Mechanical Validity**: RUN10 strictly passed the frozen V2 output contract.
 - **Mapping Model**: No external semantic model was invoked for this mapping; it was performed deterministically using explicit, authorized reference alignment rules.
+- **Reference Provenance Note**: Gold content itself was verified unchanged by Git blob identity. The historical freeze-declared SHA and canonical Git-byte SHA differ, but the exact cause/byte-domain of the historical SHA is not established. This fix does not alter mapping or metrics.
 
 ## Baseline Metrics (RUN7 subset)
 - **Predictions**: 9
