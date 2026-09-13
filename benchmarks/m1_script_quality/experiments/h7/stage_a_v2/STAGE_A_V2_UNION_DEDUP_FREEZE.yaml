@@ -37,14 +37,16 @@ deduplication:
       attract jealousy and he viewed her only as an art piece to look at from afar.
     cross_source_candidates:
     - baseline_prediction_id: C015
-      same_material_assertion: true
+      same_material_assertion: false
       same_semantic_context: true
-      decision: DEDUPLICATE
-      rationale: Both E001 and C015 identify the same unsupported claim regarding
-        Amane's motives for avoiding Mahiru (to prevent jealousy), within the same
-        semantic context of P006.
-    final_decision: DEDUPLICATE_TO_BASELINE
-    duplicate_of: C015
+      decision: DISTINCT
+      rationale: E001 and C015 overlap on the unsupported jealousy/avoidance motive,
+        but they do not identify the same complete material assertion. E001 additionally
+        asserts that Amane viewed Mahiru only as an art piece, while C015 separately
+        asserts that the gap between them was too large. Under the preregistered rule
+        this partial overlap is insufficient for deduplication.
+    final_decision: KEEP_UNIQUE
+    duplicate_of: null
   - target_prediction_id: E002
     unit_id: P011
     normalized_claim: Mahiru had no intention of finding shelter.
@@ -93,9 +95,9 @@ deduplication:
 counts:
   baseline_problematic_input: 9
   targeted_problematic_input: 5
-  targeted_deduplicated_to_baseline: 3
-  targeted_unique_retained: 2
-  final_union_prediction_count: 11
+  targeted_deduplicated_to_baseline: 2
+  targeted_unique_retained: 3
+  final_union_prediction_count: 12
 final_union:
 - union_id: U001
   source_system: BASELINE_RUN7
@@ -125,9 +127,18 @@ final_union:
   classification: UNSUPPORTED
   severity: LOW
   recommended_action: REMOVE
-  merged_source_prediction_ids:
-  - E001
+  merged_source_prediction_ids: []
 - union_id: U004
+  source_system: TARGETED_H7_RUN10
+  source_prediction_id: E001
+  unit_id: P006
+  normalized_claim: Amane avoided Mahiru because he knew getting involved would attract
+    jealousy and he viewed her only as an art piece to look at from afar.
+  classification: UNSUPPORTED
+  severity: LOW
+  recommended_action: REMOVE
+  merged_source_prediction_ids: []
+- union_id: U005
   source_system: BASELINE_RUN7
   source_prediction_id: C022
   unit_id: P011
@@ -136,7 +147,7 @@ final_union:
   severity: LOW
   recommended_action: REMOVE
   merged_source_prediction_ids: []
-- union_id: U005
+- union_id: U006
   source_system: TARGETED_H7_RUN10
   source_prediction_id: E002
   unit_id: P011
@@ -145,7 +156,7 @@ final_union:
   severity: MEDIUM
   recommended_action: REMOVE
   merged_source_prediction_ids: []
-- union_id: U006
+- union_id: U007
   source_system: BASELINE_RUN7
   source_prediction_id: C028
   unit_id: P015
@@ -155,7 +166,7 @@ final_union:
   recommended_action: REMOVE
   merged_source_prediction_ids:
   - E003
-- union_id: U007
+- union_id: U008
   source_system: BASELINE_RUN7
   source_prediction_id: C030
   unit_id: P017
@@ -164,7 +175,7 @@ final_union:
   severity: LOW
   recommended_action: REMOVE
   merged_source_prediction_ids: []
-- union_id: U008
+- union_id: U009
   source_system: BASELINE_RUN7
   source_prediction_id: C033
   unit_id: P018
@@ -173,7 +184,7 @@ final_union:
   severity: LOW
   recommended_action: REMOVE
   merged_source_prediction_ids: []
-- union_id: U009
+- union_id: U010
   source_system: BASELINE_RUN7
   source_prediction_id: C036
   unit_id: P020
@@ -182,7 +193,7 @@ final_union:
   severity: LOW
   recommended_action: REMOVE
   merged_source_prediction_ids: []
-- union_id: U010
+- union_id: U011
   source_system: BASELINE_RUN7
   source_prediction_id: C037
   unit_id: P020
@@ -193,7 +204,7 @@ final_union:
   recommended_action: REMOVE
   merged_source_prediction_ids:
   - E004
-- union_id: U011
+- union_id: U012
   source_system: TARGETED_H7_RUN10
   source_prediction_id: E005
   unit_id: P024
@@ -210,6 +221,15 @@ freeze_provenance:
   residual_failure_analysis_opened_during_task: false
   semantic_model_invoked: false
   semantic_scoring_performed: false
+  correction:
+    status: ORCHESTRATOR_DEDUP_INTEGRITY_FIX
+    corrected_after_commit: 3ba0ebcaf05c5b654773ede4bdeb67b9752f6ff9
+    gold_accessed_before_correction: false
+    semantic_scoring_performed_before_correction: false
+    corrected_target_prediction_id: E001
+    prior_decision: DEDUPLICATE_TO_BASELINE
+    corrected_decision: KEEP_UNIQUE
+    reason: PARTIAL_SEMANTIC_OVERLAP_NOT_SAME_MATERIAL_ASSERTION
 interpretation:
   development_only: true
   confirmatory_evidence: false

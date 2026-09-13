@@ -107,28 +107,39 @@ coverage over Critic V1, but remained incomplete (11/33 robust issues detected).
 
 ## Current Task
 
-H7_EIC_V2 Stage A RUN10 passed mechanical validation and the V2 candidate
-baseline+targeted union/dedup has now been frozen gold-blind.
+Orchestrator review identified an over-deduplication in the initial H7 V2
+Stage A freeze: E001 had been merged into C015 despite materially additional
+semantic content.
 
-- baseline source: unchanged RUN7;
-- targeted source: mechanically valid RUN10;
-- aggregation followed preregistered union/dedup policy;
-- gold was not accessed;
-- no semantic scoring performed;
-- freeze is immutable before gold mapping.
+The union was corrected gold-blind before any reference mapping.
 
-Record:
+Corrected frozen counts:
 
-V2 semantic attempts: 1
+baseline problematic:
+9
 
-quality_based_regenerations: 0
+RUN10 targeted problematic:
+5
+
+deduplicated:
+2
+
+targeted unique:
+3
+
+final union:
+12
+
+gold accessed:
+NO
+
+semantic scoring performed:
+NO
 
 H7 confirmatory verdict:
-
 NOT_EVALUATED
 
 Stage B:
-
 NOT_AUTHORIZED
 
 Historical note:
@@ -140,6 +151,5 @@ format violation.
 
 ## Next Candidate
 
-M1 — map the accepted frozen Stage A V2 union against the already-frozen RUN3
-reference and calculate exploratory Stage A V2 metrics without modifying the
-union freeze.
+M1 — Orchestrator review of the corrected gold-blind H7 V2 Stage A union before
+any gold mapping.
