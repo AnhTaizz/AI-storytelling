@@ -1,0 +1,24 @@
+benchmark_id: LONG_RANGE_PROBE_V1
+benchmark_version: 1
+status: FROZEN
+source_corpus_id: otonari_no_tenshi_wn_jp_30ch
+corpus_fingerprint_sha256: 7f9bb8106d6d50acd2b3760738c0b8040f36ab547c2d2f7eade1ca0b9a827ff8
+passage_contract_id: OTONARI_LOCAL_PASSAGE_V1
+segmentation_version: PARAGRAPH_PACK_V1
+chunks_jsonl_sha256: 10ef5681ad1b2db0882c150efa24804cd0fca56bb38e0ffb772d22494e1e40fb
+probe_count: 15
+per_category_counts:
+  CHRONOLOGY: 3
+  RELATIONSHIP_PROGRESSION: 3
+  CALLBACK: 3
+  TEMPORAL_STATE: 3
+  SPOILER_BOUNDARY: 3
+multi_chunk_probe_count: 15
+multi_chapter_probe_count: 14
+span_ge_5_chapter_probe_count: 10
+span_ge_10_chapter_probe_count: 8
+minimum_chapter_span: 1
+maximum_chapter_span: 28
+probe_file_sha256: 24ca1f9c92531a19f59d409c7d3e68ef90b91ab24aab6d7854f0c52667c136e2
+validator_status: PASS
+privacy_status: PASS

@@ -121,6 +121,12 @@ Coverage: PASS
 Deterministic second-run reproduction: PASS
 Validation Evidence: REPAIRED (evidence-derived metrics replacing dummy assumptions)
 
+LONG_RANGE_PROBE_V1: FROZEN
+- 15 probes
+- 5 categories (3 each)
+- Benchmark SHA-256: 24ca1f9c92531a19f59d409c7d3e68ef90b91ab24aab6d7854f0c52667c136e2
+- Validator: PASS
+
 Private chunk text: LOCAL_ONLY
 No LLM / embedding / retrieval performed.
 
