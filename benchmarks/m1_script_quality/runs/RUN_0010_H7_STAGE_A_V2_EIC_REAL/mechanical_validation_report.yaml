@@ -1,0 +1,72 @@
+validation:
+  task: TASK_001Q_F_E
+  validation_scope: MECHANICAL_ONLY_GOLD_BLIND
+raw_integrity:
+  canonical_raw_sha256_expected: 4fb345cd8f3a786f41cb213a1f3441c25957a8c96b988329ca14d9e1fd200ee5
+  canonical_raw_sha256_actual: 4fb345cd8f3a786f41cb213a1f3441c25957a8c96b988329ca14d9e1fd200ee5
+  canonical_raw_sha256_match: true
+  raw_immutable: true
+parser:
+  parser_name: PyYAML
+  parser_version: 6.0.2
+  duplicate_key_rejection_enabled: true
+  yaml_parse_pass: true
+  parser_error: null
+raw_envelope:
+  utf8_decode_pass: true
+  bom_present: false
+  leading_content_valid: true
+  first_line_exact: true
+  markdown_fence_present: false
+  grave_accent_count: 0
+  trailing_non_yaml_prose_detected: false
+input_contract:
+  critic_version_match: true
+  segmentation_version_match: true
+  expected_unit_count_declared: 32
+  expected_unit_count_match: true
+review_units:
+  expected_count: 32
+  actual_count: 32
+  unit_count_match: true
+  duplicate_unit_ids: []
+  missing_unit_ids: []
+  unexpected_unit_ids: []
+  unit_order_match: true
+  source_hash_match_count: 32
+  source_hash_mismatches: []
+  exact_review_unit_identity_match: true
+schema:
+  root_missing_keys: []
+  root_unexpected_keys: []
+  audit_unit_violations: []
+  finding_required_field_violations: []
+  enum_violations: []
+  null_rule_violations: []
+findings:
+  body_finding_count: 5
+  unique_finding_id_count: 5
+  duplicate_finding_ids: []
+problematic_index:
+  body_problematic_count: 5
+  index_count: 5
+  missing_from_index: []
+  unexpected_in_index: []
+  duplicate_index_ids: []
+  metadata_mismatches: []
+  problematic_index_exact_match: true
+protocol:
+  quality_based_regenerations: 0
+  semantic_attempts: 1
+  gold_accessed: false
+  semantic_scoring_performed: false
+  semantic_repair_performed: false
+  raw_modified: false
+result:
+  strict_frozen_output_contract_pass: true
+  final_mechanical_status: PASS
+interpretation:
+  development_only: true
+  confirmatory_evidence: false
+  h7_confirmatory_verdict: NOT_EVALUATED
+  stage_b_authorized: false

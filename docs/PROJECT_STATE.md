@@ -107,12 +107,9 @@ coverage over Critic V1, but remained incomplete (11/33 robust issues detected).
 
 ## Current Task
 
-Project-Owner-supplied H7_EIC_V2 Stage A rerun response captured immutably as
-RUN_0010.
-
-Raw semantic output preserved without repair.
-
-Mechanical validation pending.
+RUN10 H7_EIC_V2 Stage A rerun passed strict mechanical validation against the
+frozen V2 contract. The V2 format-hardening objective succeeded mechanically
+on this developmental rerun. No gold scoring has been performed for RUN10.
 
 Record:
 
@@ -137,5 +134,6 @@ format violation.
 
 ## Next Candidate
 
-M1 — mechanically validate RUN_0010 against frozen H7_EIC_V2 without semantic
-repair or gold scoring.
+M1 — Freeze a gold-blind Stage A V2 union/dedup using the unchanged RUN7
+baseline and mechanically valid RUN10 targeted-pass output before any gold
+mapping.

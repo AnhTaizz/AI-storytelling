@@ -4,7 +4,7 @@ run:
   stage: A
   iteration: V2_RERUN
   role: EXPLORATORY_DEVELOPMENT_SET
-  run_status: PROJECT_OWNER_RAW_CAPTURED_PENDING_VALIDATION
+  run_status: MECHANICALLY_VALIDATED_STRICT_CONTRACT_PASS
 
 execution:
   semantic_executor: PROJECT_OWNER
@@ -59,12 +59,21 @@ sanity:
   contains_backtick_character: false
 
 validation:
-  yaml_parsing_performed: false
-  mechanical_schema_validation_performed: false
-  source_hash_validation_performed: false
+  yaml_parsing_performed: true
+  mechanical_schema_validation_performed: true
+  source_hash_validation_performed: true
   semantic_scoring_performed: false
   gold_mapping_performed: false
 
+mechanical_validation:
+  report_path: benchmarks/m1_script_quality/runs/RUN_0010_H7_STAGE_A_V2_EIC_REAL/mechanical_validation_report.yaml
+  validation_task: TASK_001Q_F_E
+  yaml_parse_pass: true
+  strict_frozen_output_contract_pass: true
+  final_mechanical_status: PASS
+  gold_accessed: false
+  semantic_scoring_performed: false
+  raw_modified: false
 interpretation:
   development_only: true
   confirmatory_evidence: false
