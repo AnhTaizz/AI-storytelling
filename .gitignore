@@ -1,1 +1,10 @@
 .local/
+
+# Local/private bulk story corpus.
+# Chapters 001-005 are the intentionally tracked sample fixture.
+data/sample/otonari_no_tenshi/wn_jp/raw/chapter_*.txt
+!data/sample/otonari_no_tenshi/wn_jp/raw/chapter_001.txt
+!data/sample/otonari_no_tenshi/wn_jp/raw/chapter_002.txt
+!data/sample/otonari_no_tenshi/wn_jp/raw/chapter_003.txt
+!data/sample/otonari_no_tenshi/wn_jp/raw/chapter_004.txt
+!data/sample/otonari_no_tenshi/wn_jp/raw/chapter_005.txt
