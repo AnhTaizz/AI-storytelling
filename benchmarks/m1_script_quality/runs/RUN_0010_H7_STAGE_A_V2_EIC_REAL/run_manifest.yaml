@@ -1,0 +1,77 @@
+run:
+  id: RUN_0010_H7_STAGE_A_V2_EIC_REAL
+  experiment: H7
+  stage: A
+  iteration: V2_RERUN
+  role: EXPLORATORY_DEVELOPMENT_SET
+  run_status: PROJECT_OWNER_RAW_CAPTURED_PENDING_VALIDATION
+
+execution:
+  semantic_executor: PROJECT_OWNER
+  artifact_recorder: CODING_AGENT
+  environment: Antigravity
+  model_display_name: Gemini 3.1 Pro High
+  fresh_conversation: true
+  primary_semantic_attempts: 1
+  quality_based_regenerations: 0
+  model_substitution: false
+  external_search: false
+  strict_machine_context_isolation: NOT_VERIFIABLE
+  provider_side_execution_independently_verified_by_agent: false
+  semantic_edits: 0
+
+input_provenance:
+  packet_path: benchmarks/m1_script_quality/experiments/h7/stage_a_v2/STAGE_A_V2_ANTIGRAVITY_INPUT_PACKET.md
+  packet_source_commit: 210c5349650bcee828d98b2319462f756e380715
+  packet_canonical_sha256: fed2af80827b957c89170dee3e3c9505de80392a026ecd6b72b70da70814f163
+  prompt_version: H7_EIC_V2
+  prompt_canonical_sha256: 5d758fbc75927a260b8615478b836788b406368372f0f97f9a531558892a2fc9
+  story_brief_canonical_sha256: 3db5c684a8b7c97164c980958f9a8ff456d42d79cdfb959756c42cc874b73bae
+  review_units_canonical_sha256: 0e6c09f17551a7f0f046e9eb8bc202161b7efcf920b196d9ee8af79cd34259fa
+  segmentation_version: PARAGRAPH_V1
+  expected_unit_count: 32
+
+capture:
+  capture_source: PROJECT_OWNER_SUPPLIED_INLINE_ANTIGRAVITY_RESPONSE
+  local_source_path: scratch/RUN_0010_PROJECT_OWNER_RAW.txt
+  destination_path: benchmarks/m1_script_quality/runs/RUN_0010_H7_STAGE_A_V2_EIC_REAL/critic_output.raw.txt
+  project_owner_source_sha256: ed74bae05e803c280e07f7cfa68457f16d4f3ca8216c0a35368205cec4fcad70
+  raw_worktree_sha256: ed74bae05e803c280e07f7cfa68457f16d4f3ca8216c0a35368205cec4fcad70
+  source_destination_byte_match: true
+  canonical_raw_sha256: 4fb345cd8f3a786f41cb213a1f3441c25957a8c96b988329ca14d9e1fd200ee5
+
+information_visibility:
+  baseline_output_visible: false
+  gold_visible: false
+  prior_h7_output_visible: false
+  known_miss_list_visible: false
+  residual_analysis_visible: false
+  stage_a_metrics_visible: false
+  project_state_visible: false
+
+sanity:
+  non_empty_response: true
+  starts_with_critic_version_H7_EIC_V2: true
+  contains_H7_EIC_V2: true
+  contains_unit_id_P001: true
+  contains_unit_id_P032: true
+  contains_markdown_fence: false
+  contains_backtick_character: false
+
+validation:
+  yaml_parsing_performed: false
+  mechanical_schema_validation_performed: false
+  source_hash_validation_performed: false
+  semantic_scoring_performed: false
+  gold_mapping_performed: false
+
+interpretation:
+  development_only: true
+  confirmatory_evidence: false
+  h7_confirmatory_verdict: NOT_EVALUATED
+  stage_b_authorized: false
+
+historical:
+  run8_remains_immutable: true
+  run9_remains_immutable: true
+  run9_v1_format_violation_preserved: true

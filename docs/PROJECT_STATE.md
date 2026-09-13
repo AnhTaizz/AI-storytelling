@@ -107,14 +107,18 @@ coverage over Critic V1, but remained incomplete (11/33 robust issues detected).
 
 ## Current Task
 
-Isolated H7_EIC_V2 Stage A rerun packet prepared from the frozen V2 prompt,
-the same RUN3 Story Brief, and the same deterministic review units. No semantic
-execution has occurred.
+Project-Owner-supplied H7_EIC_V2 Stage A rerun response captured immutably as
+RUN_0010.
 
-Historical note:
+Raw semantic output preserved without repair.
 
-RUN9 remains valid only as Stage A developmental semantic evidence and retains
-its raw-format protocol violation under V1.
+Mechanical validation pending.
+
+Record:
+
+V2 semantic attempts: 1
+
+quality_based_regenerations: 0
 
 H7 confirmatory verdict:
 
@@ -124,8 +128,14 @@ Stage B:
 
 NOT_AUTHORIZED
 
+Historical note:
+
+RUN8 remains invalid synthetic evidence.
+
+RUN9 remains the preserved V1 developmental run with its Markdown-wrapper
+format violation.
+
 ## Next Candidate
 
-M1 — Project Owner executes exactly one H7_EIC_V2 Stage A semantic attempt in a
-fresh Antigravity conversation using Gemini 3.1 Pro High and the frozen V2
-packet; raw response must be preserved without repair.
+M1 — mechanically validate RUN_0010 against frozen H7_EIC_V2 without semantic
+repair or gold scoring.

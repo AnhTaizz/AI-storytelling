@@ -1,0 +1,220 @@
+critic_version: H7_EIC_V2
+
+input_contract:
+  segmentation_version: PARAGRAPH_V1
+  expected_unit_count: 32
+
+audit_units:
+  - unit_id: P001
+    source_unit_sha256: "a11b9966a860498b82ccedbad643875549a19ab83bf27c357762171d67f19cfd"
+    findings: []
+    no_target_claim_reason: "No targeted semantic claims found."
+  - unit_id: P002
+    source_unit_sha256: "81e30506339832739a3a1adcac9afbdd81356ead766b7b5da86e59b632e4a942"
+    findings: []
+    no_target_claim_reason: "No targeted semantic claims found."
+  - unit_id: P003
+    source_unit_sha256: "6b0ce7fa345975048af2dbb8d5c9f3c0f1da21d5f97e6b52ffa06b75f02c7da3"
+    findings: []
+    no_target_claim_reason: "No targeted semantic claims found."
+  - unit_id: P004
+    source_unit_sha256: "e4239c3a3d06fc383a5e9ff76f80abd1fddc0e3c4209a8141f33fa4f52af5e60"
+    findings: []
+    no_target_claim_reason: "No targeted semantic claims found."
+  - unit_id: P005
+    source_unit_sha256: "755081986377a2f65b3f924695ed715086b1786c772707a14b76573014d219f0"
+    findings: []
+    no_target_claim_reason: "No targeted semantic claims found."
+  - unit_id: P006
+    source_unit_sha256: "f5c37bf6c860456b7b7bcbf92b0c8e05b2eaf5a9c9b66c20d0b1c63af7ab1f77"
+    findings:
+      - finding_id: E001
+        target_dimension: HIDDEN_INTENTION_OR_MENTAL_STATE
+        claim_type: MOTIVE
+        normalized_claim: "Amane avoided Mahiru because he knew getting involved would attract jealousy and he viewed her only as an art piece to look at from afar."
+        classification: UNSUPPORTED
+        brief_support:
+          - "周は真昼に恋愛感情はなく、関わりを避けていた。 (L52-62, L132-142)"
+        severity: LOW
+        explanation: "The brief states Amane lacked romantic feelings and avoided her, but the script invents specific internal motives for this avoidance (fearing jealousy from others, viewing her as an art piece)."
+        recommended_action: REMOVE
+    no_target_claim_reason: null
+  - unit_id: P007
+    source_unit_sha256: "bbd145bdb42f41d353bc8fd9fd8c47c70d3ca5e2181ed10b9223f8f66795c1cd"
+    findings: []
+    no_target_claim_reason: "No targeted semantic claims found."
+  - unit_id: P008
+    source_unit_sha256: "23f821eae0438c695f5d54016fca67caaa8ceb709a781bb6b6770e36f75a09ee"
+    findings: []
+    no_target_claim_reason: "No targeted semantic claims found."
+  - unit_id: P009
+    source_unit_sha256: "cd221ea94bec6c779a76b42b9f6de5023dfa6680f508ad0bd4d464d28a77d542"
+    findings: []
+    no_target_claim_reason: "No targeted semantic claims found."
+  - unit_id: P010
+    source_unit_sha256: "71b16a0cce73a193517fbd3343eecbd0799c534eafb2becf42c2837ac94c65fd"
+    findings: []
+    no_target_claim_reason: "No targeted semantic claims found."
+  - unit_id: P011
+    source_unit_sha256: "548e2576e676307da9f733329daeb481ace24cc560c1c8412aad9b2be17a4397"
+    findings:
+      - finding_id: E002
+        target_dimension: HIDDEN_INTENTION_OR_MENTAL_STATE
+        claim_type: INTENTION
+        normalized_claim: "Mahiru had no intention of finding shelter."
+        classification: UNSUPPORTED
+        brief_support:
+          - "真昼の動機はUNKNOWN。"
+          - "真昼は傘をささず、ブランコに腰かけてどこかをぼんやり見ていた。"
+        severity: MEDIUM
+        explanation: "The brief states her motives are unknown and she was merely sitting there. The script turns this lack of action into an explicit lack of intention to find shelter."
+        recommended_action: REMOVE
+    no_target_claim_reason: null
+  - unit_id: P012
+    source_unit_sha256: "543f8598bae3823a87bc3b6a4fc39c60d170ca66b690b919d366cc948f75d7e2"
+    findings: []
+    no_target_claim_reason: "No targeted semantic claims found."
+  - unit_id: P013
+    source_unit_sha256: "d6b3e2692455a6a54bd7ea34123eb923c97e44c84206e2e05f9cd7e7c8a572de"
+    findings: []
+    no_target_claim_reason: "No targeted semantic claims found."
+  - unit_id: P014
+    source_unit_sha256: "a28d6269b6af6b1a70687daea402bf20743940c78132f761a516c77ebd60dfb3"
+    findings: []
+    no_target_claim_reason: "No targeted semantic claims found."
+  - unit_id: P015
+    source_unit_sha256: "ded57c451a40ee2e2e07bc4e095f6f70f88e617463da913a37443ddbecf0e258"
+    findings:
+      - finding_id: E003
+        target_dimension: HIDDEN_INTENTION_OR_MENTAL_STATE
+        claim_type: INTENTION
+        normalized_claim: "Amane purposefully kept his tone as cold as possible so that Mahiru would not misunderstand."
+        classification: UNSUPPORTED
+        brief_support:
+          - "周が「なにやってるんだ」と声をかける。"
+          - "周：放っておくのは良心が痛んだから (L110)。"
+        severity: LOW
+        explanation: "The brief establishes that Amane spoke to her due to his conscience, but it does not support an invented conscious intention to sound cold to prevent romantic misunderstanding."
+        recommended_action: REMOVE
+    no_target_claim_reason: null
+  - unit_id: P016
+    source_unit_sha256: "2f711857fb5f53d9e26f7544fd8c304d68982aaed7f6f7bba4eb2c881b458ae3"
+    findings: []
+    no_target_claim_reason: "No targeted semantic claims found."
+  - unit_id: P017
+    source_unit_sha256: "58982b3396fc30b981e424a54f6b9e24fc7a7c71ce46b4703a1522fac3d04e71"
+    findings: []
+    no_target_claim_reason: "No targeted semantic claims found."
+  - unit_id: P018
+    source_unit_sha256: "7b5a8bdf46d1e0229812a85923ad839e1c69f725212d66b640ad9cbe6d3de03b"
+    findings: []
+    no_target_claim_reason: "No targeted semantic claims found."
+  - unit_id: P019
+    source_unit_sha256: "c78fa8ff305c0fc62444e2961cfa2d9e2fceae69c15a28334c7b879369cc801b"
+    findings: []
+    no_target_claim_reason: "No targeted semantic claims found."
+  - unit_id: P020
+    source_unit_sha256: "081a865bf4ad44e9eb0923c2e622ea9d9b01ff18f639ec162d96c50cd187f90c"
+    findings:
+      - finding_id: E004
+        target_dimension: HIDDEN_INTENTION_OR_MENTAL_STATE
+        claim_type: INTERNAL_THOUGHT
+        normalized_claim: "Amane guessed that Mahiru was thinking he was using the opportunity to hit on her."
+        classification: UNSUPPORTED
+        brief_support:
+          - "真昼：急に話しかけられたことに対する警戒 (L134)。"
+        severity: LOW
+        explanation: "The brief explains Mahiru's caution was due to being spoken to suddenly. It does not provide Amane's specific internal monologue guessing that she thought he was trying to flirt."
+        recommended_action: REMOVE
+    no_target_claim_reason: null
+  - unit_id: P021
+    source_unit_sha256: "c8381b7d994a0d9457d2ecffe7e61ede6b0749b678929235a109755b069a2442"
+    findings: []
+    no_target_claim_reason: "No targeted semantic claims found."
+  - unit_id: P022
+    source_unit_sha256: "fb6fe557903c593a75f7ea65730f4463d01dbc9c413e9028207a90afb71066da"
+    findings: []
+    no_target_claim_reason: "No targeted semantic claims found."
+  - unit_id: P023
+    source_unit_sha256: "1047b1eca13fe817ebbf6abf7e92ad882dd592ab1819470695595b89aed5d2ab"
+    findings: []
+    no_target_claim_reason: "No targeted semantic claims found."
+  - unit_id: P024
+    source_unit_sha256: "0baa0db2fd62d22408c1a16417f2edf5c007bd5289777d8cf8d9f61fa3af528a"
+    findings:
+      - finding_id: E005
+        target_dimension: EPISTEMIC_KNOWLEDGE
+        claim_type: KNOWLEDGE_STATE
+        normalized_claim: "Amane knew clearly that Mahiru had something heavy on her mind."
+        classification: UNSUPPORTED
+        brief_support:
+          - "真昼が雨の中で座っていた理由は明かされていない (UNKNOWN)。"
+          - "真昼の表情は「泣きそうに歪んだように見えた」(L102) と周には映ったが、真相は不明。"
+        severity: MEDIUM
+        explanation: "The script upgrades an observation of her appearance (looking like she might cry) into Amane possessing definitive knowledge that she had a heavy burden/something on her mind."
+        recommended_action: SOFTEN
+    no_target_claim_reason: null
+  - unit_id: P025
+    source_unit_sha256: "22de26de03c4a2f5564437cdbb03b0e53c1a9cf6fa1773a0f8bd0b20a8a60c12"
+    findings: []
+    no_target_claim_reason: "No targeted semantic claims found."
+  - unit_id: P026
+    source_unit_sha256: "179bfd800e4d77f5584767a403c4c94cbb870d737398e609fcf1ba792f2d54eb"
+    findings: []
+    no_target_claim_reason: "No targeted semantic claims found."
+  - unit_id: P027
+    source_unit_sha256: "206cb06235bee0443f4c45c9e369f5a02aeec2b1fe8d7769211e09e7b1cc2d35"
+    findings: []
+    no_target_claim_reason: "No targeted semantic claims found."
+  - unit_id: P028
+    source_unit_sha256: "cc0272a15ec11095bf0ba3c3aa0790acc5c491aed2b51cdbda6aff8d3d341ac3"
+    findings: []
+    no_target_claim_reason: "No targeted semantic claims found."
+  - unit_id: P029
+    source_unit_sha256: "7b45afd1c25f56197b1b088d12923e7ee2e45785f4d1e85cbbac666af60c4d8e"
+    findings: []
+    no_target_claim_reason: "No targeted semantic claims found."
+  - unit_id: P030
+    source_unit_sha256: "43dfc6fa7244829923f004ccf5f32a06ec187958389b7680b5b989c64332bd89"
+    findings: []
+    no_target_claim_reason: "No targeted semantic claims found."
+  - unit_id: P031
+    source_unit_sha256: "1c792959f987dffe48c76578ccf57c89868b7c0df46b573ff3ea884a569e3deb"
+    findings: []
+    no_target_claim_reason: "No targeted semantic claims found."
+  - unit_id: P032
+    source_unit_sha256: "ca1b116200561a7240dacb98ec96cc9516c03cb99e6ee37b2562d2fa9bb7453b"
+    findings: []
+    no_target_claim_reason: "No targeted semantic claims found."
+
+problematic_findings:
+  - finding_id: E001
+    unit_id: P006
+    target_dimension: HIDDEN_INTENTION_OR_MENTAL_STATE
+    classification: UNSUPPORTED
+    severity: LOW
+    recommended_action: REMOVE
+  - finding_id: E002
+    unit_id: P011
+    target_dimension: HIDDEN_INTENTION_OR_MENTAL_STATE
+    classification: UNSUPPORTED
+    severity: MEDIUM
+    recommended_action: REMOVE
+  - finding_id: E003
+    unit_id: P015
+    target_dimension: HIDDEN_INTENTION_OR_MENTAL_STATE
+    classification: UNSUPPORTED
+    severity: LOW
+    recommended_action: REMOVE
+  - finding_id: E004
+    unit_id: P020
+    target_dimension: HIDDEN_INTENTION_OR_MENTAL_STATE
+    classification: UNSUPPORTED
+    severity: LOW
+    recommended_action: REMOVE
+  - finding_id: E005
+    unit_id: P024
+    target_dimension: EPISTEMIC_KNOWLEDGE
+    classification: UNSUPPORTED
+    severity: MEDIUM
+    recommended_action: SOFTEN
