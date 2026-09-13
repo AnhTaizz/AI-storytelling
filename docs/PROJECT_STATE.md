@@ -110,17 +110,15 @@ coverage over Critic V1, but remained incomplete (11/33 robust issues detected).
 30-chapter corpus identity: FROZEN
 Corpus fingerprint: 7f9bb8106d6d50acd2b3760738c0b8040f36ab547c2d2f7eade1ca0b9a827ff8
 
-Local passage contract: OTONARI_LOCAL_PASSAGE_V1 remains PRE-EXECUTION.
-Orchestrator review found the first tracked draft underspecified deterministic paragraph/offset/coverage semantics.
-The V1 contract has now been clarified before any ingestion execution.
-
+Local passage contract: OTONARI_LOCAL_PASSAGE_V1 has received final pre-execution deterministic clarification.
 Segmentation: PARAGRAPH_PACK_V1
 Maximum chunk size: 1200 Unicode code points
 Overlap: NONE
 Text normalization: NONE
 
-Ingestion execution: NOT_STARTED
-Private derived text: LOCAL_ONLY
+Execution remains: NOT_STARTED
+Execution authorization remains pending Orchestrator acceptance.
+Private derived output: LOCAL_ONLY
 
 H7 V2 Stage A: CLOSED
 H7 confirmatory verdict: NOT_EVALUATED
@@ -135,5 +133,4 @@ format violation.
 
 ## Next Candidate
 
-M1 — Orchestrator review of corrected OTONARI_LOCAL_PASSAGE_V1 before local
-30-chapter execution.
+M1 — Orchestrator acceptance of finalized V1, then execute the frozen contract locally as TASK M1-30CH-C.

@@ -9,6 +9,9 @@ contract_correction:
   execution_occurred_before_correction: false
   algorithm_choice_changed: false
   clarification_only: true
+  final_executable_semantics_fix: true
+  prior_clarification_commit: a72abb2fb700b23d1e599c049768d9b55029a13f
+  execution_occurred_before_final_clarification: false
 scope:
   integration_spike: true
   milestone_completion_claimed: false
@@ -26,6 +29,9 @@ input:
     verify_each_chapter_raw_sha256: true
     chapter_hash_mismatch_policy: BLOCK_ENTIRE_EXECUTION
     partial_execution_valid: false
+    reconstruct_corpus_fingerprint: 001:<actual chapter sha256> ... 030:<actual chapter
+      sha256> joined with LF and no final LF. Require recomputed == 7f9bb8106d6d50acd2b3760738c0b8040f36ab547c2d2f7eade1ca0b9a827ff8.
+    corpus_fingerprint_mismatch_policy: BLOCK_ENTIRE_EXECUTION
 normalization:
   text_normalization: NONE
   unicode_normalization: NONE
@@ -36,12 +42,22 @@ paragraphs:
   preserve_line_endings: true
   special_title_handling: false
   semantic_segmentation: false
-  line_iteration_semantics: source_text.splitlines(keepends=True) against original
-    source_text
-  logical_blank_line_definition: A line where removing terminal line-break sequence
-    and evaluating str.strip() == ""
+  line_iteration_semantics: lines = source_text.splitlines(keepends=True)
+  logical_blank_line_definition: line_body_without_terminal_linebreak.strip() == ""
   paragraph_definition: A maximal contiguous sequence of one or more logically NON-BLANK
     lines.
+  offset_tracking: cursor += len(line); line_char_start = cursor - len(line); line_char_end_exclusive
+    = cursor
+  terminal_linebreak_removal: Removed consistently with Python splitlines semantics
+    (e.g. CRLF as two code points, \n, \r, \v, \f, \x1c, \x1d, \x1e, \x85, \u2028,
+    \u2029) ONLY for blank classification. NEVER mutates source_text.
+  paragraph_index_start: 1
+  paragraph_index_scope: PER_CHAPTER
+  paragraph_construction: Begins at line_char_start of first logically nonblank line
+    after chapter start or blank lines. Ends at line_char_end_exclusive of final logically
+    nonblank line before next logical blank line or chapter end. paragraph_text ==
+    source_text[paragraph_char_start:paragraph_char_end_exclusive]. Indexes increment
+    sequentially in source order. No empty paragraphs. No title special case.
 offsets:
   offset_unit: PYTHON_UNICODE_CODEPOINT_INDEX
   offset_base: ZERO_BASED
@@ -57,13 +73,97 @@ chunking:
   oversized_paragraph_policy: HARD_SPLIT_CODEPOINT_V1
   internal_separator_policy: PRESERVE_EXACT_SOURCE_SLICE
   synthetic_separator_inserted: false
-  packing_strategy: GREEDY_FORWARD_NO_BACKTRACKING
-  oversized_paragraph_hard_split_rule: Split into exact contiguous Unicode-string
-    slices of at most 1200 characters over original-source offsets. Must not merge
-    with neighbors.
+  packing_strategy: 'For each chapter:
+
+    current_normal_chunk = NONE
+
+    Process paragraphs in ascending paragraph_index.
+
+    For paragraph P:
+
+    Case A — oversized paragraph:
+
+    If P.char_count > 1200:
+
+    1. if current_normal_chunk exists: emit it first; set current_normal_chunk = NONE
+
+    2. hard-split P according to Section 5
+
+    3. emit all hard-split pieces immediately in source order
+
+    4. continue to next paragraph
+
+    Oversized pieces may NEVER merge with normal neighboring paragraphs.
+
+
+    Case B — normal paragraph and current chunk is empty:
+
+    If P.char_count <= 1200 and current_normal_chunk == NONE:
+
+    start current_start = P.char_start, current_end = P.char_end_exclusive, first_paragraph_index
+    = P.paragraph_index, last_paragraph_index = P.paragraph_index
+
+
+    Case C — normal paragraph and current chunk exists:
+
+    candidate_start = current_start, candidate_end = P.char_end_exclusive
+
+    candidate_char_count = candidate_end - candidate_start (includes original blank
+    separators)
+
+    If candidate_char_count <= 1200:
+
+    extend current chunk: current_end = P.char_end_exclusive, last_paragraph_index
+    = P.paragraph_index
+
+    Else:
+
+    emit current chunk, then start a new normal chunk from P
+
+
+    Chapter end:
+
+    If current_normal_chunk exists: emit it.
+
+    No lookahead optimization, no backtracking, no reordering.'
+  oversized_paragraph_hard_split_rule: 'For oversized paragraph P:
+
+    piece_start = P.char_start
+
+    while piece_start < P.char_end_exclusive:
+
+    piece_end = min(piece_start + 1200, P.char_end_exclusive)
+
+    emit exact source slice: source_text[piece_start:piece_end]
+
+    piece_start = piece_end
+
+    Require every piece: 1 <= piece_end - piece_start_original <= 1200, zero overlap,
+    no gap, exact source substring, source order preserved.
+
+    For every hard-split piece: first_paragraph_index == P.paragraph_index, last_paragraph_index
+    == P.paragraph_index
+
+    Must not merge with preceding/following chunks.'
+  boundary_reason_allowed:
+  - PARAGRAPH_PACK
+  - OVERSIZED_PARAGRAPH_HARD_SPLIT
+  exact_source_slice_rule: 'For EVERY emitted chunk: text == source_text[char_start:char_end_exclusive].
+    Applies to both PARAGRAPH_PACK and OVERSIZED_PARAGRAPH_HARD_SPLIT. No reconstructed
+    text permitted. No joining strings with synthetic \n. No normalization.'
+  internal_separator_rule: 'For normal chunks containing > 1 paragraph: char_start
+    = first paragraph char_start, char_end_exclusive = last paragraph char_end_exclusive.
+    text is one contiguous source slice. Any blank separator lines between included
+    paragraphs are preserved exactly. Do not concatenate paragraph_text values.'
+  max_size_invariant: Every emitted chunk MUST satisfy 1 <= char_count <= 1200. No
+    exception exists.
 identifiers:
   chunk_id_format: ch{chapter_number:03d}_c{chunk_index:04d}
   chunk_index_start: 1
+  chunk_index_scope: PER_CHAPTER
+  chunk_index_increment: ON_EACH_EMITTED_CHUNK
+  chunk_index_reset: At every new chapter, resets to 1. Hard-split pieces participate
+    in the same emitted sequence.
 hashing:
   source_hash_algorithm: SHA256_LOCAL_RAW_BYTES
   chunk_hash_algorithm: SHA256_UTF8_EXACT_SOURCE_SUBSTRING
@@ -88,6 +188,15 @@ coverage:
     region
   expected_processed_chapter_count: 30
   partial_corpus_success_allowed: false
+  gap_validation: 'For each chapter, sort emitted chunk spans by char_start. Require
+    next.char_start >= previous.char_end_exclusive. If next.char_start < previous.char_end_exclusive,
+    FAIL: OVERLAPPING_CHUNK_SPANS. For any gap: gap_text = source_text[previous.char_end_exclusive:next.char_start].
+    Legal ONLY IF A) intersects no paragraph span AND B) gap_text.strip() == "". Applies
+    to chapter start/end. Any omitted paragraph character: FAIL.'
+  paragraph_coverage: 'For every parsed paragraph span: every character offset from
+    paragraph.char_start through paragraph.char_end_exclusive - 1 must be covered
+    by exactly ONE chunk span (paragraph_coverage_count == 1). Line endings inside
+    paragraph span are preserved. No omission. No duplication.'
 privacy:
   raw_corpus_visibility: LOCAL_PRIVATE
   derived_chunk_text_visibility: LOCAL_PRIVATE
@@ -97,9 +206,10 @@ privacy:
   tracked_embeddings_allowed: false
   tracked_vector_index_allowed: false
   tracked_execution_summary_rules:
-    allowed: aggregate metadata (chapter count, chunk count, lengths, hashes, etc.)
-    forbidden: chunk text, paragraph text, raw excerpts, extracted titles, private
-      source sentences
+    allowed: counts, hashes, sizes, length statistics, coverage status, per-chapter
+      chunk counts, hard-split counts
+    forbidden: story text, paragraph text, chunk text, quotes, chapter body excerpts,
+      extracted titles, first/last content.
 future_local_output:
   root: .local/story_integration/otonari_30ch/PARAGRAPH_PACK_V1/
   chunks_file: chunks.jsonl
@@ -124,7 +234,8 @@ future_local_output:
   - boundary_reason
   - text
   chunk_record_rules:
-    char_count_rule: char_end_exclusive - char_start == len(text)
+    char_count_rule: char_count == char_end_exclusive - char_start == len(text). Require
+      1 <= char_count <= 1200 for every emitted chunk.
     text_privacy: LOCAL_ONLY
     hard_split_paragraph_index_rule: first_paragraph_index == last_paragraph_index
   manifest_required_fields:
@@ -156,6 +267,16 @@ future_local_output:
   - overlap_count
   - model_invoked
   - overall_status
+  - recomputed_corpus_fingerprint_sha256
+  - corpus_fingerprint_match
+  - processed_chapter_count
+  - empty_chunk_count
+  - paragraph_count
+  - paragraph_coverage_pass
+  - legal_blank_gap_count
+  - illegal_gap_count
+  - boundary_reason_enum_valid
+  overall_status_rule: 'overall_status: PASS requires ALL mandatory checks to PASS.'
 model_usage:
   llm_used: false
   embedding_model_used: false
