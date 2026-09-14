@@ -142,8 +142,16 @@ M1-30CH-G — DENSE_E5_WINDOW_MAX_V1: EXECUTED (Fixed by M1-30CH-G-FIX)
 - GLOBAL_DIAGNOSTIC overall metrics: Hit@10 = 66.6%, Spoiler_Violation@10 = 26.6%
 - Interpretation: Eliminating parent-chunk truncation through this fixed window/max-pooling representation did not improve long-range evidence recovery on the frozen benchmark. In particular, Full Evidence Success@10 remained 20%. This reduces the likelihood that original 512-token passage truncation was the primary bottleneck. The next experiment may test multi-evidence retrieval because it is now better motivated.
 
+M1-30CH-H — DENSE_E5_MMR_V1: EXECUTED
+- Baseline Identity: `intfloat/multilingual-e5-small` via local sentence-transformers CPU inference, using identical parent-chunk representation to F.
+- MMR Contract: lambda = 0.70. Selected dynamically over full eligible dense candidate set.
+- CUTOFF_FILTERED overall metrics: Hit@10 = 80.0% (-13.3%), Recall@10 = 53.3% (-3.3%), Full_Evidence_Success@10 = 20.0% (+0.0%), MRR = 0.289 (-0.055)
+- GLOBAL_DIAGNOSTIC overall metrics: Hit@10 = 80.0%, Spoiler_Violation@10 = 33.3%
+- Diversity diagnostics: mean_unique_chapters_top10 = 7.66, mean_pairwise_similarity_top10 = 0.906, mean_query_relevance_top10 = 0.781
+- Interpretation: MMR effectively diversified the retrieved evidence set, but this diversity-aware selection did not improve evidence-set recovery. In particular, Full Evidence Success@10 remained 20% and Hit/Recall actually dropped compared to ordinary dense scoring. This negative result suggests that redundancy alone is unlikely to explain the missing evidence. The bottleneck requires richer query intent matching rather than just diversifying the single-query candidate space.
+
 Private chunk text, probes, and embeddings remain LOCAL_ONLY. No LLM / embedding / retrieval external API performed.
 
 ## Next Candidate
 
-Review DENSE_E5_WINDOW_MAX_V1 evidence. Since resolving passage truncation did not improve Recall or Full Evidence Success, the next experiment should investigate multi-evidence retrieval strategies (e.g. multi-query generation or iterative retrieval) to improve exact evidence recall before attempting graph memory.
+Review DENSE_E5_MMR_V1 evidence. Since redundancy removal did not solve evidence coverage, the likely next experiment is deterministic query decomposition / multi-query retrieval.
