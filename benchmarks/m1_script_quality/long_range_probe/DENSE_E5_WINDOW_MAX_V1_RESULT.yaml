@@ -30,8 +30,10 @@ window_diagnostics:
   passage_truncation_count: 77
   window_truncation_count: 0
   zero_truncation_verification: PASS
-  encoding_runtime_sec: 56.139
-  retrieval_evaluation_runtime_sec: 1.414
+  token_coverage_verification: PASS
+  parents_with_coverage_failure: 0
+  encoding_runtime_sec: 74.49
+  retrieval_evaluation_runtime_sec: 0.95
 CUTOFF_FILTERED:
   overall:
     hit@1: 0.06666666666666667
@@ -261,7 +263,7 @@ GLOBAL_DIAGNOSTIC:
     median_top1_similarity: 0.7990691065788269
     mean_similarity_margin: 0.004000322024027506
 detailed_results_sha256:
-  window_manifest.jsonl: e3f222f0f7303508f8db1e67e3c3cca723153b2823384f2b202db561012df924
+  window_manifest.jsonl: 839811987295d5a189104ea81318f7d2a52656ba27684a6eaa5e433df7246201
   cutoff_filtered_per_probe.jsonl: 3fc117d44358ced9ce5706f2646a1599bd7a41067e6f0b5aca8bd45643700f21
   global_diagnostic_per_probe.jsonl: 8dc7a2d69fab636fe26a2a0df1c6ad20b89a852391b4465275e4cd3822f56c7f
 DENSE_E5_SMALL_V1_COMPARISON:

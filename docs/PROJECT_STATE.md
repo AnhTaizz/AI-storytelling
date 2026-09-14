@@ -134,13 +134,13 @@ M1-30CH-F — DENSE_E5_SMALL_V1: EXECUTED
 - Dense retrieval improves evidence retrieval significantly over lexical BM25 on LONG_RANGE_PROBE_V1.
 - Dense_diagnostics note: 77/97 chunk passages exceeded the 512 token limit and required truncation, but semantic matching still largely succeeded.
 
-M1-30CH-G — DENSE_E5_WINDOW_MAX_V1: EXECUTED
+M1-30CH-G — DENSE_E5_WINDOW_MAX_V1: EXECUTED (Fixed by M1-30CH-G-FIX)
 - Baseline Identity: `intfloat/multilingual-e5-small` via local sentence-transformers CPU inference
 - Semantic Window Contract: 448 tokens window, 64 token overlap. Exact HuggingFace snapshot frozen (`614241f...`).
-- Zero truncation achieved. Passage truncation completely eliminated.
+- Zero truncation achieved. Passage truncation completely eliminated. Token coverage verified strictly with 0 gaps. (Diagnostics mechanically verified: 97 parents mapped to 176 windows).
 - CUTOFF_FILTERED overall metrics: Hit@10 = 80.0% (-13.3%), Recall@10 = 52.2% (-4.4%), Full_Evidence_Success@10 = 20.0% (+0.0%), MRR = 0.260 (-0.084)
 - GLOBAL_DIAGNOSTIC overall metrics: Hit@10 = 66.6%, Spoiler_Violation@10 = 26.6%
-- Interpretation: Eliminating passage truncation via overlapping windows and parent max-pooling did *not* improve Full Evidence Success, and actually slightly degraded Hit@10 and MRR compared to DENSE_E5_SMALL_V1. The remaining failure to recover full evidence is unlikely to be explained primarily by passage truncation. This strongly suggests exploring multi-evidence retrieval.
+- Interpretation: Eliminating parent-chunk truncation through this fixed window/max-pooling representation did not improve long-range evidence recovery on the frozen benchmark. In particular, Full Evidence Success@10 remained 20%. This reduces the likelihood that original 512-token passage truncation was the primary bottleneck. The next experiment may test multi-evidence retrieval because it is now better motivated.
 
 Private chunk text, probes, and embeddings remain LOCAL_ONLY. No LLM / embedding / retrieval external API performed.
 

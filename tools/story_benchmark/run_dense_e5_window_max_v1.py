@@ -199,6 +199,8 @@ def run_dense_baseline(probes_path: Path, chunks_path: Path, out_dir: Path):
             "passage_truncation_count": dense.passage_truncation_count,
             "window_truncation_count": dense.window_truncation_count,
             "zero_truncation_verification": "PASS" if dense.window_truncation_count == 0 else "FAIL",
+            "token_coverage_verification": "PASS" if dense.coverage_failure_count == 0 else "FAIL",
+            "parents_with_coverage_failure": dense.coverage_failure_count,
             "encoding_runtime_sec": round(t1 - t0, 3),
             "retrieval_evaluation_runtime_sec": round(eval_t1 - eval_t0, 3)
         },
@@ -213,6 +215,10 @@ def run_dense_baseline(probes_path: Path, chunks_path: Path, out_dir: Path):
     
     with open(out_dir / "aggregate_metrics.yaml", "w", encoding="utf-8") as f:
         yaml.dump(agg, f, sort_keys=False)
+        
+    if dense.coverage_failure_count > 0:
+        print(f"Coverage validation failed for {dense.coverage_failure_count} parents.", file=sys.stderr)
+        sys.exit(1)
         
     return agg
 

@@ -3,6 +3,108 @@ import numpy as np
 from typing import List, Dict, Tuple, Set
 from sentence_transformers import SentenceTransformer
 
+def build_token_windows(text: str, tokenizer, content_window_tokens: int, stride: int) -> dict:
+    encoded = tokenizer(text, return_offsets_mapping=True, add_special_tokens=False)
+    input_ids = encoded["input_ids"]
+    offsets = encoded["offset_mapping"]
+    
+    total_token_count = len(input_ids)
+    
+    if total_token_count == 0:
+        return {
+            "total_token_count": 0,
+            "windows": []
+        }
+        
+    windows = []
+    start_idx = 0
+    
+    while start_idx < total_token_count:
+        end_idx = min(start_idx + content_window_tokens, total_token_count)
+        
+        char_start = offsets[start_idx][0]
+        char_end = offsets[end_idx - 1][1]
+        window_text = text[char_start:char_end]
+        
+        windows.append({
+            "token_start": start_idx,
+            "token_end": end_idx,
+            "char_start": char_start,
+            "char_end": char_end,
+            "text": window_text
+        })
+        
+        if end_idx == total_token_count:
+            break
+            
+        start_idx += stride
+        
+    return {
+        "total_token_count": total_token_count,
+        "windows": windows
+    }
+
+def validate_token_coverage(parent_id: str, coverage_data: dict, content_window_tokens: int, stride: int) -> dict:
+    total_token_count = coverage_data["total_token_count"]
+    windows = coverage_data["windows"]
+    
+    evidence = {
+        "parent_id": parent_id,
+        "status": "FAIL",
+        "reason": "",
+        "total_token_count": total_token_count
+    }
+    
+    if total_token_count == 0:
+        if len(windows) > 0:
+            evidence["reason"] = "Empty tokens but windows were generated"
+            return evidence
+        evidence["status"] = "PASS"
+        evidence["reason"] = "Valid empty parent"
+        return evidence
+        
+    if not windows:
+        evidence["reason"] = "Tokens exist but no windows generated"
+        return evidence
+        
+    if windows[0]["token_start"] != 0:
+        evidence["reason"] = "First window does not start at 0"
+        return evidence
+        
+    if windows[-1]["token_end"] != total_token_count:
+        evidence["reason"] = "Last window does not end at total_token_count"
+        return evidence
+        
+    covered = [False] * total_token_count
+    for i, w in enumerate(windows):
+        ts = w["token_start"]
+        te = w["token_end"]
+        if not (ts < te):
+            evidence["reason"] = f"Window {i} has invalid bounds: {ts} to {te}"
+            return evidence
+            
+        if (te - ts) > content_window_tokens:
+            evidence["reason"] = f"Window {i} exceeds max length: {te - ts} > {content_window_tokens}"
+            return evidence
+            
+        for idx in range(ts, te):
+            covered[idx] = True
+            
+        if i < len(windows) - 1:
+            next_start = windows[i+1]["token_start"]
+            if next_start != ts + stride:
+                evidence["reason"] = f"Window {i+1} does not follow stride contract. Expected {ts + stride}, got {next_start}"
+                return evidence
+                
+    if not all(covered):
+        evidence["reason"] = "Gap detected in token coverage"
+        return evidence
+        
+    evidence["status"] = "PASS"
+    evidence["reason"] = "All tokens covered"
+    return evidence
+
+
 class DenseE5WindowMaxV1:
     """
     DENSE_E5_WINDOW_MAX_V1 Implementation
@@ -47,6 +149,10 @@ class DenseE5WindowMaxV1:
         self.single_window_parent_count = 0
         self.max_windows_per_parent = 0
         
+        self.coverage_failure_count = 0
+        self.total_parent_tokens = 0
+        self.total_covered_token_positions = 0
+        
         # Parent mapping: doc_id -> list of child_ids
         self.parent_to_windows = {}
         
@@ -70,42 +176,6 @@ class DenseE5WindowMaxV1:
             "torch_version": str(torch.__version__),
             "execution_device": self.device
         }
-
-    def _chunk_text(self, text: str) -> List[str]:
-        # Fast tokenizer allows offset mapping
-        tok = self.model.tokenizer
-        encoded = tok(text, return_offsets_mapping=True, add_special_tokens=False)
-        input_ids = encoded["input_ids"]
-        offsets = encoded["offset_mapping"]
-        
-        total_tokens = len(input_ids)
-        
-        if total_tokens == 0:
-            return []
-            
-        if total_tokens <= self.CONTENT_WINDOW_TOKENS:
-            return [text]
-            
-        windows = []
-        start_idx = 0
-        
-        while start_idx < total_tokens:
-            end_idx = min(start_idx + self.CONTENT_WINDOW_TOKENS, total_tokens)
-            
-            # Extract substring
-            char_start = offsets[start_idx][0]
-            # Handle empty offset at the end if any
-            char_end = offsets[end_idx - 1][1]
-            
-            window_text = text[char_start:char_end]
-            windows.append(window_text)
-            
-            if end_idx == total_tokens:
-                break
-                
-            start_idx += self.STRIDE
-            
-        return windows
 
     def _check_truncation(self, texts, is_query=False, is_window=False):
         tok = self.model.tokenizer
@@ -132,9 +202,20 @@ class DenseE5WindowMaxV1:
         flat_window_ids = []
         
         windows_manifest = []
+        tok = self.model.tokenizer
         
         for parent_id, text in zip(doc_ids, texts):
-            windows = self._chunk_text(text)
+            coverage_data = build_token_windows(text, tok, self.CONTENT_WINDOW_TOKENS, self.STRIDE)
+            evidence = validate_token_coverage(parent_id, coverage_data, self.CONTENT_WINDOW_TOKENS, self.STRIDE)
+            
+            if evidence["status"] != "PASS":
+                self.coverage_failure_count += 1
+                
+            self.total_parent_tokens += coverage_data["total_token_count"]
+            if evidence["status"] == "PASS":
+                self.total_covered_token_positions += coverage_data["total_token_count"]
+                
+            windows = coverage_data["windows"]
             num_windows = len(windows)
             
             if num_windows == 1:
@@ -146,7 +227,8 @@ class DenseE5WindowMaxV1:
                 self.max_windows_per_parent = num_windows
                 
             child_ids = []
-            for i, w_text in enumerate(windows):
+            for i, w in enumerate(windows):
+                w_text = w["text"]
                 w_id = f"{parent_id}_w{i+1:04d}"
                 child_ids.append(w_id)
                 flat_window_ids.append(w_id)
@@ -157,6 +239,10 @@ class DenseE5WindowMaxV1:
                     "parent_chunk_id": parent_id,
                     "window_id": w_id,
                     "window_index": i,
+                    "token_start": w["token_start"],
+                    "token_end": w["token_end"],
+                    "char_start": w["char_start"],
+                    "char_end": w["char_end"],
                     "text": w_text
                 })
                 
@@ -170,7 +256,10 @@ class DenseE5WindowMaxV1:
             raise ValueError(f"Window truncation verification failed: {self.window_truncation_count} windows exceed 512 tokens.")
             
         with torch.no_grad():
-            emb = self.model.encode(flat_window_texts, convert_to_numpy=True, normalize_embeddings=True, show_progress_bar=False)
+            if flat_window_texts:
+                emb = self.model.encode(flat_window_texts, convert_to_numpy=True, normalize_embeddings=True, show_progress_bar=False)
+            else:
+                emb = np.empty((0, self.model.get_sentence_embedding_dimension()))
             
         self.window_ids = flat_window_ids
         self.window_embeddings = emb
@@ -185,6 +274,9 @@ class DenseE5WindowMaxV1:
             
     def score_embedding(self, q_emb: np.ndarray, allowed_doc_ids: Set[str] = None) -> List[Tuple[str, float]]:
         # Dot product against all windows
+        if len(self.window_ids) == 0:
+            return []
+            
         sims = np.dot(self.window_embeddings, q_emb)
         
         # Map child -> similarity
