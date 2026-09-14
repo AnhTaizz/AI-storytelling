@@ -1,10 +1,22 @@
 import unittest
 import numpy as np
+import tempfile
+import yaml
+import json
+from pathlib import Path
+from unittest.mock import patch
+
 from tools.story_benchmark.dense_e5_window_max_v1 import (
     calculate_metrics,
     build_token_windows,
     validate_token_coverage,
     DenseE5WindowMaxV1
+)
+
+from tools.story_benchmark.run_dense_e5_window_max_v1 import (
+    compute_spoiler_violations,
+    verify_dense_determinism,
+    compare_f_and_g
 )
 
 class MockTokenizer:
@@ -46,10 +58,34 @@ class MockModel:
 
 class MockDenseE5WindowMaxV1(DenseE5WindowMaxV1):
     def __init__(self):
-        super().__init__()
+        # DO NOT call super().__init__() to avoid loading real SentenceTransformer
+        # We manually initialize only what is required
         self.model = MockModel()
+        self.model_name = "mock"
+        self.model_revision = "mock"
+        self.device = "cpu"
+        
+        self.MAX_MODEL_TOKENS = 512
         self.CONTENT_WINDOW_TOKENS = 2
+        self.CONTENT_OVERLAP_TOKENS = 1
         self.STRIDE = 1
+        
+        self.passage_truncation_count = 0
+        self.query_truncation_count = 0
+        self.window_truncation_count = 0
+        self.coverage_failure_count = 0
+        
+        self.parent_count = 0
+        self.window_count = 0
+        self.parents_with_multiple_windows = 0
+        self.single_window_parent_count = 0
+        self.max_windows_per_parent = 0
+        self.total_parent_tokens = 0
+        self.total_covered_token_positions = 0
+        
+        self.parent_to_windows = {}
+        self.window_ids = []
+        self.window_embeddings = None
 
     def encode_documents(self, doc_ids, texts, embeddings=None):
         res = super().encode_documents(doc_ids, texts)
@@ -58,6 +94,17 @@ class MockDenseE5WindowMaxV1(DenseE5WindowMaxV1):
         return res
 
 class TestDenseE5WindowMaxV1(unittest.TestCase):
+
+    @patch('tools.story_benchmark.dense_e5_window_max_v1.SentenceTransformer')
+    def test_offline_proof(self, mock_st):
+        mock_st.side_effect = RuntimeError("SentenceTransformer should not be instantiated during unit tests")
+        # Ensure that our test mock does NOT instantiate the real model
+        m = MockDenseE5WindowMaxV1()
+        self.assertIsInstance(m.model, MockModel)
+        
+        # Test that instantiating real model raises our patched exception
+        with self.assertRaises(RuntimeError):
+            DenseE5WindowMaxV1()
 
     def test_short_parent_exactly_one_window(self):
         tok = MockTokenizer()
@@ -221,6 +268,149 @@ class TestDenseE5WindowMaxV1(unittest.TestCase):
             m.encode_documents(["ch1"], ["1234567890"])
             
         self.assertIn("Window truncation verification failed", str(context.exception))
+
+    def test_spoiler_violation(self):
+        probe = {
+            "cutoff_chapter": 2
+        }
+        ranked_ids = ["chunk_c1", "chunk_c2", "chunk_c3", "chunk_c4", "chunk_c5"]
+        chunk_meta = {
+            "chunk_c1": 1,
+            "chunk_c2": 2,
+            "chunk_c3": 3, # spoiler!
+            "chunk_c4": 1,
+            "chunk_c5": 4  # spoiler!
+        }
+        
+        violations = compute_spoiler_violations(probe, ranked_ids, chunk_meta)
+        
+        # @1 -> chunk_c1 (chap 1 <= 2) -> no spoiler
+        self.assertEqual(violations["spoiler_violation@1"], 0.0)
+        
+        # @3 -> chunk_c1, c2, c3. c3 is chap 3 > 2 -> spoiler!
+        self.assertEqual(violations["spoiler_violation@3"], 1.0)
+        
+        # @5 -> chunk_c5 is also spoiler, but already violated
+        self.assertEqual(violations["spoiler_violation@5"], 1.0)
+        self.assertEqual(violations["spoiler_violation@10"], 1.0)
+
+    def test_f_vs_g_comparison(self):
+        keys = ["hit@1", "hit@3", "hit@5", "hit@10", "recall@1", "recall@3", "recall@5", "recall@10", "success@1", "success@3", "success@5", "success@10"]
+        overall_g = {k: 0.0 for k in keys}
+        overall_g["hit@10"] = 0.8
+        overall_g["recall@10"] = 0.5
+        overall_g["success@10"] = 0.2
+        overall_g["mrr"] = 0.4
+        
+        cat_g = {k: 0.0 for k in keys}
+        cat_g["hit@10"] = 1.0
+        cat_g["recall@10"] = 0.6
+        cat_g["success@10"] = 0.5
+
+        agg_g = {
+            "CUTOFF_FILTERED": {
+                "overall": overall_g,
+                "per_category": {
+                    "CAT_A": cat_g
+                }
+            }
+        }
+        
+        overall_f = {k: 0.0 for k in keys}
+        overall_f["hit@10"] = 0.9
+        overall_f["recall@10"] = 0.7
+        overall_f["success@10"] = 0.3
+        overall_f["mrr"] = 0.6
+        
+        cat_f = {k: 0.0 for k in keys}
+        cat_f["hit@10"] = 0.5
+        cat_f["recall@10"] = 0.4
+        cat_f["success@10"] = 0.1
+
+        agg_f = {
+            "CUTOFF_FILTERED": {
+                "overall": overall_f,
+                "per_category": {
+                    "CAT_A": cat_f
+                }
+            }
+        }
+        
+        with tempfile.TemporaryDirectory() as tmpdir:
+            f_path = Path(tmpdir) / "f.yaml"
+            with open(f_path, "w", encoding="utf-8") as f:
+                yaml.dump(agg_f, f)
+                
+            compare_f_and_g(agg_g, f_path)
+            
+        comp = agg_g.get("DENSE_E5_SMALL_V1_COMPARISON")
+        self.assertIsNotNone(comp)
+        
+        # Check overall deltas
+        ov = comp["overall"]
+        # G (0.8) - F (0.9) = -0.1
+        self.assertAlmostEqual(ov["Hit@10"]["delta"], -0.1)
+        self.assertAlmostEqual(ov["Recall@10"]["delta"], -0.2)
+        self.assertAlmostEqual(ov["Full_Evidence_Success@10"]["delta"], -0.1)
+        self.assertAlmostEqual(ov["MRR"]["delta"], -0.2)
+        
+        # Check per category delta
+        cat = comp["per_category_Hit10"]["CAT_A"]
+        # G (1.0) - F (0.5) = 0.5
+        self.assertAlmostEqual(cat["delta_Hit@10"], 0.5)
+
+    def test_verify_dense_determinism(self):
+        agg1 = {
+            "window_diagnostics": {
+                "encoding_runtime_sec": 1.5,
+                "retrieval_evaluation_runtime_sec": 0.5
+            },
+            "detailed_results_sha256": {
+                "cutoff_filtered_per_probe.jsonl": "sha_c1",
+                "global_diagnostic_per_probe.jsonl": "sha_g1",
+                "window_manifest.jsonl": "sha_w1"
+            },
+            "some_metric": 0.9
+        }
+        
+        agg2 = {
+            "window_diagnostics": {
+                "encoding_runtime_sec": 2.5, # Different runtime
+                "retrieval_evaluation_runtime_sec": 0.6
+            },
+            "detailed_results_sha256": {
+                "cutoff_filtered_per_probe.jsonl": "sha_c1",
+                "global_diagnostic_per_probe.jsonl": "sha_g1",
+                "window_manifest.jsonl": "sha_w1"
+            },
+            "some_metric": 0.9
+        }
+        
+        # Should pass despite different runtimes
+        self.assertTrue(verify_dense_determinism(agg1, agg2))
+        
+        # Fail on different cutoff SHA
+        agg2_bad_c = dict(agg2)
+        agg2_bad_c["detailed_results_sha256"] = dict(agg2["detailed_results_sha256"])
+        agg2_bad_c["detailed_results_sha256"]["cutoff_filtered_per_probe.jsonl"] = "sha_c2"
+        self.assertFalse(verify_dense_determinism(agg1, agg2_bad_c))
+        
+        # Fail on different global SHA
+        agg2_bad_g = dict(agg2)
+        agg2_bad_g["detailed_results_sha256"] = dict(agg2["detailed_results_sha256"])
+        agg2_bad_g["detailed_results_sha256"]["global_diagnostic_per_probe.jsonl"] = "sha_g2"
+        self.assertFalse(verify_dense_determinism(agg1, agg2_bad_g))
+        
+        # Fail on different manifest SHA
+        agg2_bad_w = dict(agg2)
+        agg2_bad_w["detailed_results_sha256"] = dict(agg2["detailed_results_sha256"])
+        agg2_bad_w["detailed_results_sha256"]["window_manifest.jsonl"] = "sha_w2"
+        self.assertFalse(verify_dense_determinism(agg1, agg2_bad_w))
+        
+        # Fail on different metric (JSON serialization differs)
+        agg2_bad_m = dict(agg2)
+        agg2_bad_m["some_metric"] = 0.8
+        self.assertFalse(verify_dense_determinism(agg1, agg2_bad_m))
 
 if __name__ == '__main__':
     unittest.main()
