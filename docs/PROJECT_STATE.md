@@ -147,11 +147,11 @@ M1-30CH-H — DENSE_E5_MMR_V1: EXECUTED
 - MMR Contract: lambda = 0.70. Selected dynamically over full eligible dense candidate set.
 - CUTOFF_FILTERED overall metrics: Hit@10 = 80.0% (-13.3%), Recall@10 = 53.3% (-3.3%), Full_Evidence_Success@10 = 20.0% (+0.0%), MRR = 0.289 (-0.055)
 - GLOBAL_DIAGNOSTIC overall metrics: Hit@10 = 80.0%, Spoiler_Violation@10 = 33.3%
-- Diversity diagnostics: mean_unique_chapters_top10 = 7.66, mean_pairwise_similarity_top10 = 0.906, mean_query_relevance_top10 = 0.781
-- Interpretation: MMR effectively diversified the retrieved evidence set, but this diversity-aware selection did not improve evidence-set recovery. In particular, Full Evidence Success@10 remained 20% and Hit/Recall actually dropped compared to ordinary dense scoring. This negative result suggests that redundancy alone is unlikely to explain the missing evidence. The bottleneck requires richer query intent matching rather than just diversifying the single-query candidate space.
+- Diversity diagnostics deltas (Control vs MMR): mean_unique_chapters_top10 = +0.066, mean_pairwise_similarity_top10 = -0.011, mean_query_relevance_top10 = -0.001
+- Interpretation: Control vs MMR diagnostics mechanically demonstrate that MMR successfully increased diversity (more unique chapters, lower pairwise similarity) in the candidate pool. However, correctness metrics did not improve. Redundancy/diversity alone is unlikely to be the main remaining bottleneck. This motivates testing whether a single query under-specifies multiple evidence needs.
 
 Private chunk text, probes, and embeddings remain LOCAL_ONLY. No LLM / embedding / retrieval external API performed.
 
 ## Next Candidate
 
-Review DENSE_E5_MMR_V1 evidence. Since redundancy removal did not solve evidence coverage, the likely next experiment is deterministic query decomposition / multi-query retrieval.
+Review DENSE_E5_MMR_V1 evidence. Since redundancy removal did not solve evidence coverage, that hypothesis must be tested next. Likely candidate is deterministic query decomposition / multi-query retrieval.

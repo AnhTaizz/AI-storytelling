@@ -14,6 +14,8 @@ model_info:
   torch_version: 2.14.0+cpu
   execution_device: cpu
 relevance_control_reproduction_status: PASS
+relevance_control_ranking_match: PASS
+relevance_control_probe_count: 15
 mmr_lambda: 0.7
 CUTOFF_FILTERED:
   overall:
@@ -125,12 +127,6 @@ CUTOFF_FILTERED:
       spoiler_violation@5: 0.0
       spoiler_violation@10: 0.0
       mrr: 0.15
-  diagnostics:
-    mean_unique_chapters_top3: 2.8666666666666667
-    mean_unique_chapters_top5: 4.6
-    mean_unique_chapters_top10: 7.666666666666667
-    mean_pairwise_similarity_top10: 0.9067221879959106
-    mean_query_relevance_top10: 0.7817942996819814
 GLOBAL_DIAGNOSTIC:
   overall:
     hit@1: 0.06666666666666667
@@ -241,19 +237,31 @@ GLOBAL_DIAGNOSTIC:
       spoiler_violation@5: 1.0
       spoiler_violation@10: 1.0
       mrr: 0.10833333333333334
-  diagnostics:
-    mean_unique_chapters_top3: 2.933333333333333
-    mean_unique_chapters_top5: 4.666666666666667
-    mean_unique_chapters_top10: 8.2
-    mean_pairwise_similarity_top10: 0.9041494727134705
-    mean_query_relevance_top10: 0.7827443726857504
+RELEVANCE_CONTROL_DIVERSITY:
+  mean_unique_chapters_top3: 2.7333333333333334
+  mean_unique_chapters_top5: 4.0
+  mean_unique_chapters_top10: 7.6
+  mean_pairwise_similarity_top10: 0.9186926484107971
+  mean_query_relevance_top10: 0.7837040174007416
+MMR_DIVERSITY:
+  mean_unique_chapters_top3: 2.8666666666666667
+  mean_unique_chapters_top5: 4.6
+  mean_unique_chapters_top10: 7.666666666666667
+  mean_pairwise_similarity_top10: 0.9067221879959106
+  mean_query_relevance_top10: 0.7817942996819814
+DIVERSITY_DELTAS:
+  mean_unique_chapters_top3: 0.1333333333333333
+  mean_unique_chapters_top5: 0.5999999999999996
+  mean_unique_chapters_top10: 0.06666666666666732
+  mean_pairwise_similarity_top10: -0.011970460414886475
+  mean_query_relevance_top10: -0.00190971771876014
 dense_diagnostics:
   probe_count: 15
   passage_count: 97
   query_truncation_count: 0
   passage_truncation_count: 77
-  encoding_runtime_sec: 69.374
-  retrieval_evaluation_runtime_sec: 6.1
+  encoding_runtime_sec: 34.434
+  retrieval_evaluation_runtime_sec: 1.213
 detailed_results_sha256:
   relevance_control_per_probe.jsonl: f3c5f02d1b238687490c3b582c033e54fb73d2be90c62076a91e7fd45a54aaad
   mmr_cutoff_per_probe.jsonl: b647e2b18c9b4e386e386119c17fb423b8962eee8df29151f6c6621b51f1dc58

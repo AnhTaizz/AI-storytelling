@@ -6,10 +6,10 @@ import time
 import numpy as np
 from pathlib import Path
 from collections import defaultdict
-from tools.story_benchmark.dense_e5_mmr_v1 import DenseE5MMRV1, calculate_metrics
+from tools.story_benchmark.dense_e5_mmr_v1 import DenseE5MMRV1, calculate_metrics, calculate_diversity_diagnostics, MMR_LAMBDA_V1
 from tools.story_benchmark.run_bm25_lexical_v1 import compute_spoiler_violations
 
-def run_dense_mmr(probes_path: Path, chunks_path: Path, out_dir: Path):
+def run_dense_mmr(probes_path: Path, chunks_path: Path, out_dir: Path, base_dir: Path):
     out_dir.mkdir(parents=True, exist_ok=True)
     
     with open(probes_path, "r", encoding="utf-8") as f:
@@ -35,7 +35,6 @@ def run_dense_mmr(probes_path: Path, chunks_path: Path, out_dir: Path):
     dense.encode_documents(doc_ids, texts)
     t1 = time.time()
 
-    # Save local embeddings
     np.save(str(out_dir / "passage_embeddings.npy"), dense.doc_embeddings)
     
     # Evaluate Control Gate (CUTOFF filtering only for the control)
@@ -48,7 +47,7 @@ def run_dense_mmr(probes_path: Path, chunks_path: Path, out_dir: Path):
         ranked_cutoff = dense.score_embedding_relevance(q_emb, allowed_doc_ids=allowed_docs)
         ranked_ids = [x[0] for x in ranked_cutoff]
         m = calculate_metrics(probe, ranked_ids)
-        control_metrics_list.append((probe, m))
+        control_metrics_list.append((probe, m, ranked_cutoff))
         relevance_control_results.append({
             "probe_id": probe["probe_id"],
             "retrieved_chunk_ids": ranked_ids,
@@ -59,35 +58,61 @@ def run_dense_mmr(probes_path: Path, chunks_path: Path, out_dir: Path):
         for r in relevance_control_results:
             f.write(json.dumps(r) + "\n")
             
-    # Check control exact reproduction against known F metrics
+    # Check exact relevance control reproduction against F detailed artifact
+    f_detailed_path = base_dir / ".local/story_integration/otonari_30ch/DENSE_E5_SMALL_V1/cutoff_filtered_per_probe.jsonl"
+    if not f_detailed_path.exists():
+        print(f"FAIL: Missing F detailed artifact at {f_detailed_path}", file=sys.stderr)
+        sys.exit(1)
+        
+    f_detailed_results = {}
+    with open(f_detailed_path, "r", encoding="utf-8") as f:
+        for line in f:
+            r = json.loads(line)
+            f_detailed_results[r["probe_id"]] = r["retrieved_chunk_ids"]
+            
+    mismatches = []
+    for r in relevance_control_results:
+        pid = r["probe_id"]
+        if pid not in f_detailed_results:
+            mismatches.append(pid)
+            continue
+        if r["retrieved_chunk_ids"] != f_detailed_results[pid]:
+            mismatches.append(pid)
+            
+    if mismatches:
+        print(f"FAIL: Relevance Control Exact Ranking Gate mismatch on probes: {mismatches}", file=sys.stderr)
+        sys.exit(1)
+    else:
+        print("PASS: Relevance Control Exact Ranking Gate passed.")
+
+    # Check control aggregate reproduction
+    f_result_yaml = base_dir / "benchmarks/m1_script_quality/long_range_probe/DENSE_E5_SMALL_V1_RESULT.yaml"
+    with open(f_result_yaml, "r", encoding="utf-8") as f:
+        f_agg = yaml.safe_load(f)
+        
+    expected_f = f_agg["CUTOFF_FILTERED"]["overall"]
+    
     def aggregate_control(metrics_list):
-        overall = {k: 0.0 for k in ["hit@1", "hit@3", "hit@5", "hit@10", "recall@10", "success@10", "mrr"]}
-        for p, m in metrics_list:
-            for k in overall:
+        keys = ["hit@1", "hit@3", "hit@5", "hit@10", "recall@1", "recall@3", "recall@5", "recall@10", "success@1", "success@3", "success@5", "success@10", "mrr"]
+        overall = {k: 0.0 for k in keys}
+        for p, m, _ in metrics_list:
+            for k in keys:
                 overall[k] += m[k]
-        for k in overall:
+        for k in keys:
             overall[k] /= len(metrics_list)
         return overall
         
     c_agg = aggregate_control(control_metrics_list)
     
-    # Expected F metrics
-    expected = {
-        "hit@1": 0.1333333333,
-        "hit@3": 0.4,
-        "hit@5": 0.7333333333,
-        "hit@10": 0.9333333333,
-        "recall@10": 0.5666666667,
-        "success@10": 0.2,
-        "mrr": 0.3446296296
-    }
-    
-    for k, v in expected.items():
-        if abs(c_agg[k] - v) > 1e-6:
-            print(f"FAIL: Relevance Control Gate mismatch on {k}. Expected {v}, got {c_agg[k]}", file=sys.stderr)
+    for k in ["hit@1", "hit@3", "hit@5", "hit@10", "recall@1", "recall@3", "recall@5", "recall@10", "success@1", "success@3", "success@5", "success@10", "mrr"]:
+        if abs(c_agg[k] - expected_f[k]) > 1e-6:
+            print(f"FAIL: Relevance Control Aggregate Gate mismatch on {k}. Expected {expected_f[k]}, got {c_agg[k]}", file=sys.stderr)
             sys.exit(1)
             
-    print("PASS: Relevance Control Gate passed.")
+    print("PASS: Relevance Control Aggregate Gate passed.")
+
+    # Calculate diversity diagnostics for control
+    control_diversity = calculate_diversity_diagnostics(control_metrics_list, chunk_meta, dense.doc_ids, dense.doc_embeddings)
 
     # Execute MMR
     cutoff_filtered = []
@@ -105,7 +130,7 @@ def run_dense_mmr(probes_path: Path, chunks_path: Path, out_dir: Path):
         
         # CUTOFF FILTERED MMR
         allowed_docs = {cid for cid, chap in chunk_meta.items() if chap <= probe["cutoff_chapter"]}
-        ranked_cutoff = dense.score_embedding_mmr(q_emb, allowed_doc_ids=allowed_docs, lambda_param=0.70)
+        ranked_cutoff = dense.score_embedding_mmr(q_emb, allowed_doc_ids=allowed_docs, lambda_param=MMR_LAMBDA_V1)
         ranked_ids_cutoff = [x[0] for x in ranked_cutoff]
         m_cutoff = calculate_metrics(probe, ranked_ids_cutoff)
         m_cutoff.update(compute_spoiler_violations(probe, ranked_ids_cutoff, chunk_meta))
@@ -122,7 +147,7 @@ def run_dense_mmr(probes_path: Path, chunks_path: Path, out_dir: Path):
         cutoff_filtered_metrics.append((probe, m_cutoff, ranked_cutoff))
         
         # GLOBAL DIAGNOSTIC MMR
-        ranked_global = dense.score_embedding_mmr(q_emb, allowed_doc_ids=None, lambda_param=0.70)
+        ranked_global = dense.score_embedding_mmr(q_emb, allowed_doc_ids=None, lambda_param=MMR_LAMBDA_V1)
         ranked_ids_global = [x[0] for x in ranked_global]
         m_global = calculate_metrics(probe, ranked_ids_global)
         m_global.update(compute_spoiler_violations(probe, ranked_ids_global, chunk_meta))
@@ -161,40 +186,13 @@ def run_dense_mmr(probes_path: Path, chunks_path: Path, out_dir: Path):
         by_cat = defaultdict(lambda: {k: 0.0 for k in keys})
         cat_counts = defaultdict(int)
         
-        chaps_top3 = []
-        chaps_top5 = []
-        chaps_top10 = []
-        
-        pairwise_sims_top10 = []
-        query_rels_top10 = []
-        
-        for p, m, ranked in metrics_list:
+        for p, m, _ in metrics_list:
             cat = p["category"]
             cat_counts[cat] += 1
             
             for k in keys:
                 overall[k] += m[k]
                 by_cat[cat][k] += m[k]
-                
-            ranked_ids = [x[0] for x in ranked]
-            chaps = [chunk_meta[rid] for rid in ranked_ids]
-            
-            chaps_top3.append(len(set(chaps[:3])))
-            chaps_top5.append(len(set(chaps[:5])))
-            chaps_top10.append(len(set(chaps[:10])))
-            
-            # calculate pairwise cos sim among selected
-            if len(ranked_ids) > 1:
-                embs = []
-                for rid in ranked_ids[:10]:
-                    idx = dense.doc_ids.index(rid)
-                    embs.append(dense.doc_embeddings[idx])
-                embs = np.array(embs)
-                sim_matrix = np.dot(embs, embs.T)
-                upper = sim_matrix[np.triu_indices(len(embs), k=1)]
-                pairwise_sims_top10.extend(upper)
-                
-            query_rels_top10.extend([float(x[1]) for x in ranked[:10]])
                 
         n = len(metrics_list)
         for k in keys:
@@ -204,18 +202,17 @@ def run_dense_mmr(probes_path: Path, chunks_path: Path, out_dir: Path):
                 
         return {
             "overall": overall,
-            "per_category": dict(by_cat),
-            "diagnostics": {
-                "mean_unique_chapters_top3": float(np.mean(chaps_top3)),
-                "mean_unique_chapters_top5": float(np.mean(chaps_top5)),
-                "mean_unique_chapters_top10": float(np.mean(chaps_top10)),
-                "mean_pairwise_similarity_top10": float(np.mean(pairwise_sims_top10)) if pairwise_sims_top10 else 0.0,
-                "mean_query_relevance_top10": float(np.mean(query_rels_top10)) if query_rels_top10 else 0.0
-            }
+            "per_category": dict(by_cat)
         }
         
     agg_cutoff = aggregate(cutoff_filtered_metrics)
     agg_global = aggregate(global_diag_metrics, is_cutoff=False)
+    
+    mmr_diversity = calculate_diversity_diagnostics(cutoff_filtered_metrics, chunk_meta, dense.doc_ids, dense.doc_embeddings)
+    
+    diversity_deltas = {}
+    for k in control_diversity:
+        diversity_deltas[k] = mmr_diversity[k] - control_diversity[k]
     
     with open(probes_path, "rb") as f: psha = hashlib.sha256(f.read()).hexdigest()
     with open(chunks_path, "rb") as f: csha = hashlib.sha256(f.read()).hexdigest()
@@ -232,9 +229,14 @@ def run_dense_mmr(probes_path: Path, chunks_path: Path, out_dir: Path):
         "chunks_jsonl_sha256": csha,
         "model_info": dense.get_model_info(),
         "relevance_control_reproduction_status": "PASS",
-        "mmr_lambda": 0.70,
+        "relevance_control_ranking_match": "PASS",
+        "relevance_control_probe_count": len(probes),
+        "mmr_lambda": MMR_LAMBDA_V1,
         "CUTOFF_FILTERED": agg_cutoff,
         "GLOBAL_DIAGNOSTIC": agg_global,
+        "RELEVANCE_CONTROL_DIVERSITY": control_diversity,
+        "MMR_DIVERSITY": mmr_diversity,
+        "DIVERSITY_DELTAS": diversity_deltas,
         "dense_diagnostics": {
             "probe_count": len(probes),
             "passage_count": len(doc_ids),
@@ -312,6 +314,7 @@ def compare_f_and_h(agg_h, ref_f_yaml_path: Path):
 def verify_dense_mmr_determinism(agg1, agg2):
     import copy
     
+    # Check strict SHA equality for detailed files
     d1 = agg1["detailed_results_sha256"]["mmr_cutoff_per_probe.jsonl"]
     d2 = agg2["detailed_results_sha256"]["mmr_cutoff_per_probe.jsonl"]
     g1 = agg1["detailed_results_sha256"]["mmr_global_per_probe.jsonl"]
@@ -319,9 +322,13 @@ def verify_dense_mmr_determinism(agg1, agg2):
     c1 = agg1["detailed_results_sha256"]["relevance_control_per_probe.jsonl"]
     c2 = agg2["detailed_results_sha256"]["relevance_control_per_probe.jsonl"]
     
+    if d1 != d2 or g1 != g2 or c1 != c2:
+        return False
+    
     a1_cmp = copy.deepcopy(agg1)
     a2_cmp = copy.deepcopy(agg2)
     
+    # Remove timings
     if "dense_diagnostics" in a1_cmp:
         a1_cmp["dense_diagnostics"].pop("encoding_runtime_sec", None)
         a1_cmp["dense_diagnostics"].pop("retrieval_evaluation_runtime_sec", None)
@@ -332,7 +339,7 @@ def verify_dense_mmr_determinism(agg1, agg2):
     s1 = json.dumps(a1_cmp, sort_keys=True)
     s2 = json.dumps(a2_cmp, sort_keys=True)
     
-    return d1 == d2 and g1 == g2 and c1 == c2 and s1 == s2
+    return s1 == s2
 
 if __name__ == "__main__":
     base_dir = Path("e:/ProjectDE/AI-storytelling")
@@ -341,11 +348,11 @@ if __name__ == "__main__":
     out_dir = base_dir / ".local/story_integration/otonari_30ch/DENSE_E5_MMR_V1"
     f_res = base_dir / "benchmarks/m1_script_quality/long_range_probe/DENSE_E5_SMALL_V1_RESULT.yaml"
     
-    agg1 = run_dense_mmr(probes, chunks, out_dir)
+    agg1 = run_dense_mmr(probes, chunks, out_dir, base_dir)
     print("Run 1 complete.")
     
     time.sleep(1)
-    agg2 = run_dense_mmr(probes, chunks, out_dir)
+    agg2 = run_dense_mmr(probes, chunks, out_dir, base_dir)
     print("Run 2 complete.")
     
     if not verify_dense_mmr_determinism(agg1, agg2):
@@ -358,7 +365,6 @@ if __name__ == "__main__":
     agg1["deterministic_reproduction_status"] = "PASS"
     agg1["privacy_status"] = "PASS"
     
-    # Save the manifest locally for records
     with open(out_dir / "run_manifest.yaml", "w", encoding="utf-8") as f:
         yaml.dump({"files": ["passage_embeddings.npy", "query_embeddings.npy", "relevance_control_per_probe.jsonl", "mmr_cutoff_per_probe.jsonl", "mmr_global_per_probe.jsonl"]}, f)
     
@@ -366,3 +372,4 @@ if __name__ == "__main__":
     pub_dir.mkdir(parents=True, exist_ok=True)
     with open(pub_dir / "DENSE_E5_MMR_V1_RESULT.yaml", "w", encoding="utf-8") as f:
         yaml.dump(agg1, f, sort_keys=False)
+

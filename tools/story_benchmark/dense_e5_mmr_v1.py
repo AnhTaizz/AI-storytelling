@@ -3,6 +3,8 @@ import numpy as np
 from typing import List, Tuple, Set
 from sentence_transformers import SentenceTransformer
 
+MMR_LAMBDA_V1 = 0.70
+
 def mmr_select(
     query_emb: np.ndarray,
     candidate_embs: np.ndarray,
@@ -195,3 +197,43 @@ def calculate_metrics(probe: dict, ranked_results: List[str]) -> dict:
             
     metrics["mrr"] = mrr
     return metrics
+
+def calculate_diversity_diagnostics(metrics_list: List[Tuple[dict, dict, List[Tuple[str, float]]]], chunk_meta: dict, doc_ids: List[str], doc_embeddings: np.ndarray) -> dict:
+    """
+    Calculate diversity diagnostics across all probes.
+    metrics_list contains (probe, metrics_dict, ranked_results).
+    """
+    chaps_top3 = []
+    chaps_top5 = []
+    chaps_top10 = []
+    
+    pairwise_sims_top10 = []
+    query_rels_top10 = []
+    
+    for _, _, ranked in metrics_list:
+        ranked_ids = [x[0] for x in ranked]
+        chaps = [chunk_meta[rid] for rid in ranked_ids]
+        
+        chaps_top3.append(len(set(chaps[:3])))
+        chaps_top5.append(len(set(chaps[:5])))
+        chaps_top10.append(len(set(chaps[:10])))
+        
+        if len(ranked_ids) > 1:
+            embs = []
+            for rid in ranked_ids[:10]:
+                idx = doc_ids.index(rid)
+                embs.append(doc_embeddings[idx])
+            embs = np.array(embs)
+            sim_matrix = np.dot(embs, embs.T)
+            upper = sim_matrix[np.triu_indices(len(embs), k=1)]
+            pairwise_sims_top10.extend(upper)
+            
+        query_rels_top10.extend([float(x[1]) for x in ranked[:10]])
+        
+    return {
+        "mean_unique_chapters_top3": float(np.mean(chaps_top3)) if chaps_top3 else 0.0,
+        "mean_unique_chapters_top5": float(np.mean(chaps_top5)) if chaps_top5 else 0.0,
+        "mean_unique_chapters_top10": float(np.mean(chaps_top10)) if chaps_top10 else 0.0,
+        "mean_pairwise_similarity_top10": float(np.mean(pairwise_sims_top10)) if pairwise_sims_top10 else 0.0,
+        "mean_query_relevance_top10": float(np.mean(query_rels_top10)) if query_rels_top10 else 0.0
+    }
