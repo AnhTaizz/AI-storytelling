@@ -1,0 +1,325 @@
+diagnostic_id: K_RANK_TRANSITION_DIAGNOSTIC_V1
+status: EXECUTED
+benchmark_id: LONG_RANGE_PROBE_V1
+analysis_mode: CUTOFF_FILTERED
+source_baselines:
+  F: DENSE_E5_SMALL_V1
+  K: DENSE_E5_LARGE_V1
+artifact_integrity:
+  status: PASS
+  source_sha256:
+    probe_file: 24ca1f9c92531a19f59d409c7d3e68ef90b91ab24aab6d7854f0c52667c136e2
+    chunks_jsonl: 10ef5681ad1b2db0882c150efa24804cd0fca56bb38e0ffb772d22494e1e40fb
+    f_cutoff_ranking: b4a2f7479853276205fca17e7230ef878a07e299aedf94d83ea2c8b2169d824f
+    k_cutoff_ranking: 07d317cbb09bf0ff5734d7513ce1531871ec0d4cdf84bd9d9728d7f2c2a18e86
+  f_k_top10_metrics_reproduce_committed_results: PASS
+population:
+  probe_count: 15
+  required_evidence_units: 35
+all_required_evidence_transition_counts:
+  total_units: 35
+  counts:
+    STAY_TOP10: 12
+    F_TOP10_LOST_BY_K: 8
+    K_TOP10_GAIN_FROM_F: 8
+    STAY_OUTSIDE_TOP10: 7
+  stay_outside_top10_f_buckets:
+    TOP_10: 0
+    NEAR_11_20: 1
+    MID_21_30: 2
+    MID_31_50: 2
+    DEEP_GT_50: 2
+    MISSING: 0
+  stay_outside_top10_k_buckets:
+    TOP_10: 0
+    NEAR_11_20: 4
+    MID_21_30: 0
+    MID_31_50: 1
+    DEEP_GT_50: 2
+    MISSING: 0
+  f_bucket_distribution_all:
+    TOP_10: 20
+    NEAR_11_20: 6
+    MID_21_30: 3
+    MID_31_50: 3
+    DEEP_GT_50: 3
+    MISSING: 0
+  k_bucket_distribution_all:
+    TOP_10: 20
+    NEAR_11_20: 9
+    MID_21_30: 3
+    MID_31_50: 1
+    DEEP_GT_50: 2
+    MISSING: 0
+  missing_verified:
+    f: 0
+    k: 0
+f_top10_lost_population:
+  population_size: 8
+  k_destination:
+    11-15:
+      count: 4
+      fraction: 0.5
+    16-20:
+      count: 1
+      fraction: 0.125
+    21-30:
+      count: 3
+      fraction: 0.375
+    31-50:
+      count: 0
+      fraction: 0.0
+    '>50':
+      count: 0
+      fraction: 0.0
+    missing:
+      count: 0
+      fraction: 0.0
+  median_f_rank: 4.5
+  median_k_rank: 16.0
+  mean_k_rank: 18.25
+  fraction_within_k_top20: 0.625
+  fraction_within_k_top30: 1.0
+  fraction_within_k_top50: 1.0
+  wording: candidate-reachable within K Top-N (not reranker-solvable)
+k_top10_gain_population:
+  population_size: 8
+  f_origin:
+    11-20:
+      count: 5
+      fraction: 0.625
+    21-30:
+      count: 1
+      fraction: 0.125
+    31-50:
+      count: 1
+      fraction: 0.125
+    '>50':
+      count: 1
+      fraction: 0.125
+    missing:
+      count: 0
+      fraction: 0.0
+  median_f_rank: 17.0
+  median_k_rank: 4.5
+remaining_deep_under_k:
+  k_rank_gt20:
+    count: 6
+    f_bucket_distribution:
+      TOP_10: 3
+      NEAR_11_20: 1
+      MID_21_30: 0
+      MID_31_50: 1
+      DEEP_GT_50: 1
+      MISSING: 0
+    k_bucket_distribution:
+      TOP_10: 0
+      NEAR_11_20: 0
+      MID_21_30: 3
+      MID_31_50: 1
+      DEEP_GT_50: 2
+      MISSING: 0
+    median_f_rank: 13.0
+    median_k_rank: 32.0
+    categories:
+      CHRONOLOGY: 2
+      RELATIONSHIP_PROGRESSION: 1
+      SPOILER_BOUNDARY: 2
+      TEMPORAL_STATE: 1
+  k_rank_gt30:
+    count: 3
+    f_bucket_distribution:
+      TOP_10: 0
+      NEAR_11_20: 1
+      MID_21_30: 0
+      MID_31_50: 1
+      DEEP_GT_50: 1
+      MISSING: 0
+    k_bucket_distribution:
+      TOP_10: 0
+      NEAR_11_20: 0
+      MID_21_30: 0
+      MID_31_50: 1
+      DEEP_GT_50: 2
+      MISSING: 0
+    median_f_rank: 47.0
+    median_k_rank: 53.0
+    categories:
+      CHRONOLOGY: 1
+      SPOILER_BOUNDARY: 1
+      TEMPORAL_STATE: 1
+  k_rank_gt50:
+    count: 2
+    f_bucket_distribution:
+      TOP_10: 0
+      NEAR_11_20: 1
+      MID_21_30: 0
+      MID_31_50: 0
+      DEEP_GT_50: 1
+      MISSING: 0
+    k_bucket_distribution:
+      TOP_10: 0
+      NEAR_11_20: 0
+      MID_21_30: 0
+      MID_31_50: 0
+      DEEP_GT_50: 2
+      MISSING: 0
+    median_f_rank: 37.0
+    median_k_rank: 62.5
+    categories:
+      SPOILER_BOUNDARY: 1
+      TEMPORAL_STATE: 1
+  note: categories are descriptive only
+probe_transition_aggregates:
+  probe_count: 15
+  f_hit_probes: 14
+  k_hit_probes: 12
+  f_full_success_probes: 3
+  k_full_success_probes: 4
+  hit_gained: 1
+  hit_lost: 3
+  hit_stable_true: 11
+  hit_stable_false: 0
+  full_success_gained: 3
+  full_success_lost: 2
+  full_success_stable_true: 1
+  full_success_stable_false: 9
+  probes_with_more_required_in_k_top10: 4
+  probes_with_fewer_required_in_k_top10: 5
+  probes_with_equal_required_in_top10: 6
+raw_unit_count_vs_macro_recall:
+  f_raw_required_units_in_top10: 20
+  k_raw_required_units_in_top10: 20
+  total_required_units: 35
+  f_micro_recall10: 0.5714285714285714
+  k_micro_recall10: 0.5714285714285714
+  f_macro_recall10: 0.5666666666666667
+  k_macro_recall10: 0.5777777777777777
+  probes_by_required_count:
+    2: 10
+    3: 5
+  explanation: 'Raw evidence-unit count and macro Recall@10 are different statistics:
+    each probe contributes equally to macro recall, while probes require different
+    numbers of evidence units, so moving a unit between a 2-unit and a 3-unit probe
+    changes macro recall without changing the raw count.'
+candidate_access_by_depth:
+  note: candidate-access diagnostic from frozen rankings; NOT reranker performance
+  K:
+    top10:
+      probes_with_any_required: 12
+      probes_with_all_required: 4
+      recall: 0.5777777777777777
+      full_evidence_success: 0.26666666666666666
+      hit: 0.8
+      raw_required_units: 20
+    top20:
+      probes_with_any_required: 15
+      probes_with_all_required: 9
+      recall: 0.8222222222222223
+      full_evidence_success: 0.6
+      hit: 1.0
+      raw_required_units: 29
+    top30:
+      probes_with_any_required: 15
+      probes_with_all_required: 12
+      recall: 0.9111111111111111
+      full_evidence_success: 0.8
+      hit: 1.0
+      raw_required_units: 32
+    top50:
+      probes_with_any_required: 15
+      probes_with_all_required: 13
+      recall: 0.9333333333333333
+      full_evidence_success: 0.8666666666666667
+      hit: 1.0
+      raw_required_units: 33
+  F_reference:
+    top10:
+      probes_with_any_required: 14
+      probes_with_all_required: 3
+      recall: 0.5666666666666667
+      full_evidence_success: 0.2
+      hit: 0.9333333333333333
+      raw_required_units: 20
+    top20:
+      probes_with_any_required: 14
+      probes_with_all_required: 8
+      recall: 0.7333333333333333
+      full_evidence_success: 0.5333333333333333
+      hit: 0.9333333333333333
+      raw_required_units: 26
+    top30:
+      probes_with_any_required: 14
+      probes_with_all_required: 10
+      recall: 0.8222222222222223
+      full_evidence_success: 0.6666666666666666
+      hit: 0.9333333333333333
+      raw_required_units: 29
+    top50:
+      probes_with_any_required: 15
+      probes_with_all_required: 12
+      recall: 0.9111111111111111
+      full_evidence_success: 0.8
+      hit: 1.0
+      raw_required_units: 32
+per_category_descriptive:
+  note: descriptive only (3 probes per category)
+  CALLBACK:
+    units: 7
+    STAY_TOP10: 3
+    F_TOP10_LOST_BY_K: 1
+    K_TOP10_GAIN_FROM_F: 2
+    STAY_OUTSIDE_TOP10: 1
+    k_rank_gt20: 0
+    k_rank_gt30: 0
+  CHRONOLOGY:
+    units: 9
+    STAY_TOP10: 2
+    F_TOP10_LOST_BY_K: 2
+    K_TOP10_GAIN_FROM_F: 2
+    STAY_OUTSIDE_TOP10: 3
+    k_rank_gt20: 2
+    k_rank_gt30: 1
+  RELATIONSHIP_PROGRESSION:
+    units: 7
+    STAY_TOP10: 2
+    F_TOP10_LOST_BY_K: 2
+    K_TOP10_GAIN_FROM_F: 2
+    STAY_OUTSIDE_TOP10: 1
+    k_rank_gt20: 1
+    k_rank_gt30: 0
+  SPOILER_BOUNDARY:
+    units: 6
+    STAY_TOP10: 2
+    F_TOP10_LOST_BY_K: 2
+    K_TOP10_GAIN_FROM_F: 1
+    STAY_OUTSIDE_TOP10: 1
+    k_rank_gt20: 2
+    k_rank_gt30: 1
+  TEMPORAL_STATE:
+    units: 6
+    STAY_TOP10: 3
+    F_TOP10_LOST_BY_K: 1
+    K_TOP10_GAIN_FROM_F: 1
+    STAY_OUTSIDE_TOP10: 1
+    k_rank_gt20: 1
+    k_rank_gt30: 1
+descriptive_classification:
+  ordering_condition: true
+  deep_condition: false
+  classification: ORDERING_CONSISTENT
+  rule:
+    ordering: lost_within_k_top20 > 50% AND K full_evidence_success@30 >= 0.50
+    deep: units with K rank > 30 >= 10% of required units
+  disclosure: thresholds set after K result and K post-hoc counts were visible; descriptive
+    only
+local_table_sha256:
+  required_evidence_transitions.jsonl: d063276dc30bc1872ab20b836493590ff5c4c941b97a69b55fd28fb95e4e6657
+  probe_transitions.jsonl: d31dbc2742aa353ef1aeb4d54cbe154d24214f578009ae7d11bf6acf47b11024
+interpretation: 'Of 8 required units F had in Top-10 but K ranked lower, 5 stay within
+  K Top-20 and 8 within K Top-30, i.e. they moved just below the output boundary rather
+  than being lost. Under K, 9/15 probes have all required evidence within Top-20 and
+  12/15 within Top-30 (candidate access). 3/35 units remain beyond K rank 30 and 2/35
+  beyond rank 50. Descriptive classification: ORDERING_CONSISTENT.'
+determinism_status: PASS
+privacy_status: PASS
