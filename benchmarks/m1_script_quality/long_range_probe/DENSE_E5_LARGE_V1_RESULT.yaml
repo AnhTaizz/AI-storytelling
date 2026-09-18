@@ -1,0 +1,472 @@
+baseline_id: DENSE_E5_LARGE_V1
+status: EXECUTED
+benchmark_id: LONG_RANGE_PROBE_V1
+reference_baseline_id: DENSE_E5_SMALL_V1
+model_info:
+  model_id: intfloat/multilingual-e5-large
+  model_revision: 3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3
+  model_weight_filename: model.safetensors
+  model_weight_sha256: 020afdebf2762b29fcaf286629a96c3b3b65af241f6a08226b1cfee60a21def6
+  tokenizer_filename: tokenizer.json
+  tokenizer_sha256: 62c24cdc13d4c9952d63718d6c9fa4c287974249e16b7ade6d5a85e7bbb75626
+  tokenizer_class: XLMRobertaTokenizer
+  embedding_dimension: 1024
+  max_seq_length: 512
+  sentence_transformers_version: 6.0.1
+  transformers_version: 5.17.0
+  torch_version: 2.14.0+cpu
+  torch_default_dtype: torch.float32
+  execution_device: cpu
+retrieval_contract:
+  representation: one embedding per original parent chunk (PARAGRAPH_PACK_V1); no
+    windows
+  query_prefix: 'query: '
+  passage_prefix: 'passage: '
+  max_seq_length: 512
+  normalize_embeddings: true
+  similarity: dot product of unit-normalized embeddings (cosine)
+  tie_break: chunk_id ASC
+  passage_encode_batch_size: 4
+  query_encode: one query per encode call (same as F)
+input_integrity:
+  benchmark_freeze: PASS
+  probe_file_sha256: 24ca1f9c92531a19f59d409c7d3e68ef90b91ab24aab6d7854f0c52667c136e2
+  chunks_jsonl_sha256: 10ef5681ad1b2db0882c150efa24804cd0fca56bb38e0ffb772d22494e1e40fb
+  corpus_fingerprint_sha256: 7f9bb8106d6d50acd2b3760738c0b8040f36ab547c2d2f7eade1ca0b9a827ff8
+  f_detailed_ranking: PASS
+  f_detailed_ranking_sha256: b4a2f7479853276205fca17e7230ef878a07e299aedf94d83ea2c8b2169d824f
+  j_population_reconstruction: PASS
+  model_identity: PASS
+CUTOFF_FILTERED:
+  overall:
+    hit@1: 0.26666666666666666
+    hit@3: 0.4666666666666667
+    hit@5: 0.6666666666666666
+    hit@10: 0.8
+    recall@1: 0.1111111111111111
+    recall@3: 0.26666666666666666
+    recall@5: 0.45555555555555555
+    recall@10: 0.5777777777777777
+    success@1: 0.0
+    success@3: 0.13333333333333333
+    success@5: 0.2
+    success@10: 0.26666666666666666
+    spoiler_violation@1: 0.0
+    spoiler_violation@3: 0.0
+    spoiler_violation@5: 0.0
+    spoiler_violation@10: 0.0
+    mrr: 0.42085592769803293
+  per_category:
+    CHRONOLOGY:
+      hit@1: 0.3333333333333333
+      hit@3: 0.3333333333333333
+      hit@5: 0.6666666666666666
+      hit@10: 0.6666666666666666
+      recall@1: 0.1111111111111111
+      recall@3: 0.1111111111111111
+      recall@5: 0.3333333333333333
+      recall@10: 0.4444444444444444
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.0
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.44696969696969696
+    RELATIONSHIP_PROGRESSION:
+      hit@1: 0.3333333333333333
+      hit@3: 0.6666666666666666
+      hit@5: 0.6666666666666666
+      hit@10: 0.6666666666666666
+      recall@1: 0.1111111111111111
+      recall@3: 0.27777777777777773
+      recall@5: 0.5555555555555555
+      recall@10: 0.5555555555555555
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.3333333333333333
+      success@10: 0.3333333333333333
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.4619883040935672
+    CALLBACK:
+      hit@1: 0.3333333333333333
+      hit@3: 1.0
+      hit@5: 1.0
+      hit@10: 1.0
+      recall@1: 0.16666666666666666
+      recall@3: 0.611111111111111
+      recall@5: 0.7222222222222222
+      recall@10: 0.7222222222222222
+      success@1: 0.0
+      success@3: 0.3333333333333333
+      success@5: 0.3333333333333333
+      success@10: 0.3333333333333333
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.611111111111111
+    TEMPORAL_STATE:
+      hit@1: 0.3333333333333333
+      hit@3: 0.3333333333333333
+      hit@5: 0.6666666666666666
+      hit@10: 1.0
+      recall@1: 0.16666666666666666
+      recall@3: 0.3333333333333333
+      recall@5: 0.5
+      recall@10: 0.6666666666666666
+      success@1: 0.0
+      success@3: 0.3333333333333333
+      success@5: 0.3333333333333333
+      success@10: 0.3333333333333333
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.4583333333333333
+    SPOILER_BOUNDARY:
+      hit@1: 0.0
+      hit@3: 0.0
+      hit@5: 0.3333333333333333
+      hit@10: 0.6666666666666666
+      recall@1: 0.0
+      recall@3: 0.0
+      recall@5: 0.16666666666666666
+      recall@10: 0.5
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.3333333333333333
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.12587719298245614
+GLOBAL_DIAGNOSTIC:
+  overall:
+    hit@1: 0.26666666666666666
+    hit@3: 0.4666666666666667
+    hit@5: 0.6
+    hit@10: 0.6666666666666666
+    recall@1: 0.1111111111111111
+    recall@3: 0.26666666666666666
+    recall@5: 0.4222222222222222
+    recall@10: 0.47777777777777775
+    success@1: 0.0
+    success@3: 0.13333333333333333
+    success@5: 0.2
+    success@10: 0.2
+    spoiler_violation@1: 0.06666666666666667
+    spoiler_violation@3: 0.06666666666666667
+    spoiler_violation@5: 0.26666666666666666
+    spoiler_violation@10: 0.3333333333333333
+    mrr: 0.40814117656222915
+  per_category:
+    CHRONOLOGY:
+      hit@1: 0.3333333333333333
+      hit@3: 0.3333333333333333
+      hit@5: 0.6666666666666666
+      hit@10: 0.6666666666666666
+      recall@1: 0.1111111111111111
+      recall@3: 0.1111111111111111
+      recall@5: 0.3333333333333333
+      recall@10: 0.4444444444444444
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.0
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.44696969696969696
+    RELATIONSHIP_PROGRESSION:
+      hit@1: 0.3333333333333333
+      hit@3: 0.6666666666666666
+      hit@5: 0.6666666666666666
+      hit@10: 0.6666666666666666
+      recall@1: 0.1111111111111111
+      recall@3: 0.27777777777777773
+      recall@5: 0.5555555555555555
+      recall@10: 0.5555555555555555
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.3333333333333333
+      success@10: 0.3333333333333333
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.4619883040935672
+    CALLBACK:
+      hit@1: 0.3333333333333333
+      hit@3: 1.0
+      hit@5: 1.0
+      hit@10: 1.0
+      recall@1: 0.16666666666666666
+      recall@3: 0.611111111111111
+      recall@5: 0.7222222222222222
+      recall@10: 0.7222222222222222
+      success@1: 0.0
+      success@3: 0.3333333333333333
+      success@5: 0.3333333333333333
+      success@10: 0.3333333333333333
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.611111111111111
+    TEMPORAL_STATE:
+      hit@1: 0.3333333333333333
+      hit@3: 0.3333333333333333
+      hit@5: 0.6666666666666666
+      hit@10: 0.6666666666666666
+      recall@1: 0.16666666666666666
+      recall@3: 0.3333333333333333
+      recall@5: 0.5
+      recall@10: 0.5
+      success@1: 0.0
+      success@3: 0.3333333333333333
+      success@5: 0.3333333333333333
+      success@10: 0.3333333333333333
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.3333333333333333
+      spoiler_violation@10: 0.6666666666666666
+      mrr: 0.44047619047619047
+    SPOILER_BOUNDARY:
+      hit@1: 0.0
+      hit@3: 0.0
+      hit@5: 0.0
+      hit@10: 0.3333333333333333
+      recall@1: 0.0
+      recall@3: 0.0
+      recall@5: 0.0
+      recall@10: 0.16666666666666666
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.0
+      spoiler_violation@1: 0.3333333333333333
+      spoiler_violation@3: 0.3333333333333333
+      spoiler_violation@5: 1.0
+      spoiler_violation@10: 1.0
+      mrr: 0.08016058016058016
+J_MISSED_EVIDENCE_RANK_DIAGNOSTIC:
+  population_size: 15
+  rank_improved: 13
+  rank_same: 0
+  rank_worsened: 2
+  f_gt10_to_k_le10: 8
+  f_gt20_to_k_le20: 7
+  f_gt50_to_k_le50: 2
+  f_gt20_units: 9
+  f_gt50_units: 3
+  median_f_rank: 28.0
+  median_k_rank: 10.0
+  k_rank_distribution:
+    1-10:
+      count: 8
+      fraction: 0.5333333333333333
+    11-20:
+      count: 4
+      fraction: 0.26666666666666666
+    21-50:
+      count: 1
+      fraction: 0.06666666666666667
+    '>50':
+      count: 2
+      fraction: 0.13333333333333333
+    missing:
+      count: 0
+      fraction: 0.0
+COMPLETENESS_CURVE:
+  note: Diagnostic depths from the frozen rankings; F values read from the committed
+    J result.
+  K10:
+    F_recall: 0.5666666666666667
+    K_recall: 0.5777777777777777
+    delta_recall: 0.011111111111111072
+    F_full_evidence_success: 0.2
+    K_full_evidence_success: 0.26666666666666666
+    delta_full_evidence_success: 0.06666666666666665
+  K20:
+    F_recall: 0.7333333333333333
+    K_recall: 0.8222222222222222
+    delta_recall: 0.0888888888888889
+    F_full_evidence_success: 0.5333333333333333
+    K_full_evidence_success: 0.6
+    delta_full_evidence_success: 0.06666666666666665
+  K30:
+    F_recall: 0.8222222222222223
+    K_recall: 0.9111111111111111
+    delta_recall: 0.0888888888888888
+    F_full_evidence_success: 0.6666666666666666
+    K_full_evidence_success: 0.8
+    delta_full_evidence_success: 0.13333333333333341
+  K50:
+    F_recall: 0.9111111111111111
+    K_recall: 0.9333333333333333
+    delta_recall: 0.022222222222222254
+    F_full_evidence_success: 0.8
+    K_full_evidence_success: 0.8666666666666667
+    delta_full_evidence_success: 0.06666666666666665
+truncation_diagnostics:
+  k_query_truncation_count: 0
+  k_passage_truncation_count: 77
+  f_query_truncation_count: 0
+  f_passage_truncation_count: 77
+  passage_count: 97
+  probe_count: 15
+runtime_diagnostics:
+  model_load_runtime_sec: 79.705
+  encoding_runtime_sec: 328.688
+  retrieval_evaluation_runtime_sec: 6.077
+detailed_results_sha256:
+  cutoff_filtered_per_probe.jsonl: 07d317cbb09bf0ff5734d7513ce1531871ec0d4cdf84bd9d9728d7f2c2a18e86
+  global_diagnostic_per_probe.jsonl: 24990d98b1297cfe6b7eeabf01ab739b0b5054b179445cf66346609d66fdc4e3
+  f_missed_rank_shift.jsonl: b2490359883419bfb8009566e304e2632ecc9c1bed53fd6cc3517518fecbff0c
+F_COMPARISON:
+  overall:
+    Hit@1:
+      K_LARGE: 0.26666666666666666
+      F_SMALL: 0.13333333333333333
+      delta: 0.13333333333333333
+    Recall@1:
+      K_LARGE: 0.1111111111111111
+      F_SMALL: 0.05555555555555555
+      delta: 0.05555555555555555
+    Full_Evidence_Success@1:
+      K_LARGE: 0.0
+      F_SMALL: 0.0
+      delta: 0.0
+    Spoiler_Violation@1:
+      K_LARGE: 0.0
+      F_SMALL: 0.0
+      delta: 0.0
+    Hit@3:
+      K_LARGE: 0.4666666666666667
+      F_SMALL: 0.4
+      delta: 0.06666666666666665
+    Recall@3:
+      K_LARGE: 0.26666666666666666
+      F_SMALL: 0.17777777777777776
+      delta: 0.0888888888888889
+    Full_Evidence_Success@3:
+      K_LARGE: 0.13333333333333333
+      F_SMALL: 0.0
+      delta: 0.13333333333333333
+    Spoiler_Violation@3:
+      K_LARGE: 0.0
+      F_SMALL: 0.0
+      delta: 0.0
+    Hit@5:
+      K_LARGE: 0.6666666666666666
+      F_SMALL: 0.7333333333333333
+      delta: -0.06666666666666665
+    Recall@5:
+      K_LARGE: 0.45555555555555555
+      F_SMALL: 0.38888888888888895
+      delta: 0.0666666666666666
+    Full_Evidence_Success@5:
+      K_LARGE: 0.2
+      F_SMALL: 0.06666666666666667
+      delta: 0.13333333333333336
+    Spoiler_Violation@5:
+      K_LARGE: 0.0
+      F_SMALL: 0.0
+      delta: 0.0
+    Hit@10:
+      K_LARGE: 0.8
+      F_SMALL: 0.9333333333333333
+      delta: -0.1333333333333333
+    Recall@10:
+      K_LARGE: 0.5777777777777777
+      F_SMALL: 0.5666666666666667
+      delta: 0.011111111111111072
+    Full_Evidence_Success@10:
+      K_LARGE: 0.26666666666666666
+      F_SMALL: 0.2
+      delta: 0.06666666666666665
+    Spoiler_Violation@10:
+      K_LARGE: 0.0
+      F_SMALL: 0.0
+      delta: 0.0
+    MRR:
+      K_LARGE: 0.42085592769803293
+      F_SMALL: 0.3446296296296296
+      delta: 0.07622629806840331
+  per_category:
+    CALLBACK:
+      K_Hit@10: 1.0
+      F_Hit@10: 1.0
+      delta_Hit@10: 0.0
+      K_Recall@10: 0.7222222222222222
+      F_Recall@10: 0.5555555555555555
+      delta_Recall@10: 0.16666666666666674
+      K_Success@10: 0.3333333333333333
+      F_Success@10: 0.0
+      delta_Success@10: 0.3333333333333333
+      K_MRR: 0.611111111111111
+      F_MRR: 0.28888888888888886
+      delta_MRR: 0.3222222222222222
+    CHRONOLOGY:
+      K_Hit@10: 0.6666666666666666
+      F_Hit@10: 1.0
+      delta_Hit@10: -0.33333333333333337
+      K_Recall@10: 0.4444444444444444
+      F_Recall@10: 0.4444444444444444
+      delta_Recall@10: 0.0
+      K_Success@10: 0.0
+      F_Success@10: 0.0
+      delta_Success@10: 0.0
+      K_MRR: 0.44696969696969696
+      F_MRR: 0.3444444444444444
+      delta_MRR: 0.10252525252525257
+    RELATIONSHIP_PROGRESSION:
+      K_Hit@10: 0.6666666666666666
+      F_Hit@10: 0.6666666666666666
+      delta_Hit@10: 0.0
+      K_Recall@10: 0.5555555555555555
+      F_Recall@10: 0.5
+      delta_Recall@10: 0.05555555555555547
+      K_Success@10: 0.3333333333333333
+      F_Success@10: 0.3333333333333333
+      delta_Success@10: 0.0
+      K_MRR: 0.4619883040935672
+      F_MRR: 0.3787037037037037
+      delta_MRR: 0.08328460038986352
+    SPOILER_BOUNDARY:
+      K_Hit@10: 0.6666666666666666
+      F_Hit@10: 1.0
+      delta_Hit@10: -0.33333333333333337
+      K_Recall@10: 0.5
+      F_Recall@10: 0.6666666666666666
+      delta_Recall@10: -0.16666666666666663
+      K_Success@10: 0.3333333333333333
+      F_Success@10: 0.3333333333333333
+      delta_Success@10: 0.0
+      K_MRR: 0.12587719298245614
+      F_MRR: 0.19999999999999998
+      delta_MRR: -0.07412280701754384
+    TEMPORAL_STATE:
+      K_Hit@10: 1.0
+      F_Hit@10: 1.0
+      delta_Hit@10: 0.0
+      K_Recall@10: 0.6666666666666666
+      F_Recall@10: 0.6666666666666666
+      delta_Recall@10: 0.0
+      K_Success@10: 0.3333333333333333
+      F_Success@10: 0.3333333333333333
+      delta_Success@10: 0.0
+      K_MRR: 0.4583333333333333
+      F_MRR: 0.5111111111111111
+      delta_MRR: -0.05277777777777776
+deterministic_reproduction_status: PASS
+privacy_status: PASS
+verdict: PARTIALLY_SUPPORTED
