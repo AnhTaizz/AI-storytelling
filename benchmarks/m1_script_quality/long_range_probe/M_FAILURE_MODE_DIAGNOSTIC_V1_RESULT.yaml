@@ -1,0 +1,156 @@
+diagnostic_id: M_FAILURE_MODE_DIAGNOSTIC_V1
+status: EXECUTED
+benchmark_id: LONG_RANGE_PROBE_V1
+source_experiment:
+  id: BGE_RERANKER_V2_M3_TOP30_V1
+  candidate_source: DENSE_E5_LARGE_V1 CUTOFF_FILTERED Top-30
+  model_inference: none
+artifact_integrity:
+  status: PASS
+  source_sha256:
+    probe_file: 24ca1f9c92531a19f59d409c7d3e68ef90b91ab24aab6d7854f0c52667c136e2
+    chunks_jsonl: 10ef5681ad1b2db0882c150efa24804cd0fca56bb38e0ffb772d22494e1e40fb
+    k_cutoff_ranking: 07d317cbb09bf0ff5734d7513ce1531871ec0d4cdf84bd9d9728d7f2c2a18e86
+    m_reranked_per_probe.jsonl: 0e75284929ae1b34b23c6aba840cc9fa3e142e873e5abd8e942f219d5ada43f5
+    m_required_evidence_transitions.jsonl: ea796b35d73ee95e699750e8e616b2a5b217fc2fc683a4d94cd608b881bf9511
+    m_probe_transitions.jsonl: 22e0dd03e2f877c1be1afe022acf740056bbafed79aa4be0b66033a1889af01f
+    m_pair_scores.jsonl: 95b2cf51a1000ec170c899f1d29025e0f1c06910790a1631bfd9e78fc54ba0e1
+  m_metrics_transitions_counts_truncation_reproduced: PASS
+population:
+  probe_count: 15
+  required_evidence_units: 35
+  candidate_complete_probes: 12
+  candidate_complete_full_success_probes: 4
+  candidate_complete_failure_probes: 8
+  required_units_in_failure_probes: 20
+  missing_required_units: 8
+  promoted_required_units: 12
+missing_required_rank_distribution:
+  buckets:
+    11-15:
+      count: 5
+      fraction: 0.625
+    16-20:
+      count: 2
+      fraction: 0.25
+    21-30:
+      count: 1
+      fraction: 0.125
+  gt30_or_missing: 0
+  m_rank:
+    n: 8
+    min: 11.0
+    median: 13.5
+    mean: 15.0
+    max: 25.0
+  k_rank:
+    n: 8
+    min: 3.0
+    median: 9.0
+    mean: 13.625
+    max: 29.0
+rank_movement:
+  population: missing required units (failure probes, M rank > 10)
+  improved_m_lt_k: 3
+  unchanged: 0
+  worsened_m_gt_k: 5
+  rank_delta_m_minus_k:
+    n: 8
+    min: -14.0
+    median: 3.5
+    mean: 1.375
+    max: 14.0
+top10_score_gap:
+  definition: m_rank10_score - m_score (raw BGE logits; no semantic threshold)
+  missing_units:
+    n: 8
+    min: 0.06176280975341797
+    median: 0.2261829376220703
+    mean: 0.4432184100151062
+    max: 1.3808155059814453
+  by_bucket:
+    11-15:
+      n: 5
+      min: 0.06176280975341797
+      median: 0.09699249267578125
+      mean: 0.1368880271911621
+      max: 0.26222801208496094
+    16-20:
+      n: 2
+      min: 0.6096982955932617
+      median: 0.9952569007873535
+      mean: 0.9952569007873535
+      max: 1.3808155059814453
+    21-30:
+      n: 1
+      min: 0.870793342590332
+      median: 0.870793342590332
+      mean: 0.870793342590332
+      max: 0.870793342590332
+  promoted_units_for_reference:
+    n: 12
+    min: -3.620664596557617
+    median: -0.5847089290618896
+    mean: -0.9847849210103353
+    max: -0.09681224822998047
+truncation_exposure:
+  definition: TRUNCATION_EXPOSED = recorded passage_tokens > 512 in the M pair contract
+  missing_required_units:
+    count: 8
+    truncated_count: 8
+    non_truncated_count: 0
+    truncated_fraction: 1.0
+  promoted_required_units_same_probes:
+    count: 12
+    truncated_count: 11
+    non_truncated_count: 1
+    truncated_fraction: 0.9166666666666666
+  enrichment:
+    difference: 0.08333333333333337
+    statement: no clear enrichment in truncation exposure
+  reference_all_m_pairs:
+    truncated: 367
+    pairs: 450
+  limit: chunk-level exposure only; evidence token spans are not labeled, so this
+    is not causal
+probe_failure_modes:
+  failure_probes: 8
+  all_missing_rank_11_15: 5
+  any_missing_rank_16_30: 3
+  every_missing_unit_truncation_exposed: 8
+  at_least_one_non_truncated_missing_unit: 0
+  label_counts:
+    MID_POOL_ORDERING+TRUNCATION_EXPOSED: 3
+    NEAR_BOUNDARY_ORDERING+TRUNCATION_EXPOSED: 5
+  k_full_success_among_failure_probes: 2
+  note: descriptive labels only; not hypothesis verdicts
+candidate_complete_transition_context:
+  population: required units of candidate-complete failure probes
+  k_top10_to_m_top10: 9
+  k_outside_to_m_top10: 3
+  k_top10_to_m_outside: 4
+  outside_both: 4
+descriptive_summary:
+  near_boundary_fraction_of_missing: 0.625
+  near_boundary_dominant: false
+  truncation_statement: no clear enrichment in truncation exposure
+  rules:
+    near_boundary_dominant: '>= 2/3 of missing units rank 11-15'
+    truncation_enrichment: missing minus promoted truncated fraction >= +0.20
+local_table_sha256:
+  missing_required_units.jsonl: 887b15fdcd6f2bcc7ff6411bf3594d686230aca3b046499a1872dfc879c8142e
+  failure_probes.jsonl: f35a23e673ecd9933a180c6af5b9fca8ab0cab6ac52617d37e9e7e8bfdce5807
+interpretation_limit: The current benchmark labels the evidence-bearing chunk, not
+  the exact evidence token span. Therefore this diagnostic can determine whether a
+  failed required chunk was truncated by the M pair contract, but cannot determine
+  whether the gold evidence itself occurred in the truncated tail.
+interpretation: '8 of 12 candidate-complete probes fail Full Evidence Success@10 after
+  reranking, with 8 missing required units: 5 at rank 11-15, 2 at 16-20, 1 at 21-30.
+  Relative to K, 3 missing units moved up, 0 were unchanged and 5 moved down. Truncation
+  exposure: missing 8/8 vs promoted 11/12 (no clear enrichment in truncation exposure).
+  Probe labels: 5 near-boundary, 3 mid-pool. The current benchmark labels the evidence-bearing
+  chunk, not the exact evidence token span. Therefore this diagnostic can determine
+  whether a failed required chunk was truncated by the M pair contract, but cannot
+  determine whether the gold evidence itself occurred in the truncated tail.'
+determinism_status: PASS
+privacy_status: PASS
