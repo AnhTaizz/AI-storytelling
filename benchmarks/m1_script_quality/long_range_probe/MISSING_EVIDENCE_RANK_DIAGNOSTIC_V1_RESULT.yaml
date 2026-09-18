@@ -1,0 +1,184 @@
+diagnostic_id: MISSING_EVIDENCE_RANK_DIAGNOSTIC_V1
+status: EXECUTED
+benchmark_id: LONG_RANGE_PROBE_V1
+analysis_mode: CUTOFF_FILTERED
+source_baselines:
+  F: DENSE_E5_SMALL_V1
+  I: DENSE_E5_MULTIQUERY_V1
+artifact_integrity:
+  status: PASS
+  source_sha256:
+    probe_file: 24ca1f9c92531a19f59d409c7d3e68ef90b91ab24aab6d7854f0c52667c136e2
+    chunks_jsonl: 10ef5681ad1b2db0882c150efa24804cd0fca56bb38e0ffb772d22494e1e40fb
+    f_cutoff_ranking: b4a2f7479853276205fca17e7230ef878a07e299aedf94d83ea2c8b2169d824f
+    i_fused_cutoff_ranking: 4a1243365c62ab56c33fce2d6b7a139eac8c421697ee5fcfe2cfbe0a1fbeb44b
+    i_per_query_rankings: b6c2dcb966acb2fab6cdc9fe91bd005ea99a6046c40875bc5f637c1b8494be47
+  k10_consistency_with_f_result: PASS
+frozen_rules:
+  buckets:
+    TOP_10: 1-10
+    NEAR_MISS: 11-20
+    MID_RANK: 21-50
+    DEEP_RANK: '>50'
+    MISSING: absent
+  completeness_ks:
+  - 10
+  - 20
+  - 30
+  - 50
+  shallow_min_fraction_rank_11_20: 0.7
+  deep_min_fraction_rank_gt_20_exclusive: 0.5
+  fusion_signal_min_units: 3
+required_evidence_unit_count: 35
+probe_count: 15
+f_rank_bucket_distribution:
+  TOP_10:
+    count: 20
+    fraction: 0.5714285714285714
+  NEAR_MISS:
+    count: 6
+    fraction: 0.17142857142857143
+  MID_RANK:
+    count: 6
+    fraction: 0.17142857142857143
+  DEEP_RANK:
+    count: 3
+    fraction: 0.08571428571428572
+  MISSING:
+    count: 0
+    fraction: 0.0
+f_missed_evidence_bucket_distribution:
+  rank_11_20:
+    count: 6
+    fraction: 0.4
+  rank_21_50:
+    count: 6
+    fraction: 0.4
+  rank_gt_50:
+    count: 3
+    fraction: 0.2
+  missing:
+    count: 0
+    fraction: 0.0
+missing_verified_zero: true
+candidate_reachability:
+  f_top10_missed_units: 15
+  missed_within_top20:
+    count: 6
+    fraction: 0.4
+  missed_within_top50:
+    count: 12
+    fraction: 0.8
+  small_candidate_reachable_units: 6
+  medium_candidate_reachable_units: 6
+  deep_units: 3
+  probes_all_required_within_top10: 3
+  probes_all_required_within_top20: 8
+  probes_all_required_within_top50: 12
+  probe_count: 15
+  wording: candidate-reachable (gold present in the candidate pool); NOT reranker-solvable
+probe_completeness_by_k:
+  note: Diagnostic measurement of the frozen F ranking; NOT a new retrieval baseline.
+  K10:
+    recall: 0.5666666666666667
+    full_evidence_success: 0.2
+  K20:
+    recall: 0.7333333333333333
+    full_evidence_success: 0.5333333333333333
+  K30:
+    recall: 0.8222222222222223
+    full_evidence_success: 0.6666666666666666
+  K50:
+    recall: 0.9111111111111111
+    full_evidence_success: 0.8
+rank_context:
+  missed_units_median_relative_rank: 0.2978723404255319
+  missed_units_in_bottom_half_of_pool: 4
+  missed_units_median_eligible_pool_size: 97.0
+  missed_units_median_f_rank: 28.0
+  missed_units_median_cosine_gap_to_rank10: 0.00899726152420044
+  probe_worst_required_rank_median: 17.0
+multiquery_rank_diagnostic:
+  population: F Top-10 missed required evidence units
+  unit_count: 15
+  best_query_rank_better_than_f: 9
+  best_query_rank_equal_to_f: 6
+  best_query_rank_worse_than_f: 0
+  f_rank_gt10_and_some_i_query_top10: 3
+  f_rank_gt20_and_some_i_query_top20: 0
+  fusion_bottleneck_condition_count: 3
+  i_fused_rank_better_than_f: 6
+  i_fused_rescued_into_top10: 1
+  f_top10_units_lost_by_i_fused: 4
+  median_best_query_rank: 24.0
+  median_i_fused_rank: 27.0
+  fusion_bottleneck_signal: true
+per_category_aggregates:
+  note: Descriptive only (3 probes per category); not statistically conclusive.
+  CALLBACK:
+    probe_count: 3
+    required_evidence_units: 7
+    f_top10_missed_units: 3
+    missed_rank_11_20: 1
+    missed_rank_21_50: 2
+    missed_rank_gt_50: 0
+    missed_missing: 0
+    probes_all_required_within_top20: 1
+    probes_all_required_within_top50: 3
+    missed_best_i_query_top10: 0
+  CHRONOLOGY:
+    probe_count: 3
+    required_evidence_units: 9
+    f_top10_missed_units: 5
+    missed_rank_11_20: 2
+    missed_rank_21_50: 2
+    missed_rank_gt_50: 1
+    missed_missing: 0
+    probes_all_required_within_top20: 1
+    probes_all_required_within_top50: 2
+    missed_best_i_query_top10: 1
+  RELATIONSHIP_PROGRESSION:
+    probe_count: 3
+    required_evidence_units: 7
+    f_top10_missed_units: 3
+    missed_rank_11_20: 0
+    missed_rank_21_50: 2
+    missed_rank_gt_50: 1
+    missed_missing: 0
+    probes_all_required_within_top20: 1
+    probes_all_required_within_top50: 2
+    missed_best_i_query_top10: 0
+  SPOILER_BOUNDARY:
+    probe_count: 3
+    required_evidence_units: 6
+    f_top10_missed_units: 2
+    missed_rank_11_20: 2
+    missed_rank_21_50: 0
+    missed_rank_gt_50: 0
+    missed_missing: 0
+    probes_all_required_within_top20: 3
+    probes_all_required_within_top50: 3
+    missed_best_i_query_top10: 2
+  TEMPORAL_STATE:
+    probe_count: 3
+    required_evidence_units: 6
+    f_top10_missed_units: 2
+    missed_rank_11_20: 1
+    missed_rank_21_50: 0
+    missed_rank_gt_50: 1
+    missed_missing: 0
+    probes_all_required_within_top20: 2
+    probes_all_required_within_top50: 2
+    missed_best_i_query_top10: 0
+classification: DEEP_RELEVANCE_BOTTLENECK
+fusion_bottleneck_signal: true
+local_table_sha256:
+  required_evidence_ranks.jsonl: 581e306edcd40dde3034cdf1826a06e4dc1701203b157b7e8d45fdaf8b98230b
+  probe_completeness.jsonl: 0e50208ac17fcb15eec3a8417420c8e11b4522d0f6595d0553c9cd62270c5629
+interpretation: Most F-missed required evidence ranks beyond 20, outside a small Top-20
+  candidate pool. 6/15 missed units are candidate-reachable within Top-20 and 12/15
+  within Top-50. 8/15 probes have all required evidence within Top-20. Individual
+  I subqueries placed 3 F-missed units in Top-10; the fusion-bottleneck condition
+  holds for 3 unit(s).
+determinism_status: PASS
+privacy_status: PASS

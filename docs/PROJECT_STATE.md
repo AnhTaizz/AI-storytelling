@@ -160,8 +160,18 @@ M1-30CH-I — DENSE_E5_MULTIQUERY_V1: EXECUTED — Verdict: NOT_SUPPORTED
 - Determinism: PASS (two consecutive runs gave identical aggregates and identical decomposition, control, per-query and fused ranking hashes). Privacy: PASS.
 - Interpretation: Question-only facet decomposition with RRF changed candidate discovery substantially but did not recover more required evidence. Recall, Hit and MRR all fell, and Full Evidence Success did not change. On this benchmark the evidence does not support single-query under-specification (as operationalized by surface question decomposition) as the remaining bottleneck. Together with G (truncation) and H (redundancy), three query- and selection-side interventions around the same e5-small relevance signal have now failed to raise Full Evidence Success@10 above 20%.
 
+M1-30CH-J — MISSING_EVIDENCE_RANK_DIAGNOSTIC_V1: EXECUTED — Classification: DEEP_RELEVANCE_BOTTLENECK (fusion_bottleneck_signal = true)
+- Diagnostic only; no new retrieval method. Reads the frozen F and I CUTOFF_FILTERED rankings.
+- Source artifact integrity: PASS. Probe and chunk hashes match the freeze file; the F ranking and the I fused and per-query ranking hashes match their committed results; the K=10 oracle reproduces F Recall@10 and Full Evidence Success@10.
+- Population: 15 probes, 35 required evidence units; F misses 15 of them in Top-10.
+- F rank of the 15 missed units: 11–20: 6 (40%); 21–50: 6 (40%); >50: 3 (20%); missing: 0. Median F rank of a missed unit is 28, in a median eligible pool of 97 chunks.
+- Candidate reachability (gold present in the pool, not reranker-solvable): 6/15 missed units are within Top-20 and 12/15 within Top-50. Probes with all required evidence within Top-20: 8/15; within Top-50: 12/15.
+- Full Evidence Success diagnostic curve on the frozen F ranking (not a baseline): K=10: 0.20, K=20: 0.53, K=30: 0.67, K=50: 0.80. Recall at the same K: 0.57, 0.73, 0.82, 0.91.
+- Multi-query best-rank finding: the best I subquery ranked 9/15 missed units higher than F, 6 the same and 0 lower. 3 missed units reached an individual subquery's Top-10, and all 3 were pushed back out of Top-10 by RRF (the fusion-bottleneck condition). No subquery lifted a unit from beyond rank 20 into Top-20.
+- Interpretation: 60% of F-missed required evidence ranks beyond 20, so a small Top-20 reranker would lack access to most of it. Top-50 covers more, but on a corpus of at most 97 chunks that is about half of it. Decomposition improved individual ranks only near the boundary, and fusion discarded those gains.
+
 Private chunk text, probes, and embeddings remain LOCAL_ONLY. No LLM / embedding / retrieval external API performed.
 
 ## Next Candidate
 
-Review DENSE_E5_MULTIQUERY_V1 evidence. Truncation (G), redundancy (H) and single-query under-specification (I) each failed to improve Full Evidence Success@10. The remaining suspect is the relevance signal itself: how well the e5-small English-query to Japanese-passage similarity ranks the missing required chunks. Before choosing a new method, a diagnostic-only step should measure where the missing required chunks rank in the existing local F/I rankings. This separates "reachable within a small Top-N, so reranking could help" from "not reachable, so the encoder or representation must change".
+M1-30CH-J classified the remaining failure as DEEP_RELEVANCE_BOTTLENECK. The candidate next experiment is a controlled test of the relevance signal: for example, a stronger multilingual embedding model swapped into the frozen F pipeline (same corpus, passages, probes, cutoff and metrics), with the F-missed rank distribution as a secondary readout. Separately noted: fusion_bottleneck_signal = true (3 units), a small secondary signal that RRF dilutes subquery gains near the boundary. No fusion experiment is scheduled from it. Structured or graph memory is not justified by this diagnostic alone.
