@@ -150,8 +150,18 @@ M1-30CH-H — DENSE_E5_MMR_V1: EXECUTED
 - Diversity diagnostics deltas (Control vs MMR): mean_unique_chapters_top10 = +0.066, mean_pairwise_similarity_top10 = -0.011, mean_query_relevance_top10 = -0.001
 - Interpretation: Control vs MMR diagnostics mechanically demonstrate that MMR successfully increased diversity (more unique chapters, lower pairwise similarity) in the candidate pool. However, correctness metrics did not improve. Redundancy/diversity alone is unlikely to be the main remaining bottleneck. This motivates testing whether a single query under-specifies multiple evidence needs.
 
+M1-30CH-I — DENSE_E5_MULTIQUERY_V1: EXECUTED — Verdict: NOT_SUPPORTED
+- Method Identity: Frozen F encoder and parent-chunk representation (`intfloat/multilingual-e5-small` @ `614241f...`, CPU, `query: ` / `passage: `). Question-only deterministic decomposition `QUESTION_FACET_DECOMP_V1` (sentence split → directive strip → `,`/`;` enumeration split → `from…to` / `between…and` range split with stem, ≥2 content tokens, dedup, max 8 queries). Each query embedded independently and fused with Reciprocal Rank Fusion (`K_RRF = 60`, 1-based ranks, tie-break `chunk_id ASC`). No MMR, no windowing, no LLM.
+- Relevance Control Gate: Q0-only cosine ranking reproduced the F cutoff-filtered ranking exactly (ordered chunk-id equality, 15/15 probes) and the F aggregate metrics. PASS.
+- Decomposition: 14/15 probes produced more than one query; mean 2.8 queries per probe (min 1, max 5).
+- CUTOFF_FILTERED overall metrics (Δ vs F): Hit@10 = 73.3% (-20.0%), Recall@10 = 47.8% (-8.9%), Full_Evidence_Success@10 = 20.0% (+0.0%), MRR = 0.242 (-0.103)
+- GLOBAL_DIAGNOSTIC overall metrics: Hit@10 = 60.0%, Spoiler_Violation@10 = 26.7%
+- Change diagnostics vs Q0-only control: Top-10 changed for 13/15 probes (mean Jaccard 0.728, mean 1.73 new chunks). Recall@10 improved for 1 probe, decreased for 4 and stayed unchanged for 10. Full Evidence Success@10 moved 0→1 for 1 probe and 1→0 for 1 probe.
+- Determinism: PASS (two consecutive runs gave identical aggregates and identical decomposition, control, per-query and fused ranking hashes). Privacy: PASS.
+- Interpretation: Question-only facet decomposition with RRF changed candidate discovery substantially but did not recover more required evidence. Recall, Hit and MRR all fell, and Full Evidence Success did not change. On this benchmark the evidence does not support single-query under-specification (as operationalized by surface question decomposition) as the remaining bottleneck. Together with G (truncation) and H (redundancy), three query- and selection-side interventions around the same e5-small relevance signal have now failed to raise Full Evidence Success@10 above 20%.
+
 Private chunk text, probes, and embeddings remain LOCAL_ONLY. No LLM / embedding / retrieval external API performed.
 
 ## Next Candidate
 
-Review DENSE_E5_MMR_V1 evidence. Since redundancy removal did not solve evidence coverage, that hypothesis must be tested next. Likely candidate is deterministic query decomposition / multi-query retrieval.
+Review DENSE_E5_MULTIQUERY_V1 evidence. Truncation (G), redundancy (H) and single-query under-specification (I) each failed to improve Full Evidence Success@10. The remaining suspect is the relevance signal itself: how well the e5-small English-query to Japanese-passage similarity ranks the missing required chunks. Before choosing a new method, a diagnostic-only step should measure where the missing required chunks rank in the existing local F/I rankings. This separates "reachable within a small Top-N, so reranking could help" from "not reachable, so the encoder or representation must change".
