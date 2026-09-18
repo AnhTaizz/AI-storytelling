@@ -1,0 +1,385 @@
+baseline_id: BGE_RERANKER_V2_M3_TOP30_V1
+status: EXECUTED
+benchmark_id: LONG_RANGE_PROBE_V1
+candidate_source:
+  baseline_id: DENSE_E5_LARGE_V1
+  mode: CUTOFF_FILTERED
+  candidate_depth: 30
+  evaluated_ranking: reranked Top-30 followed by unchanged K ranks > 30
+model_info:
+  model_id: BAAI/bge-reranker-v2-m3
+  model_revision: 953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e
+  model_weight_filename: model.safetensors
+  model_weight_sha256: d9e3e081faff1eefb84019509b2f5558fd74c1a05a2c7db22f74174fcedb5286
+  tokenizer_filename: tokenizer.json
+  tokenizer_sha256: 69564b696052886ed0ac63fa393e928384e0f8caada38c1f4864a9bfbf379c15
+  tokenizer_class: XLMRobertaTokenizer
+  architecture: XLMRobertaForSequenceClassification
+  num_labels: 1
+  transformers_version: 5.17.0
+  flagembedding_version: null
+  torch_version: 2.14.0+cpu
+  execution_device: cpu
+  dtype: torch.float32
+pair_contract:
+  format: <s> query </s></s> passage </s> (tokenizer.prepare_for_model)
+  query_max_length: 256
+  passage_max_length: 512
+  score: raw classification logit (no sigmoid)
+  scoring_batch_size: 1
+  tie_break: score DESC, original K rank ASC, chunk_id ASC
+input_integrity:
+  benchmark_freeze: PASS
+  corpus_fingerprint_sha256: 7f9bb8106d6d50acd2b3760738c0b8040f36ab547c2d2f7eade1ca0b9a827ff8
+  probe_file_sha256: 24ca1f9c92531a19f59d409c7d3e68ef90b91ab24aab6d7854f0c52667c136e2
+  chunks_jsonl_sha256: 10ef5681ad1b2db0882c150efa24804cd0fca56bb38e0ffb772d22494e1e40fb
+  k_cutoff_ranking_sha256: 07d317cbb09bf0ff5734d7513ce1531871ec0d4cdf84bd9d9728d7f2c2a18e86
+  f_cutoff_ranking_sha256: b4a2f7479853276205fca17e7230ef878a07e299aedf94d83ea2c8b2169d824f
+  population: PASS (15 probes / 35 units)
+  k_control_reproduction: PASS
+  l_population_reconstruction: PASS
+  model_identity: PASS
+candidate_set_integrity:
+  status: PASS
+  probes: 15
+  probes_with_full_depth_30: 15
+  probes_with_fewer_than_30: 0
+  min_eligible_pool_size: 30
+  total_pairs_scored: 450
+K_CONTROL:
+  overall:
+    hit@1: 0.26666666666666666
+    hit@3: 0.4666666666666667
+    hit@5: 0.6666666666666666
+    hit@10: 0.8
+    recall@1: 0.1111111111111111
+    recall@3: 0.26666666666666666
+    recall@5: 0.45555555555555555
+    recall@10: 0.5777777777777777
+    success@1: 0.0
+    success@3: 0.13333333333333333
+    success@5: 0.2
+    success@10: 0.26666666666666666
+    spoiler_violation@1: 0.0
+    spoiler_violation@3: 0.0
+    spoiler_violation@5: 0.0
+    spoiler_violation@10: 0.0
+    mrr: 0.42085592769803293
+  per_category:
+    CALLBACK:
+      hit@1: 0.3333333333333333
+      hit@3: 1.0
+      hit@5: 1.0
+      hit@10: 1.0
+      recall@1: 0.16666666666666666
+      recall@3: 0.611111111111111
+      recall@5: 0.7222222222222222
+      recall@10: 0.7222222222222222
+      success@1: 0.0
+      success@3: 0.3333333333333333
+      success@5: 0.3333333333333333
+      success@10: 0.3333333333333333
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.611111111111111
+    CHRONOLOGY:
+      hit@1: 0.3333333333333333
+      hit@3: 0.3333333333333333
+      hit@5: 0.6666666666666666
+      hit@10: 0.6666666666666666
+      recall@1: 0.1111111111111111
+      recall@3: 0.1111111111111111
+      recall@5: 0.3333333333333333
+      recall@10: 0.4444444444444444
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.0
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.44696969696969696
+    RELATIONSHIP_PROGRESSION:
+      hit@1: 0.3333333333333333
+      hit@3: 0.6666666666666666
+      hit@5: 0.6666666666666666
+      hit@10: 0.6666666666666666
+      recall@1: 0.1111111111111111
+      recall@3: 0.27777777777777773
+      recall@5: 0.5555555555555555
+      recall@10: 0.5555555555555555
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.3333333333333333
+      success@10: 0.3333333333333333
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.4619883040935672
+    SPOILER_BOUNDARY:
+      hit@1: 0.0
+      hit@3: 0.0
+      hit@5: 0.3333333333333333
+      hit@10: 0.6666666666666666
+      recall@1: 0.0
+      recall@3: 0.0
+      recall@5: 0.16666666666666666
+      recall@10: 0.5
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.3333333333333333
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.12587719298245614
+    TEMPORAL_STATE:
+      hit@1: 0.3333333333333333
+      hit@3: 0.3333333333333333
+      hit@5: 0.6666666666666666
+      hit@10: 1.0
+      recall@1: 0.16666666666666666
+      recall@3: 0.3333333333333333
+      recall@5: 0.5
+      recall@10: 0.6666666666666666
+      success@1: 0.0
+      success@3: 0.3333333333333333
+      success@5: 0.3333333333333333
+      success@10: 0.3333333333333333
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.4583333333333333
+RERANKED:
+  overall:
+    hit@1: 0.3333333333333333
+    hit@3: 0.6
+    hit@5: 0.6666666666666666
+    hit@10: 0.9333333333333333
+    recall@1: 0.15555555555555553
+    recall@3: 0.27777777777777773
+    recall@5: 0.3777777777777777
+    recall@10: 0.6444444444444444
+    success@1: 0.0
+    success@3: 0.0
+    success@5: 0.06666666666666667
+    success@10: 0.26666666666666666
+    spoiler_violation@1: 0.0
+    spoiler_violation@3: 0.0
+    spoiler_violation@5: 0.0
+    spoiler_violation@10: 0.0
+    mrr: 0.5142616642616643
+  per_category:
+    CALLBACK:
+      hit@1: 0.6666666666666666
+      hit@3: 1.0
+      hit@5: 1.0
+      hit@10: 1.0
+      recall@1: 0.3333333333333333
+      recall@3: 0.4444444444444444
+      recall@5: 0.7222222222222222
+      recall@10: 0.8888888888888888
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.3333333333333333
+      success@10: 0.6666666666666666
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.8333333333333334
+    CHRONOLOGY:
+      hit@1: 0.0
+      hit@3: 0.0
+      hit@5: 0.3333333333333333
+      hit@10: 0.6666666666666666
+      recall@1: 0.0
+      recall@3: 0.0
+      recall@5: 0.1111111111111111
+      recall@10: 0.4444444444444444
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.0
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.16125541125541124
+    RELATIONSHIP_PROGRESSION:
+      hit@1: 0.3333333333333333
+      hit@3: 0.6666666666666666
+      hit@5: 0.6666666666666666
+      hit@10: 1.0
+      recall@1: 0.1111111111111111
+      recall@3: 0.27777777777777773
+      recall@5: 0.38888888888888884
+      recall@10: 0.5555555555555555
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.0
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.5370370370370371
+    SPOILER_BOUNDARY:
+      hit@1: 0.3333333333333333
+      hit@3: 0.6666666666666666
+      hit@5: 0.6666666666666666
+      hit@10: 1.0
+      recall@1: 0.16666666666666666
+      recall@3: 0.3333333333333333
+      recall@5: 0.3333333333333333
+      recall@10: 0.6666666666666666
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.3333333333333333
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.5476190476190476
+    TEMPORAL_STATE:
+      hit@1: 0.3333333333333333
+      hit@3: 0.6666666666666666
+      hit@5: 0.6666666666666666
+      hit@10: 1.0
+      recall@1: 0.16666666666666666
+      recall@3: 0.3333333333333333
+      recall@5: 0.3333333333333333
+      recall@10: 0.6666666666666666
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.3333333333333333
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.4920634920634921
+K_COMPARISON:
+  overall:
+    Hit@1:
+      K: 0.26666666666666666
+      RERANKED: 0.3333333333333333
+      delta: 0.06666666666666665
+    Recall@1:
+      K: 0.1111111111111111
+      RERANKED: 0.15555555555555553
+      delta: 0.044444444444444425
+    Full_Evidence_Success@1:
+      K: 0.0
+      RERANKED: 0.0
+      delta: 0.0
+    Spoiler_Violation@1:
+      K: 0.0
+      RERANKED: 0.0
+      delta: 0.0
+    Hit@3:
+      K: 0.4666666666666667
+      RERANKED: 0.6
+      delta: 0.1333333333333333
+    Recall@3:
+      K: 0.26666666666666666
+      RERANKED: 0.27777777777777773
+      delta: 0.011111111111111072
+    Full_Evidence_Success@3:
+      K: 0.13333333333333333
+      RERANKED: 0.0
+      delta: -0.13333333333333333
+    Spoiler_Violation@3:
+      K: 0.0
+      RERANKED: 0.0
+      delta: 0.0
+    Hit@5:
+      K: 0.6666666666666666
+      RERANKED: 0.6666666666666666
+      delta: 0.0
+    Recall@5:
+      K: 0.45555555555555555
+      RERANKED: 0.3777777777777777
+      delta: -0.07777777777777783
+    Full_Evidence_Success@5:
+      K: 0.2
+      RERANKED: 0.06666666666666667
+      delta: -0.13333333333333336
+    Spoiler_Violation@5:
+      K: 0.0
+      RERANKED: 0.0
+      delta: 0.0
+    Hit@10:
+      K: 0.8
+      RERANKED: 0.9333333333333333
+      delta: 0.1333333333333333
+    Recall@10:
+      K: 0.5777777777777777
+      RERANKED: 0.6444444444444444
+      delta: 0.06666666666666665
+    Full_Evidence_Success@10:
+      K: 0.26666666666666666
+      RERANKED: 0.26666666666666666
+      delta: 0.0
+    Spoiler_Violation@10:
+      K: 0.0
+      RERANKED: 0.0
+      delta: 0.0
+    MRR:
+      K: 0.42085592769803293
+      RERANKED: 0.5142616642616643
+      delta: 0.09340573656363138
+F_HISTORICAL_CONTEXT:
+  note: historical only; F is not the control for M
+  hit@10: 0.9333333333333333
+  recall@10: 0.5666666666666667
+  success@10: 0.2
+  mrr: 0.3446296296296296
+candidate_ceiling:
+  candidate_complete_probes: 12
+  candidate_complete_fraction: 0.8
+  reranked_full_success_probes: 4
+  reranker_ceiling_utilization: 0.3333333333333333
+  note: descriptive only; evidence outside K Top-30 cannot be recovered
+required_evidence_transitions:
+  total_units: 35
+  counts:
+    STAY_TOP10: 16
+    K_TOP10_LOST_BY_RERANK: 4
+    RERANK_TOP10_GAIN_FROM_K: 6
+    STAY_OUTSIDE_TOP10: 9
+  l_f_top10_lost_by_k_population: 8
+  l_lost_restored_to_reranked_top10: 3
+probe_transitions:
+  k_hit_probes: 12
+  reranked_hit_probes: 14
+  k_full_success_probes: 4
+  reranked_full_success_probes: 4
+  hit_gained: 2
+  hit_lost: 0
+  full_success_gained: 2
+  full_success_lost: 2
+truncation_diagnostics:
+  query_truncation_count: 0
+  passage_truncation_count: 367
+  pairs: 450
+  query_max_length: 256
+  passage_max_length: 512
+runtime_diagnostics:
+  model_load_runtime_sec: 29.159
+  scoring_runtime_sec: 685.26
+detailed_results_sha256:
+  reranked_per_probe.jsonl: 0e75284929ae1b34b23c6aba840cc9fa3e142e873e5abd8e942f219d5ada43f5
+  required_evidence_transitions.jsonl: ea796b35d73ee95e699750e8e616b2a5b217fc2fc683a4d94cd608b881bf9511
+  probe_transitions.jsonl: 22e0dd03e2f877c1be1afe022acf740056bbafed79aa4be0b66033a1889af01f
+  pair_scores.jsonl: 95b2cf51a1000ec170c899f1d29025e0f1c06910790a1631bfd9e78fc54ba0e1
+deterministic_reproduction_status: PASS
+privacy_status: PASS
+verdict: PARTIALLY_SUPPORTED
