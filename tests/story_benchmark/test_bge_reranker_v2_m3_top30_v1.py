@@ -13,6 +13,7 @@ from tools.story_benchmark.bge_reranker_v2_m3_top30_v1 import (
     MODEL_ID,
     MODEL_REVISION,
     MODEL_WEIGHT_SHA256,
+    PAIR_FORMAT,
     PASSAGE_MAX_LENGTH,
     QUERY_MAX_LENGTH,
     TOKENIZER_SHA256,
@@ -48,10 +49,6 @@ class FakeTokenizer:
         return {"input_ids": [10 + (hash(w) % 1000) for w in text.split()]}
 
     cls_token_id, sep_token_id = 0, 2
-
-    def prepare_for_model(self, a, b, add_special_tokens=True, truncation=False):
-        ids = [0] + list(a) + [2, 2] + list(b) + [2]
-        return {"input_ids": ids, "attention_mask": [1] * len(ids)}
 
 
 class TestContract(unittest.TestCase):
@@ -106,6 +103,25 @@ class TestContract(unittest.TestCase):
         self.assertFalse(short["query_truncated"] or short["passage_truncated"])
         self.assertEqual(short["input_ids"][0], 0)
         self.assertEqual(short["input_ids"][3:5], [2, 2])
+
+    def test_pair_format_provenance_matches_build_pair_input(self):
+        # Regression (M1-30CH-M-FIX): public provenance must describe the manual serialization actually used.
+        self.assertNotIn("prepare_for_model", PAIR_FORMAT)
+        self.assertIn("manual XLM-R pair serialization", PAIR_FORMAT)
+        self.assertIn("[CLS] query [SEP][SEP] passage [SEP]", PAIR_FORMAT)
+        self.assertIn("cls_token_id", PAIR_FORMAT)
+        self.assertIn("sep_token_id", PAIR_FORMAT)
+        tok = FakeTokenizer()
+        pair = build_pair_input(tok, "a b", "c d e")
+        q_ids, p_ids = tok("a b")["input_ids"], tok("c d e")["input_ids"]
+        cls_id, sep_id = tok.cls_token_id, tok.sep_token_id
+        self.assertEqual(pair["input_ids"], [cls_id] + q_ids + [sep_id, sep_id] + p_ids + [sep_id])
+        self.assertFalse(hasattr(tok, "prepare_for_model"))  # layout does not depend on prepare_for_model
+
+    def test_runner_does_not_emit_stale_provenance(self):
+        src = (REPO / "tools/story_benchmark/run_bge_reranker_v2_m3_top30_v1.py").read_text(encoding="utf-8")
+        self.assertNotIn("prepare_for_model", src)
+        self.assertIn('"format": PAIR_FORMAT', src)
 
     def test_sort_and_tie_breaks(self):
         cands = ["z", "b", "a", "c"]  # original K ranks 1..4
@@ -248,6 +264,8 @@ class TestEndToEnd(unittest.TestCase):
         text = yaml.dump(res, sort_keys=False, allow_unicode=True)
         self.assertEqual(find_private_leaks(text, forbidden), [])
         self.assertNotIn("reranked_top_candidates", text)
+        self.assertEqual(res["pair_contract"]["format"], PAIR_FORMAT)
+        self.assertNotIn("prepare_for_model", text)
 
     def test_k_control_gate(self):
         k = yaml.safe_load(self.paths["k_result"].read_text())
@@ -298,6 +316,8 @@ class TestPublicArtifacts(unittest.TestCase):
             self.assertEqual(data["privacy_status"], "PASS")
             self.assertEqual(data["model_info"]["model_revision"], MODEL_REVISION)
             self.assertEqual(data["candidate_set_integrity"]["status"], "PASS")
+            self.assertEqual(data["pair_contract"]["format"], PAIR_FORMAT)
+            self.assertNotIn("prepare_for_model", files[0].read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

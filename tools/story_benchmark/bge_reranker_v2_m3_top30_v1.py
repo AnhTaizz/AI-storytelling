@@ -23,6 +23,9 @@ CANDIDATE_DEPTH = 30
 QUERY_MAX_LENGTH = 256
 PASSAGE_MAX_LENGTH = 512
 SCORING_BATCH_SIZE = 1  # one pair per forward pass: no padding, batch-independent scores
+# Public provenance of the pair layout actually built by build_pair_input().
+PAIR_FORMAT = ("manual XLM-R pair serialization [CLS] query [SEP][SEP] passage [SEP] "
+               "built from tokenizer special-token IDs (cls_token_id, sep_token_id)")
 
 
 class ModelIdentityError(RuntimeError):

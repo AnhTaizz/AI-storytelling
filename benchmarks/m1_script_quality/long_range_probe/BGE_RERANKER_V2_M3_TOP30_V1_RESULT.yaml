@@ -22,7 +22,8 @@ model_info:
   execution_device: cpu
   dtype: torch.float32
 pair_contract:
-  format: <s> query </s></s> passage </s> (tokenizer.prepare_for_model)
+  format: manual XLM-R pair serialization [CLS] query [SEP][SEP] passage [SEP] built
+    from tokenizer special-token IDs (cls_token_id, sep_token_id)
   query_max_length: 256
   passage_max_length: 512
   score: raw classification logit (no sigmoid)

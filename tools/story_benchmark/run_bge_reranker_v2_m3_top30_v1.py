@@ -13,6 +13,7 @@ import yaml
 from tools.story_benchmark.bge_reranker_v2_m3_top30_v1 import (
     CANDIDATE_DEPTH,
     MODEL_ID,
+    PAIR_FORMAT,
     PASSAGE_MAX_LENGTH,
     QUERY_MAX_LENGTH,
     SCORING_BATCH_SIZE,
@@ -269,7 +270,7 @@ def run_once(paths, reranker_factory=BgeRerankerV2M3):
                              "candidate_depth": CANDIDATE_DEPTH,
                              "evaluated_ranking": "reranked Top-30 followed by unchanged K ranks > 30"},
         "model_info": model_info,
-        "pair_contract": {"format": "<s> query </s></s> passage </s> (tokenizer.prepare_for_model)",
+        "pair_contract": {"format": PAIR_FORMAT,
                           "query_max_length": QUERY_MAX_LENGTH, "passage_max_length": PASSAGE_MAX_LENGTH,
                           "score": "raw classification logit (no sigmoid)", "scoring_batch_size": SCORING_BATCH_SIZE,
                           "tie_break": "score DESC, original K rank ASC, chunk_id ASC"},
