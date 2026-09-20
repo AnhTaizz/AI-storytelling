@@ -14,6 +14,7 @@ from tools.story_benchmark.validate_independent_validation_fixture_v1 import (
     EXPECTED_PER_CATEGORY,
     EXPECTED_PROBE_COUNT,
     find_privacy_leaks_in_manifest,
+    validate_source_gold_audit_and_partitions,
     validate_validation_probes,
 )
 
@@ -206,6 +207,319 @@ class TestIndependentValidationFixtureValidator(unittest.TestCase):
             self.assertTrue(res["pass"], f"Revised validation failed: {res.get('issues')}")
             self.assertEqual(res["metrics"]["probe_count"], 18)
             self.assertEqual(res["metrics"]["multi_chunk_probe_count"], 18)
+
+    def test_corrected_fixture_validates_cleanly(self):
+        corr_dir = REPO_ROOT / ".local/story_integration/otonari_30ch/M1_30CH_P_CORRECTION"
+        if not corr_dir.exists():
+            self.skipTest("M1_30CH_P_CORRECTION directory not found")
+
+        draft_p = corr_dir / "corrected_draft_probes.yaml"
+        audit_p = corr_dir / "corrected_source_gold_audit.jsonl"
+        aux_def_p = corr_dir / "auxiliary_and_deferred.yaml"
+
+        # 1. Probe schema and cutoff validation
+        res_probes = validate_validation_probes(
+            draft_p,
+            self.chunks_path,
+            self.orig_path,
+            expected_probe_count=16,
+            expected_per_category=None,
+            check_intra_fixture_duplicates=True,
+        )
+        self.assertTrue(res_probes["pass"], f"Corrected probes failed validation: {res_probes.get('issues')}")
+        self.assertEqual(res_probes["metrics"]["probe_count"], 16)
+        self.assertEqual(res_probes["metrics"]["multi_chunk_probe_count"], 16)
+
+        # 2. Source gold audit and partition validation
+        res_audit = validate_source_gold_audit_and_partitions(
+            draft_p,
+            audit_p,
+            aux_def_p,
+            self.chunks_path,
+            expected_total_probes=25,
+        )
+        self.assertTrue(res_audit["pass"], f"Corrected audit failed validation: {res_audit.get('issues')}")
+        self.assertEqual(res_audit["counts"]["primary"], 16)
+        self.assertEqual(res_audit["counts"]["auxiliary"], 6)
+        self.assertEqual(res_audit["counts"]["deferred"], 3)
+        self.assertEqual(res_audit["counts"]["total_accounted"], 25)
+
+    def test_detect_invalid_span_bounds_or_mismatch(self):
+        # Create synthetic chunks, draft, audit, aux_def
+        with tempfile.TemporaryDirectory() as td:
+            tdp = Path(td)
+            chunks_file = tdp / "chunks.jsonl"
+            draft_file = tdp / "draft.yaml"
+            audit_file = tdp / "audit.jsonl"
+            aux_file = tdp / "aux.yaml"
+
+            # Synthetic chunk: length 20
+            c_text = "0123456789ABCDEFGHIJ"
+            with open(chunks_file, "w", encoding="utf-8") as f:
+                f.write(json.dumps({"chunk_id": "synth_c0001", "chapter_number": 1, "text": c_text}) + "\n")
+
+            draft_content = {
+                "probes": [{
+                    "probe_id": "SYNTH_P01",
+                    "question": "What is the text?",
+                    "expected_answer": "01234",
+                    "cutoff_chapter": 5,
+                    "required_evidence_chunk_ids": ["synth_c0001"]
+                }]
+            }
+            with open(draft_file, "w", encoding="utf-8") as f:
+                yaml.dump(draft_content, f)
+
+            with open(aux_file, "w", encoding="utf-8") as f:
+                yaml.dump({"auxiliary_single_chunk_probes": [], "deferred_probes": []}, f)
+
+            # Test A: Out of bounds span [15:25] when chunk length is 20
+            bad_audit_a = {
+                "probe_id": "SYNTH_P01",
+                "question_original": "What is the text?",
+                "expected_answer_original": "01234",
+                "cutoff_chapter": 5,
+                "minimality_and_multi_evidence": [{"chunk_id": "synth_c0001"}],
+                "expected_propositions": [{
+                    "proposition_id": "P1",
+                    "supporting_chunk_id": "synth_c0001",
+                    "chapter_number": 1,
+                    "char_offset_start": 15,
+                    "char_offset_end": 25,
+                    "exact_excerpt": "FGHIJ"
+                }]
+            }
+            with open(audit_file, "w", encoding="utf-8") as f:
+                f.write(json.dumps(bad_audit_a) + "\n")
+
+            res_a = validate_source_gold_audit_and_partitions(draft_file, audit_file, aux_file, chunks_file, expected_total_probes=1)
+            self.assertFalse(res_a["pass"])
+            self.assertTrue(any("Invalid character span bounds [15:25]" in issue for issue in res_a["issues"]))
+
+            # Test B: Excerpt mismatch ([0:5] slice is '01234', but excerpt says 'WRONG')
+            bad_audit_b = {
+                "probe_id": "SYNTH_P01",
+                "question_original": "What is the text?",
+                "expected_answer_original": "01234",
+                "cutoff_chapter": 5,
+                "minimality_and_multi_evidence": [{"chunk_id": "synth_c0001"}],
+                "expected_propositions": [{
+                    "proposition_id": "P1",
+                    "supporting_chunk_id": "synth_c0001",
+                    "chapter_number": 1,
+                    "char_offset_start": 0,
+                    "char_offset_end": 5,
+                    "exact_excerpt": "WRONG"
+                }]
+            }
+            with open(audit_file, "w", encoding="utf-8") as f:
+                f.write(json.dumps(bad_audit_b) + "\n")
+
+            res_b = validate_source_gold_audit_and_partitions(draft_file, audit_file, aux_file, chunks_file, expected_total_probes=1)
+            self.assertFalse(res_b["pass"])
+            self.assertTrue(any("Source slice mismatch" in issue for issue in res_b["issues"]))
+
+    def test_detect_unmapped_required_chunk_or_orphan_proposition(self):
+        with tempfile.TemporaryDirectory() as td:
+            tdp = Path(td)
+            chunks_file = tdp / "chunks.jsonl"
+            draft_file = tdp / "draft.yaml"
+            audit_file = tdp / "audit.jsonl"
+            aux_file = tdp / "aux.yaml"
+
+            with open(chunks_file, "w", encoding="utf-8") as f:
+                f.write(json.dumps({"chunk_id": "synth_c0001", "chapter_number": 1, "text": "chunk_one_text_here"}) + "\n")
+                f.write(json.dumps({"chunk_id": "synth_c0002", "chapter_number": 1, "text": "chunk_two_text_here"}) + "\n")
+
+            # Draft requires 2 chunks: synth_c0001 and synth_c0002
+            draft_content = {
+                "probes": [{
+                    "probe_id": "SYNTH_P02",
+                    "question": "Q?",
+                    "expected_answer": "A",
+                    "cutoff_chapter": 5,
+                    "required_evidence_chunk_ids": ["synth_c0001", "synth_c0002"]
+                }]
+            }
+            with open(draft_file, "w", encoding="utf-8") as f:
+                yaml.dump(draft_content, f)
+
+            with open(aux_file, "w", encoding="utf-8") as f:
+                yaml.dump({"auxiliary_single_chunk_probes": [], "deferred_probes": []}, f)
+
+            # Audit only maps proposition to synth_c0001 (synth_c0002 unmapped)
+            bad_audit = {
+                "probe_id": "SYNTH_P02",
+                "question_original": "Q?",
+                "expected_answer_original": "A",
+                "cutoff_chapter": 5,
+                "minimality_and_multi_evidence": [{"chunk_id": "synth_c0001"}, {"chunk_id": "synth_c0002"}],
+                "expected_propositions": [{
+                    "proposition_id": "P1",
+                    "supporting_chunk_id": "synth_c0001",
+                    "chapter_number": 1,
+                    "char_offset_start": 0,
+                    "char_offset_end": 5,
+                    "exact_excerpt": "chunk"
+                }]
+            }
+            with open(audit_file, "w", encoding="utf-8") as f:
+                f.write(json.dumps(bad_audit) + "\n")
+
+            res = validate_source_gold_audit_and_partitions(draft_file, audit_file, aux_file, chunks_file, expected_total_probes=1)
+            self.assertFalse(res["pass"])
+            self.assertTrue(any("Proposition chunk mapping mismatch" in issue for issue in res["issues"]))
+
+    def test_detect_draft_audit_inconsistency(self):
+        with tempfile.TemporaryDirectory() as td:
+            tdp = Path(td)
+            chunks_file = tdp / "chunks.jsonl"
+            draft_file = tdp / "draft.yaml"
+            audit_file = tdp / "audit.jsonl"
+            aux_file = tdp / "aux.yaml"
+
+            with open(chunks_file, "w", encoding="utf-8") as f:
+                f.write(json.dumps({"chunk_id": "synth_c0001", "chapter_number": 1, "text": "hello_world_sample"}) + "\n")
+
+            draft_content = {
+                "probes": [{
+                    "probe_id": "SYNTH_P03",
+                    "question": "Question A",
+                    "expected_answer": "Answer A",
+                    "cutoff_chapter": 5,
+                    "required_evidence_chunk_ids": ["synth_c0001"]
+                }]
+            }
+            with open(draft_file, "w", encoding="utf-8") as f:
+                yaml.dump(draft_content, f)
+
+            with open(aux_file, "w", encoding="utf-8") as f:
+                yaml.dump({"auxiliary_single_chunk_probes": [], "deferred_probes": []}, f)
+
+            # Audit has mismatched question: 'Question B'
+            bad_audit = {
+                "probe_id": "SYNTH_P03",
+                "question_original": "Question B",
+                "expected_answer_original": "Answer A",
+                "cutoff_chapter": 5,
+                "minimality_and_multi_evidence": [{"chunk_id": "synth_c0001"}],
+                "expected_propositions": [{
+                    "proposition_id": "P1",
+                    "supporting_chunk_id": "synth_c0001",
+                    "chapter_number": 1,
+                    "char_offset_start": 0,
+                    "char_offset_end": 5,
+                    "exact_excerpt": "hello"
+                }]
+            }
+            with open(audit_file, "w", encoding="utf-8") as f:
+                f.write(json.dumps(bad_audit) + "\n")
+
+            res = validate_source_gold_audit_and_partitions(draft_file, audit_file, aux_file, chunks_file, expected_total_probes=1)
+            self.assertFalse(res["pass"])
+            self.assertTrue(any("Question mismatch in SYNTH_P03" in issue for issue in res["issues"]))
+
+    def test_detect_partition_overlap_or_probe_loss(self):
+        with tempfile.TemporaryDirectory() as td:
+            tdp = Path(td)
+            chunks_file = tdp / "chunks.jsonl"
+            draft_file = tdp / "draft.yaml"
+            audit_file = tdp / "audit.jsonl"
+            aux_file = tdp / "aux.yaml"
+
+            with open(chunks_file, "w", encoding="utf-8") as f:
+                f.write(json.dumps({"chunk_id": "synth_c0001", "chapter_number": 1, "text": "hello_world_sample"}) + "\n")
+
+            # Primary has SYNTH_P04
+            draft_content = {
+                "probes": [{
+                    "probe_id": "SYNTH_P04",
+                    "question": "Q?",
+                    "expected_answer": "A",
+                    "cutoff_chapter": 5,
+                    "required_evidence_chunk_ids": ["synth_c0001"]
+                }]
+            }
+            with open(draft_file, "w", encoding="utf-8") as f:
+                yaml.dump(draft_content, f)
+
+            audit_content = {
+                "probe_id": "SYNTH_P04",
+                "question_original": "Q?",
+                "expected_answer_original": "A",
+                "cutoff_chapter": 5,
+                "minimality_and_multi_evidence": [{"chunk_id": "synth_c0001"}],
+                "expected_propositions": [{
+                    "proposition_id": "P1",
+                    "supporting_chunk_id": "synth_c0001",
+                    "chapter_number": 1,
+                    "char_offset_start": 0,
+                    "char_offset_end": 5,
+                    "exact_excerpt": "hello"
+                }]
+            }
+            with open(audit_file, "w", encoding="utf-8") as f:
+                f.write(json.dumps(audit_content) + "\n")
+
+            # Auxiliary also contains SYNTH_P04 -> Overlap error!
+            with open(aux_file, "w", encoding="utf-8") as f:
+                yaml.dump({
+                    "auxiliary_single_chunk_probes": [{"probe_id": "SYNTH_P04"}],
+                    "deferred_probes": []
+                }, f)
+
+            res = validate_source_gold_audit_and_partitions(draft_file, audit_file, aux_file, chunks_file, expected_total_probes=1)
+            self.assertFalse(res["pass"])
+            self.assertTrue(any("Partition overlap between primary and auxiliary" in issue for issue in res["issues"]))
+
+    def test_detect_chapter_metadata_and_cutoff_violations(self):
+        with tempfile.TemporaryDirectory() as td:
+            tdp = Path(td)
+            chunks_file = tdp / "chunks.jsonl"
+            draft_file = tdp / "draft.yaml"
+            audit_file = tdp / "audit.jsonl"
+            aux_file = tdp / "aux.yaml"
+
+            with open(chunks_file, "w", encoding="utf-8") as f:
+                f.write(json.dumps({"chunk_id": "synth_c0010", "chapter_number": 10, "text": "chapter_ten_content"}) + "\n")
+
+            # Cutoff is Chapter 5, but chunk is Chapter 10 -> Cutoff violation!
+            draft_content = {
+                "probes": [{
+                    "probe_id": "SYNTH_P05",
+                    "question": "Q?",
+                    "expected_answer": "A",
+                    "cutoff_chapter": 5,
+                    "required_evidence_chunk_ids": ["synth_c0010"]
+                }]
+            }
+            with open(draft_file, "w", encoding="utf-8") as f:
+                yaml.dump(draft_content, f)
+
+            with open(aux_file, "w", encoding="utf-8") as f:
+                yaml.dump({"auxiliary_single_chunk_probes": [], "deferred_probes": []}, f)
+
+            bad_audit = {
+                "probe_id": "SYNTH_P05",
+                "question_original": "Q?",
+                "expected_answer_original": "A",
+                "cutoff_chapter": 5,
+                "minimality_and_multi_evidence": [{"chunk_id": "synth_c0010"}],
+                "expected_propositions": [{
+                    "proposition_id": "P1",
+                    "supporting_chunk_id": "synth_c0010",
+                    "chapter_number": 10,
+                    "char_offset_start": 0,
+                    "char_offset_end": 7,
+                    "exact_excerpt": "chapter"
+                }]
+            }
+            with open(audit_file, "w", encoding="utf-8") as f:
+                f.write(json.dumps(bad_audit) + "\n")
+
+            res = validate_source_gold_audit_and_partitions(draft_file, audit_file, aux_file, chunks_file, expected_total_probes=1)
+            self.assertFalse(res["pass"])
+            self.assertTrue(any("Cutoff violation in proposition P1" in issue for issue in res["issues"]))
 
 
 if __name__ == "__main__":

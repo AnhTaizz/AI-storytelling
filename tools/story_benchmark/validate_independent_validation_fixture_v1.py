@@ -279,6 +279,163 @@ def find_privacy_leaks_in_manifest(manifest_text: str) -> List[str]:
     return leaks
 
 
+def validate_source_gold_audit_and_partitions(
+    draft_probes_path: Path,
+    audit_path: Path,
+    aux_def_path: Path,
+    chunks_path: Path,
+    expected_total_probes: int = 25,
+) -> Dict[str, Any]:
+    issues: List[str] = []
+
+    if not draft_probes_path.exists():
+        issues.append(f"Draft probes file not found: {draft_probes_path}")
+        return {"pass": False, "issues": issues}
+    if not audit_path.exists():
+        issues.append(f"Audit file not found: {audit_path}")
+        return {"pass": False, "issues": issues}
+    if not aux_def_path.exists():
+        issues.append(f"Auxiliary and deferred file not found: {aux_def_path}")
+        return {"pass": False, "issues": issues}
+    if not chunks_path.exists():
+        issues.append(f"Chunks file not found: {chunks_path}")
+        return {"pass": False, "issues": issues}
+
+    # 1. Load chunks
+    chunks: Dict[str, Dict[str, Any]] = {}
+    with open(chunks_path, "r", encoding="utf-8") as f:
+        for line in f:
+            if line.strip():
+                c = json.loads(line)
+                chunks[c["chunk_id"]] = c
+
+    # 2. Load draft probes
+    with open(draft_probes_path, "r", encoding="utf-8") as f:
+        draft_data = yaml.safe_load(f)
+    draft_probes = {p["probe_id"]: p for p in draft_data.get("probes", [])}
+
+    # 3. Load auxiliary & deferred probes
+    with open(aux_def_path, "r", encoding="utf-8") as f:
+        aux_def_data = yaml.safe_load(f)
+    aux_probes = {p["probe_id"]: p for p in aux_def_data.get("auxiliary_single_chunk_probes", [])}
+    def_probes = {p["probe_id"]: p for p in aux_def_data.get("deferred_probes", [])}
+
+    # 4. Partition disjointness and completeness check
+    p_set = set(draft_probes.keys())
+    a_set = set(aux_probes.keys())
+    d_set = set(def_probes.keys())
+
+    if p_set & a_set:
+        issues.append(f"Partition overlap between primary and auxiliary: {sorted(list(p_set & a_set))}")
+    if p_set & d_set:
+        issues.append(f"Partition overlap between primary and deferred: {sorted(list(p_set & d_set))}")
+    if a_set & d_set:
+        issues.append(f"Partition overlap between auxiliary and deferred: {sorted(list(a_set & d_set))}")
+
+    union_set = p_set | a_set | d_set
+    if expected_total_probes is not None and len(union_set) != expected_total_probes:
+        issues.append(f"Partition union count {len(union_set)} != expected total {expected_total_probes}")
+
+    # 5. Load and validate audit records
+    audit_records: Dict[str, Dict[str, Any]] = {}
+    with open(audit_path, "r", encoding="utf-8") as f:
+        for line_num, line in enumerate(f, 1):
+            if line.strip():
+                rec = json.loads(line)
+                pid = rec.get("probe_id")
+                if not pid:
+                    issues.append(f"Line {line_num} in audit has empty probe_id")
+                    continue
+                if pid in audit_records:
+                    issues.append(f"Duplicate audit record for probe_id {pid}")
+                audit_records[pid] = rec
+
+    # Check that primary draft probes and audit records match 1-to-1
+    if p_set != set(audit_records.keys()):
+        issues.append(f"Draft probe IDs and audit probe IDs do not match: draft={sorted(list(p_set))}, audit={sorted(list(audit_records.keys()))}")
+
+    # Check each audit record in detail
+    for pid, rec in audit_records.items():
+        if pid not in draft_probes:
+            continue
+        dp = draft_probes[pid]
+
+        # Consistency: Question, Answer, Cutoff
+        if dp.get("question") != rec.get("question_original"):
+            issues.append(f"Question mismatch in {pid} between draft and audit")
+        if dp.get("expected_answer") != rec.get("expected_answer_original"):
+            issues.append(f"Expected answer mismatch in {pid} between draft and audit")
+        if dp.get("cutoff_chapter") != rec.get("cutoff_chapter"):
+            issues.append(f"Cutoff chapter mismatch in {pid} between draft and audit")
+
+        cutoff = rec.get("cutoff_chapter", 30)
+        req_chunks = set(dp.get("required_evidence_chunk_ids", []))
+
+        # Check minimality chunk list matches required chunks
+        cf_chunks = [cf.get("chunk_id") for cf in rec.get("minimality_and_multi_evidence", [])]
+        if cf_chunks != dp.get("required_evidence_chunk_ids", []):
+            issues.append(f"Minimality chunk list mismatch in {pid}: {cf_chunks} != {dp.get('required_evidence_chunk_ids')}")
+
+        # Check propositions
+        props = rec.get("expected_propositions", [])
+        if not props:
+            issues.append(f"No expected_propositions in audit for {pid}")
+
+        prop_chunks = set()
+        for prop in props:
+            pr_id = prop.get("proposition_id", "?")
+            cid = prop.get("supporting_chunk_id")
+            if not cid:
+                issues.append(f"Empty supporting_chunk_id in proposition {pr_id} of {pid}")
+                continue
+
+            if cid not in chunks:
+                issues.append(f"Supporting chunk {cid} in proposition {pr_id} of {pid} does not exist in corpus")
+                continue
+
+            prop_chunks.add(cid)
+            chunk_data = chunks[cid]
+            chunk_text = chunk_data.get("text", "")
+            actual_ch = chunk_data.get("chapter_number")
+
+            # Chapter metadata check
+            if prop.get("chapter_number") != actual_ch:
+                issues.append(f"Chapter metadata mismatch in proposition {pr_id} of {pid}: prop says {prop.get('chapter_number')}, chunk says {actual_ch}")
+
+            # Cutoff check
+            if actual_ch > cutoff:
+                issues.append(f"Cutoff violation in proposition {pr_id} of {pid}: chunk {cid} (ch {actual_ch}) exceeds cutoff {cutoff}")
+
+            # Character span bounds check
+            s = prop.get("char_offset_start")
+            e = prop.get("char_offset_end")
+            excerpt = prop.get("exact_excerpt", "")
+
+            if s is None or e is None or not (0 <= s < e <= len(chunk_text)):
+                issues.append(f"Invalid character span bounds [{s}:{e}] for chunk len {len(chunk_text)} in proposition {pr_id} of {pid}")
+                continue
+
+            # Exact slice check
+            actual_slice = chunk_text[s:e]
+            if actual_slice != excerpt:
+                issues.append(f"Source slice mismatch in proposition {pr_id} of {pid} ({cid} [{s}:{e}]): actual slice != exact_excerpt")
+
+        # Proposition mapping completeness (no unmapped required chunk, no orphan proposition)
+        if prop_chunks != req_chunks:
+            issues.append(f"Proposition chunk mapping mismatch in {pid}: required={sorted(list(req_chunks))}, propositions={sorted(list(prop_chunks))}")
+
+    return {
+        "pass": len(issues) == 0,
+        "issues": issues,
+        "counts": {
+            "primary": len(p_set),
+            "auxiliary": len(a_set),
+            "deferred": len(d_set),
+            "total_accounted": len(union_set),
+        }
+    }
+
+
 if __name__ == "__main__":
     import sys
     base_dir = Path(__file__).resolve().parent.parent.parent

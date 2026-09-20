@@ -287,10 +287,37 @@ M1-30CH-P-REPAIR — REVISED VALIDATION DRAFT: EXECUTED — Fixture Status: PREP
   - `repair_summary.md`: Executive summary of repair accounting, methodology, and protocol corrections.
 - Validator enhancements: Validator in `tools/story_benchmark/` updated to separate target counts from validity conditions and add intra-fixture duplicate detection. All 11 unit tests passed.
 
+M1-30CH-P-CORRECTION — FIX SOURCE-CONFIRMED GOLD ERRORS: EXECUTED — Fixture Status: PREPARED_PENDING_HUMAN_REVIEW
+- Objective: Fix reviewer-identified gold errors confirmed directly against raw chunks.jsonl, synchronize draft probes, audit records, and human review packet, and implement automated regression prevention.
+- Fixture Accounting across all 25 probes:
+  - Primary multi-evidence validation fixture: 16 probes (100% genuine multi-chunk; 100% multi-chapter; every required chunk strictly necessary under counterfactual analysis).
+  - Category distribution in primary fixture: CHRONOLOGY (5), RELATIONSHIP_PROGRESSION (4), CALLBACK (2), TEMPORAL_STATE (2), SPOILER_BOUNDARY (3).
+  - Auxiliary single-chunk candidate pool: 6 probes (including retrospective recall probes where prior events are fully detailed within later single chunks).
+  - Deferred pool: 3 probes (1 intra-fixture duplicate, 1 dev-set overlap, 1 alternative-evidence probe held due to single-gold evaluator limitation).
+- Key Source-Confirmed Error Corrections:
+  - Key handoff & naming boundaries: Separated temporary emergency handoff in Ch 22 from ongoing key retention in Ch 25; accurately represented private first-name permission in Ch 24 and polite/neighbor boundaries in Ch 4.
+  - Parental discovery grounding: Grounded maternal discovery in Ch 22 strictly on source text (Mahiru resting against the edge of the bed hugging a cushion on her lap; dining tableware discovery); eliminated ungrounded shoe claims and false Ch 23 dependency.
+  - Relationship progression cleanups: Grounded physical contact progression across ankle first aid (Ch 13), piggybacking home (Ch 13), and feeding cake (Ch 26); removed over-interpreted balcony distancing and pre-packaged rhetorical conclusions.
+  - Retrospective recall segregation: Segregated retrospective recall into auxiliary pool (Ch 2 umbrella lending and cold).
+  - Multi-gold evaluator reservation: Deferred probes with alternative valid evidence paths (crepe compensation advice in Ch 20) until evaluator supports multi-gold sets.
+- Verification & Test Suite:
+  - 100% of character offset spans [char_offset_start:char_offset_end] match raw chunk slices in chunks.jsonl with zero mismatch.
+  - Extended validator in `tools/story_benchmark/` with `validate_source_gold_audit_and_partitions()`.
+  - Added 6 synthetic negative unit tests in `tests/story_benchmark/test_validate_independent_validation_fixture_v1.py` covering invalid bounds, excerpt mismatches, unmapped chunks/propositions, draft-audit divergence, and partition leaks.
+  - Full test suite execution across all 13 test files in `tests/story_benchmark`: 217 / 217 tests passed cleanly in 28.9s (exit code 0; raw log preserved).
+- Five private deliverables and test log packaged into `.local/story_integration/otonari_30ch/M1_30CH_P_CORRECTION_PACKAGE.zip`:
+  - `corrected_draft_probes.yaml`
+  - `auxiliary_and_deferred.yaml`
+  - `corrected_source_gold_audit.jsonl`
+  - `corrected_revision_log.jsonl`
+  - `corrected_human_review_packet.md`
+  - `raw_test_log.txt`
+- No retrieval, embedding, BGE reranking, or scoring executed; Task Q not started; all probes remain strictly PENDING_REVIEW.
+
 Private chunk text, probes, and review sheets remain LOCAL_ONLY. No LLM / embedding / retrieval external API performed.
 
 ## Next Candidate
 
-Human review of revised validation draft using `.local/story_integration/otonari_30ch/M1_30CH_P_REPAIR/revised_human_review_packet.md`, `revised_draft_probes.yaml`, and `revised_source_gold_audit.jsonl`. Sign off on primary probes and disposition auxiliary/deferred candidates before final fixture freeze. Do not start evaluation (Task Q) before human review approval is completed.
+Human review of corrected validation draft using `.local/story_integration/otonari_30ch/M1_30CH_P_CORRECTION/corrected_human_review_packet.md`, `corrected_draft_probes.yaml`, and `corrected_source_gold_audit.jsonl` (or from `M1_30CH_P_CORRECTION_PACKAGE.zip`). Sign off on primary probes and disposition auxiliary/deferred candidates before final fixture freeze. Do not start evaluation (Task Q) before human review approval is completed.
 
 

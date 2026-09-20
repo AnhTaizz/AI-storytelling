@@ -33,18 +33,20 @@ It is **NOT** an independent cross-story or cross-volume evaluation. Performance
 ---
 
 ## 3. Fixture Design & Schema
-The validation fixture targets and establishes **25 distinct probes** partitioned equally across the 5 canonical narrative categories (5 probes per category):
-
-1. **CHRONOLOGY (5 probes)**: Ordering multi-event narrative progressions occurring across separated chapters.
-2. **RELATIONSHIP_PROGRESSION (5 probes)**: Tracing evolving interpersonal trust, boundary changes, and disclosure over time.
-3. **CALLBACK (5 probes)**: Connecting later reveals or actions to specific, dispersed earlier observations.
-4. **TEMPORAL_STATE (5 probes)**: Determining precise narrative facts or arrangements held at a specific story cutoff.
-5. **SPOILER_BOUNDARY (5 probes)**: Answering inquiries under strict chapter cutoff constraints without leaking post-cutoff events.
+The validation fixture accounts for **25 distinct probes** partitioned into:
+- **16 Primary Multi-Evidence Probes** partitioned across the 5 canonical narrative categories:
+  1. **CHRONOLOGY (5 probes)**: Ordering multi-event narrative progressions occurring across separated chapters.
+  2. **RELATIONSHIP_PROGRESSION (4 probes)**: Tracing evolving interpersonal trust, boundary changes, and disclosure over time.
+  3. **CALLBACK (2 probes)**: Connecting later reveals or actions to specific, dispersed earlier observations.
+  4. **TEMPORAL_STATE (2 probes)**: Determining precise narrative facts or arrangements held at a specific story cutoff.
+  5. **SPOILER_BOUNDARY (3 probes)**: Answering inquiries under strict chapter cutoff constraints without leaking post-cutoff events.
+- **6 Auxiliary Single-Chunk Probes**: Probes verified as solvable from a single comprehensive passage (e.g. self-contained retrospective recall). Segregated into an auxiliary pool to preserve multi-evidence benchmark integrity.
+- **3 Deferred Probes**: Probes reserved due to intra-fixture duplicate evidence (1 probe), development-set overlap (1 probe), or multi-evidence ambiguity / evaluator single-gold limitations (1 probe).
 
 ### Probe Invariants
-- **Multi-Chunk Requirement**: 100% of validation probes (25 / 25) require at least two distinct evidence chunks (`requires_multi_chunk: true`).
-- **Multi-Chapter Span**: 88% of validation probes (22 / 25) span multiple chapters (`requires_multi_chapter: true`).
-- **Minimal Gold Evidence**: Only the strictly necessary evidence chunks are designated as `required_evidence_chunk_ids`. Optional or redundant background passages are excluded.
+- **Multi-Chunk Requirement**: 100% of primary validation probes (16 / 16) require at least two distinct evidence chunks (`requires_multi_chunk: true`).
+- **Multi-Chapter Span**: 100% of primary validation probes (16 / 16) span multiple chapters (`requires_multi_chapter: true`).
+- **Minimal Gold Evidence**: Only strictly necessary evidence chunks are designated as `required_evidence_chunk_ids`. Redundant or narrative padding chunks are excluded.
 - **Strict Spoiler Cutoff**: For probes with `cutoff_chapter < 30`, all required chunks must satisfy `chapter_number <= cutoff_chapter`. Future chapters are strictly forbidden.
 - **Dedup / Independence**: Zero question overlap and zero identical required chunk sets relative to the original 15 `LONG_RANGE_PROBE_V1` probes.
 
@@ -59,17 +61,19 @@ The validation fixture targets and establishes **25 distinct probes** partitione
 
 ## 5. Source-Grounded Gold Audit & Human-Review Gate
 In TASK M1-30CH-P-AUDIT, an exhaustive source-grounded audit was executed across all 25 probes and 60 atomic propositions against the raw Japanese corpus (`PARAGRAPH_PACK_V1`, 97 chunks).
-Detailed private audit logs are preserved in `.local/story_integration/otonari_30ch/M1_30CH_P_AUDIT/`.
+Following audit review, TASK M1-30CH-P-REPAIR and TASK M1-30CH-P-CORRECTION systematically resolved all source-confirmed errors directly against `chunks.jsonl`.
 
-### Audit Findings Summary
-- **Audited Probes**: 25 / 25 (100% audited against full source text with exact character offsets).
-- **Probes Flagged for Revision / Human Review**: 18 / 25 probes require revision or human judgment before freeze:
-  - **4 Chunk Misassignments**: 4 probes had required evidence assigned to chunks that did not contain the factual event (e.g. event occurred in a different chunk of the chapter, or was recalled off-screen in a subsequent chapter).
-  - **4 Factual Hallucinations in Expected Answers**: 4 probes asserted target facts that were factually incorrect or unsupported by the 30-chapter source text (e.g. claiming a private evening dinner in Chapter 30 that never occurred in the 30-chapter corpus, misattributing parent-child conversation topics, or misidentifying character clothing).
-  - **4 Minimality Violations / Artificial Padding**: 4 probes included redundant evidence chunks that were not strictly necessary to answer the question, artificially inflated to satisfy the multi-chunk drafting quota.
-  - **Critical Semantic Duplicate Blocker**: 1 pair of validation probes share the identical required chunk set and query the identical event under different categories. One probe must be replaced before freezing.
-- **Concrete Proposed Revisions**: Documented in `.local/story_integration/otonari_30ch/M1_30CH_P_AUDIT/proposed_revisions.yaml`.
-- **Human Review Packet**: Formatted for review in `.local/story_integration/otonari_30ch/M1_30CH_P_AUDIT/human_review_packet.md`.
+### Audit & Correction Summary
+- **Audited & Corrected Probes**: 25 / 25 accounted for (16 primary, 6 auxiliary, 3 deferred).
+- **Key Source Error Corrections**:
+  - *Key handoff & naming boundaries*: Separated emergency temporary key handoff (Ch 22) from ongoing key retention (Ch 25), with accurate private vs public naming forms.
+  - *Parental discovery grounding*: Grounded maternal discovery in Ch 22 strictly on source facts (discovering Mahiru resting against the edge of the bed hugging a cushion; tableware discovery; avoiding ungrounded shoe claims or false Ch 23 dependencies).
+  - *Relationship progression cleanups*: Removed over-interpreted balcony distancing and pre-packaged rhetorical conclusions; focused on concrete behavioral contrasts supported by verbatim text.
+  - *Retrospective recall segregation*: Segregated probes where earlier events are fully recalled in a later single chunk into auxiliary pool.
+  - *Multi-gold evaluator reservation*: Deferred probes with alternative valid corpus evidence sets until multi-gold evaluator capabilities are implemented.
+- **Verbatim Slice Verification**: 100% of character offset spans `[char_offset_start:char_offset_end]` in `corrected_source_gold_audit.jsonl` match raw text slices in `chunks.jsonl` with zero discrepancy.
+- **Automated Regression Prevention**: Validator extended with negative synthetic tests to catch span bounds violations, proposition-chunk mismatches, orphan propositions, and partition leaks.
+- **Deliverables Package**: All corrected private artifacts and test logs packaged into `.local/story_integration/otonari_30ch/M1_30CH_P_CORRECTION_PACKAGE.zip`.
 
 Final fixture status remains `PREPARED_PENDING_HUMAN_REVIEW` until human annotators sign off on resolutions.
 
@@ -125,5 +129,6 @@ All private textual assets (probe questions, expected answers, chapter prose, in
 - `.local/story_integration/otonari_30ch/INDEPENDENT_VALIDATION_FIXTURE_V1/`
 - `.local/story_integration/otonari_30ch/M1_30CH_P_AUDIT/`
 - `.local/story_integration/otonari_30ch/M1_30CH_P_REPAIR/`
+- `.local/story_integration/otonari_30ch/M1_30CH_P_CORRECTION/`
 
 This public specification contains only structural schemas, aggregate counts, audit findings, and protocol definitions.
