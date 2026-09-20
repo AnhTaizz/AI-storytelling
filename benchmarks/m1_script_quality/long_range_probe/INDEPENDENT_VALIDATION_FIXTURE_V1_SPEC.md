@@ -94,23 +94,27 @@ When human review is approved and evaluation commences, execution MUST adhere to
 
 ### Evaluation Rules & Pre-Registered Decision Protocol
 - **Anti-Tuning Contract**: Strictly NO tuning of candidate depth ($30$), consensus weights, rank tie-breakers, or post-hoc score thresholds after observing validation set results. Any adjustment voids generalization claims and mandates a new held-out evaluation set.
-- **Primary Comparison**: Method O versus Method M. (K serves as secondary historical baseline).
+- **Primary Comparison**: Method O versus Method M on Top-10 metrics. (K serves as secondary historical baseline).
 - **Primary Metrics**:
-  - Full Evidence Success@10
+  - Full Evidence Success@10 (Primary binary endpoint)
   - Required Evidence Recall@10
   - Hit@10
-  - MRR
-- **Hit Drop Handling Policy**:
-  - Consensus (O) demonstrated a minor Hit@10 regression on the development set (14/15 -> 13/15, $\Delta = -0.0667$).
-  - On this 25-probe validation fixture, a Hit@10 drop of at most 1 probe ($\Delta \text{Hit@10} \ge -0.0400$) is pre-registered as an *acceptable trade-off* provided Full Evidence Success@10 strictly improves over M and Recall@10 does not decrease.
-  - A Hit@10 drop exceeding 1 probe ($\Delta \text{Hit@10} < -0.0400$) constitutes an *unacceptable Hit regression*.
-- **Pre-Registered Decision Rules**:
-  - **SUPPORTED**: Consensus Full Evidence Success@10 > M AND Consensus Recall@10 >= M AND Consensus Hit@10 >= M AND full_success_gained > full_success_lost.
-  - **PARTIALLY_SUPPORTED (Trade-off)**: Consensus Full Evidence Success@10 > M AND Consensus Recall@10 >= M AND $\Delta \text{Hit@10} \ge -0.0400$ (at most 1 probe Hit drop), with full_success_gained > full_success_lost.
-  - **NOT_SUPPORTED**: Consensus Success <= M, OR Consensus Recall < M, OR $\Delta \text{Hit@10} < -0.0400$, OR full_success_gained <= full_success_lost.
-- **Uncertainty Reporting Methodology**:
-  - Report 95% paired bootstrap confidence intervals ($B = 10,000$ resamples) for $\Delta \text{Success@10}$, $\Delta \text{Recall@10}$, $\Delta \text{Hit@10}$, and $\Delta \text{MRR}$ between Method O and Method M.
-  - Report exact paired permutation $p$-value and McNemar's test for full-evidence binary success outcomes.
+  - MRR (Reported alongside as ranking quality metric)
+
+- **Protocol Revision History & Correction**:
+  - *Previous Proposal (Unapproved)*: In the initial audit, a Hit@10 drop of at most 1 probe ($\Delta \ge -0.0400$) was proposed as an "acceptable trade-off". This rule is formally recorded as an **unapproved research proposal** and is discarded from pre-registered decision gating. No trade-off shall be termed "acceptable" in the absence of explicit product-level criteria.
+  - *Conservative Descriptive Classifications*: Descriptive outcomes for Method O versus Method M are categorized strictly as:
+    1. **DESCRIPTIVE_SUPPORT**: Full Evidence Success@10 increases ($\Delta > 0$), Recall@10 does not decrease ($\Delta \ge 0$), and Hit@10 does not decrease ($\Delta \ge 0$).
+    2. **MIXED_TRADE_OFF**: At least one of the three primary metrics (Success, Recall, Hit) increases and at least one decreases. (Descriptive only; no value judgment of acceptability is attached).
+    3. **NO_OBSERVED_GAIN**: None of the three primary metrics increases over Method M.
+    4. **NOT_EVALUABLE**: Critical data integrity, human review sign-off, or evaluation pipeline gates fail.
+
+- **Statistical Uncertainty & Inference Protocol (Separated from Descriptive Verdict)**:
+  - **Paired Bootstrap Sampling**: Compute 95% paired bootstrap confidence intervals using $B = 10,000$ resamples with a fixed random seed ($42$) and identical resample probe indices for Method M and Method O. Macro metrics must be computed from per-probe contributions.
+  - **Primary Binary Hypothesis Testing**: Compute exact McNemar's test and paired permutation test for the primary binary endpoint (Full Evidence Success@10).
+  - **Secondary Exploratory Designations**: All uncertainty analyses for Recall@10, Hit@10, and MRR are explicitly designated as **exploratory**. Non-significant differences shall not be construed or reported as demonstrating "equivalence".
+  - **Zero Retrieval Execution**: No retrieval evaluation or model scoring is conducted in this fixture repair task.
+
 - **Evaluator Limitation Blocker**:
   - The current evaluation harness evaluates against a single gold set. In cases where alternative valid evidence exists in the corpus, single-gold scoring introduces artificial false negatives. Resolving multi-gold scoring representation is an open prerequisite before freezing.
 
@@ -120,5 +124,6 @@ When human review is approved and evaluation commences, execution MUST adhere to
 All private textual assets (probe questions, expected answers, chapter prose, individual probe IDs, chunk IDs, offset annotations, and review logs) remain strictly confined to:
 - `.local/story_integration/otonari_30ch/INDEPENDENT_VALIDATION_FIXTURE_V1/`
 - `.local/story_integration/otonari_30ch/M1_30CH_P_AUDIT/`
+- `.local/story_integration/otonari_30ch/M1_30CH_P_REPAIR/`
 
 This public specification contains only structural schemas, aggregate counts, audit findings, and protocol definitions.

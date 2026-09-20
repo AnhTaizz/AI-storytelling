@@ -256,15 +256,41 @@ M1-30CH-P-AUDIT — SOURCE-GROUNDED GOLD REVIEW: EXECUTED — Fixture Status: PR
   - `audit_summary.md`: Executive summary of audit findings, provenance, and pre-freeze blockers.
 - Protocol updates and pre-registration in `SPEC.md`:
   - Primary comparison pre-registered as O vs M on Top-10 metrics.
-  - Hit regression tolerance established: Drop of $\le 1$ probe ($\Delta \text{Hit@10} \ge -0.0400$) is acceptable if Full Evidence Success improves; drop of $> 1$ probe ($\Delta < -0.0400$) is an unacceptable regression.
+  - Previous proposal of acceptable Hit drop threshold marked as unapproved research proposal; replaced with conservative descriptive rules.
   - Uncertainty reporting: 95% paired bootstrap confidence intervals (B=10,000) and McNemar's / exact permutation test.
   - Strict anti-tuning rule: Prohibits parameter tuning of K, M, or O after inspecting validation performance.
   - Single-gold evaluator limitation formally recorded as a blocker.
 - No model inference or evaluation executed; Task Q not started; no probe marked APPROVED or FROZEN.
 
+M1-30CH-P-REPAIR — REVISED VALIDATION DRAFT: EXECUTED — Fixture Status: PREPARED_PENDING_HUMAN_REVIEW
+- Objective: Create a rigorous revised validation draft grounded in full source evidence for direct human review without forced quota padding or artificial balance.
+- Fixture Accounting across all 25 draft probes:
+  - Primary multi-evidence validation fixture: 18 probes (100% genuine multi-chunk; 16 multi-chapter; every required chunk strictly NECESSARY under counterfactual removal tests).
+  - Category distribution in primary fixture: CHRONOLOGY (5), RELATIONSHIP_PROGRESSION (4), CALLBACK (4), TEMPORAL_STATE (2), SPOILER_BOUNDARY (3).
+  - Auxiliary single-chunk candidate pool: 5 probes (inquiries 100% self-contained in a single chunk; segregated to prevent multi-chunk dilution).
+  - Deferred pool: 2 probes (1 intra-fixture duplicate and 1 development-set overlap probe held in reserve).
+- All distinct audit issues resolved:
+  - 4 chunk misassignments corrected to exact source chunks with verified character offsets.
+  - 4 answer hallucinations eliminated and reconciled with source text.
+  - 5 minimality padding instances segregated into auxiliary single-chunk pool.
+  - 1 intra-fixture duplicate blocker resolved by retaining spoiler boundary probe and deferring duplicate callback.
+- Protocol corrections in `SPEC.md`:
+  - Hit drop tolerance rule of -0.04 formally recorded as an unapproved research proposal and discarded.
+  - Conservative descriptive classifications established: DESCRIPTIVE_SUPPORT, MIXED_TRADE_OFF, NO_OBSERVED_GAIN, NOT_EVALUABLE. No trade-off termed 'acceptable' without product criteria.
+  - Uncertainty protocol: 95% paired bootstrap CIs (B=10,000, seed 42, identical sample indices for M and O) for macro metrics; exact McNemar's test for primary binary success endpoint. Secondary analyses marked exploratory.
+- Six private deliverables created in `.local/story_integration/otonari_30ch/M1_30CH_P_REPAIR/`:
+  - `revised_draft_probes.yaml`: 18 primary multi-evidence probes.
+  - `deferred_or_auxiliary_probes.yaml`: 5 auxiliary single-chunk probes + 2 deferred probes.
+  - `revision_log.jsonl`: 25 structured revision log entries tracking every probe's changes and rationale.
+  - `revised_source_gold_audit.jsonl`: 18 audited probe records with 100% verified 0-indexed character offsets into full chunk text.
+  - `revised_human_review_packet.md`: Comprehensive human review packet with bilingual questions/answers, verifiable proposition tables, minimality counterfactual tables, and review checklists.
+  - `repair_summary.md`: Executive summary of repair accounting, methodology, and protocol corrections.
+- Validator enhancements: Validator in `tools/story_benchmark/` updated to separate target counts from validity conditions and add intra-fixture duplicate detection. All 11 unit tests passed.
+
 Private chunk text, probes, and review sheets remain LOCAL_ONLY. No LLM / embedding / retrieval external API performed.
 
 ## Next Candidate
 
-Human review of `INDEPENDENT_VALIDATION_FIXTURE_V1` using `.local/story_integration/otonari_30ch/M1_30CH_P_AUDIT/human_review_packet.md` and resolution of the 18 proposed revisions in `proposed_revisions.yaml`. Replace the intra-fixture duplicate blocker and resolve chunk misassignments before freezing the fixture. Do not start evaluation (Task Q) before human review and revision approval are completed.
+Human review of revised validation draft using `.local/story_integration/otonari_30ch/M1_30CH_P_REPAIR/revised_human_review_packet.md`, `revised_draft_probes.yaml`, and `revised_source_gold_audit.jsonl`. Sign off on primary probes and disposition auxiliary/deferred candidates before final fixture freeze. Do not start evaluation (Task Q) before human review approval is completed.
+
 

@@ -49,6 +49,9 @@ def validate_validation_probes(
     probes_path: Path,
     chunks_path: Path,
     orig_probes_path: Optional[Path] = None,
+    expected_probe_count: Optional[int] = EXPECTED_PROBE_COUNT,
+    expected_per_category: Optional[int] = EXPECTED_PER_CATEGORY,
+    check_intra_fixture_duplicates: bool = False,
 ) -> Dict[str, Any]:
     issues: List[str] = []
 
@@ -64,8 +67,11 @@ def validate_validation_probes(
         data = yaml.safe_load(f)
 
     probes = data.get("probes", [])
-    if len(probes) != EXPECTED_PROBE_COUNT:
-        issues.append(f"Expected {EXPECTED_PROBE_COUNT} probes, got {len(probes)}")
+    if expected_probe_count is not None:
+        if len(probes) != expected_probe_count:
+            issues.append(f"Expected {expected_probe_count} probes, got {len(probes)}")
+    elif len(probes) < 1:
+        issues.append("Validation probe file must contain at least 1 probe")
 
     # Load chunk metadata and verify fingerprint
     chunk_meta: Dict[str, int] = {}
@@ -94,6 +100,7 @@ def validate_validation_probes(
     questions = set()
     cat_counts = {c: 0 for c in CATEGORIES}
     status_counts = {s: 0 for s in VALID_ANNOTATION_STATUSES}
+    seen_val_chunk_sets = {}
 
     multi_chunk_count = 0
     multi_chap_count = 0
@@ -178,6 +185,12 @@ def validate_validation_probes(
             if req_set == o_set:
                 issues.append(f"Required evidence set in {pid} is identical to original probe index {idx}")
 
+        if check_intra_fixture_duplicates:
+            for seen_pid, seen_set in seen_val_chunk_sets.items():
+                if req_set == seen_set:
+                    issues.append(f"Intra-fixture duplicate required evidence set: {pid} duplicates {seen_pid}")
+            seen_val_chunk_sets[pid] = req_set
+
         req_chapters = []
         for cid in req:
             if cid not in chunk_meta:
@@ -227,13 +240,19 @@ def validate_validation_probes(
         if forbidden != expected_forbidden:
             issues.append(f"forbidden_future_chapters mismatch in {pid}: expected {expected_forbidden}, got {forbidden}")
 
-    # Category balance check: exactly 5 probes each
-    for cat in CATEGORIES:
-        if cat_counts[cat] != EXPECTED_PER_CATEGORY:
-            issues.append(f"Category {cat} has {cat_counts[cat]} probes, expected {EXPECTED_PER_CATEGORY}")
+    # Category balance check
+    if expected_per_category is not None:
+        for cat in CATEGORIES:
+            if cat_counts[cat] != expected_per_category:
+                issues.append(f"Category {cat} has {cat_counts[cat]} probes, expected {expected_per_category}")
+    else:
+        for cat, cnt in cat_counts.items():
+            if cnt > 0 and cat not in CATEGORIES:
+                issues.append(f"Invalid category {cat} in fixture")
 
     metrics = {
         "probe_count": len(probes),
+        "target_probe_count": EXPECTED_PROBE_COUNT,
         "per_category_counts": cat_counts,
         "annotation_status_counts": status_counts,
         "multi_chunk_probe_count": multi_chunk_count,

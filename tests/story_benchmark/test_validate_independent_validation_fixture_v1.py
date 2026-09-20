@@ -158,6 +158,55 @@ class TestIndependentValidationFixtureValidator(unittest.TestCase):
         leak_probe = "target probe: V_CHRONO_01"
         self.assertIn("<validation-probe-id pattern>", find_privacy_leaks_in_manifest(leak_probe))
 
+    def test_flexible_probe_count_when_targets_none(self):
+        with open(self.probes_path, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+
+        # Slice to 10 probes across arbitrary categories
+        probes = data["probes"][:10]
+        with tempfile.NamedTemporaryFile("w", delete=False, suffix=".yaml", encoding="utf-8") as tf:
+            yaml.dump({"probes": probes}, tf)
+            tmp_path = Path(tf.name)
+
+        try:
+            res = validate_validation_probes(
+                tmp_path,
+                self.chunks_path,
+                self.orig_path,
+                expected_probe_count=None,
+                expected_per_category=None,
+            )
+            self.assertTrue(res["pass"], f"Flexible count failed: {res.get('issues')}")
+            self.assertEqual(res["metrics"]["probe_count"], 10)
+        finally:
+            tmp_path.unlink(missing_ok=True)
+
+    def test_intra_fixture_duplicate_detection(self):
+        # Legacy draft has intra-fixture duplicate V_CALL_02 and V_SPOIL_02
+        res = validate_validation_probes(
+            self.probes_path,
+            self.chunks_path,
+            self.orig_path,
+            check_intra_fixture_duplicates=True,
+        )
+        self.assertFalse(res["pass"])
+        self.assertTrue(any("Intra-fixture duplicate required evidence set" in issue for issue in res["issues"]))
+
+    def test_revised_draft_probes_validation_passes(self):
+        revised_path = REPO_ROOT / ".local/story_integration/otonari_30ch/M1_30CH_P_REPAIR/revised_draft_probes.yaml"
+        if revised_path.exists():
+            res = validate_validation_probes(
+                revised_path,
+                self.chunks_path,
+                self.orig_path,
+                expected_probe_count=18,
+                expected_per_category=None,
+                check_intra_fixture_duplicates=True,
+            )
+            self.assertTrue(res["pass"], f"Revised validation failed: {res.get('issues')}")
+            self.assertEqual(res["metrics"]["probe_count"], 18)
+            self.assertEqual(res["metrics"]["multi_chunk_probe_count"], 18)
+
 
 if __name__ == "__main__":
     unittest.main()

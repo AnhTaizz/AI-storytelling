@@ -1,5 +1,5 @@
 fixture_id: INDEPENDENT_VALIDATION_FIXTURE_V1
-fixture_version: 1
+fixture_version: 2
 status: PREPARED_PENDING_HUMAN_REVIEW
 source_corpus_id: otonari_no_tenshi_wn_jp_30ch
 corpus_fingerprint_sha256: 7f9bb8106d6d50acd2b3760738c0b8040f36ab547c2d2f7eade1ca0b9a827ff8
@@ -9,16 +9,18 @@ chunks_jsonl_sha256: 10ef5681ad1b2db0882c150efa24804cd0fca56bb38e0ffb772d22494e1
 
 probe_counts:
   target: 25
-  actual: 25
-  multi_chunk: 25
-  multi_chapter: 22
+  total_accounted: 25
+  primary_multi_evidence: 18
+  auxiliary_single_chunk: 5
+  deferred_probes: 2
+  primary_multi_chapter: 16
 
-category_counts:
+primary_category_counts:
   CHRONOLOGY: 5
-  RELATIONSHIP_PROGRESSION: 5
-  CALLBACK: 5
-  TEMPORAL_STATE: 5
-  SPOILER_BOUNDARY: 5
+  RELATIONSHIP_PROGRESSION: 4
+  CALLBACK: 4
+  TEMPORAL_STATE: 2
+  SPOILER_BOUNDARY: 3
 
 annotation_review_counts:
   PENDING_REVIEW: 25
@@ -28,23 +30,22 @@ annotation_review_counts:
 
 agent_audit_recommendations:
   provisional_keep: 7
-  proposed_revise: 16
-  needs_human_review: 2
-  chunk_misassignments_flagged: 4
-  factual_hallucinations_flagged: 4
-  minimality_padding_flagged: 4
-  intra_fixture_duplicates_flagged: 1
-  high_semantic_overlap_with_dev_flagged: 1
+  proposed_revise: 11
+  auxiliary_segregated: 5
+  deferred_duplicate_or_overlap: 2
+  resolved_chunk_misassignments: 4
+  resolved_factual_hallucinations: 4
+  resolved_minimality_paddings: 5
 
 dedup_audit_status:
-  status: REVIEW_REQUIRED
+  status: PASS_PRIMARY_WITH_DEFERRED_RESERVES
   reference_benchmark: LONG_RANGE_PROBE_V1
   reference_probe_count: 15
   exact_question_duplicates: 0
   exact_required_chunk_set_duplicates_vs_dev: 0
-  semantic_overlap_vs_dev_high: 1
-  semantic_overlap_vs_dev_moderate: 6
-  intra_fixture_exact_chunk_set_duplicates: 1
+  intra_fixture_duplicates_in_primary: 0
+  deferred_intra_fixture_duplicates: 1
+  deferred_dev_overlap_probes: 1
 
 private_draft_hashes:
   draft_probes.yaml: 9f0051158231841b8a0feb4b90d5acfc7026ffbbc996001b36b6e521b2790480
@@ -59,17 +60,21 @@ private_audit_hashes:
   overlap_audit_review.json: e27c79c4e06341fc8a10b50b55b561525e8be43812c8597a78d9f20a4c3159f3
   audit_summary.md: afd0ed13de5579ffac8611866d69bda36ea365f63965e8e9dcdf76ece04a86e8
 
+private_repair_hashes:
+  revised_draft_probes.yaml: ddc468842160539fe860ff3d00b11ac0036c8ef6cdd2b21cf11cf93e84c7015d
+  deferred_or_auxiliary_probes.yaml: 37372e3e2d93e78a271ffb2f16878c552432085f5828e8841ad8380bb1305b6c
+  revision_log.jsonl: 714818e106b3aada77b205e43e84fd89d6cf1bb212843ec45f6849ed03755377
+  revised_source_gold_audit.jsonl: 228a4232bdf4dba3244395f8cb2982bd1a8bbc70fb8fe1e96a72fc6bd907c568
+  revised_human_review_packet.md: 9dfdcd94763208ade909c83b013cc21d373697245d7b11ae77da6072fae48fa4
+  repair_summary.md: fbb42bbbc7c3132f2c03a7a3122dc232f48e970ccdb5b6afe8db5a8801b2caa3
+
 intended_evaluation_methods:
   primary_control: BGE_RERANKER_V2_M3_TOP30_V1
   consensus_method: KM_CONSENSUS_RANK_SUM_V1
   historical_context: DENSE_E5_LARGE_V1
 
 unresolved_blockers:
-  - "Human review of drafted probes, expected answers, and gold evidence in human_review_packet.md must be completed and approved before freezing or evaluation."
-  - "Intra-fixture duplicate blocker: Two validation probes share identical required evidence chunks and query the identical event; one must be replaced."
-  - "Gold chunk misassignments: 4 probes require evidence chunks that do not contain the supporting facts; revisions proposed in proposed_revisions.yaml."
-  - "Answer hallucination issues: 4 probes assert facts not supported by the source text; revisions proposed in proposed_revisions.yaml."
-  - "Minimality padding: 4 probes include redundant evidence chunks that are not strictly necessary to answer the question; single-chunk proposals prepared."
-  - "Evaluator limitation: The current benchmark evaluator only supports a single gold chunk set per probe. Probes with valid alternative evidence sets cannot be fairly scored until alternative evidence support is added or probes are revised to have unique minimal evidence."
+  - "Human review of revised probes, expected answers, and gold evidence in revised_human_review_packet.md must be completed and signed off before freezing or evaluation."
+  - "Evaluator limitation: The current benchmark evaluator only supports a single gold chunk set per probe. Multi-gold representation remains an open prerequisite before final freeze."
 
 privacy_status: PASS
