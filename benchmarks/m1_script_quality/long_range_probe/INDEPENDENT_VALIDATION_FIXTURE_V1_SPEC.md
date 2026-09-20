@@ -51,21 +51,27 @@ The validation fixture targets and establishes **25 distinct probes** partitione
 ---
 
 ## 4. Anti-Leakage & Provenance Contract
-- **Authoring Provenance**: All 25 draft probes were authored directly from primary source chapters (Chapters 1–30), completely independent of previous model retrieval rankings, pair scores, or probe failure classifications.
-- **Blinding Disclosure**: Because aggregate experiment results from prior iterations were present in the research context, the drafting process is disclosed as **model-assisted research drafting**, not fully blinded.
-- **Draft Status**: All generated gold labels are strictly designated as **DRAFT / PENDING_REVIEW** until verified by a human annotator against the raw Japanese text.
+- **Authoring Provenance**: The 25 draft probes were authored targeting narrative arcs across Chapters 1–30.
+- **Blinding & Prior Exposure Disclosure**: The authoring agent in TASK M1-30CH-P explicitly read and analyzed all 15 development probes from `LONG_RANGE_PROBE_V1/probes.yaml` prior to drafting. Furthermore, initial draft authoring relied on console chunk slice previews rather than full-text verification. Consequently, the fixture is disclosed as **model-assisted research drafting with prior dev-set exposure**, NOT independently verified or fully blinded.
+- **Draft Status**: All generated gold labels remain strictly designated as **PREPARED_PENDING_HUMAN_REVIEW** until verified by a human annotator against the raw Japanese text.
 
 ---
 
-## 5. Human-Review Gate
-Prior to declaring this fixture `FROZEN` or running any retrieval evaluations:
-1. Each probe must be independently audited using the private review sheet (`human_review.csv`).
-2. Reviewers must verify:
-   - Factuality and relevance of each required chunk against the source text;
-   - Minimality (confirming no unnecessary chunk is marked mandatory);
-   - Absence of temporal leakage or post-cutoff spoiler content.
-3. Review statuses: `PENDING_REVIEW`, `APPROVED`, `NEEDS_REVISION`, `REJECTED`.
-4. Final status remains `PREPARED_PENDING_HUMAN_REVIEW` until formal approval is committed.
+## 5. Source-Grounded Gold Audit & Human-Review Gate
+In TASK M1-30CH-P-AUDIT, an exhaustive source-grounded audit was executed across all 25 probes and 60 atomic propositions against the raw Japanese corpus (`PARAGRAPH_PACK_V1`, 97 chunks).
+Detailed private audit logs are preserved in `.local/story_integration/otonari_30ch/M1_30CH_P_AUDIT/`.
+
+### Audit Findings Summary
+- **Audited Probes**: 25 / 25 (100% audited against full source text with exact character offsets).
+- **Probes Flagged for Revision / Human Review**: 18 / 25 probes require revision or human judgment before freeze:
+  - **4 Chunk Misassignments**: 4 probes had required evidence assigned to chunks that did not contain the factual event (e.g. event occurred in a different chunk of the chapter, or was recalled off-screen in a subsequent chapter).
+  - **4 Factual Hallucinations in Expected Answers**: 4 probes asserted target facts that were factually incorrect or unsupported by the 30-chapter source text (e.g. claiming a private evening dinner in Chapter 30 that never occurred in the 30-chapter corpus, misattributing parent-child conversation topics, or misidentifying character clothing).
+  - **4 Minimality Violations / Artificial Padding**: 4 probes included redundant evidence chunks that were not strictly necessary to answer the question, artificially inflated to satisfy the multi-chunk drafting quota.
+  - **Critical Semantic Duplicate Blocker**: 1 pair of validation probes share the identical required chunk set and query the identical event under different categories. One probe must be replaced before freezing.
+- **Concrete Proposed Revisions**: Documented in `.local/story_integration/otonari_30ch/M1_30CH_P_AUDIT/proposed_revisions.yaml`.
+- **Human Review Packet**: Formatted for review in `.local/story_integration/otonari_30ch/M1_30CH_P_AUDIT/human_review_packet.md`.
+
+Final fixture status remains `PREPARED_PENDING_HUMAN_REVIEW` until human annotators sign off on resolutions.
 
 ---
 
@@ -86,21 +92,33 @@ When human review is approved and evaluation commences, execution MUST adhere to
    - Tie-break: $\max(k\_rank, m\_rank) \text{ ASC}$, $\min(k\_rank, m\_rank) \text{ ASC}$, $\text{chunk\_id ASC}$.
    - Evaluated ranking: Consensus Top-30 followed by unchanged K tail (> 30).
 
-### Evaluation Rules
-- **No Hyperparameter Tuning**: No testing of alternative weights, RRF parameters, depth variations, or post-hoc threshold adjustments on this validation set.
-- **Primary Comparison**: Method O versus Method M. (K serves as secondary historical context).
+### Evaluation Rules & Pre-Registered Decision Protocol
+- **Anti-Tuning Contract**: Strictly NO tuning of candidate depth ($30$), consensus weights, rank tie-breakers, or post-hoc score thresholds after observing validation set results. Any adjustment voids generalization claims and mandates a new held-out evaluation set.
+- **Primary Comparison**: Method O versus Method M. (K serves as secondary historical baseline).
 - **Primary Metrics**:
   - Full Evidence Success@10
   - Required Evidence Recall@10
   - Hit@10
   - MRR
-- **Pre-Registered Future Decision Rule**:
+- **Hit Drop Handling Policy**:
+  - Consensus (O) demonstrated a minor Hit@10 regression on the development set (14/15 -> 13/15, $\Delta = -0.0667$).
+  - On this 25-probe validation fixture, a Hit@10 drop of at most 1 probe ($\Delta \text{Hit@10} \ge -0.0400$) is pre-registered as an *acceptable trade-off* provided Full Evidence Success@10 strictly improves over M and Recall@10 does not decrease.
+  - A Hit@10 drop exceeding 1 probe ($\Delta \text{Hit@10} < -0.0400$) constitutes an *unacceptable Hit regression*.
+- **Pre-Registered Decision Rules**:
   - **SUPPORTED**: Consensus Full Evidence Success@10 > M AND Consensus Recall@10 >= M AND Consensus Hit@10 >= M AND full_success_gained > full_success_lost.
-  - **PARTIALLY_SUPPORTED**: Not SUPPORTED, but at least one delta (Success, Recall, or Hit) > 0.
-  - **NOT_SUPPORTED**: Consensus Success <= M AND Consensus Recall <= M AND Consensus Hit <= M.
+  - **PARTIALLY_SUPPORTED (Trade-off)**: Consensus Full Evidence Success@10 > M AND Consensus Recall@10 >= M AND $\Delta \text{Hit@10} \ge -0.0400$ (at most 1 probe Hit drop), with full_success_gained > full_success_lost.
+  - **NOT_SUPPORTED**: Consensus Success <= M, OR Consensus Recall < M, OR $\Delta \text{Hit@10} < -0.0400$, OR full_success_gained <= full_success_lost.
+- **Uncertainty Reporting Methodology**:
+  - Report 95% paired bootstrap confidence intervals ($B = 10,000$ resamples) for $\Delta \text{Success@10}$, $\Delta \text{Recall@10}$, $\Delta \text{Hit@10}$, and $\Delta \text{MRR}$ between Method O and Method M.
+  - Report exact paired permutation $p$-value and McNemar's test for full-evidence binary success outcomes.
+- **Evaluator Limitation Blocker**:
+  - The current evaluation harness evaluates against a single gold set. In cases where alternative valid evidence exists in the corpus, single-gold scoring introduces artificial false negatives. Resolving multi-gold scoring representation is an open prerequisite before freezing.
 
 ---
 
 ## 7. Privacy Compliance
-All private textual assets (probe questions, expected answers, chapter prose, individual probe IDs, chunk IDs, and review logs) remain strictly confined to `.local/story_integration/otonari_30ch/INDEPENDENT_VALIDATION_FIXTURE_V1/`.  
-This specification contains only structural schemas, aggregate counts, and protocol definitions.
+All private textual assets (probe questions, expected answers, chapter prose, individual probe IDs, chunk IDs, offset annotations, and review logs) remain strictly confined to:
+- `.local/story_integration/otonari_30ch/INDEPENDENT_VALIDATION_FIXTURE_V1/`
+- `.local/story_integration/otonari_30ch/M1_30CH_P_AUDIT/`
+
+This public specification contains only structural schemas, aggregate counts, audit findings, and protocol definitions.

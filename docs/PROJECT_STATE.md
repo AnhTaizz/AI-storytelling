@@ -232,15 +232,39 @@ M1-30CH-P — INDEPENDENT_VALIDATION_FIXTURE_V1: PREPARED_PENDING_HUMAN_REVIEW
 - Purpose: Prepare an independent 25-probe held-out validation fixture to evaluate whether frozen K+M consensus (O) generalizes to unseen questions on the 30-chapter Otonari corpus without unacceptable Hit@10 regression. Retrieval evaluation was not executed in this task.
 - Scope and limitations: Explicitly classified as query-held-out validation on the shared 30-chapter corpus (OTONARI_LOCAL_PASSAGE_V1 / PARAGRAPH_PACK_V1). It does not test cross-story generalization.
 - Fixture composition: 25 probes across 5 canonical categories (5 probes each: CHRONOLOGY, RELATIONSHIP_PROGRESSION, CALLBACK, TEMPORAL_STATE, SPOILER_BOUNDARY). 25/25 require multi-chunk evidence; 22/25 span multiple chapters.
-- Provenance and anti-leakage: Authored directly from source chapters (Ch 1–30) without inspecting prior per-probe rankings, model scores, or failure probe IDs. All gold labels are designated as DRAFT pending human review.
-- Dedup and overlap audit: PASS against LONG_RANGE_PROBE_V1 (0 duplicate questions, 0 identical required chunk sets).
-- Validation and tests: Validator checks passed (schema, chapter cutoffs, unique IDs, category balance, multi-chunk rules, corpus fingerprint). 208/208 tests in test suite passed.
-- Human review gate: Detailed review sheet created locally in `.local/story_integration/otonari_30ch/INDEPENDENT_VALIDATION_FIXTURE_V1/human_review.csv` with review guide in `annotation_issues.md`. All 25 probes hold PENDING_REVIEW status.
-- Pre-registered evaluation protocol: Spec defines frozen evaluation procedure for K (Dense E5-large), M (BGE Reranker v2 M3), and O (KM Consensus Rank Sum v1) with pre-registered decision rules and no hyperparameter tuning allowed.
-- Remaining work: Human review and approval of draft probes and gold evidence in `human_review.csv` prior to freezing or evaluation execution.
+- Human review gate: All 25 probes hold PENDING_REVIEW status pending comprehensive source audit and human review.
+
+M1-30CH-P-AUDIT — SOURCE-GROUNDED GOLD REVIEW: EXECUTED — Fixture Status: PREPARED_PENDING_HUMAN_REVIEW
+- Methodology and provenance disclosure: Post-mortem examination of Task P authoring revealed that chunk selection relied on 120–200 character terminal slice previews rather than full-chunk reading, factual support was checked via superficial heuristics (`'keyword' in text or len(text) > 0`), and semantic overlap screening checked only token Jaccard and set equality. The authoring agent also had prior exposure to the 15 development probes in `LONG_RANGE_PROBE_V1/probes.yaml`. Neither independent verification nor fully blinded authoring was achieved in Task P.
+- Source audit of all 25 probes: Every probe was audited against the full Japanese source text from `PARAGRAPH_PACK_V1/chunks.jsonl`. Each required chunk and target proposition was verified with exact 0-indexed character offsets `[start, end)`.
+- Audit breakdown (25 probes total):
+  - Provisional KEEP: 7 probes.
+  - Proposed REVISION: 16 probes.
+  - NEEDS_HUMAN_REVIEW: 2 probes.
+  - Total flagged: 18 / 25 probes (72%).
+- Critical issues identified:
+  - Gold chunk misassignments (4 probes): Evidence absent from assigned chunk (e.g. event located in a different chunk or recalled off-screen in a subsequent chapter).
+  - Expected answer hallucinations (4 probes): Assertions not supported by source (e.g. private dinner hallucination beyond corpus boundary, tea conversation topic misattribution, clothing ownership error).
+  - Minimality padding (4 probes): Redundant chunks artificially added to satisfy multi-chunk quota where a single chunk was sufficient.
+  - Intra-fixture duplicate blocker (1 probe pair): Two validation probes share identical required chunk sets and query the identical event; one must be replaced.
+  - Overlap with development fixture: 1 high semantic overlap probe pair and 6 moderate overlaps identified and cataloged.
+- Five private deliverables generated in `.local/story_integration/otonari_30ch/M1_30CH_P_AUDIT/`:
+  - `source_gold_audit.jsonl`: 25 structured JSON lines, 60 verifiable propositions with exact 0-indexed character offsets and cutoff checks.
+  - `human_review_packet.md`: Human review packet with bilingual questions, target propositions, exact Japanese source excerpts, minimality tables, and sign-off checkboxes.
+  - `proposed_revisions.yaml`: Concrete revision proposals for all 18 flagged probes leaving original `draft_probes.yaml` untouched.
+  - `overlap_audit_review.json`: Deep semantic overlap analysis across dev probes and intra-fixture probes.
+  - `audit_summary.md`: Executive summary of audit findings, provenance, and pre-freeze blockers.
+- Protocol updates and pre-registration in `SPEC.md`:
+  - Primary comparison pre-registered as O vs M on Top-10 metrics.
+  - Hit regression tolerance established: Drop of $\le 1$ probe ($\Delta \text{Hit@10} \ge -0.0400$) is acceptable if Full Evidence Success improves; drop of $> 1$ probe ($\Delta < -0.0400$) is an unacceptable regression.
+  - Uncertainty reporting: 95% paired bootstrap confidence intervals (B=10,000) and McNemar's / exact permutation test.
+  - Strict anti-tuning rule: Prohibits parameter tuning of K, M, or O after inspecting validation performance.
+  - Single-gold evaluator limitation formally recorded as a blocker.
+- No model inference or evaluation executed; Task Q not started; no probe marked APPROVED or FROZEN.
 
 Private chunk text, probes, and review sheets remain LOCAL_ONLY. No LLM / embedding / retrieval external API performed.
 
 ## Next Candidate
 
-Human review and approval of `INDEPENDENT_VALIDATION_FIXTURE_V1` using `.local/story_integration/otonari_30ch/INDEPENDENT_VALIDATION_FIXTURE_V1/human_review.csv`. Once approved and frozen, execute the pre-registered evaluation protocol comparing O versus M on the validation set. Do not start evaluation before human review is completed.
+Human review of `INDEPENDENT_VALIDATION_FIXTURE_V1` using `.local/story_integration/otonari_30ch/M1_30CH_P_AUDIT/human_review_packet.md` and resolution of the 18 proposed revisions in `proposed_revisions.yaml`. Replace the intra-fixture duplicate blocker and resolve chunk misassignments before freezing the fixture. Do not start evaluation (Task Q) before human review and revision approval are completed.
+

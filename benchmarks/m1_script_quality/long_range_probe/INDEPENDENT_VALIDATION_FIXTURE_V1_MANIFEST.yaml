@@ -26,12 +26,25 @@ annotation_review_counts:
   NEEDS_REVISION: 0
   REJECTED: 0
 
+agent_audit_recommendations:
+  provisional_keep: 7
+  proposed_revise: 16
+  needs_human_review: 2
+  chunk_misassignments_flagged: 4
+  factual_hallucinations_flagged: 4
+  minimality_padding_flagged: 4
+  intra_fixture_duplicates_flagged: 1
+  high_semantic_overlap_with_dev_flagged: 1
+
 dedup_audit_status:
-  status: PASS
+  status: REVIEW_REQUIRED
   reference_benchmark: LONG_RANGE_PROBE_V1
   reference_probe_count: 15
   exact_question_duplicates: 0
-  exact_required_chunk_set_duplicates: 0
+  exact_required_chunk_set_duplicates_vs_dev: 0
+  semantic_overlap_vs_dev_high: 1
+  semantic_overlap_vs_dev_moderate: 6
+  intra_fixture_exact_chunk_set_duplicates: 1
 
 private_draft_hashes:
   draft_probes.yaml: 9f0051158231841b8a0feb4b90d5acfc7026ffbbc996001b36b6e521b2790480
@@ -39,12 +52,24 @@ private_draft_hashes:
   overlap_audit.json: bc6a8b79aa92ae8f38783f397e25a4a02ce8fdd65e9481c9a24d0d0f2ff45364
   annotation_issues.md: 3b966b39621f9be58a9e1a5307fbbbe2c8000c174ed113bc56392e3b0064bd3f
 
+private_audit_hashes:
+  source_gold_audit.jsonl: cb19dadcf478e1ea64cf7d8d8dfb77e455d3c733161f3e27844e15e8e376e268
+  human_review_packet.md: 334c544309dde48d2c8b14b1a9dc887a716360c33a83d7dc46c09e1f8e934952
+  proposed_revisions.yaml: 70fc3ffb0daed5f63ab95858b5cfd40be658625abe4db3a7e4b02ced514a92ed
+  overlap_audit_review.json: e27c79c4e06341fc8a10b50b55b561525e8be43812c8597a78d9f20a4c3159f3
+  audit_summary.md: afd0ed13de5579ffac8611866d69bda36ea365f63965e8e9dcdf76ece04a86e8
+
 intended_evaluation_methods:
   primary_control: BGE_RERANKER_V2_M3_TOP30_V1
   consensus_method: KM_CONSENSUS_RANK_SUM_V1
   historical_context: DENSE_E5_LARGE_V1
 
 unresolved_blockers:
-  - "Human review of drafted probes and gold evidence in human_review.csv must be completed and approved before freezing or evaluation."
+  - "Human review of drafted probes, expected answers, and gold evidence in human_review_packet.md must be completed and approved before freezing or evaluation."
+  - "Intra-fixture duplicate blocker: Two validation probes share identical required evidence chunks and query the identical event; one must be replaced."
+  - "Gold chunk misassignments: 4 probes require evidence chunks that do not contain the supporting facts; revisions proposed in proposed_revisions.yaml."
+  - "Answer hallucination issues: 4 probes assert facts not supported by the source text; revisions proposed in proposed_revisions.yaml."
+  - "Minimality padding: 4 probes include redundant evidence chunks that are not strictly necessary to answer the question; single-chunk proposals prepared."
+  - "Evaluator limitation: The current benchmark evaluator only supports a single gold chunk set per probe. Probes with valid alternative evidence sets cannot be fairly scored until alternative evidence support is added or probes are revised to have unique minimal evidence."
 
 privacy_status: PASS
