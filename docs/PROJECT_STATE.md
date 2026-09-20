@@ -210,8 +210,25 @@ M1-30CH-N — M_FAILURE_MODE_DIAGNOSTIC_V1: EXECUTED
 - Probe labels (descriptive): NEAR_BOUNDARY_ORDERING 5, MID_POOL_ORDERING 3. All 8 are TRUNCATION_EXPOSED, as are almost all required chunks.
 - Interpretation: The flat Full Evidence Success is driven by one missing unit per probe, mostly just below the Top-10 cutoff by a small score margin. The reranker often pushed down a unit K already had in its Top-10. By the frozen two-thirds rule the pattern is not near-boundary dominant (62.5%), but near-boundary ordering is the larger population. Truncation exposure is almost universal among required chunks and is not enriched in failures. The benchmark labels the evidence-bearing chunk, not the exact evidence token span, so this diagnostic can say whether a failed chunk was truncated by the M pair contract, but not whether the gold evidence itself lay in the truncated tail.
 
+M1-30CH-O — KM_CONSENSUS_RANK_SUM_V1: EXECUTED — Verdict: PARTIALLY_SUPPORTED
+- Selection rule: Deterministic equal-weight rank sum consensus over frozen Top-30 candidate pool (`rank_sum(c) = k_rank(c) + m_rank(c) ASC`). Symmetric tie-break: `max(k_rank, m_rank) ASC`, `min(k_rank, m_rank) ASC`, `chunk_id ASC`. Evaluated ranking appends unchanged K tail beyond 30. Pure selector with zero gold inputs.
+- Source artifact integrity: PASS (benchmark freeze, probes, chunks, K ranking, and M reranked ranking SHA-256 verified; K and M control metrics reproduced exactly; candidate sets identical for 15/15 probes).
+- Primary metrics (Consensus vs M Top-10):
+  - Full Evidence Success@10: 0.2667 → 0.4667 (+0.2000, 4 → 7 probes)
+  - Recall@10: 0.6444 → 0.6889 (+0.0444)
+  - Hit@10: 0.9333 → 0.8667 (-0.0667, 14 → 13 probes)
+  - MRR: 0.5143 → 0.4963 (-0.0180)
+- Candidate ceiling: Candidate-complete probes = 12/15 (0.80). Consensus achieved full success for 7 probes (ceiling utilization = 0.5833, up from 0.3333 under M).
+- Required evidence transitions (35 units): STAY_TOP10 = 19, M_TOP10_LOST_BY_CONSENSUS = 3, CONSENSUS_TOP10_GAIN_FROM_M = 5, STAY_OUTSIDE_TOP10 = 8.
+- Probe transitions: Full success gained = 3, lost = 0 (net +3 full-success probes). Hit gained = 1, lost = 2 (net -1 hit probe).
+- N failure population (8 candidate-complete failure probes under M):
+  - 3 probes converted to full success under consensus; 5 remain failures; 1 probe worsened.
+  - Of the 8 missing units: 4 entered Top-10, 4 stayed outside Top-10, 5 moved upward, 3 moved downward.
+- Determinism: PASS (two consecutive runs produced identical rankings, local table hashes, and metrics). Privacy: PASS (public result contains aggregate-only data, zero sensitive string/ID pattern leaks).
+- Interpretation: Combining complementary bi-encoder (K) and cross-encoder (M) ranking signals via simple rank sum consensus significantly boosted complete multi-evidence retrieval (Full Evidence Success@10 from 26.7% to 46.7%, recovering 3 of N's 8 failure probes with 0 full-success regressions). However, because Hit@10 slipped from 93.3% to 86.7% (1 net hit lost), the result formally registers as PARTIALLY_SUPPORTED under the frozen gate rule. Consensus mitigates destructive swaps for multi-evidence probes, but equal-weight sum pushed single-evidence candidates in 2 probes just outside Top-10.
+
 Private chunk text, probes, and embeddings remain LOCAL_ONLY. No LLM / embedding / retrieval external API performed.
 
 ## Next Candidate
 
-M1-30CH-N found a mixed pattern dominated by near-boundary ordering. Every failing candidate-complete probe misses exactly one required unit, 5 of 8 of those units sit at ranks 11–15 with small score gaps, and truncation exposure is not enriched in failures. The candidate next experiment is a controlled multi-evidence-aware selection (coverage) experiment. It would reuse the same frozen K Top-30 pool and M scores, change only how the final Top-10 is selected from them, and freeze its method before scoring. Unlike H, which applied embedding-similarity MMR over F's full pool, it would operate on the fixed reranked candidate set. Not implemented. Graph memory is not motivated by this diagnostic.
+M1-30CH-O demonstrated that consensus between dense embedding ranks (K) and cross-encoder scores (M) breaks the long-standing 26.7% Full Evidence Success ceiling (reaching 46.7%), but at the expense of a small Hit@10 regression (1 hit probe lost). The candidate next experiment is to investigate a controlled boundary-aware consensus or calibrated score combination that preserves consensus gains on multi-evidence candidate sets while preventing boundary dropouts for isolated hits. Not implemented. Graph memory is not motivated by this result.

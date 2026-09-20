@@ -1,0 +1,443 @@
+experiment_id: KM_CONSENSUS_RANK_SUM_V1
+status: EXECUTED
+benchmark_id: LONG_RANGE_PROBE_V1
+primary_control: BGE_RERANKER_V2_M3_TOP30_V1
+historical_context: DENSE_E5_LARGE_V1
+selection_contract:
+  method: KM_CONSENSUS_RANK_SUM_V1
+  formula: rank_sum(c) = k_rank(c) + m_rank(c) ASC
+  tie_break: max(k_rank, m_rank) ASC, min(k_rank, m_rank) ASC, chunk_id ASC
+  candidate_depth: 30
+  evaluated_ranking: consensus Top-30 followed by unchanged K tail (> 30)
+  anti_leakage_gate: PASS (pure selector with no gold/probe metadata inputs)
+artifact_integrity:
+  status: PASS
+  source_sha256:
+    probe_file: 24ca1f9c92531a19f59d409c7d3e68ef90b91ab24aab6d7854f0c52667c136e2
+    chunks_jsonl: 10ef5681ad1b2db0882c150efa24804cd0fca56bb38e0ffb772d22494e1e40fb
+    k_cutoff_ranking: 07d317cbb09bf0ff5734d7513ce1531871ec0d4cdf84bd9d9728d7f2c2a18e86
+    m_reranked_per_probe: 0e75284929ae1b34b23c6aba840cc9fa3e142e873e5abd8e942f219d5ada43f5
+  k_control_reproduction: PASS
+  m_control_reproduction: PASS
+  n_diagnostic_reproduction: PASS
+candidate_set_integrity:
+  status: PASS
+  probes: 15
+  candidate_depth_per_probe: 30
+  candidate_set_match_k_m: PASS (identical 30-candidate set for 15/15 probes)
+M_CONTROL:
+  overall:
+    hit@1: 0.3333333333333333
+    hit@3: 0.6
+    hit@5: 0.6666666666666666
+    hit@10: 0.9333333333333333
+    recall@1: 0.15555555555555553
+    recall@3: 0.27777777777777773
+    recall@5: 0.3777777777777777
+    recall@10: 0.6444444444444444
+    success@1: 0.0
+    success@3: 0.0
+    success@5: 0.06666666666666667
+    success@10: 0.26666666666666666
+    spoiler_violation@1: 0.0
+    spoiler_violation@3: 0.0
+    spoiler_violation@5: 0.0
+    spoiler_violation@10: 0.0
+    mrr: 0.5142616642616643
+  per_category:
+    CALLBACK:
+      hit@1: 0.6666666666666666
+      hit@3: 1.0
+      hit@5: 1.0
+      hit@10: 1.0
+      recall@1: 0.3333333333333333
+      recall@3: 0.4444444444444444
+      recall@5: 0.7222222222222222
+      recall@10: 0.8888888888888888
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.3333333333333333
+      success@10: 0.6666666666666666
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.8333333333333334
+    CHRONOLOGY:
+      hit@1: 0.0
+      hit@3: 0.0
+      hit@5: 0.3333333333333333
+      hit@10: 0.6666666666666666
+      recall@1: 0.0
+      recall@3: 0.0
+      recall@5: 0.1111111111111111
+      recall@10: 0.4444444444444444
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.0
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.16125541125541124
+    RELATIONSHIP_PROGRESSION:
+      hit@1: 0.3333333333333333
+      hit@3: 0.6666666666666666
+      hit@5: 0.6666666666666666
+      hit@10: 1.0
+      recall@1: 0.1111111111111111
+      recall@3: 0.27777777777777773
+      recall@5: 0.38888888888888884
+      recall@10: 0.5555555555555555
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.0
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.5370370370370371
+    SPOILER_BOUNDARY:
+      hit@1: 0.3333333333333333
+      hit@3: 0.6666666666666666
+      hit@5: 0.6666666666666666
+      hit@10: 1.0
+      recall@1: 0.16666666666666666
+      recall@3: 0.3333333333333333
+      recall@5: 0.3333333333333333
+      recall@10: 0.6666666666666666
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.3333333333333333
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.5476190476190476
+    TEMPORAL_STATE:
+      hit@1: 0.3333333333333333
+      hit@3: 0.6666666666666666
+      hit@5: 0.6666666666666666
+      hit@10: 1.0
+      recall@1: 0.16666666666666666
+      recall@3: 0.3333333333333333
+      recall@5: 0.3333333333333333
+      recall@10: 0.6666666666666666
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.3333333333333333
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.4920634920634921
+CONSENSUS:
+  overall:
+    hit@1: 0.26666666666666666
+    hit@3: 0.7333333333333333
+    hit@5: 0.7333333333333333
+    hit@10: 0.8666666666666667
+    recall@1: 0.1111111111111111
+    recall@3: 0.4111111111111111
+    recall@5: 0.43333333333333335
+    recall@10: 0.6888888888888888
+    success@1: 0.0
+    success@3: 0.13333333333333333
+    success@5: 0.13333333333333333
+    success@10: 0.4666666666666667
+    spoiler_violation@1: 0.0
+    spoiler_violation@3: 0.0
+    spoiler_violation@5: 0.0
+    spoiler_violation@10: 0.0
+    mrr: 0.4962962962962963
+  per_category:
+    CALLBACK:
+      hit@1: 0.3333333333333333
+      hit@3: 1.0
+      hit@5: 1.0
+      hit@10: 1.0
+      recall@1: 0.16666666666666666
+      recall@3: 0.611111111111111
+      recall@5: 0.611111111111111
+      recall@10: 1.0
+      success@1: 0.0
+      success@3: 0.3333333333333333
+      success@5: 0.3333333333333333
+      success@10: 1.0
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.6666666666666666
+    CHRONOLOGY:
+      hit@1: 0.3333333333333333
+      hit@3: 0.6666666666666666
+      hit@5: 0.6666666666666666
+      hit@10: 1.0
+      recall@1: 0.1111111111111111
+      recall@3: 0.2222222222222222
+      recall@5: 0.3333333333333333
+      recall@10: 0.5555555555555555
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.0
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.48148148148148145
+    RELATIONSHIP_PROGRESSION:
+      hit@1: 0.3333333333333333
+      hit@3: 0.6666666666666666
+      hit@5: 0.6666666666666666
+      hit@10: 0.6666666666666666
+      recall@1: 0.1111111111111111
+      recall@3: 0.5555555555555555
+      recall@5: 0.5555555555555555
+      recall@10: 0.5555555555555555
+      success@1: 0.0
+      success@3: 0.3333333333333333
+      success@5: 0.3333333333333333
+      success@10: 0.3333333333333333
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.5277777777777778
+    SPOILER_BOUNDARY:
+      hit@1: 0.0
+      hit@3: 0.6666666666666666
+      hit@5: 0.6666666666666666
+      hit@10: 0.6666666666666666
+      recall@1: 0.0
+      recall@3: 0.3333333333333333
+      recall@5: 0.3333333333333333
+      recall@10: 0.5
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.3333333333333333
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.3055555555555555
+    TEMPORAL_STATE:
+      hit@1: 0.3333333333333333
+      hit@3: 0.6666666666666666
+      hit@5: 0.6666666666666666
+      hit@10: 1.0
+      recall@1: 0.16666666666666666
+      recall@3: 0.3333333333333333
+      recall@5: 0.3333333333333333
+      recall@10: 0.8333333333333334
+      success@1: 0.0
+      success@3: 0.0
+      success@5: 0.0
+      success@10: 0.6666666666666666
+      spoiler_violation@1: 0.0
+      spoiler_violation@3: 0.0
+      spoiler_violation@5: 0.0
+      spoiler_violation@10: 0.0
+      mrr: 0.5
+M_COMPARISON:
+  overall:
+    Hit@1:
+      M: 0.3333333333333333
+      CONSENSUS: 0.26666666666666666
+      delta: -0.06666666666666665
+    Recall@1:
+      M: 0.15555555555555553
+      CONSENSUS: 0.1111111111111111
+      delta: -0.044444444444444425
+    Full_Evidence_Success@1:
+      M: 0.0
+      CONSENSUS: 0.0
+      delta: 0.0
+    Spoiler_Violation@1:
+      M: 0.0
+      CONSENSUS: 0.0
+      delta: 0.0
+    Hit@3:
+      M: 0.6
+      CONSENSUS: 0.7333333333333333
+      delta: 0.1333333333333333
+    Recall@3:
+      M: 0.27777777777777773
+      CONSENSUS: 0.4111111111111111
+      delta: 0.13333333333333336
+    Full_Evidence_Success@3:
+      M: 0.0
+      CONSENSUS: 0.13333333333333333
+      delta: 0.13333333333333333
+    Spoiler_Violation@3:
+      M: 0.0
+      CONSENSUS: 0.0
+      delta: 0.0
+    Hit@5:
+      M: 0.6666666666666666
+      CONSENSUS: 0.7333333333333333
+      delta: 0.06666666666666665
+    Recall@5:
+      M: 0.3777777777777777
+      CONSENSUS: 0.43333333333333335
+      delta: 0.055555555555555636
+    Full_Evidence_Success@5:
+      M: 0.06666666666666667
+      CONSENSUS: 0.13333333333333333
+      delta: 0.06666666666666667
+    Spoiler_Violation@5:
+      M: 0.0
+      CONSENSUS: 0.0
+      delta: 0.0
+    Hit@10:
+      M: 0.9333333333333333
+      CONSENSUS: 0.8666666666666667
+      delta: -0.06666666666666665
+    Recall@10:
+      M: 0.6444444444444444
+      CONSENSUS: 0.6888888888888888
+      delta: 0.0444444444444444
+    Full_Evidence_Success@10:
+      M: 0.26666666666666666
+      CONSENSUS: 0.4666666666666667
+      delta: 0.2
+    Spoiler_Violation@10:
+      M: 0.0
+      CONSENSUS: 0.0
+      delta: 0.0
+    MRR:
+      M: 0.5142616642616643
+      CONSENSUS: 0.4962962962962963
+      delta: -0.017965367965368018
+K_HISTORICAL_CONTEXT:
+  overall:
+    Hit@1:
+      K: 0.26666666666666666
+      CONSENSUS: 0.26666666666666666
+      delta: 0.0
+    Recall@1:
+      K: 0.1111111111111111
+      CONSENSUS: 0.1111111111111111
+      delta: 0.0
+    Full_Evidence_Success@1:
+      K: 0.0
+      CONSENSUS: 0.0
+      delta: 0.0
+    Spoiler_Violation@1:
+      K: 0.0
+      CONSENSUS: 0.0
+      delta: 0.0
+    Hit@3:
+      K: 0.4666666666666667
+      CONSENSUS: 0.7333333333333333
+      delta: 0.2666666666666666
+    Recall@3:
+      K: 0.26666666666666666
+      CONSENSUS: 0.4111111111111111
+      delta: 0.14444444444444443
+    Full_Evidence_Success@3:
+      K: 0.13333333333333333
+      CONSENSUS: 0.13333333333333333
+      delta: 0.0
+    Spoiler_Violation@3:
+      K: 0.0
+      CONSENSUS: 0.0
+      delta: 0.0
+    Hit@5:
+      K: 0.6666666666666666
+      CONSENSUS: 0.7333333333333333
+      delta: 0.06666666666666665
+    Recall@5:
+      K: 0.45555555555555555
+      CONSENSUS: 0.43333333333333335
+      delta: -0.0222222222222222
+    Full_Evidence_Success@5:
+      K: 0.2
+      CONSENSUS: 0.13333333333333333
+      delta: -0.06666666666666668
+    Spoiler_Violation@5:
+      K: 0.0
+      CONSENSUS: 0.0
+      delta: 0.0
+    Hit@10:
+      K: 0.8
+      CONSENSUS: 0.8666666666666667
+      delta: 0.06666666666666665
+    Recall@10:
+      K: 0.5777777777777777
+      CONSENSUS: 0.6888888888888888
+      delta: 0.11111111111111105
+    Full_Evidence_Success@10:
+      K: 0.26666666666666666
+      CONSENSUS: 0.4666666666666667
+      delta: 0.2
+    Spoiler_Violation@10:
+      K: 0.0
+      CONSENSUS: 0.0
+      delta: 0.0
+    MRR:
+      K: 0.42085592769803293
+      CONSENSUS: 0.4962962962962963
+      delta: 0.07544036859826336
+candidate_ceiling:
+  candidate_complete_probes: 12
+  candidate_complete_fraction: 0.8
+  consensus_full_success_probes: 7
+  ceiling_utilization: 0.5833333333333334
+  note: descriptive only; evidence outside K Top-30 cannot be recovered
+required_evidence_transitions:
+  total_units: 35
+  counts:
+    STAY_TOP10: 19
+    M_TOP10_LOST_BY_CONSENSUS: 3
+    CONSENSUS_TOP10_GAIN_FROM_M: 5
+    STAY_OUTSIDE_TOP10: 8
+probe_transitions:
+  m_hit_probes: 14
+  consensus_hit_probes: 13
+  m_full_success_probes: 4
+  consensus_full_success_probes: 7
+  hit_gained: 1
+  hit_lost: 2
+  full_success_gained: 3
+  full_success_lost: 0
+n_failure_population:
+  population_size: 8
+  probes_full_success_under_consensus: 3
+  probes_remain_failure: 5
+  probes_m_full_fail_improved: 0
+  probes_worsened: 1
+  missing_units_analysis:
+    count: 8
+    entered_top10: 4
+    stayed_outside_top10: 4
+    moved_upward: 5
+    moved_downward: 3
+    unchanged: 0
+    m_bucket_distribution:
+      11-15: 5
+      16-20: 2
+      21-30: 1
+    consensus_bucket_distribution:
+      <=10: 4
+      11-15: 1
+      16-20: 1
+      21-30: 2
+      '>30': 0
+local_table_sha256:
+  consensus_per_probe.jsonl: fbffd057cde1f03e02689136410f3d0e151925fa05720bbe4c24a9a4b467d8cc
+  required_evidence_transitions.jsonl: 17dc8a08183b81c3e370f37873415cd5d3132f6a683e8f8ec9c93fa8d07e26d4
+  n_failure_population_transitions.jsonl: d549bc598ada9ad5a4977dfd1a82a6422974169310b70159031aabb587f237d8
+determinism_status: PASS
+privacy_status: PASS
+verdict: PARTIALLY_SUPPORTED
+interpretation: 'Rank sum consensus produced mixed effects relative to M. Full Evidence
+  Success@10 moved 0.2667 -> 0.4667 (+0.2000), Recall@10 moved 0.6444 -> 0.6889 (+0.0444),
+  Hit@10 moved 0.9333 -> 0.8667 (-0.0667), and MRR moved 0.5143 -> 0.4963 (-0.0180).
+  Full-success probes gained: 3, lost: 0.'
