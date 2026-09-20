@@ -314,10 +314,19 @@ M1-30CH-P-CORRECTION — FIX SOURCE-CONFIRMED GOLD ERRORS: EXECUTED — Fixture 
   - `raw_test_log.txt`
 - No retrieval, embedding, BGE reranking, or scoring executed; Task Q not started; all probes remain strictly PENDING_REVIEW.
 
+M1_30CH_P_SEMANTIC_FIX — SOURCE SEMANTICS & REQUIRED-EVIDENCE REPAIR: EXECUTED — Fixture Status: PREPARED_PENDING_HUMAN_REVIEW
+- Re-read the Japanese source for 9 reviewer-flagged primary probes and revised questions, answers, facts, propositions, source spans, and counterfactual necessity explanations from one generator-backed definition.
+- Corrected the inability-to-walk contradiction; removed unsupported tree, laundering, bedroom, contacts/bangs, and "unpolished gem" details; represented the early relationship boundary as Amane's statement rather than a mutual agreement.
+- Reframed callback, spoiler-boundary, relationship-progression, chronology, and temporal questions so each required chunk supplies a concrete answer part requested by the question.
+- Partition accounting remains 16 primary / 6 auxiliary / 3 deferred because all 9 repaired probes retain source-grounded necessity, not because of a quota. Actual primary structure is 16 multi-chunk and 13 multi-chapter.
+- Added complete private artifacts under `.local/story_integration/otonari_30ch/M1_30CH_P_SEMANTIC_FIX/`: `draft_probes.yaml`, `source_gold_audit.jsonl`, `human_review_packet.md`, `revision_log.jsonl`, `auxiliary_and_deferred.yaml`, `validation_report.json`, `raw_test_log.txt`, and `manifest.json`.
+- Extended the public validator with complete review-bundle checks: exact source slices, cutoffs, proposition mapping, partition coverage, all-`PENDING_REVIEW` status, review-packet synchronization, derived counts, and manifest hashes.
+- Relevant verification passed: fixture validator 18 tests, frozen long-range validator 21 tests, ingestion/corpus 20 tests (59 total, all exit 0). Corpus, segmentation artifacts, and LONG_RANGE_PROBE_V1 hashes remained unchanged.
+- Packaged private artifacts as `.local/story_integration/otonari_30ch/M1_30CH_P_SEMANTIC_FIX.zip` (SHA-256 `44fe92f9fffd6eb9f72382b51faad5c0239d024fbdc1072e73d9bb7f3a8e5f87`). No retrieval experiment, K/M/O evaluation, approval, or freeze was performed.
+
 Private chunk text, probes, and review sheets remain LOCAL_ONLY. No LLM / embedding / retrieval external API performed.
 
 ## Next Candidate
 
-Human review of corrected validation draft using `.local/story_integration/otonari_30ch/M1_30CH_P_CORRECTION/corrected_human_review_packet.md`, `corrected_draft_probes.yaml`, and `corrected_source_gold_audit.jsonl` (or from `M1_30CH_P_CORRECTION_PACKAGE.zip`). Sign off on primary probes and disposition auxiliary/deferred candidates before final fixture freeze. Do not start evaluation (Task Q) before human review approval is completed.
-
+Human review of the semantic-fix draft using `.local/story_integration/otonari_30ch/M1_30CH_P_SEMANTIC_FIX/human_review_packet.md`, `draft_probes.yaml`, and `source_gold_audit.jsonl` (or from `M1_30CH_P_SEMANTIC_FIX.zip`). Sign off on primary probes and disposition auxiliary/deferred candidates before final fixture freeze. Do not start evaluation (Task Q) before human review approval is completed.
 

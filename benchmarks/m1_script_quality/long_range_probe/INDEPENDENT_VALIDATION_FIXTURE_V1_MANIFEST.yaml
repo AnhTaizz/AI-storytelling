@@ -1,5 +1,5 @@
 fixture_id: INDEPENDENT_VALIDATION_FIXTURE_V1
-fixture_version: 3
+fixture_version: 4
 status: PREPARED_PENDING_HUMAN_REVIEW
 source_corpus_id: otonari_no_tenshi_wn_jp_30ch
 corpus_fingerprint_sha256: 7f9bb8106d6d50acd2b3760738c0b8040f36ab547c2d2f7eade1ca0b9a827ff8
@@ -13,7 +13,7 @@ probe_counts:
   primary_multi_evidence: 16
   auxiliary_single_chunk: 6
   deferred_probes: 3
-  primary_multi_chapter: 16
+  primary_multi_chapter: 13
 
 primary_category_counts:
   CHRONOLOGY: 5
@@ -78,13 +78,23 @@ private_correction_hashes:
   raw_test_log.txt: 3d85f57d380e8686a4ce0f214085c4d4fdbc3b9df3a15da7a61072cbdbe499b4
   M1_30CH_P_CORRECTION_PACKAGE.zip: e1c5597195b8c0b94eb8b60f702d2882fed1b1c49f9d5b758ecfe422ef0c59fc
 
+private_semantic_fix_hashes:
+  draft_probes.yaml: bd5e594142038b86069dabd126d02d9a3747923c70f9c9afca0bb7c3688b4f67
+  source_gold_audit.jsonl: 0b9c82c61ac7779700ad89eac93d61acfb93a18b722c8712ce43aaf60dd00dd4
+  human_review_packet.md: bdb1c858116f983cdc53c42e3a83c00eea95831e8c81f9d821b0bc737c2162ec
+  revision_log.jsonl: edd94c0d7ce194f23e52e36fc2881721cb68f1a9ae4f3d2d99f5a7a34ff6e3a6
+  auxiliary_and_deferred.yaml: 30ab9312e46ac85fd80d73f2afebce7e027539d0628fefddd40bbd5c4a7a0904
+  validation_report.json: 5b3174dfd0b451c476d74a608c8de2b297185f139ea19166050ce118143409aa
+  raw_test_log.txt: dd5b38df4db2bde1f8d38a87edba78ee91b3213eec18f849bb11d4683ff1b505
+  M1_30CH_P_SEMANTIC_FIX.zip: 44fe92f9fffd6eb9f72382b51faad5c0239d024fbdc1072e73d9bb7f3a8e5f87
+
 intended_evaluation_methods:
   primary_control: BGE_RERANKER_V2_M3_TOP30_V1
   consensus_method: KM_CONSENSUS_RANK_SUM_V1
   historical_context: DENSE_E5_LARGE_V1
 
 unresolved_blockers:
-  - "Human review of corrected probes, expected answers, and gold evidence in corrected_human_review_packet.md must be completed and signed off before freezing or evaluation."
+  - "Human review of the semantic-fix probes, expected answers, and gold evidence in M1_30CH_P_SEMANTIC_FIX/human_review_packet.md must be completed and signed off before freezing or evaluation."
   - "Evaluator limitation: The current benchmark evaluator only supports a single gold chunk set per probe. Multi-gold representation remains an open prerequisite before final freeze."
 
 privacy_status: PASS

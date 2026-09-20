@@ -14,6 +14,7 @@ from tools.story_benchmark.validate_independent_validation_fixture_v1 import (
     EXPECTED_PER_CATEGORY,
     EXPECTED_PROBE_COUNT,
     find_privacy_leaks_in_manifest,
+    validate_review_artifact_bundle,
     validate_source_gold_audit_and_partitions,
     validate_validation_probes,
 )
@@ -243,6 +244,20 @@ class TestIndependentValidationFixtureValidator(unittest.TestCase):
         self.assertEqual(res_audit["counts"]["auxiliary"], 6)
         self.assertEqual(res_audit["counts"]["deferred"], 3)
         self.assertEqual(res_audit["counts"]["total_accounted"], 25)
+
+    def test_semantic_fix_review_bundle_validates_cleanly(self):
+        artifact_dir = REPO_ROOT / ".local/story_integration/otonari_30ch/M1_30CH_P_SEMANTIC_FIX"
+        if not artifact_dir.exists():
+            self.skipTest("M1_30CH_P_SEMANTIC_FIX directory not found")
+
+        result = validate_review_artifact_bundle(
+            artifact_dir,
+            self.chunks_path,
+            self.orig_path,
+            expected_total_probes=25,
+        )
+        self.assertTrue(result["pass"], f"Semantic-fix bundle failed: {result.get('issues')}")
+        self.assertEqual(result["metrics"]["total"], 25)
 
     def test_detect_invalid_span_bounds_or_mismatch(self):
         # Create synthetic chunks, draft, audit, aux_def

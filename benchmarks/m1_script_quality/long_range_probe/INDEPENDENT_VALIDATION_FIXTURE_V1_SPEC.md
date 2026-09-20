@@ -61,7 +61,7 @@ The validation fixture accounts for **25 distinct probes** partitioned into:
 
 ## 5. Source-Grounded Gold Audit & Human-Review Gate
 In TASK M1-30CH-P-AUDIT, an exhaustive source-grounded audit was executed across all 25 probes and 60 atomic propositions against the raw Japanese corpus (`PARAGRAPH_PACK_V1`, 97 chunks).
-Following audit review, TASK M1-30CH-P-REPAIR and TASK M1-30CH-P-CORRECTION systematically resolved all source-confirmed errors directly against `chunks.jsonl`.
+Following audit review, TASK M1-30CH-P-REPAIR, TASK M1-30CH-P-CORRECTION, and TASK M1_30CH_P_SEMANTIC_FIX revised source-confirmed errors directly against `chunks.jsonl`.
 
 ### Audit & Correction Summary
 - **Audited & Corrected Probes**: 25 / 25 accounted for (16 primary, 6 auxiliary, 3 deferred).
@@ -71,9 +71,12 @@ Following audit review, TASK M1-30CH-P-REPAIR and TASK M1-30CH-P-CORRECTION syst
   - *Relationship progression cleanups*: Removed over-interpreted balcony distancing and pre-packaged rhetorical conclusions; focused on concrete behavioral contrasts supported by verbatim text.
   - *Retrospective recall segregation*: Segregated probes where earlier events are fully recalled in a later single chunk into auxiliary pool.
   - *Multi-gold evaluator reservation*: Deferred probes with alternative valid corpus evidence sets until multi-gold evaluator capabilities are implemented.
-- **Verbatim Slice Verification**: 100% of character offset spans `[char_offset_start:char_offset_end]` in `corrected_source_gold_audit.jsonl` match raw text slices in `chunks.jsonl` with zero discrepancy.
-- **Automated Regression Prevention**: Validator extended with negative synthetic tests to catch span bounds violations, proposition-chunk mismatches, orphan propositions, and partition leaks.
-- **Deliverables Package**: All corrected private artifacts and test logs packaged into `.local/story_integration/otonari_30ch/M1_30CH_P_CORRECTION_PACKAGE.zip`.
+  - *Semantic necessity repair*: Corrected an inability-to-walk claim, removed unsupported tree/laundering details, narrowed broad questions, replaced a one-sided boundary statement that had been presented as mutual, and rewrote two callback questions so every required chunk supplies an explicitly requested answer part.
+- **Actual Primary Structure**: 16 / 16 primary probes are multi-chunk and 13 / 16 are multi-chapter. These figures are derived from the artifact rather than treated as quotas.
+- **Verbatim Slice Verification**: 100% of character offset spans `[char_offset_start:char_offset_end)` in `source_gold_audit.jsonl` match raw text slices in `chunks.jsonl` with zero discrepancy.
+- **Automated Regression Prevention**: Validator checks span bounds, proposition-chunk mappings, partition coverage, all-`PENDING_REVIEW` status, draft/audit/review-packet synchronization, derived statistics, and artifact hashes.
+- **Deliverables Package**: The eight private review artifacts are packaged into `.local/story_integration/otonari_30ch/M1_30CH_P_SEMANTIC_FIX.zip`.
+- **Verification Scope**: 59 relevant tests passed (fixture validator 18, frozen long-range validator 21, ingestion/corpus 20). Retrieval/model experiment suites were not executed.
 
 Final fixture status remains `PREPARED_PENDING_HUMAN_REVIEW` until human annotators sign off on resolutions.
 
@@ -130,5 +133,6 @@ All private textual assets (probe questions, expected answers, chapter prose, in
 - `.local/story_integration/otonari_30ch/M1_30CH_P_AUDIT/`
 - `.local/story_integration/otonari_30ch/M1_30CH_P_REPAIR/`
 - `.local/story_integration/otonari_30ch/M1_30CH_P_CORRECTION/`
+- `.local/story_integration/otonari_30ch/M1_30CH_P_SEMANTIC_FIX/`
 
 This public specification contains only structural schemas, aggregate counts, audit findings, and protocol definitions.

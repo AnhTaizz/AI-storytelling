@@ -436,6 +436,210 @@ def validate_source_gold_audit_and_partitions(
     }
 
 
+def validate_review_artifact_bundle(
+    artifact_dir: Path,
+    chunks_path: Path,
+    orig_probes_path: Optional[Path] = None,
+    expected_total_probes: int = 25,
+) -> Dict[str, Any]:
+    """Validate a complete private review bundle without judging story semantics.
+
+    This adds cross-file and packaging checks to the lower-level fixture validators:
+    exact source spans, partition coverage, PENDING_REVIEW status, draft/audit/review
+    packet synchronization, derived statistics, and manifest hashes. Semantic
+    correctness remains a human/source-reading responsibility.
+    """
+    issues: List[str] = []
+    names = {
+        "draft": "draft_probes.yaml",
+        "audit": "source_gold_audit.jsonl",
+        "packet": "human_review_packet.md",
+        "revision": "revision_log.jsonl",
+        "partitions": "auxiliary_and_deferred.yaml",
+        "report": "validation_report.json",
+        "log": "raw_test_log.txt",
+        "manifest": "manifest.json",
+    }
+    paths = {key: artifact_dir / value for key, value in names.items()}
+    for key, path in paths.items():
+        if not path.exists():
+            issues.append(f"Missing required artifact {key}: {path}")
+    if issues:
+        return {"pass": False, "issues": issues, "counts": {}, "metrics": {}}
+
+    probe_result = validate_validation_probes(
+        paths["draft"],
+        chunks_path,
+        orig_probes_path,
+        expected_probe_count=None,
+        expected_per_category=None,
+        check_intra_fixture_duplicates=True,
+    )
+    issues.extend(probe_result.get("issues", []))
+
+    audit_result = validate_source_gold_audit_and_partitions(
+        paths["draft"],
+        paths["audit"],
+        paths["partitions"],
+        chunks_path,
+        expected_total_probes=expected_total_probes,
+    )
+    issues.extend(audit_result.get("issues", []))
+
+    with open(paths["draft"], "r", encoding="utf-8") as f:
+        draft_data = yaml.safe_load(f) or {}
+    primary = {p["probe_id"]: p for p in draft_data.get("probes", [])}
+
+    with open(paths["partitions"], "r", encoding="utf-8") as f:
+        partition_data = yaml.safe_load(f) or {}
+    auxiliary = {
+        p["probe_id"]: p
+        for p in partition_data.get("auxiliary_single_chunk_probes", [])
+    }
+    deferred = {
+        p["probe_id"]: p for p in partition_data.get("deferred_probes", [])
+    }
+
+    audit_records: Dict[str, Dict[str, Any]] = {}
+    with open(paths["audit"], "r", encoding="utf-8") as f:
+        for line in f:
+            if line.strip():
+                rec = json.loads(line)
+                audit_records[rec["probe_id"]] = rec
+
+    revision_records: Dict[str, Dict[str, Any]] = {}
+    with open(paths["revision"], "r", encoding="utf-8") as f:
+        for line_num, line in enumerate(f, 1):
+            if not line.strip():
+                continue
+            rec = json.loads(line)
+            pid = rec.get("probe_id")
+            if not pid:
+                issues.append(f"Revision log line {line_num} has no probe_id")
+            elif pid in revision_records:
+                issues.append(f"Duplicate revision log record for {pid}")
+            else:
+                revision_records[pid] = rec
+
+    all_ids = set(primary) | set(auxiliary) | set(deferred)
+    if set(revision_records) != all_ids:
+        issues.append(
+            "Revision log IDs do not match the complete partition union: "
+            f"revision={sorted(revision_records)}, union={sorted(all_ids)}"
+        )
+
+    for partition_name, records in (
+        ("primary", primary),
+        ("auxiliary", auxiliary),
+        ("deferred", deferred),
+    ):
+        for pid, record in records.items():
+            status = record.get("annotation_status")
+            if status != "PENDING_REVIEW":
+                issues.append(
+                    f"{pid} in {partition_name} has annotation_status={status!r}; "
+                    "expected PENDING_REVIEW"
+                )
+
+    packet_text = paths["packet"].read_text(encoding="utf-8")
+    packet_normalized = packet_text.replace("\r\n", "\n")
+    for pid, draft in primary.items():
+        audit = audit_records.get(pid)
+        if audit is None:
+            continue
+        required_texts = [
+            pid,
+            draft.get("question", ""),
+            draft.get("expected_answer", ""),
+            audit.get("question_vi", ""),
+            audit.get("expected_answer_vi", ""),
+        ]
+        required_texts.extend(draft.get("required_evidence_chunk_ids", []))
+        for proposition in audit.get("expected_propositions", []):
+            required_texts.extend(
+                [
+                    proposition.get("proposition_en", ""),
+                    proposition.get("proposition_vi", ""),
+                    proposition.get("exact_excerpt", ""),
+                ]
+            )
+        for removal in audit.get("minimality_and_multi_evidence", []):
+            required_texts.append(removal.get("missing_answer_part_if_removed", ""))
+        for value in required_texts:
+            normalized_value = value.replace("\r\n", "\n") if isinstance(value, str) else value
+            if normalized_value and normalized_value not in packet_normalized:
+                issues.append(f"Human review packet is not synchronized for {pid}")
+                break
+
+        if audit.get("human_review_status") != "PENDING_REVIEW":
+            issues.append(
+                f"{pid} audit human_review_status is not PENDING_REVIEW"
+            )
+
+    for pid, record in revision_records.items():
+        if record.get("annotation_status") != "PENDING_REVIEW":
+            issues.append(
+                f"{pid} revision annotation_status is not PENDING_REVIEW"
+            )
+
+    chapter_by_chunk: Dict[str, int] = {}
+    with open(chunks_path, "r", encoding="utf-8") as f:
+        for line in f:
+            if line.strip():
+                chunk = json.loads(line)
+                chapter_by_chunk[chunk["chunk_id"]] = chunk["chapter_number"]
+
+    multi_chunk = 0
+    multi_chapter = 0
+    for probe in primary.values():
+        required = probe.get("required_evidence_chunk_ids", [])
+        chapters = {chapter_by_chunk[cid] for cid in required if cid in chapter_by_chunk}
+        multi_chunk += len(required) > 1
+        multi_chapter += len(chapters) > 1
+
+    derived = {
+        "primary": len(primary),
+        "auxiliary": len(auxiliary),
+        "deferred": len(deferred),
+        "total": len(all_ids),
+        "primary_multi_chunk": multi_chunk,
+        "primary_multi_chapter": multi_chapter,
+    }
+
+    with open(paths["manifest"], "r", encoding="utf-8") as f:
+        manifest = json.load(f)
+    if manifest.get("statistics") != derived:
+        issues.append(
+            f"Manifest statistics mismatch: {manifest.get('statistics')} != {derived}"
+        )
+    manifest_files = manifest.get("files", {})
+    if names["manifest"] in manifest_files:
+        issues.append("Manifest must not contain a hash of itself")
+    expected_hashed_files = set(names.values()) - {names["manifest"]}
+    if set(manifest_files) != expected_hashed_files:
+        issues.append(
+            "Manifest file coverage mismatch: "
+            f"{sorted(manifest_files)} != {sorted(expected_hashed_files)}"
+        )
+    for filename, metadata in manifest_files.items():
+        file_path = artifact_dir / filename
+        if not file_path.exists():
+            continue
+        actual_hash = sha256_file(file_path)
+        if metadata.get("sha256") != actual_hash:
+            issues.append(f"Manifest SHA-256 mismatch for {filename}")
+        if metadata.get("bytes") != file_path.stat().st_size:
+            issues.append(f"Manifest byte-size mismatch for {filename}")
+
+    return {
+        "pass": len(issues) == 0,
+        "issues": issues,
+        "counts": audit_result.get("counts", {}),
+        "metrics": derived,
+        "probe_metrics": probe_result.get("metrics", {}),
+    }
+
+
 if __name__ == "__main__":
     import sys
     base_dir = Path(__file__).resolve().parent.parent.parent
