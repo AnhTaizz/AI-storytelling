@@ -1,0 +1,50 @@
+fixture_id: INDEPENDENT_VALIDATION_FIXTURE_V1
+fixture_version: 1
+status: PREPARED_PENDING_HUMAN_REVIEW
+source_corpus_id: otonari_no_tenshi_wn_jp_30ch
+corpus_fingerprint_sha256: 7f9bb8106d6d50acd2b3760738c0b8040f36ab547c2d2f7eade1ca0b9a827ff8
+passage_contract_id: OTONARI_LOCAL_PASSAGE_V1
+segmentation_version: PARAGRAPH_PACK_V1
+chunks_jsonl_sha256: 10ef5681ad1b2db0882c150efa24804cd0fca56bb38e0ffb772d22494e1e40fb
+
+probe_counts:
+  target: 25
+  actual: 25
+  multi_chunk: 25
+  multi_chapter: 22
+
+category_counts:
+  CHRONOLOGY: 5
+  RELATIONSHIP_PROGRESSION: 5
+  CALLBACK: 5
+  TEMPORAL_STATE: 5
+  SPOILER_BOUNDARY: 5
+
+annotation_review_counts:
+  PENDING_REVIEW: 25
+  APPROVED: 0
+  NEEDS_REVISION: 0
+  REJECTED: 0
+
+dedup_audit_status:
+  status: PASS
+  reference_benchmark: LONG_RANGE_PROBE_V1
+  reference_probe_count: 15
+  exact_question_duplicates: 0
+  exact_required_chunk_set_duplicates: 0
+
+private_draft_hashes:
+  draft_probes.yaml: 9f0051158231841b8a0feb4b90d5acfc7026ffbbc996001b36b6e521b2790480
+  human_review.csv: c08e236fe69f059e6d35ba7ed380a57d760d8e2648725231e198488feb2948d0
+  overlap_audit.json: bc6a8b79aa92ae8f38783f397e25a4a02ce8fdd65e9481c9a24d0d0f2ff45364
+  annotation_issues.md: 3b966b39621f9be58a9e1a5307fbbbe2c8000c174ed113bc56392e3b0064bd3f
+
+intended_evaluation_methods:
+  primary_control: BGE_RERANKER_V2_M3_TOP30_V1
+  consensus_method: KM_CONSENSUS_RANK_SUM_V1
+  historical_context: DENSE_E5_LARGE_V1
+
+unresolved_blockers:
+  - "Human review of drafted probes and gold evidence in human_review.csv must be completed and approved before freezing or evaluation."
+
+privacy_status: PASS

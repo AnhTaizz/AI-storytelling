@@ -227,8 +227,20 @@ M1-30CH-O — KM_CONSENSUS_RANK_SUM_V1: EXECUTED — Verdict: PARTIALLY_SUPPORTE
 - Determinism: PASS (two consecutive runs produced identical rankings, local table hashes, and metrics). Privacy: PASS (public result contains aggregate-only data, zero sensitive string/ID pattern leaks).
 - Interpretation: Combining complementary bi-encoder (K) and cross-encoder (M) ranking signals via simple rank sum consensus significantly boosted complete multi-evidence retrieval (Full Evidence Success@10 from 26.7% to 46.7%, recovering 3 of N's 8 failure probes with 0 full-success regressions). However, because Hit@10 slipped from 93.3% to 86.7% (1 net hit lost), the result formally registers as PARTIALLY_SUPPORTED under the frozen gate rule. Consensus mitigates destructive swaps for multi-evidence probes, but equal-weight sum pushed single-evidence candidates in 2 probes just outside Top-10.
 
-Private chunk text, probes, and embeddings remain LOCAL_ONLY. No LLM / embedding / retrieval external API performed.
+M1-30CH-P — INDEPENDENT_VALIDATION_FIXTURE_V1: PREPARED_PENDING_HUMAN_REVIEW
+- Status: PREPARED_PENDING_HUMAN_REVIEW.
+- Purpose: Prepare an independent 25-probe held-out validation fixture to evaluate whether frozen K+M consensus (O) generalizes to unseen questions on the 30-chapter Otonari corpus without unacceptable Hit@10 regression. Retrieval evaluation was not executed in this task.
+- Scope and limitations: Explicitly classified as query-held-out validation on the shared 30-chapter corpus (OTONARI_LOCAL_PASSAGE_V1 / PARAGRAPH_PACK_V1). It does not test cross-story generalization.
+- Fixture composition: 25 probes across 5 canonical categories (5 probes each: CHRONOLOGY, RELATIONSHIP_PROGRESSION, CALLBACK, TEMPORAL_STATE, SPOILER_BOUNDARY). 25/25 require multi-chunk evidence; 22/25 span multiple chapters.
+- Provenance and anti-leakage: Authored directly from source chapters (Ch 1–30) without inspecting prior per-probe rankings, model scores, or failure probe IDs. All gold labels are designated as DRAFT pending human review.
+- Dedup and overlap audit: PASS against LONG_RANGE_PROBE_V1 (0 duplicate questions, 0 identical required chunk sets).
+- Validation and tests: Validator checks passed (schema, chapter cutoffs, unique IDs, category balance, multi-chunk rules, corpus fingerprint). 208/208 tests in test suite passed.
+- Human review gate: Detailed review sheet created locally in `.local/story_integration/otonari_30ch/INDEPENDENT_VALIDATION_FIXTURE_V1/human_review.csv` with review guide in `annotation_issues.md`. All 25 probes hold PENDING_REVIEW status.
+- Pre-registered evaluation protocol: Spec defines frozen evaluation procedure for K (Dense E5-large), M (BGE Reranker v2 M3), and O (KM Consensus Rank Sum v1) with pre-registered decision rules and no hyperparameter tuning allowed.
+- Remaining work: Human review and approval of draft probes and gold evidence in `human_review.csv` prior to freezing or evaluation execution.
+
+Private chunk text, probes, and review sheets remain LOCAL_ONLY. No LLM / embedding / retrieval external API performed.
 
 ## Next Candidate
 
-M1-30CH-O demonstrated that consensus between dense embedding ranks (K) and cross-encoder scores (M) breaks the long-standing 26.7% Full Evidence Success ceiling (reaching 46.7%), but at the expense of a small Hit@10 regression (1 hit probe lost). The candidate next experiment is to investigate a controlled boundary-aware consensus or calibrated score combination that preserves consensus gains on multi-evidence candidate sets while preventing boundary dropouts for isolated hits. Not implemented. Graph memory is not motivated by this result.
+Human review and approval of `INDEPENDENT_VALIDATION_FIXTURE_V1` using `.local/story_integration/otonari_30ch/INDEPENDENT_VALIDATION_FIXTURE_V1/human_review.csv`. Once approved and frozen, execute the pre-registered evaluation protocol comparing O versus M on the validation set. Do not start evaluation before human review is completed.
