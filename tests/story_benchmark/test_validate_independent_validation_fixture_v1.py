@@ -14,6 +14,7 @@ from tools.story_benchmark.validate_independent_validation_fixture_v1 import (
     EXPECTED_PER_CATEGORY,
     EXPECTED_PROBE_COUNT,
     find_privacy_leaks_in_manifest,
+    validate_prefreeze_correction_deliverables,
     validate_review_artifact_bundle,
     validate_review_gate_deliverables,
     validate_source_gold_audit_and_partitions,
@@ -592,6 +593,51 @@ class TestIndependentValidationFixtureValidator(unittest.TestCase):
             res_bad_status = validate_review_gate_deliverables(tdp, expected_total_probes=1)
             self.assertFalse(res_bad_status["pass"])
             self.assertTrue(any("expected PENDING_REVIEW" in i for i in res_bad_status["issues"]))
+
+    def test_prefreeze_correction_bundle_validates_cleanly(self):
+        corr_dir = REPO_ROOT / ".local/story_integration/otonari_30ch/M1_30CH_P_PREFREEZE_CORRECTION"
+        if not corr_dir.exists():
+            self.skipTest("M1_30CH_P_PREFREEZE_CORRECTION directory not found")
+
+        chunks_path = REPO_ROOT / ".local/story_integration/otonari_30ch/PARAGRAPH_PACK_V1/chunks.jsonl"
+        result = validate_prefreeze_correction_deliverables(corr_dir, chunks_path=chunks_path, expected_total_probes=25)
+        self.assertTrue(result["pass"], f"Prefreeze correction bundle failed: {result.get('issues')}")
+        self.assertEqual(result["metrics"]["total_probes"], 25)
+        self.assertEqual(result["metrics"]["primary_probes"], 16)
+        self.assertEqual(result["metrics"]["auxiliary_probes"], 6)
+        self.assertEqual(result["metrics"]["deferred_probes"], 3)
+        self.assertTrue(result["metrics"]["all_pending_review"])
+
+    def test_detect_prefreeze_correction_synthetic_errors(self):
+        with tempfile.TemporaryDirectory() as td:
+            tdp = Path(td)
+            res_missing = validate_prefreeze_correction_deliverables(tdp, expected_total_probes=1)
+            self.assertFalse(res_missing["pass"])
+            self.assertTrue(any("Missing required prefreeze correction deliverable" in i for i in res_missing["issues"]))
+
+            # Create dummy files
+            required_files = [
+                "canonical_probe_inventory.csv",
+                "primary_gold_audit.jsonl",
+                "corrected_human_review_packet_vi.md",
+                "auxiliary_deferred_disposition.md",
+                "evaluation_readiness.md",
+                "correction_log.md",
+                "validation_report.json",
+                "raw_test_log.txt",
+                "manifest.json",
+            ]
+            for rf in required_files:
+                (tdp / rf).write_text("dummy", encoding="utf-8")
+
+            # CSV with report-only typo
+            csv_content = "probe_id,partition,category,cutoff,required_chunks,audit_status,human_decision,notes\n"
+            csv_content += "V_CHRO_01,primary,CHRONOLOGY,30,ch001_c0001,SOURCE_GROUNDED_PASS,PENDING_REVIEW,notes\n"
+            (tdp / "canonical_probe_inventory.csv").write_text(csv_content, encoding="utf-8")
+
+            res_typo = validate_prefreeze_correction_deliverables(tdp, expected_total_probes=1)
+            self.assertFalse(res_typo["pass"])
+            self.assertTrue(any("report-only typo" in i for i in res_typo["issues"]))
 
 
 if __name__ == "__main__":

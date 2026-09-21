@@ -1,5 +1,5 @@
 fixture_id: INDEPENDENT_VALIDATION_FIXTURE_V1
-fixture_version: 5
+fixture_version: 6
 status: PREPARED_PENDING_HUMAN_REVIEW
 source_corpus_id: otonari_no_tenshi_wn_jp_30ch
 corpus_fingerprint_sha256: 7f9bb8106d6d50acd2b3760738c0b8040f36ab547c2d2f7eade1ca0b9a827ff8
@@ -99,14 +99,27 @@ private_review_gate_hashes:
   manifest.json: 61aa110bbe87c630da95d9e36a3db653be2881418451dffb929bee1df76e36db
   M1_30CH_P_REVIEW_GATE.zip: 4d1c1cdcd4889415697603e8e056011aff97d749433b72b68ba83292e53e5ce0
 
+private_prefreeze_correction_hashes:
+  canonical_probe_inventory.csv: b5a83639f4149ce224297381920ef4f41004e6028d9bb0597fbbb78d5b245214
+  primary_gold_audit.jsonl: ce93689102a0188cf3768686ab7f85b149d3ac16289f5843ac039610b4ce3ab2
+  corrected_human_review_packet_vi.md: 57eccb253cb14dc7d3fb1cb35e613df3ca52757e8fe118edf9708d03fa4a5bf4
+  auxiliary_deferred_disposition.md: 1d698eb92c1816e81a3df0e8a5b9097bd6dedd2799dca4580b609e3d697b12f8
+  evaluation_readiness.md: ef77793a34120d75598f0bfff2630eb4577bfc7eee37af176959848c522499b9
+  correction_log.md: c246fb893babffa370afb011084efcac550a7fb5a4e43431eafe776a780a243f
+  validation_report.json: 0afba28e2e9ef1c44d895b9ca4e7c3522c24bf8c3bdab0f6ea044c2f0044e64f
+  raw_test_log.txt: 88afa1e44fa0de3addca671c27d20e9151f2db82cbbe2fd9e7049c912d32fb7d
+  manifest.json: 26865d478d12df61f9d557ba0180f0c7aa5a851d57f9389460cb20ac5a3ccf49
+  M1_30CH_P_PREFREEZE_CORRECTION.zip: 89c09b85fd01fe1a3ac88d056d149508ddbc2a0350910d8cb5e3067a206990a8
+
 intended_evaluation_methods:
   primary_control: BGE_RERANKER_V2_M3_TOP30_V1
   consensus_method: KM_CONSENSUS_RANK_SUM_V1
   historical_context: DENSE_E5_LARGE_V1
 
 unresolved_blockers:
-  - "Human review of the 16 primary probes using M1_30CH_P_REVIEW_GATE/review_packet_vi.md must be completed and signed off by the Product Owner before freezing."
-  - "Auxiliary pool hallucinations: 3 probes (V_TEMP_01, V_SPOIL_03, V_SPOIL_05) contain facts absent from the 30-chapter Web Novel corpus and must be revised or rejected before freeze."
-  - "Evaluator limitation: The current benchmark evaluator only supports a single gold chunk set per probe. Multi-gold representation remains an open prerequisite before final freeze."
+  - "Human review of the 16 primary probes using M1_30CH_P_PREFREEZE_CORRECTION/corrected_human_review_packet_vi.md must be completed and signed off by the Product Owner before freezing."
+  - "Auxiliary pool hallucinations: 3 probes (V_TEMP_01, V_SPOIL_03, V_SPOIL_05) proposed as REJECT_AS_CURRENTLY_WRITTEN; awaiting Product Owner sign-off."
+  - "Evaluator limitation: The current benchmark evaluator only supports a single gold chunk set per probe. Multi-gold representation remains an open prerequisite before final freeze (V_CALL_03 held in deferred)."
 
 privacy_status: PASS
+

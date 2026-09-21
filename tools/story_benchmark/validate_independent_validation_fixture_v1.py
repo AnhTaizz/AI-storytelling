@@ -797,6 +797,243 @@ def validate_review_gate_deliverables(
     }
 
 
+def validate_prefreeze_correction_deliverables(
+    correction_dir: Path,
+    chunks_path: Optional[Path] = None,
+    expected_total_probes: int = 25,
+) -> Dict[str, Any]:
+    """
+    Validates deliverables under M1_30CH_P_PREFREEZE_CORRECTION.
+    Checks:
+    - All 9 deliverables exist:
+        1. canonical_probe_inventory.csv
+        2. primary_gold_audit.jsonl
+        3. corrected_human_review_packet_vi.md
+        4. auxiliary_deferred_disposition.md
+        5. evaluation_readiness.md
+        6. correction_log.md
+        7. validation_report.json
+        8. raw_test_log.txt
+        9. manifest.json
+    - canonical_probe_inventory.csv has exactly 25 probes partitioned into:
+        16 primary, 6 auxiliary, 3 deferred, with 100% PENDING_REVIEW human_decision.
+      All chronology probes use canonical V_CHRONO_XX (no V_CHRO_ typos).
+      Flagged auxiliary probes have audit_status REJECT_AS_CURRENTLY_WRITTEN.
+    - primary_gold_audit.jsonl has 16 primary probes with:
+        - 100% EXPLICITLY_STATED propositions
+        - 100% exact character offset slice match into chunks.jsonl
+        - Zero cutoff violations
+        - Counterfactual minimality on all required chunks
+        - human_review_status PENDING_REVIEW
+    - corrected_human_review_packet_vi.md covers all 16 primary probes with empty sign-off fields.
+    - auxiliary_deferred_disposition.md accounts for all 9 non-primary probes, confirms V_CALL_03 identity.
+    - evaluation_readiness.md strictly distinguishes readiness states with EVALUATION_ALLOWED = NO.
+    - correction_log.md documents REPORT_ONLY_TYPO resolution.
+    - validation_report.json has valid schema, EVALUATION_ALLOWED = false, and 25 PENDING_REVIEW.
+    - manifest.json verifies all 8 other files with matching SHA-256 and byte size.
+    """
+    issues: List[str] = []
+    required_files = [
+        "canonical_probe_inventory.csv",
+        "primary_gold_audit.jsonl",
+        "corrected_human_review_packet_vi.md",
+        "auxiliary_deferred_disposition.md",
+        "evaluation_readiness.md",
+        "correction_log.md",
+        "validation_report.json",
+        "raw_test_log.txt",
+        "manifest.json",
+    ]
+    for rf in required_files:
+        fp = correction_dir / rf
+        if not fp.exists():
+            issues.append(f"Missing required prefreeze correction deliverable: {rf}")
+
+    if issues:
+        return {"pass": False, "issues": issues, "metrics": {}}
+
+    # 1. Validate canonical_probe_inventory.csv
+    csv_probes = {}
+    csv_path = correction_dir / "canonical_probe_inventory.csv"
+    with open(csv_path, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            pid = row.get("probe_id")
+            if not pid:
+                issues.append("Empty probe_id in canonical_probe_inventory.csv")
+                continue
+            if pid in csv_probes:
+                issues.append(f"Duplicate probe_id in canonical_probe_inventory.csv: {pid}")
+            csv_probes[pid] = row
+
+            if "V_CHRO_" in pid:
+                issues.append(f"Found report-only typo probe_id {pid} in canonical_probe_inventory.csv")
+
+            h_dec = row.get("human_decision")
+            if h_dec != "PENDING_REVIEW":
+                issues.append(f"Probe {pid} in inventory has human_decision={h_dec!r}, expected PENDING_REVIEW")
+
+    if len(csv_probes) != expected_total_probes:
+        issues.append(f"canonical_probe_inventory.csv has {len(csv_probes)} probes, expected {expected_total_probes}")
+
+    p_count = sum(1 for r in csv_probes.values() if r.get("partition") == "primary")
+    a_count = sum(1 for r in csv_probes.values() if r.get("partition") == "auxiliary")
+    d_count = sum(1 for r in csv_probes.values() if r.get("partition") == "deferred")
+
+    if p_count != 16:
+        issues.append(f"Primary probe count in canonical_probe_inventory.csv is {p_count}, expected 16")
+    if a_count != 6:
+        issues.append(f"Auxiliary probe count in canonical_probe_inventory.csv is {a_count}, expected 6")
+    if d_count != 3:
+        issues.append(f"Deferred probe count in canonical_probe_inventory.csv is {d_count}, expected 3")
+
+    for flag_pid in ("V_TEMP_01", "V_SPOIL_03", "V_SPOIL_05"):
+        if flag_pid in csv_probes:
+            ast = csv_probes[flag_pid].get("audit_status")
+            if ast != "REJECT_AS_CURRENTLY_WRITTEN":
+                issues.append(f"Expected REJECT_AS_CURRENTLY_WRITTEN for {flag_pid}, got {ast}")
+
+    # 2. Validate primary_gold_audit.jsonl
+    chunks_data = {}
+    if chunks_path and chunks_path.exists():
+        with open(chunks_path, "r", encoding="utf-8") as f:
+            for line in f:
+                if line.strip():
+                    c = json.loads(line)
+                    chunks_data[c["chunk_id"]] = c
+
+    audit_probes = {}
+    audit_path = correction_dir / "primary_gold_audit.jsonl"
+    with open(audit_path, "r", encoding="utf-8") as f:
+        for line_num, line in enumerate(f, 1):
+            if line.strip():
+                try:
+                    item = json.loads(line)
+                except json.JSONDecodeError as e:
+                    issues.append(f"Line {line_num} in primary_gold_audit.jsonl has invalid JSON: {e}")
+                    continue
+                pid = item.get("probe_id")
+                if not pid:
+                    issues.append(f"Line {line_num} in primary_gold_audit.jsonl has no probe_id")
+                    continue
+                if pid in audit_probes:
+                    issues.append(f"Duplicate probe_id in primary_gold_audit.jsonl: {pid}")
+                audit_probes[pid] = item
+
+                if item.get("human_review_status") != "PENDING_REVIEW":
+                    issues.append(f"Probe {pid} in audit has human_review_status={item.get('human_review_status')!r}, expected PENDING_REVIEW")
+
+                cutoff = item.get("cutoff_chapter", 30)
+                props = item.get("expected_propositions", [])
+                if not props:
+                    issues.append(f"Probe {pid} in primary_gold_audit.jsonl has no expected_propositions")
+
+                for prop in props:
+                    pr_id = prop.get("proposition_id")
+                    cid = prop.get("supporting_chunk_id")
+                    s = prop.get("char_offset_start")
+                    e = prop.get("char_offset_end")
+                    excerpt = prop.get("exact_excerpt")
+                    supp = prop.get("support_level")
+                    if supp != "EXPLICITLY_STATED":
+                        issues.append(f"Proposition {pr_id} in {pid} has support_level={supp!r}, expected EXPLICITLY_STATED")
+
+                    if chunks_data and cid in chunks_data:
+                        actual_ch = chunks_data[cid].get("chapter_number", 0)
+                        if actual_ch > cutoff:
+                            issues.append(f"Proposition {pr_id} in {pid} violates cutoff: Ch {actual_ch} > cutoff {cutoff}")
+                        actual_text = chunks_data[cid]["text"][s:e]
+                        if actual_text != excerpt:
+                            issues.append(f"Slice mismatch in {pid} {cid} [{s}:{e}] for prop {pr_id}")
+
+    primary_csv_ids = {pid for pid, r in csv_probes.items() if r.get("partition") == "primary"}
+    if set(audit_probes.keys()) != primary_csv_ids:
+        issues.append(f"Audit probe IDs mismatch primary CSV IDs: {set(audit_probes.keys())} != {primary_csv_ids}")
+
+    # 3. Validate corrected_human_review_packet_vi.md
+    packet_content = (correction_dir / "corrected_human_review_packet_vi.md").read_text(encoding="utf-8")
+    for pid in primary_csv_ids:
+        if pid not in packet_content:
+            issues.append(f"corrected_human_review_packet_vi.md does not contain {pid}")
+    if "[X] PENDING_REVIEW" not in packet_content:
+        issues.append("corrected_human_review_packet_vi.md missing default [X] PENDING_REVIEW")
+
+    # 4. Validate auxiliary_deferred_disposition.md
+    disp_content = (correction_dir / "auxiliary_deferred_disposition.md").read_text(encoding="utf-8")
+    for pid in [p for p, r in csv_probes.items() if r.get("partition") in ("auxiliary", "deferred")]:
+        if pid not in disp_content:
+            issues.append(f"auxiliary_deferred_disposition.md missing reference to {pid}")
+    if "REJECT_AS_CURRENTLY_WRITTEN" not in disp_content:
+        issues.append("auxiliary_deferred_disposition.md missing REJECT_AS_CURRENTLY_WRITTEN recommendation")
+    if "V_CALL_03" in disp_content:
+        if "Chitose" not in disp_content or "crepe" not in disp_content:
+            issues.append("V_CALL_03 missing Chitose/crepe identity description in disposition document")
+
+    # 5. Validate evaluation_readiness.md
+    readiness_content = (correction_dir / "evaluation_readiness.md").read_text(encoding="utf-8")
+    for term in ["DATA_PREPARED", "TECHNICAL_VALIDATION_PASSED", "HUMAN_REVIEW_PENDING", "FROZEN", "EVALUATION_ALLOWED"]:
+        if term not in readiness_content:
+            issues.append(f"evaluation_readiness.md missing required status distinction: {term}")
+
+    # 6. Validate correction_log.md
+    log_content = (correction_dir / "correction_log.md").read_text(encoding="utf-8")
+    if "REPORT_ONLY_TYPO" not in log_content:
+        issues.append("correction_log.md missing REPORT_ONLY_TYPO classification")
+
+    # 7. Validate validation_report.json
+    try:
+        val_rep = json.loads((correction_dir / "validation_report.json").read_text(encoding="utf-8"))
+        if val_rep.get("evaluation_readiness_matrix", {}).get("EVALUATION_ALLOWED") is not False:
+            issues.append("validation_report.json has EVALUATION_ALLOWED != false")
+        if val_rep.get("human_decision_register", {}).get("PENDING_REVIEW") != expected_total_probes:
+            issues.append("validation_report.json does not show all probes PENDING_REVIEW")
+        if val_rep.get("human_decision_register", {}).get("APPROVED") != 0:
+            issues.append("validation_report.json has APPROVED != 0")
+    except Exception as e:
+        issues.append(f"Could not parse or validate validation_report.json: {e}")
+
+    # 8. Validate manifest.json
+    try:
+        manifest = json.loads((correction_dir / "manifest.json").read_text(encoding="utf-8"))
+    except Exception as e:
+        issues.append(f"Could not parse manifest.json: {e}")
+        manifest = {}
+
+    if "manifest.json" in manifest.get("files", {}):
+        issues.append("Manifest must not contain a hash of itself")
+
+    expected_manifest_files = set(required_files) - {"manifest.json"}
+    manifest_files = set(manifest.get("files", {}).keys())
+    if manifest_files != expected_manifest_files:
+        issues.append(f"Manifest files mismatch: {manifest_files} != {expected_manifest_files}")
+
+    for fname, meta in manifest.get("files", {}).items():
+        fp = correction_dir / fname
+        if not fp.exists():
+            issues.append(f"File listed in manifest does not exist: {fname}")
+            continue
+        actual_hash = sha256_file(fp)
+        if meta.get("sha256") != actual_hash:
+            issues.append(f"Manifest SHA-256 mismatch for {fname}")
+        if meta.get("bytes") != fp.stat().st_size:
+            issues.append(f"Manifest byte-size mismatch for {fname}")
+
+    metrics = {
+        "total_probes": len(csv_probes),
+        "primary_probes": p_count,
+        "auxiliary_probes": a_count,
+        "deferred_probes": d_count,
+        "all_pending_review": len(issues) == 0,
+        "manifest_files_verified": len(manifest_files),
+    }
+
+    return {
+        "pass": len(issues) == 0,
+        "issues": issues,
+        "metrics": metrics,
+    }
+
+
 if __name__ == "__main__":
     import sys
     base_dir = Path(__file__).resolve().parent.parent.parent

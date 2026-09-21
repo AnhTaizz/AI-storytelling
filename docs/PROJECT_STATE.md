@@ -333,11 +333,27 @@ M1-30CH-P-REVIEW-GATE — SOURCE-GROUNDED VALIDATION REVIEW & PRE-FREEZE BLOCKER
 - Extended validator with `validate_review_gate_deliverables()` and added regression unit tests in `tests/story_benchmark/test_validate_independent_validation_fixture_v1.py`.
 - Full relevant verification passed: 61 tests (fixture validator 20, frozen long-range validator 21, ingestion/corpus 20; all exit code 0).
 - Eight private deliverables packaged in `.local/story_integration/otonari_30ch/M1_30CH_P_REVIEW_GATE/` and `.local/story_integration/otonari_30ch/M1_30CH_P_REVIEW_GATE.zip` (SHA-256 `4d1c1cdcd4889415697603e8e056011aff97d749433b72b68ba83292e53e5ce0`). Zero private data leaked.
-- No retrieval experiment, model tuning, or Task Q evaluation executed.
+M1-30CH-P-PREFREEZE-CORRECTION — PRE-FREEZE EVIDENCE RECONCILIATION & FINAL REVIEW PACKAGE: EXECUTED — Fixture Status: PREPARED_PENDING_HUMAN_REVIEW
+- Investigated and resolved historical probe ID inconsistencies: all files on disk consistently use canonical `V_CHRONO_01` to `V_CHRONO_05`; earlier conversational references to `V_CHRO_01`/`03` and deferred `V_CHRO_02` classified as `REPORT_ONLY_TYPO`. Confirmed all 5 previous spot-checks were genuine primary probes (`V_CHRONO_01`, `V_CHRONO_02`, `V_REL_01`, `V_TEMP_02`, `V_SPOIL_01`).
+- Completed exhaustive source audit across all 16 genuine primary probes against the 30-chapter Japanese corpus (`PARAGRAPH_PACK_V1`, 97 chunks):
+  - 40/40 atomic propositions verified `EXPLICITLY_STATED` in source chunks with 100% exact character offset slice matches [start:end) (zero mismatches).
+  - Zero chapter cutoff violations; temporal ordering verified; relationship and boundary semantics accurately represented (Amane's unilateral statements vs mutual agreements).
+  - Counterfactual minimality verified for every required chunk (zero redundant padding chunks).
+  - Alternative evidence paths documented: adjacent scene chunk `ch013_c0003` for `V_CHRONO_01`; 15 remaining probes verified `NO_ALTERNATIVE_FOUND` within corpus boundaries.
+- Finalized auxiliary and deferred disposition:
+  - 3 hallucinated auxiliary probes (`V_TEMP_01` rolled cabbage, `V_SPOIL_03` pudding, `V_SPOIL_05` light bulb) designated `REJECT_AS_CURRENTLY_WRITTEN`; prohibited from entering primary benchmark.
+  - 3 valid auxiliary probes (`V_TEMP_04`, `V_TEMP_05`, `V_CALL_01`) retained in single-chunk auxiliary pool.
+  - Confirmed corrected identity of `V_CALL_03` (Chitose / plush teddy bear / station crepe advice; eliminated erroneous first-name description); held in deferred pool due to multi-gold evaluator constraints.
+  - All 25 human decision fields strictly preserved as `PENDING_REVIEW` (no automated approval).
+- Evaluator compatibility verified: existing `calculate_metrics` scored 16/16 primary probes consistently. Observed category distribution reported without forced quotas: CHRONOLOGY (5), RELATIONSHIP_PROGRESSION (4), CALLBACK (2), TEMPORAL_STATE (2), SPOILER_BOUNDARY (3).
+- Nine private deliverables created under `.local/story_integration/otonari_30ch/M1_30CH_P_PREFREEZE_CORRECTION/`: `canonical_probe_inventory.csv`, `primary_gold_audit.jsonl`, `corrected_human_review_packet_vi.md`, `auxiliary_deferred_disposition.md`, `evaluation_readiness.md`, `correction_log.md`, `validation_report.json`, `raw_test_log.txt`, `manifest.json`.
+- Private deliverables packaged as `.local/story_integration/otonari_30ch/M1_30CH_P_PREFREEZE_CORRECTION.zip` (SHA-256 `89c09b85fd01fe1a3ac88d056d149508ddbc2a0350910d8cb5e3067a206990a8`).
+- Public validator updated with `validate_prefreeze_correction_deliverables()` and unit tests added. Full relevant test suite passed: 63 tests (fixture validator 22, frozen long-range validator 21, ingestion/corpus 20; exit code 0; raw test log preserved).
+- Evaluation readiness discipline maintained: `DATA_PREPARED = true`, `TECHNICAL_VALIDATION_PASSED = true`, `HUMAN_REVIEW_PENDING = true`, `FROZEN = false`, `EVALUATION_ALLOWED = false`. Task Q evaluation remains strictly blocked.
 
 Private chunk text, probes, and review sheets remain LOCAL_ONLY. No LLM / embedding / retrieval external API performed.
 
 ## Next Candidate
 
-Human review and sign-off by the Product Owner on the 16 primary probes using `.local/story_integration/otonari_30ch/M1_30CH_P_REVIEW_GATE/review_packet_vi.md` (or from `M1_30CH_P_REVIEW_GATE.zip`), decision sign-off on `review_decisions.csv`, and resolution/rejection of the 3 flagged auxiliary hallucination probes before final fixture freeze. Do not start evaluation (Task Q) before human review sign-off and pre-freeze blockers are resolved.
+Human review and formal sign-off by the Product Owner on the 16 primary probes using `.local/story_integration/otonari_30ch/M1_30CH_P_PREFREEZE_CORRECTION/corrected_human_review_packet_vi.md` (or from `M1_30CH_P_PREFREEZE_CORRECTION.zip`), decision sign-off on `canonical_probe_inventory.csv`, and formal adoption of the `REJECT_AS_CURRENTLY_WRITTEN` recommendation for the 3 hallucinated auxiliary probes. Do not start evaluation (Task Q) before human review sign-off is complete and the fixture is officially frozen.
 

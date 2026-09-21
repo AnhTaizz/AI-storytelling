@@ -77,11 +77,13 @@ Following audit review, TASK M1-30CH-P-REPAIR, TASK M1-30CH-P-CORRECTION, and TA
 - **Automated Regression Prevention**: Validator checks span bounds, proposition-chunk mappings, partition coverage, all-`PENDING_REVIEW` status, draft/audit/review-packet synchronization, derived statistics, and artifact hashes.
 - **Deliverables Package**: The eight private review artifacts are packaged into `.local/story_integration/otonari_30ch/M1_30CH_P_SEMANTIC_FIX.zip` and the review gate package into `.local/story_integration/otonari_30ch/M1_30CH_P_REVIEW_GATE.zip`.
 - **Review Gate Audit (TASK M1-30CH-P-REVIEW-GATE)**:
-  - 16 primary probes verified 100% source-grounded with zero slice discrepancies, zero cutoff violations, and verified counterfactual necessity.
-  - Comprehensive human review packet prepared in Vietnamese (`review_packet_vi.md`) and decision register (`review_decisions.csv`) with all 25 probes holding `PENDING_REVIEW` status.
-  - 3 auxiliary probes (`V_TEMP_01`, `V_SPOIL_03`, `V_SPOIL_05`) flagged with critical factual hallucinations carried over from early drafts (rolled cabbage, pudding, light bulb - all completely absent from WN Ch 1-30).
-  - Multi-gold evaluator blocker formally analyzed in `multi_gold_feasibility.md` with mathematical formulation and backwards compatibility proof.
-  - 61 relevant tests passed (fixture validator 20, frozen long-range validator 21, ingestion/corpus 20).
+- **Prefreeze Correction & Canonical Audit (TASK M1-30CH-P-PREFREEZE-CORRECTION)**:
+  - Formally investigated and resolved probe ID inconsistency (`V_CHRO_01`/`03`/`02` vs canonical `V_CHRONO_01`..`05`); classified historical reporting discrepancies as `REPORT_ONLY_TYPO`. Confirmed all 5 previous spot-checks were genuine primary probes.
+  - Completed independent source audit across all 16 primary probes: 40/40 atomic propositions verified `EXPLICITLY_STATED`, 100% exact character slice identity, zero cutoff violations, confirmed counterfactual minimality.
+  - Finalized auxiliary and deferred disposition: 3 hallucinated auxiliary probes (`V_TEMP_01`, `V_SPOIL_03`, `V_SPOIL_05`) designated `REJECT_AS_CURRENTLY_WRITTEN`; 3 valid auxiliary probes retained in single-chunk pool; 3 deferred probes held in reserve (`V_CALL_02`, `V_REL_03`, and `V_CALL_03` with confirmed Chitose crepe/bear identity).
+  - Generated full 9-deliverable review package under `.local/story_integration/otonari_30ch/M1_30CH_P_PREFREEZE_CORRECTION/` and zip archive (`M1_30CH_P_PREFREEZE_CORRECTION.zip`).
+  - Strict status discipline: `DATA_PREPARED = true`, `TECHNICAL_VALIDATION_PASSED = true`, `HUMAN_REVIEW_PENDING = true`, `FROZEN = false`, `EVALUATION_ALLOWED = false` (Task Q evaluation remains strictly blocked).
+  - 63 relevant regression tests passed (fixture validator 22, frozen long-range validator 21, ingestion/corpus 20).
 
 Final fixture status remains `PREPARED_PENDING_HUMAN_REVIEW` until human annotators sign off on resolutions.
 
