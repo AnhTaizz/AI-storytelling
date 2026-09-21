@@ -351,9 +351,34 @@ M1-30CH-P-PREFREEZE-CORRECTION — PRE-FREEZE EVIDENCE RECONCILIATION & FINAL RE
 - Public validator updated with `validate_prefreeze_correction_deliverables()` and unit tests added. Full relevant test suite passed: 63 tests (fixture validator 22, frozen long-range validator 21, ingestion/corpus 20; exit code 0; raw test log preserved).
 - Evaluation readiness discipline maintained: `DATA_PREPARED = true`, `TECHNICAL_VALIDATION_PASSED = true`, `HUMAN_REVIEW_PENDING = true`, `FROZEN = false`, `EVALUATION_ALLOWED = false`. Task Q evaluation remains strictly blocked.
 
+M1-30CH-P-HUMAN-REVIEW-HANDOFF — MULTI-GOLD PROTOCOL RECONCILIATION, V_CHRONO_01 SOURCE AUDIT & HUMAN REVIEW HANDOFF: EXECUTED — Fixture Status: READY_FOR_HUMAN_REVIEW
+- Reconciled evaluation-protocol ambiguity:
+  - Addressed discrepancy between `INDEPENDENT_VALIDATION_FIXTURE_V1_SPEC.md` / `MANIFEST.yaml` (requiring multi-gold representation before final freeze) and recent proposals to freeze 16 single-gold primary probes.
+  - Documented protocol reconciliation in `protocol_reconciliation.md` as `PROPOSED` (awaiting Product Owner formal sign-off; no unilateral modification of pre-registered specifications).
+- In-depth source audit of suspected alternative evidence for `V_CHRONO_01`:
+  - Investigated adjacent chunk `ch013_c0003` (Mahiru spraining ankle at park, Amane lending hoodie, piggybacking her on the way home) against `ch013_c0004` (dropping her off at the apartment door).
+  - Evaluated against 4 strict criteria: (1) not merely contextual, (2) shares ongoing multi-passage action, (3) fully substitutes required evidence for the question, (4) forms a complete minimal alternative gold set: Gold Set 1 (`ch001_c0003`, `ch008_c0003`, `ch013_c0004`) and Gold Set 2 (`ch001_c0003`, `ch008_c0003`, `ch013_c0003`).
+  - Under single-gold scoring, returning Gold Set 2 yields Recall@10 = 0.6667 and Full Evidence Success@10 = 0 (artificial false negative).
+  - Officially designated `V_CHRONO_01` as `PRIMARY_FREEZE_BLOCKER`. Recommended either deferring `V_CHRONO_01` to freeze 15 strictly single-gold probes, or implementing multi-gold evaluation before freeze.
+- Semantic verification provenance and epistemic limits audit:
+  - Inspected code provenance for "40/40 atomic propositions = EXPLICITLY_STATED": confirmed 100% exact Unicode character offset slice match in `chunks.jsonl`, but clarified that the `EXPLICITLY_STATED` label was assigned by heuristic script convention rather than an automated semantic prover.
+  - Articulated epistemic boundaries across 4 levels: exact character slice match, manual semantic entailment, counterfactual minimality, and corpus-wide alternative search.
+- Produced 7 comprehensive human-review handoff deliverables in `.local/story_integration/otonari_30ch/M1_30CH_P_HUMAN_REVIEW_HANDOFF/`:
+  1. `protocol_reconciliation.md`
+  2. `v_chrono_01_alternative_audit.md`
+  3. `semantic_verification_provenance.md`
+  4. `human_review_guide_vi.md`
+  5. `human_decision_template.csv`
+  6. `readiness_and_blockers.md`
+  7. `manifest.json`
+- Human review package packaged into `.local/story_integration/otonari_30ch/M1_30CH_P_HUMAN_REVIEW_HANDOFF.zip` (SHA-256 `63ea3432525b9a956a27b3abeaad55548e97b6793a65bb006dcb586220950bb0`).
+- Validator extended with `validate_human_review_handoff_deliverables()` with flexible decision status validation; regression unit tests added; all 24 validator unit tests passed cleanly.
+- Evaluation readiness strictly maintained: `DATA_PREPARED = true`, `TECHNICAL_VALIDATION_PASSED = true`, `HUMAN_REVIEW_PENDING = true`, `FROZEN = false`, `EVALUATION_ALLOWED = false`. Task Q remains strictly blocked until Product Owner sign-off and blocker resolution.
+
 Private chunk text, probes, and review sheets remain LOCAL_ONLY. No LLM / embedding / retrieval external API performed.
 
 ## Next Candidate
 
-Human review and formal sign-off by the Product Owner on the 16 primary probes using `.local/story_integration/otonari_30ch/M1_30CH_P_PREFREEZE_CORRECTION/corrected_human_review_packet_vi.md` (or from `M1_30CH_P_PREFREEZE_CORRECTION.zip`), decision sign-off on `canonical_probe_inventory.csv`, and formal adoption of the `REJECT_AS_CURRENTLY_WRITTEN` recommendation for the 3 hallucinated auxiliary probes. Do not start evaluation (Task Q) before human review sign-off is complete and the fixture is officially frozen.
+Human review and formal sign-off by the Product Owner using `.local/story_integration/otonari_30ch/M1_30CH_P_HUMAN_REVIEW_HANDOFF/human_review_guide_vi.md` (or from `M1_30CH_P_HUMAN_REVIEW_HANDOFF.zip`), signing off decisions in `human_decision_template.csv`, formal adoption of `REJECT_AS_CURRENTLY_WRITTEN` for the 3 hallucinated auxiliary probes (`V_TEMP_01`, `V_SPOIL_03`, `V_SPOIL_05`), resolution of the `PRIMARY_FREEZE_BLOCKER` on `V_CHRONO_01` (Option 3A: defer `V_CHRONO_01` to freeze 15 strictly single-gold probes, or Option 3B: implement multi-gold evaluator before freeze), and approval of the `protocol_reconciliation.md` amendment. Do not start evaluation (Task Q) before human review sign-off is complete and the fixture is officially frozen.
+
 

@@ -14,6 +14,7 @@ from tools.story_benchmark.validate_independent_validation_fixture_v1 import (
     EXPECTED_PER_CATEGORY,
     EXPECTED_PROBE_COUNT,
     find_privacy_leaks_in_manifest,
+    validate_human_review_handoff_deliverables,
     validate_prefreeze_correction_deliverables,
     validate_review_artifact_bundle,
     validate_review_gate_deliverables,
@@ -639,6 +640,78 @@ class TestIndependentValidationFixtureValidator(unittest.TestCase):
             self.assertFalse(res_typo["pass"])
             self.assertTrue(any("report-only typo" in i for i in res_typo["issues"]))
 
+    def test_human_review_handoff_bundle_validates_cleanly(self):
+        handoff_dir = REPO_ROOT / ".local/story_integration/otonari_30ch/M1_30CH_P_HUMAN_REVIEW_HANDOFF"
+        if not handoff_dir.exists():
+            self.skipTest("M1_30CH_P_HUMAN_REVIEW_HANDOFF directory not found")
+
+        result = validate_human_review_handoff_deliverables(handoff_dir, expected_total_probes=25, require_all_pending=True)
+        self.assertTrue(result["pass"], f"Handoff bundle validation failed: {result.get('issues')}")
+        m = result["metrics"]
+        self.assertEqual(m["total_probes"], 25)
+        self.assertEqual(m["primary_probes"], 16)
+        self.assertEqual(m["auxiliary_probes"], 6)
+        self.assertEqual(m["deferred_probes"], 3)
+        self.assertEqual(m["status_distribution"]["PENDING_REVIEW"], 25)
+        self.assertTrue(m["v_chrono_01_blocker_flagged"])
+        self.assertFalse(m["evaluation_allowed"])
+        self.assertEqual(m["manifest_files_verified"], 6)
+
+    def test_detect_human_review_handoff_synthetic_errors(self):
+        with tempfile.TemporaryDirectory() as td:
+            tdp = Path(td)
+            res_missing = validate_human_review_handoff_deliverables(tdp, expected_total_probes=1)
+            self.assertFalse(res_missing["pass"])
+            self.assertTrue(any("Missing required human review handoff deliverable" in i for i in res_missing["issues"]))
+
+            # Create dummy deliverables
+            required_files = [
+                "protocol_reconciliation.md",
+                "v_chrono_01_alternative_audit.md",
+                "semantic_verification_provenance.md",
+                "human_review_guide_vi.md",
+                "human_decision_template.csv",
+                "readiness_and_blockers.md",
+                "manifest.json",
+            ]
+            for rf in required_files:
+                (tdp / rf).write_text("dummy", encoding="utf-8")
+
+            # Missing terms in markdown
+            res_bad_md = validate_human_review_handoff_deliverables(tdp, expected_total_probes=1)
+            self.assertFalse(res_bad_md["pass"])
+
+            # Fix markdown terms
+            (tdp / "protocol_reconciliation.md").write_text("PROPOSED MULTI_GOLD_PROTOCOL V_CHRONO_01", encoding="utf-8")
+            (tdp / "v_chrono_01_alternative_audit.md").write_text("ch013_c0003 ch013_c0004 PRIMARY_FREEZE_BLOCKER Tập Gold 1 Tập Gold 2", encoding="utf-8")
+            (tdp / "semantic_verification_provenance.md").write_text("EXPLICITLY_STATED Unicode chunks.jsonl 40", encoding="utf-8")
+            (tdp / "human_review_guide_vi.md").write_text("V_SYNTH_01 PENDING_REVIEW APPROVED", encoding="utf-8")
+            (tdp / "readiness_and_blockers.md").write_text("READY_FOR_HUMAN_REVIEW EVALUATION_ALLOWED = NO PRIMARY_FREEZE_BLOCKER", encoding="utf-8")
+
+            # CSV with report-only typo
+            csv_content = "probe_id,partition,category,cutoff,required_chunks,agent_recommendation,human_decision,decision_notes,signed_by,signed_date\n"
+            csv_content += "V_CHRO_01,primary,CHRONOLOGY,30,ch001_c0001,PRIMARY_FREEZE_BLOCKER,PENDING_REVIEW,notes,,\n"
+            (tdp / "human_decision_template.csv").write_text(csv_content, encoding="utf-8")
+
+            (tdp / "manifest.json").write_text(json.dumps({
+                "blocker_findings": {"v_chrono_01_status": "PRIMARY_FREEZE_BLOCKER", "evaluation_allowed": False},
+                "files": {}
+            }), encoding="utf-8")
+
+            res_typo = validate_human_review_handoff_deliverables(tdp, expected_total_probes=1)
+            self.assertFalse(res_typo["pass"])
+            self.assertTrue(any("Report-only typo" in i for i in res_typo["issues"]))
+
+            # CSV with invalid decision status
+            csv_bad_status = "probe_id,partition,category,cutoff,required_chunks,agent_recommendation,human_decision,decision_notes,signed_by,signed_date\n"
+            csv_bad_status += "V_SYNTH_01,primary,CHRONOLOGY,30,ch001_c0001,PRIMARY_FREEZE_BLOCKER,UNKNOWN_STATUS,notes,,\n"
+            (tdp / "human_decision_template.csv").write_text(csv_bad_status, encoding="utf-8")
+
+            res_bad_stat = validate_human_review_handoff_deliverables(tdp, expected_total_probes=1)
+            self.assertFalse(res_bad_stat["pass"])
+            self.assertTrue(any("invalid human_decision" in i for i in res_bad_stat["issues"]))
+
 
 if __name__ == "__main__":
     unittest.main()
+

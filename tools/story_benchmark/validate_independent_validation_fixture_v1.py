@@ -1034,6 +1034,204 @@ def validate_prefreeze_correction_deliverables(
     }
 
 
+def validate_human_review_handoff_deliverables(
+    handoff_dir: Path,
+    expected_total_probes: int = 25,
+    require_all_pending: bool = True,
+) -> Dict[str, Any]:
+    """Validates deliverables under M1_30CH_P_HUMAN_REVIEW_HANDOFF.
+
+    Checks:
+    - All 7 deliverables exist:
+        1. protocol_reconciliation.md
+        2. v_chrono_01_alternative_audit.md
+        3. semantic_verification_provenance.md
+        4. human_review_guide_vi.md
+        5. human_decision_template.csv
+        6. readiness_and_blockers.md
+        7. manifest.json
+    - human_decision_template.csv:
+        - exactly 25 probes partitioned into 16 primary, 6 auxiliary, 3 deferred.
+        - valid human_decision in VALID_ANNOTATION_STATUSES.
+        - if require_all_pending is True, all 25 must have human_decision == 'PENDING_REVIEW'.
+        - canonical probe IDs (no V_CHRO_ typos).
+        - auxiliary probes V_TEMP_01, V_SPOIL_03, V_SPOIL_05 have agent_recommendation containing REJECT_AS_CURRENTLY_WRITTEN.
+        - V_CHRONO_01 has agent_recommendation == 'PRIMARY_FREEZE_BLOCKER'.
+    - protocol_reconciliation.md:
+        - documents multi-gold protocol reconciliation and identifies status as PROPOSED.
+    - v_chrono_01_alternative_audit.md:
+        - contains 4-criteria audit for ch013_c0003 and ch013_c0004.
+        - classifies V_CHRONO_01 as PRIMARY_FREEZE_BLOCKER.
+        - specifies Gold Set 1 and Gold Set 2.
+    - semantic_verification_provenance.md:
+        - documents epistemic bounds and character-offset slice match mechanism.
+    - human_review_guide_vi.md:
+        - references all 25 probes and includes Vietnamese sign-off instructions.
+    - readiness_and_blockers.md:
+        - documents READY_FOR_HUMAN_REVIEW and EVALUATION_ALLOWED = NO.
+    - manifest.json:
+        - validates sha256 and byte sizes of all other 6 deliverables.
+        - does not contain itself.
+        - records blocker findings (v_chrono_01_status: PRIMARY_FREEZE_BLOCKER, evaluation_allowed: false).
+    """
+    issues: List[str] = []
+    required_files = [
+        "protocol_reconciliation.md",
+        "v_chrono_01_alternative_audit.md",
+        "semantic_verification_provenance.md",
+        "human_review_guide_vi.md",
+        "human_decision_template.csv",
+        "readiness_and_blockers.md",
+        "manifest.json",
+    ]
+    for rf in required_files:
+        fp = handoff_dir / rf
+        if not fp.exists():
+            issues.append(f"Missing required human review handoff deliverable: {rf}")
+
+    if issues:
+        return {"pass": False, "issues": issues, "metrics": {}}
+
+    # 1. Validate human_decision_template.csv
+    csv_probes = {}
+    csv_path = handoff_dir / "human_decision_template.csv"
+    with open(csv_path, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            pid = row.get("probe_id")
+            if not pid:
+                issues.append("Empty probe_id in human_decision_template.csv")
+                continue
+            if pid in csv_probes:
+                issues.append(f"Duplicate probe_id in human_decision_template.csv: {pid}")
+            if "V_CHRO_" in pid:
+                issues.append(f"Report-only typo found in human_decision_template.csv: {pid}")
+            csv_probes[pid] = row
+
+            status = row.get("human_decision")
+            if status not in VALID_ANNOTATION_STATUSES:
+                issues.append(
+                    f"Probe {pid} in human_decision_template.csv has invalid human_decision={status!r}, "
+                    f"must be in {sorted(VALID_ANNOTATION_STATUSES)}"
+                )
+            if require_all_pending and status != "PENDING_REVIEW":
+                issues.append(
+                    f"Probe {pid} in human_decision_template.csv has human_decision={status!r}, "
+                    "expected PENDING_REVIEW in initial handoff"
+                )
+
+    if len(csv_probes) != expected_total_probes:
+        issues.append(
+            f"human_decision_template.csv has {len(csv_probes)} probes, expected {expected_total_probes}"
+        )
+
+    p_count = sum(1 for r in csv_probes.values() if r.get("partition") == "primary")
+    a_count = sum(1 for r in csv_probes.values() if r.get("partition") == "auxiliary")
+    d_count = sum(1 for r in csv_probes.values() if r.get("partition") == "deferred")
+
+    if p_count != 16:
+        issues.append(f"Primary probe count in human_decision_template.csv is {p_count}, expected 16")
+    if a_count != 6:
+        issues.append(f"Auxiliary probe count in human_decision_template.csv is {a_count}, expected 6")
+    if d_count != 3:
+        issues.append(f"Deferred probe count in human_decision_template.csv is {d_count}, expected 3")
+
+    for rej_id in ("V_TEMP_01", "V_SPOIL_03", "V_SPOIL_05"):
+        if rej_id in csv_probes:
+            rec = csv_probes[rej_id].get("agent_recommendation", "")
+            if "REJECT_AS_CURRENTLY_WRITTEN" not in rec:
+                issues.append(f"Expected REJECT_AS_CURRENTLY_WRITTEN recommendation for {rej_id}, got {rec}")
+
+    if "V_CHRONO_01" in csv_probes:
+        rec = csv_probes["V_CHRONO_01"].get("agent_recommendation", "")
+        if "PRIMARY_FREEZE_BLOCKER" not in rec:
+            issues.append(f"Expected PRIMARY_FREEZE_BLOCKER recommendation for V_CHRONO_01, got {rec}")
+
+    # 2. Validate protocol_reconciliation.md
+    proto_text = (handoff_dir / "protocol_reconciliation.md").read_text(encoding="utf-8")
+    for req_term in ["PROPOSED", "MULTI_GOLD_PROTOCOL", "V_CHRONO_01"]:
+        if req_term not in proto_text:
+            issues.append(f"protocol_reconciliation.md missing required term: {req_term}")
+
+    # 3. Validate v_chrono_01_alternative_audit.md
+    chrono_text = (handoff_dir / "v_chrono_01_alternative_audit.md").read_text(encoding="utf-8")
+    for req_term in ["ch013_c0003", "ch013_c0004", "PRIMARY_FREEZE_BLOCKER", "Tập Gold 1", "Tập Gold 2"]:
+        if req_term not in chrono_text:
+            issues.append(f"v_chrono_01_alternative_audit.md missing required term: {req_term}")
+
+    # 4. Validate semantic_verification_provenance.md
+    sem_text = (handoff_dir / "semantic_verification_provenance.md").read_text(encoding="utf-8")
+    for req_term in ["EXPLICITLY_STATED", "Unicode", "chunks.jsonl", "40"]:
+        if req_term not in sem_text:
+            issues.append(f"semantic_verification_provenance.md missing required term: {req_term}")
+
+    # 5. Validate human_review_guide_vi.md
+    guide_text = (handoff_dir / "human_review_guide_vi.md").read_text(encoding="utf-8")
+    for pid in csv_probes:
+        if pid not in guide_text:
+            issues.append(f"human_review_guide_vi.md missing reference to {pid}")
+    if "PENDING_REVIEW" not in guide_text or "APPROVED" not in guide_text:
+        issues.append("human_review_guide_vi.md missing human decision instructions")
+
+    # 6. Validate readiness_and_blockers.md
+    readiness_text = (handoff_dir / "readiness_and_blockers.md").read_text(encoding="utf-8")
+    for req_term in ["READY_FOR_HUMAN_REVIEW", "EVALUATION_ALLOWED = NO", "PRIMARY_FREEZE_BLOCKER"]:
+        if req_term not in readiness_text:
+            issues.append(f"readiness_and_blockers.md missing required status marker: {req_term}")
+
+    # 7. Validate manifest.json
+    try:
+        manifest = json.loads((handoff_dir / "manifest.json").read_text(encoding="utf-8"))
+    except Exception as e:
+        issues.append(f"Could not parse manifest.json: {e}")
+        manifest = {}
+
+    if "manifest.json" in manifest.get("files", {}):
+        issues.append("Manifest must not contain a hash of itself")
+
+    expected_manifest_files = set(required_files) - {"manifest.json"}
+    manifest_files = set(manifest.get("files", {}).keys())
+    if manifest_files != expected_manifest_files:
+        issues.append(f"Manifest files mismatch: {manifest_files} != {expected_manifest_files}")
+
+    for fname, meta in manifest.get("files", {}).items():
+        fp = handoff_dir / fname
+        if not fp.exists():
+            issues.append(f"File listed in manifest does not exist: {fname}")
+            continue
+        actual_hash = sha256_file(fp)
+        if meta.get("sha256") != actual_hash:
+            issues.append(f"Manifest SHA-256 mismatch for {fname}")
+        if meta.get("bytes") != fp.stat().st_size:
+            issues.append(f"Manifest byte-size mismatch for {fname}")
+
+    blocker_findings = manifest.get("blocker_findings", {})
+    if blocker_findings.get("v_chrono_01_status") != "PRIMARY_FREEZE_BLOCKER":
+        issues.append("Manifest blocker_findings v_chrono_01_status != PRIMARY_FREEZE_BLOCKER")
+    if blocker_findings.get("evaluation_allowed") is not False:
+        issues.append("Manifest blocker_findings evaluation_allowed != false")
+
+    metrics = {
+        "total_probes": len(csv_probes),
+        "primary_probes": p_count,
+        "auxiliary_probes": a_count,
+        "deferred_probes": d_count,
+        "status_distribution": {
+            s: sum(1 for r in csv_probes.values() if r.get("human_decision") == s)
+            for s in sorted(VALID_ANNOTATION_STATUSES)
+        },
+        "v_chrono_01_blocker_flagged": "V_CHRONO_01" in csv_probes and "PRIMARY_FREEZE_BLOCKER" in csv_probes["V_CHRONO_01"].get("agent_recommendation", ""),
+        "evaluation_allowed": False,
+        "manifest_files_verified": len(manifest_files),
+    }
+
+    return {
+        "pass": len(issues) == 0,
+        "issues": issues,
+        "metrics": metrics,
+    }
+
+
 if __name__ == "__main__":
     import sys
     base_dir = Path(__file__).resolve().parent.parent.parent
