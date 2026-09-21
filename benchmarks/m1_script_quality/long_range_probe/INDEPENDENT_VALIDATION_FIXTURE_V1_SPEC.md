@@ -75,8 +75,13 @@ Following audit review, TASK M1-30CH-P-REPAIR, TASK M1-30CH-P-CORRECTION, and TA
 - **Actual Primary Structure**: 16 / 16 primary probes are multi-chunk and 13 / 16 are multi-chapter. These figures are derived from the artifact rather than treated as quotas.
 - **Verbatim Slice Verification**: 100% of character offset spans `[char_offset_start:char_offset_end)` in `source_gold_audit.jsonl` match raw text slices in `chunks.jsonl` with zero discrepancy.
 - **Automated Regression Prevention**: Validator checks span bounds, proposition-chunk mappings, partition coverage, all-`PENDING_REVIEW` status, draft/audit/review-packet synchronization, derived statistics, and artifact hashes.
-- **Deliverables Package**: The eight private review artifacts are packaged into `.local/story_integration/otonari_30ch/M1_30CH_P_SEMANTIC_FIX.zip`.
-- **Verification Scope**: 59 relevant tests passed (fixture validator 18, frozen long-range validator 21, ingestion/corpus 20). Retrieval/model experiment suites were not executed.
+- **Deliverables Package**: The eight private review artifacts are packaged into `.local/story_integration/otonari_30ch/M1_30CH_P_SEMANTIC_FIX.zip` and the review gate package into `.local/story_integration/otonari_30ch/M1_30CH_P_REVIEW_GATE.zip`.
+- **Review Gate Audit (TASK M1-30CH-P-REVIEW-GATE)**:
+  - 16 primary probes verified 100% source-grounded with zero slice discrepancies, zero cutoff violations, and verified counterfactual necessity.
+  - Comprehensive human review packet prepared in Vietnamese (`review_packet_vi.md`) and decision register (`review_decisions.csv`) with all 25 probes holding `PENDING_REVIEW` status.
+  - 3 auxiliary probes (`V_TEMP_01`, `V_SPOIL_03`, `V_SPOIL_05`) flagged with critical factual hallucinations carried over from early drafts (rolled cabbage, pudding, light bulb - all completely absent from WN Ch 1-30).
+  - Multi-gold evaluator blocker formally analyzed in `multi_gold_feasibility.md` with mathematical formulation and backwards compatibility proof.
+  - 61 relevant tests passed (fixture validator 20, frozen long-range validator 21, ingestion/corpus 20).
 
 Final fixture status remains `PREPARED_PENDING_HUMAN_REVIEW` until human annotators sign off on resolutions.
 
@@ -134,5 +139,6 @@ All private textual assets (probe questions, expected answers, chapter prose, in
 - `.local/story_integration/otonari_30ch/M1_30CH_P_REPAIR/`
 - `.local/story_integration/otonari_30ch/M1_30CH_P_CORRECTION/`
 - `.local/story_integration/otonari_30ch/M1_30CH_P_SEMANTIC_FIX/`
+- `.local/story_integration/otonari_30ch/M1_30CH_P_REVIEW_GATE/`
 
 This public specification contains only structural schemas, aggregate counts, audit findings, and protocol definitions.

@@ -324,9 +324,20 @@ M1_30CH_P_SEMANTIC_FIX — SOURCE SEMANTICS & REQUIRED-EVIDENCE REPAIR: EXECUTED
 - Relevant verification passed: fixture validator 18 tests, frozen long-range validator 21 tests, ingestion/corpus 20 tests (59 total, all exit 0). Corpus, segmentation artifacts, and LONG_RANGE_PROBE_V1 hashes remained unchanged.
 - Packaged private artifacts as `.local/story_integration/otonari_30ch/M1_30CH_P_SEMANTIC_FIX.zip` (SHA-256 `44fe92f9fffd6eb9f72382b51faad5c0239d024fbdc1072e73d9bb7f3a8e5f87`). No retrieval experiment, K/M/O evaluation, approval, or freeze was performed.
 
+M1-30CH-P-REVIEW-GATE — SOURCE-GROUNDED VALIDATION REVIEW & PRE-FREEZE BLOCKER RESOLUTION: EXECUTED — Fixture Status: PREPARED_PENDING_HUMAN_REVIEW
+- Independent source audit across all 25 probes against the full 30-chapter Japanese source (`PARAGRAPH_PACK_V1`, 97 chunks, 96,972 characters).
+- Verified 16 primary probes: 100% source-grounded with exact character offset slices [start, end), zero chapter cutoff violations, and confirmed counterfactual necessity (each chunk supplies an essential, non-redundant answer component).
+- Critical source finding in auxiliary pool: 3 of 6 auxiliary probes contain severe factual hallucinations carried over from early unverified drafts (V_TEMP_01 claims rolled cabbage in Ch 5; V_SPOIL_03 claims pudding in Ch 16; V_SPOIL_05 claims light bulb replacement in Ch 27; all three terms are completely absent from the 30-chapter Web Novel corpus). Flagged as NEEDS_REVISION / REJECTED in review decision register.
+- Formally analyzed the Multi-Gold Evaluator Blocker in `multi_gold_feasibility.md`: formulated schema representation, mathematical metrics (Hit, Recall, Full Evidence Success, MRR), and proved 100% backwards compatibility on single-gold benchmarks. Kept V_CALL_03 in deferred pool until evaluator implementation.
+- Prepared comprehensive human review packet in Vietnamese (`review_packet_vi.md`) and decision register (`review_decisions.csv`) covering all 25 probes with default status PENDING_REVIEW (no automated approval granted).
+- Extended validator with `validate_review_gate_deliverables()` and added regression unit tests in `tests/story_benchmark/test_validate_independent_validation_fixture_v1.py`.
+- Full relevant verification passed: 61 tests (fixture validator 20, frozen long-range validator 21, ingestion/corpus 20; all exit code 0).
+- Eight private deliverables packaged in `.local/story_integration/otonari_30ch/M1_30CH_P_REVIEW_GATE/` and `.local/story_integration/otonari_30ch/M1_30CH_P_REVIEW_GATE.zip` (SHA-256 `4d1c1cdcd4889415697603e8e056011aff97d749433b72b68ba83292e53e5ce0`). Zero private data leaked.
+- No retrieval experiment, model tuning, or Task Q evaluation executed.
+
 Private chunk text, probes, and review sheets remain LOCAL_ONLY. No LLM / embedding / retrieval external API performed.
 
 ## Next Candidate
 
-Human review of the semantic-fix draft using `.local/story_integration/otonari_30ch/M1_30CH_P_SEMANTIC_FIX/human_review_packet.md`, `draft_probes.yaml`, and `source_gold_audit.jsonl` (or from `M1_30CH_P_SEMANTIC_FIX.zip`). Sign off on primary probes and disposition auxiliary/deferred candidates before final fixture freeze. Do not start evaluation (Task Q) before human review approval is completed.
+Human review and sign-off by the Product Owner on the 16 primary probes using `.local/story_integration/otonari_30ch/M1_30CH_P_REVIEW_GATE/review_packet_vi.md` (or from `M1_30CH_P_REVIEW_GATE.zip`), decision sign-off on `review_decisions.csv`, and resolution/rejection of the 3 flagged auxiliary hallucination probes before final fixture freeze. Do not start evaluation (Task Q) before human review sign-off and pre-freeze blockers are resolved.
 

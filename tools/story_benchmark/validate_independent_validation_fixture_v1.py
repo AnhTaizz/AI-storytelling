@@ -11,6 +11,7 @@ Validates the 25-probe independent validation fixture:
 - corpus fingerprint integrity
 - privacy compliance
 """
+import csv
 import hashlib
 import json
 import os
@@ -637,6 +638,162 @@ def validate_review_artifact_bundle(
         "counts": audit_result.get("counts", {}),
         "metrics": derived,
         "probe_metrics": probe_result.get("metrics", {}),
+    }
+
+
+def validate_review_gate_deliverables(
+    gate_dir: Path,
+    expected_total_probes: int = 25,
+) -> Dict[str, Any]:
+    """Validate the 8 review gate deliverables in M1_30CH_P_REVIEW_GATE.
+
+    Checks:
+    - All 8 required deliverables exist:
+        1. review_packet_vi.md
+        2. review_decisions.csv
+        3. source_review_findings.jsonl
+        4. multi_gold_feasibility.md
+        5. prefreeze_readiness_report.md
+        6. validation_report.json
+        7. raw_test_log.txt
+        8. manifest.json
+    - review_decisions.csv has 25 probes, exactly partitioned (16 primary, 6 aux, 3 def),
+      and 100% PENDING_REVIEW status.
+    - source_review_findings.jsonl has 25 entries with valid audit verdicts.
+    - manifest.json covers all other 7 files with verified sha256 and byte sizes.
+    """
+    issues: List[str] = []
+    required_files = [
+        "review_packet_vi.md",
+        "review_decisions.csv",
+        "source_review_findings.jsonl",
+        "multi_gold_feasibility.md",
+        "prefreeze_readiness_report.md",
+        "validation_report.json",
+        "raw_test_log.txt",
+        "manifest.json",
+    ]
+    for rf in required_files:
+        fp = gate_dir / rf
+        if not fp.exists():
+            issues.append(f"Missing required review gate deliverable: {rf}")
+
+    if issues:
+        return {"pass": False, "issues": issues, "metrics": {}}
+
+    # 1. Validate review_decisions.csv
+    csv_probes = {}
+    csv_path = gate_dir / "review_decisions.csv"
+    with open(csv_path, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            pid = row.get("probe_id")
+            if not pid:
+                issues.append("Empty probe_id in review_decisions.csv")
+                continue
+            if pid in csv_probes:
+                issues.append(f"Duplicate probe_id in review_decisions.csv: {pid}")
+            csv_probes[pid] = row
+            status = row.get("decision_status")
+            if status != "PENDING_REVIEW":
+                issues.append(f"Probe {pid} in review_decisions.csv has status={status!r}, expected PENDING_REVIEW")
+
+    if len(csv_probes) != expected_total_probes:
+        issues.append(f"review_decisions.csv has {len(csv_probes)} probes, expected {expected_total_probes}")
+
+    p_count = sum(1 for r in csv_probes.values() if r.get("partition") == "primary")
+    a_count = sum(1 for r in csv_probes.values() if r.get("partition") == "auxiliary")
+    d_count = sum(1 for r in csv_probes.values() if r.get("partition") == "deferred")
+
+    if p_count != 16:
+        issues.append(f"Primary probe count in review_decisions.csv is {p_count}, expected 16")
+    if a_count != 6:
+        issues.append(f"Auxiliary probe count in review_decisions.csv is {a_count}, expected 6")
+    if d_count != 3:
+        issues.append(f"Deferred probe count in review_decisions.csv is {d_count}, expected 3")
+
+    # 2. Validate source_review_findings.jsonl
+    jsonl_probes = {}
+    jsonl_path = gate_dir / "source_review_findings.jsonl"
+    with open(jsonl_path, "r", encoding="utf-8") as f:
+        for line_num, line in enumerate(f, 1):
+            if line.strip():
+                try:
+                    item = json.loads(line)
+                except json.JSONDecodeError as e:
+                    issues.append(f"Line {line_num} in source_review_findings.jsonl has invalid JSON: {e}")
+                    continue
+                pid = item.get("probe_id")
+                if not pid:
+                    issues.append(f"Line {line_num} in source_review_findings.jsonl has no probe_id")
+                    continue
+                if pid in jsonl_probes:
+                    issues.append(f"Duplicate probe_id in source_review_findings.jsonl: {pid}")
+                jsonl_probes[pid] = item
+                if item.get("status") != "PENDING_REVIEW":
+                    issues.append(f"Probe {pid} in findings has status={item.get('status')!r}, expected PENDING_REVIEW")
+
+    if set(jsonl_probes.keys()) != set(csv_probes.keys()):
+        issues.append("Mismatch between probe IDs in CSV and JSONL findings")
+
+    # Check flagged auxiliary probes
+    for flag_pid in ("V_TEMP_01", "V_SPOIL_03", "V_SPOIL_05"):
+        if flag_pid in jsonl_probes:
+            verdict = jsonl_probes[flag_pid].get("agent_audit_verdict")
+            if verdict != "SOURCE_HALLUCINATION_DETECTED":
+                issues.append(f"Expected SOURCE_HALLUCINATION_DETECTED for {flag_pid}, got {verdict}")
+
+    # 3. Validate review_packet_vi.md content
+    packet_path = gate_dir / "review_packet_vi.md"
+    try:
+        packet_content = packet_path.read_text(encoding="utf-8")
+        for pid in csv_probes:
+            if pid not in packet_content:
+                issues.append(f"review_packet_vi.md does not contain reference to {pid}")
+    except Exception as e:
+        issues.append(f"Could not read review_packet_vi.md: {e}")
+
+    # 4. Validate manifest.json
+    manifest_path = gate_dir / "manifest.json"
+    try:
+        with open(manifest_path, "r", encoding="utf-8") as f:
+            manifest = json.load(f)
+    except Exception as e:
+        issues.append(f"Could not parse manifest.json: {e}")
+        manifest = {}
+
+    if "manifest.json" in manifest.get("files", {}):
+        issues.append("Manifest must not contain a hash of itself")
+
+    expected_files = set(required_files) - {"manifest.json"}
+    manifest_files = set(manifest.get("files", {}).keys())
+    if manifest_files != expected_files:
+        issues.append(f"Manifest file set mismatch: {manifest_files} != {expected_files}")
+
+    for fname, meta in manifest.get("files", {}).items():
+        fp = gate_dir / fname
+        if not fp.exists():
+            issues.append(f"File listed in manifest does not exist: {fname}")
+            continue
+        actual_hash = sha256_file(fp)
+        if meta.get("sha256") != actual_hash:
+            issues.append(f"Manifest SHA-256 mismatch for {fname}")
+        if meta.get("bytes") != fp.stat().st_size:
+            issues.append(f"Manifest byte-size mismatch for {fname}")
+
+    metrics = {
+        "total_probes": len(csv_probes),
+        "primary_probes": p_count,
+        "auxiliary_probes": a_count,
+        "deferred_probes": d_count,
+        "all_pending_review": len(issues) == 0,
+        "manifest_files_verified": len(manifest_files),
+    }
+
+    return {
+        "pass": len(issues) == 0,
+        "issues": issues,
+        "metrics": metrics,
     }
 
 

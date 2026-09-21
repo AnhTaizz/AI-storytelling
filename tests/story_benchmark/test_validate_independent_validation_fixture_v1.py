@@ -15,6 +15,7 @@ from tools.story_benchmark.validate_independent_validation_fixture_v1 import (
     EXPECTED_PROBE_COUNT,
     find_privacy_leaks_in_manifest,
     validate_review_artifact_bundle,
+    validate_review_gate_deliverables,
     validate_source_gold_audit_and_partitions,
     validate_validation_probes,
 )
@@ -535,6 +536,62 @@ class TestIndependentValidationFixtureValidator(unittest.TestCase):
             res = validate_source_gold_audit_and_partitions(draft_file, audit_file, aux_file, chunks_file, expected_total_probes=1)
             self.assertFalse(res["pass"])
             self.assertTrue(any("Cutoff violation in proposition P1" in issue for issue in res["issues"]))
+
+    def test_review_gate_bundle_validates_cleanly(self):
+        gate_dir = REPO_ROOT / ".local/story_integration/otonari_30ch/M1_30CH_P_REVIEW_GATE"
+        if not gate_dir.exists():
+            self.skipTest("M1_30CH_P_REVIEW_GATE directory not found")
+
+        # Skip if manifest is not yet generated in this step
+        if not (gate_dir / "manifest.json").exists():
+            self.skipTest("manifest.json not yet generated in review gate")
+
+        result = validate_review_gate_deliverables(gate_dir, expected_total_probes=25)
+        self.assertTrue(result["pass"], f"Review gate bundle failed: {result.get('issues')}")
+        self.assertEqual(result["metrics"]["total_probes"], 25)
+        self.assertEqual(result["metrics"]["primary_probes"], 16)
+        self.assertEqual(result["metrics"]["auxiliary_probes"], 6)
+        self.assertEqual(result["metrics"]["deferred_probes"], 3)
+
+    def test_detect_review_gate_synthetic_errors(self):
+        with tempfile.TemporaryDirectory() as td:
+            tdp = Path(td)
+            # Create incomplete directory (missing files)
+            res_missing = validate_review_gate_deliverables(tdp, expected_total_probes=1)
+            self.assertFalse(res_missing["pass"])
+            self.assertTrue(any("Missing required review gate deliverable" in i for i in res_missing["issues"]))
+
+            # Create all required dummy files
+            required_files = [
+                "review_packet_vi.md",
+                "review_decisions.csv",
+                "source_review_findings.jsonl",
+                "multi_gold_feasibility.md",
+                "prefreeze_readiness_report.md",
+                "validation_report.json",
+                "raw_test_log.txt",
+                "manifest.json",
+            ]
+            for rf in required_files:
+                (tdp / rf).write_text("dummy", encoding="utf-8")
+
+            (tdp / "source_review_findings.jsonl").write_text(
+                json.dumps({"probe_id": "V_SYNTH_01", "status": "PENDING_REVIEW"}) + "\n",
+                encoding="utf-8"
+            )
+            (tdp / "manifest.json").write_text(
+                json.dumps({"files": {}}),
+                encoding="utf-8"
+            )
+
+            # With invalid CSV content (non-PENDING_REVIEW status)
+            csv_content = "probe_id,partition,category,cutoff_chapter,required_chunk_ids,decision_status,reviewer_notes\n"
+            csv_content += "V_SYNTH_01,primary,CHRONOLOGY,30,ch001_c0001,APPROVED,notes\n"
+            (tdp / "review_decisions.csv").write_text(csv_content, encoding="utf-8")
+
+            res_bad_status = validate_review_gate_deliverables(tdp, expected_total_probes=1)
+            self.assertFalse(res_bad_status["pass"])
+            self.assertTrue(any("expected PENDING_REVIEW" in i for i in res_bad_status["issues"]))
 
 
 if __name__ == "__main__":
