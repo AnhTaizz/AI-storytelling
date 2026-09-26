@@ -13,7 +13,11 @@ from tools.story_benchmark.validate_independent_validation_fixture_v1 import (
     CATEGORIES,
     EXPECTED_PER_CATEGORY,
     EXPECTED_PROBE_COUNT,
+    find_private_validation_content,
     find_privacy_leaks_in_manifest,
+    sha256_file,
+    validate_final_freeze_candidate_bundle,
+    validate_human_signoff_artifact,
     validate_human_review_handoff_deliverables,
     validate_prefreeze_correction_deliverables,
     validate_review_artifact_bundle,
@@ -712,6 +716,285 @@ class TestIndependentValidationFixtureValidator(unittest.TestCase):
             self.assertTrue(any("invalid human_decision" in i for i in res_bad_stat["issues"]))
 
 
+class TestFinalFreezeCandidateWorkflow(unittest.TestCase):
+    FILES = {
+        "final_probe_inventory.csv",
+        "primary_semantic_audit.jsonl",
+        "alternative_evidence_audit.jsonl",
+        "v_chrono_01_deep_audit.md",
+        "protocol_reconciliation.md",
+        "semantic_verification_provenance.md",
+        "human_review_guide_vi.md",
+        "human_signoff_template.csv",
+        "freeze_candidate_readiness.md",
+        "validation_report.json",
+        "raw_test_log.txt",
+    }
+
+    def _refresh_manifest(self, root: Path) -> None:
+        files = {}
+        for name in sorted(self.FILES):
+            path = root / name
+            if path.exists():
+                files[name] = {"sha256": sha256_file(path), "bytes": path.stat().st_size}
+        (root / "manifest.json").write_text(
+            json.dumps({"files": files}, indent=2), encoding="utf-8"
+        )
+
+    def _make_package(self, root: Path) -> None:
+        inventory_header = (
+            "probe_id,partition,category,cutoff_chapter,required_chunk_ids,"
+            "proposition_count,semantic_audit_status,minimality_status,"
+            "alternative_evidence_status,agent_recommendation,human_decision,notes\n"
+        )
+        inventory_rows = [
+            "V_SYNTH_01,primary,CHRONOLOGY,3,synth_c0001;synth_c0002,1,PASS,MINIMAL,NO_ALTERNATIVE_FOUND,KEEP,PENDING_REVIEW,synthetic\n",
+            "V_SYNTH_02,auxiliary,TEMPORAL_STATE,3,synth_c0001,0,VALID_AUXILIARY,SINGLE_CHUNK,NOT_AUDITED,KEEP_AUXILIARY,PENDING_REVIEW,synthetic\n",
+            "V_SYNTH_03,deferred,CALLBACK,3,,0,DEFERRED,NOT_APPLICABLE,NOT_AUDITED,HOLD_DEFERRED,PENDING_REVIEW,synthetic\n",
+        ]
+        (root / "final_probe_inventory.csv").write_text(
+            inventory_header + "".join(inventory_rows), encoding="utf-8"
+        )
+        semantic = {
+            "probe_id": "V_SYNTH_01",
+            "propositions": [
+                {
+                    "proposition_id": "P1",
+                    "classification": "DIRECTLY_EXPLICIT",
+                    "rationale": "Synthetic source says the claim directly.",
+                }
+            ],
+        }
+        (root / "primary_semantic_audit.jsonl").write_text(
+            json.dumps(semantic) + "\n", encoding="utf-8"
+        )
+        alternative = {
+            "probe_id": "V_SYNTH_01",
+            "classification": "NO_ALTERNATIVE_FOUND",
+            "candidates": [],
+            "complete_alternative_gold_sets": [],
+        }
+        (root / "alternative_evidence_audit.jsonl").write_text(
+            json.dumps(alternative) + "\n", encoding="utf-8"
+        )
+        for name in (
+            "v_chrono_01_deep_audit.md",
+            "protocol_reconciliation.md",
+            "semantic_verification_provenance.md",
+            "human_review_guide_vi.md",
+            "freeze_candidate_readiness.md",
+            "raw_test_log.txt",
+        ):
+            (root / name).write_text("synthetic fixture metadata\n", encoding="utf-8")
+        signoff_header = (
+            "probe_id,partition,agent_recommendation,human_decision,human_notes,"
+            "reviewed_at,reviewer_role,source_package_sha256\n"
+        )
+        signoff_rows = [
+            "V_SYNTH_01,primary,KEEP,PENDING_REVIEW,,,,\n",
+            "V_SYNTH_02,auxiliary,KEEP_AUXILIARY,PENDING_REVIEW,,,,\n",
+            "V_SYNTH_03,deferred,HOLD_DEFERRED,PENDING_REVIEW,,,,\n",
+        ]
+        (root / "human_signoff_template.csv").write_text(
+            signoff_header + "".join(signoff_rows), encoding="utf-8"
+        )
+        (root / "validation_report.json").write_text(
+            json.dumps(
+                {
+                    "final_status": "READY_FOR_HUMAN_SIGNOFF",
+                    "task_q_executed": False,
+                    "evaluation_allowed": False,
+                }
+            ),
+            encoding="utf-8",
+        )
+        self._refresh_manifest(root)
+
+    def _validate(self, root: Path):
+        return validate_final_freeze_candidate_bundle(
+            root, expected_total_probes=3, expected_primary_probes=1
+        )
+
+    def _write_signed(self, path: Path, package_hash: str, missing_decision: bool = False) -> None:
+        header = (
+            "probe_id,partition,agent_recommendation,human_decision,human_notes,"
+            "reviewed_at,reviewer_role,source_package_sha256\n"
+        )
+        decisions = ["" if missing_decision else "APPROVED", "DEFERRED", "DEFERRED"]
+        rows = [
+            f"V_SYNTH_01,primary,KEEP,{decisions[0]},reviewed,2026-09-27T12:00:00+07:00,Product Owner,{package_hash}\n",
+            f"V_SYNTH_02,auxiliary,KEEP_AUXILIARY,{decisions[1]},reviewed,2026-09-27T12:00:00+07:00,Product Owner,{package_hash}\n",
+            f"V_SYNTH_03,deferred,HOLD_DEFERRED,{decisions[2]},reviewed,2026-09-27T12:00:00+07:00,Product Owner,{package_hash}\n",
+        ]
+        path.write_text(header + "".join(rows), encoding="utf-8")
+
+    def test_valid_unsigned_preparation_package(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self._make_package(root)
+            result = self._validate(root)
+            self.assertTrue(result["pass"], result["issues"])
+            self.assertTrue(result["metrics"]["freeze_candidate_gate_pass"])
+            self.assertFalse(result["metrics"]["human_signoff_complete"])
+
+    def test_ai_created_approved_status_is_rejected(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self._make_package(root)
+            template = root / "human_signoff_template.csv"
+            template.write_text(
+                template.read_text(encoding="utf-8").replace(
+                    "KEEP,PENDING_REVIEW", "KEEP,APPROVED", 1
+                ),
+                encoding="utf-8",
+            )
+            self._refresh_manifest(root)
+            result = self._validate(root)
+            self.assertFalse(result["pass"])
+            self.assertTrue(any("AI-created approval" in issue for issue in result["issues"]))
+
+    def test_valid_separate_human_signoff_is_accepted_and_hash_bound(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self._make_package(root)
+            package = root / "review-package.zip"
+            package.write_bytes(b"immutable synthetic review package")
+            signoff = root / "human_signoff.csv"
+            package_hash = sha256_file(package)
+            self._write_signed(signoff, package_hash)
+            result = validate_human_signoff_artifact(
+                signoff, root / "final_probe_inventory.csv", package
+            )
+            self.assertTrue(result["pass"], result["issues"])
+            self.assertEqual(result["metrics"]["source_package_sha256"], package_hash)
+
+    def test_stale_signoff_is_rejected_after_package_mutation(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self._make_package(root)
+            package = root / "review-package.zip"
+            package.write_bytes(b"version one")
+            signoff = root / "human_signoff.csv"
+            self._write_signed(signoff, sha256_file(package))
+            package.write_bytes(b"version two")
+            result = validate_human_signoff_artifact(
+                signoff, root / "final_probe_inventory.csv", package
+            )
+            self.assertFalse(result["pass"])
+            self.assertTrue(any("Stale or incorrect" in issue for issue in result["issues"]))
+
+    def test_missing_human_decision_is_rejected_when_signing(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self._make_package(root)
+            package = root / "review-package.zip"
+            package.write_bytes(b"review package")
+            signoff = root / "human_signoff.csv"
+            self._write_signed(signoff, sha256_file(package), missing_decision=True)
+            result = validate_human_signoff_artifact(
+                signoff, root / "final_probe_inventory.csv", package
+            )
+            self.assertFalse(result["pass"])
+            self.assertTrue(any("Missing or invalid human decision" in issue for issue in result["issues"]))
+
+    def test_invalid_probe_id_is_rejected(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self._make_package(root)
+            inventory = root / "final_probe_inventory.csv"
+            inventory.write_text(
+                inventory.read_text(encoding="utf-8").replace("V_SYNTH_01", "BAD", 1),
+                encoding="utf-8",
+            )
+            self._refresh_manifest(root)
+            result = self._validate(root)
+            self.assertFalse(result["pass"])
+            self.assertTrue(any("Invalid probe_id" in issue for issue in result["issues"]))
+
+    def test_duplicate_probe_and_partition_overlap_are_rejected(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self._make_package(root)
+            inventory = root / "final_probe_inventory.csv"
+            inventory.write_text(
+                inventory.read_text(encoding="utf-8")
+                + "V_SYNTH_01,deferred,CALLBACK,3,,0,DEFERRED,NOT_APPLICABLE,NOT_AUDITED,HOLD_DEFERRED,PENDING_REVIEW,overlap\n",
+                encoding="utf-8",
+            )
+            self._refresh_manifest(root)
+            result = self._validate(root)
+            self.assertFalse(result["pass"])
+            self.assertTrue(any("Duplicate probe_id" in issue for issue in result["issues"]))
+
+    def test_missing_primary_semantic_audit_is_rejected(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self._make_package(root)
+            (root / "primary_semantic_audit.jsonl").unlink()
+            result = self._validate(root)
+            self.assertFalse(result["pass"])
+            self.assertTrue(any("Missing required" in issue for issue in result["issues"]))
+
+    def test_unsupported_semantic_proposition_blocks_gate(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self._make_package(root)
+            audit = root / "primary_semantic_audit.jsonl"
+            row = json.loads(audit.read_text(encoding="utf-8"))
+            row["propositions"][0]["classification"] = "UNSUPPORTED"
+            audit.write_text(json.dumps(row) + "\n", encoding="utf-8")
+            (root / "validation_report.json").write_text(
+                json.dumps({"final_status": "FIX_REQUIRED", "task_q_executed": False, "evaluation_allowed": False}),
+                encoding="utf-8",
+            )
+            self._refresh_manifest(root)
+            result = self._validate(root)
+            self.assertTrue(result["pass"], result["issues"])
+            self.assertEqual(result["metrics"]["semantic_blockers"], 1)
+            self.assertFalse(result["metrics"]["freeze_candidate_gate_pass"])
+
+    def test_complete_alternative_gold_path_blocks_gate(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self._make_package(root)
+            audit = root / "alternative_evidence_audit.jsonl"
+            row = json.loads(audit.read_text(encoding="utf-8"))
+            row["classification"] = "COMPLETE_ALTERNATIVE_FOUND"
+            row["complete_alternative_gold_sets"] = [["synth_c0003", "synth_c0004"]]
+            audit.write_text(json.dumps(row) + "\n", encoding="utf-8")
+            (root / "validation_report.json").write_text(
+                json.dumps({"final_status": "FIX_REQUIRED", "task_q_executed": False, "evaluation_allowed": False}),
+                encoding="utf-8",
+            )
+            self._refresh_manifest(root)
+            result = self._validate(root)
+            self.assertTrue(result["pass"], result["issues"])
+            self.assertEqual(result["metrics"]["multi_gold_blockers"], 1)
+            self.assertFalse(result["metrics"]["freeze_candidate_gate_pass"])
+
+    def test_deferred_probe_does_not_contaminate_primary_gate(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self._make_package(root)
+            result = self._validate(root)
+            self.assertTrue(result["pass"], result["issues"])
+            self.assertEqual(result["metrics"]["deferred_probes"], 1)
+            self.assertEqual(result["metrics"]["multi_gold_blockers"], 0)
+            self.assertTrue(result["metrics"]["freeze_candidate_gate_pass"])
+
+    def test_private_fixture_content_is_detected_in_public_file(self):
+        with tempfile.TemporaryDirectory() as td:
+            public = Path(td) / "public.md"
+            public.write_text(
+                "probe V_SYNTH_01 uses synth prose \u65e5\u672c\u8a9e and ch001_c0001\n",
+                encoding="utf-8",
+            )
+            findings = find_private_validation_content([public])
+            self.assertEqual(len(findings), 1)
+            self.assertIn("Japanese prose", findings[0])
+            self.assertIn("private probe ID", findings[0])
+            self.assertIn("chunk ID", findings[0])
+
+
 if __name__ == "__main__":
     unittest.main()
-

@@ -1,8 +1,8 @@
 # INDEPENDENT_VALIDATION_FIXTURE_V1 Specification & Protocol
 
 ## Status
-**PREPARED_PENDING_HUMAN_REVIEW**  
-*(Drafted in TASK M1-30CH-P. Frozen evaluation protocol defined below. Retrieval execution prohibited until human review gate is passed).*
+**FIX_REQUIRED**
+*(Final pre-freeze validation found semantic and multi-gold blockers in the current primary population. Human sign-off is incomplete, the fixture is not frozen, and retrieval execution remains prohibited.)*
 
 ---
 
@@ -79,13 +79,19 @@ Following audit review, TASK M1-30CH-P-REPAIR, TASK M1-30CH-P-CORRECTION, and TA
 - **Review Gate Audit (TASK M1-30CH-P-REVIEW-GATE)**:
 - **Prefreeze Correction & Canonical Audit (TASK M1-30CH-P-PREFREEZE-CORRECTION)**:
   - Formally investigated and resolved probe ID inconsistency (`V_CHRO_01`/`03`/`02` vs canonical `V_CHRONO_01`..`05`); classified historical reporting discrepancies as `REPORT_ONLY_TYPO`. Confirmed all 5 previous spot-checks were genuine primary probes.
-  - Completed independent source audit across all 16 primary probes: 40/40 atomic propositions verified `EXPLICITLY_STATED`, 100% exact character slice identity, zero cutoff violations, confirmed counterfactual minimality.
+  - The prefreeze package reported 40/40 atomic propositions as `EXPLICITLY_STATED`, 100% exact character slice identity, zero cutoff violations, and confirmed counterfactual minimality. The later final audit determined that the semantic label was Agent-authored/copied rather than automatically entailed by the slice validator; see the correction below.
   - Finalized auxiliary and deferred disposition: 3 hallucinated auxiliary probes (`V_TEMP_01`, `V_SPOIL_03`, `V_SPOIL_05`) designated `REJECT_AS_CURRENTLY_WRITTEN`; 3 valid auxiliary probes retained in single-chunk pool; 3 deferred probes held in reserve (`V_CALL_02`, `V_REL_03`, and `V_CALL_03` with confirmed Chitose crepe/bear identity).
   - Generated full 9-deliverable review package under `.local/story_integration/otonari_30ch/M1_30CH_P_PREFREEZE_CORRECTION/` and zip archive (`M1_30CH_P_PREFREEZE_CORRECTION.zip`).
   - Strict status discipline: `DATA_PREPARED = true`, `TECHNICAL_VALIDATION_PASSED = true`, `HUMAN_REVIEW_PENDING = true`, `FROZEN = false`, `EVALUATION_ALLOWED = false` (Task Q evaluation remains strictly blocked).
   - 63 relevant regression tests passed (fixture validator 22, frozen long-range validator 21, ingestion/corpus 20).
 
-Final fixture status remains `PREPARED_PENDING_HUMAN_REVIEW` until human annotators sign off on resolutions.
+### Final validation correction (TASK M1-30CH-P-FINAL-VALIDATION-FREEZE-CANDIDATE)
+
+The final pre-freeze audit independently re-read all 40 primary propositions and neighboring source context. It found 34 directly explicit, 3 strongly entailed, 1 interpretive inference, 0 ambiguous, and 2 unsupported propositions. At probe level, 12 primary probes pass the technical audit, 2 need revision, and 2 are blocked. A corpus-wide, cutoff-constrained lexical and contextual audit found 4 probes with no complete alternative, 10 with partial alternatives, and 2 with complete alternative gold paths. Thus the current 16-probe primary population is not a valid freeze candidate for the single-gold evaluator.
+
+This correction does not erase the earlier report. It clarifies that exact offset/hash validation established mechanical identity, not semantic entailment. It also corrects an earlier deferred-probe rationale: the reviewed retrospective callback is self-contained rather than a second complete gold path; its continued deferral is based on overlap, not multi-gold.
+
+Current lifecycle state is `FIX_REQUIRED`. Human decisions remain pending, the fixture is not frozen, `EVALUATION_ALLOWED = false`, and Task Q has not been executed.
 
 ---
 
@@ -131,6 +137,8 @@ When human review is approved and evaluation commences, execution MUST adhere to
 
 - **Evaluator Limitation Blocker**:
   - The current evaluation harness evaluates against a single gold set. In cases where alternative valid evidence exists in the corpus, single-gold scoring introduces artificial false negatives. Resolving multi-gold scoring representation is an open prerequisite before freezing.
+  - A narrower rule has been recorded as `PROPOSED_PROTOCOL_REVISION_MULTI_GOLD_SCOPE` with status `PROPOSED_PENDING_PRODUCT_OWNER_APPROVAL`: a single-gold probe could participate only after the defined audit finds no complete alternative path, while probes with confirmed complete alternatives remain deferred until multi-gold support exists. This is a proposed protocol revision, not a reinterpretation of the original rule and not an approved decision.
+  - The current primary population fails under both the original rule and the proposed revision because two complete alternative paths are known.
 
 ---
 
@@ -142,5 +150,6 @@ All private textual assets (probe questions, expected answers, chapter prose, in
 - `.local/story_integration/otonari_30ch/M1_30CH_P_CORRECTION/`
 - `.local/story_integration/otonari_30ch/M1_30CH_P_SEMANTIC_FIX/`
 - `.local/story_integration/otonari_30ch/M1_30CH_P_REVIEW_GATE/`
+- `.local/story_integration/otonari_30ch/M1_30CH_P_FINAL_VALIDATION_FREEZE_CANDIDATE/`
 
 This public specification contains only structural schemas, aggregate counts, audit findings, and protocol definitions.

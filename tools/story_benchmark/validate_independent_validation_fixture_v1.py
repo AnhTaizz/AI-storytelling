@@ -33,6 +33,20 @@ CATEGORIES = [
 CORPUS_FINGERPRINT_SHA256 = "7f9bb8106d6d50acd2b3760738c0b8040f36ab547c2d2f7eade1ca0b9a827ff8"
 CHUNKS_JSONL_SHA256 = "10ef5681ad1b2db0882c150efa24804cd0fca56bb38e0ffb772d22494e1e40fb"
 VALID_ANNOTATION_STATUSES = {"PENDING_REVIEW", "APPROVED", "NEEDS_REVISION", "REJECTED"}
+VALID_HUMAN_DECISIONS = {"APPROVED", "NEEDS_REVISION", "REJECTED", "DEFERRED"}
+VALID_SEMANTIC_CLASSIFICATIONS = {
+    "DIRECTLY_EXPLICIT",
+    "STRONGLY_ENTAILED",
+    "INTERPRETIVE_INFERENCE",
+    "AMBIGUOUS",
+    "UNSUPPORTED",
+}
+VALID_ALTERNATIVE_CLASSIFICATIONS = {
+    "NO_ALTERNATIVE_FOUND",
+    "PARTIAL_ALTERNATIVE_FOUND",
+    "COMPLETE_ALTERNATIVE_FOUND",
+    "UNCERTAIN",
+}
 CHUNK_ID_RE = re.compile(r"ch\d{3}_c\d{4}")
 PROBE_ID_RE = re.compile(r"\bV_[A-Z]+_\d{2}\b")
 
@@ -1230,6 +1244,321 @@ def validate_human_review_handoff_deliverables(
         "issues": issues,
         "metrics": metrics,
     }
+
+
+def _read_csv_by_probe(path: Path, issues: List[str], label: str) -> Dict[str, Dict[str, str]]:
+    rows: Dict[str, Dict[str, str]] = {}
+    try:
+        with open(path, "r", encoding="utf-8", newline="") as f:
+            for line_number, row in enumerate(csv.DictReader(f), 2):
+                probe_id = (row.get("probe_id") or "").strip()
+                if not probe_id or not PROBE_ID_RE.fullmatch(probe_id):
+                    issues.append(f"Invalid probe_id {probe_id!r} in {label} line {line_number}")
+                    continue
+                if probe_id in rows:
+                    issues.append(f"Duplicate probe_id in {label}: {probe_id}")
+                    continue
+                rows[probe_id] = row
+    except Exception as exc:
+        issues.append(f"Could not parse {label}: {exc}")
+    return rows
+
+
+def _read_jsonl_by_probe(path: Path, issues: List[str], label: str) -> Dict[str, Dict[str, Any]]:
+    rows: Dict[str, Dict[str, Any]] = {}
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            for line_number, line in enumerate(f, 1):
+                if not line.strip():
+                    continue
+                try:
+                    row = json.loads(line)
+                except json.JSONDecodeError as exc:
+                    issues.append(f"Invalid JSON in {label} line {line_number}: {exc}")
+                    continue
+                probe_id = row.get("probe_id")
+                if not isinstance(probe_id, str) or not PROBE_ID_RE.fullmatch(probe_id):
+                    issues.append(f"Invalid probe_id {probe_id!r} in {label} line {line_number}")
+                    continue
+                if probe_id in rows:
+                    issues.append(f"Duplicate probe_id in {label}: {probe_id}")
+                    continue
+                rows[probe_id] = row
+    except Exception as exc:
+        issues.append(f"Could not parse {label}: {exc}")
+    return rows
+
+
+def validate_human_signoff_artifact(
+    signoff_path: Path,
+    inventory_path: Path,
+    source_package_path: Path,
+) -> Dict[str, Any]:
+    """Validate a separately authored human sign-off against an immutable package.
+
+    The signed CSV is intentionally outside the reviewed ZIP.  Every row must
+    bind to the exact ZIP SHA-256; changing the package makes the sign-off stale.
+    This function validates structure and binding only.  It never creates or
+    infers a human decision.
+    """
+    issues: List[str] = []
+    for path, label in (
+        (signoff_path, "human sign-off"),
+        (inventory_path, "probe inventory"),
+        (source_package_path, "source review package"),
+    ):
+        if not path.exists():
+            issues.append(f"Missing {label}: {path}")
+    if issues:
+        return {"pass": False, "issues": issues, "metrics": {}}
+
+    inventory = _read_csv_by_probe(inventory_path, issues, "probe inventory")
+    signoff = _read_csv_by_probe(signoff_path, issues, "human sign-off")
+    if set(signoff) != set(inventory):
+        issues.append(
+            "Human sign-off probe IDs do not exactly match the reviewed inventory: "
+            f"signoff={sorted(signoff)}, inventory={sorted(inventory)}"
+        )
+
+    package_sha256 = sha256_file(source_package_path)
+    for probe_id, row in signoff.items():
+        decision = (row.get("human_decision") or "").strip()
+        if decision not in VALID_HUMAN_DECISIONS:
+            issues.append(
+                f"Missing or invalid human decision for {probe_id}: {decision!r}; "
+                f"expected one of {sorted(VALID_HUMAN_DECISIONS)}"
+            )
+        if not (row.get("reviewed_at") or "").strip():
+            issues.append(f"Missing reviewed_at for {probe_id}")
+        if not (row.get("reviewer_role") or "").strip():
+            issues.append(f"Missing reviewer_role for {probe_id}")
+        bound_hash = (row.get("source_package_sha256") or "").strip().lower()
+        if bound_hash != package_sha256:
+            issues.append(
+                f"Stale or incorrect source_package_sha256 for {probe_id}: "
+                f"{bound_hash!r} != {package_sha256}"
+            )
+        inventory_row = inventory.get(probe_id, {})
+        if row.get("partition") != inventory_row.get("partition"):
+            issues.append(f"Partition mismatch for {probe_id} in human sign-off")
+        if row.get("agent_recommendation") != inventory_row.get("agent_recommendation"):
+            issues.append(f"Agent recommendation mismatch for {probe_id} in human sign-off")
+
+    return {
+        "pass": len(issues) == 0,
+        "issues": issues,
+        "metrics": {
+            "probe_count": len(signoff),
+            "source_package_sha256": package_sha256,
+            "complete_human_decisions": sum(
+                1
+                for row in signoff.values()
+                if (row.get("human_decision") or "").strip() in VALID_HUMAN_DECISIONS
+            ),
+        },
+    }
+
+
+def validate_final_freeze_candidate_bundle(
+    artifact_dir: Path,
+    expected_total_probes: int = 25,
+    expected_primary_probes: int = 16,
+) -> Dict[str, Any]:
+    """Validate the final *unsigned* preparation package and freeze-candidate gate.
+
+    A structurally valid package may truthfully have a failed scientific gate
+    (for example, unsupported propositions or complete alternative gold paths).
+    ``pass`` describes package integrity; ``freeze_candidate_gate_pass`` describes
+    whether the included technical evidence supports READY_FOR_HUMAN_SIGNOFF.
+    """
+    issues: List[str] = []
+    required_files = {
+        "final_probe_inventory.csv",
+        "primary_semantic_audit.jsonl",
+        "alternative_evidence_audit.jsonl",
+        "v_chrono_01_deep_audit.md",
+        "protocol_reconciliation.md",
+        "semantic_verification_provenance.md",
+        "human_review_guide_vi.md",
+        "human_signoff_template.csv",
+        "freeze_candidate_readiness.md",
+        "validation_report.json",
+        "raw_test_log.txt",
+        "manifest.json",
+    }
+    for name in sorted(required_files):
+        if not (artifact_dir / name).is_file():
+            issues.append(f"Missing required final freeze-candidate deliverable: {name}")
+    if issues:
+        return {"pass": False, "issues": issues, "metrics": {}}
+
+    inventory = _read_csv_by_probe(
+        artifact_dir / "final_probe_inventory.csv", issues, "final_probe_inventory.csv"
+    )
+    if len(inventory) != expected_total_probes:
+        issues.append(f"Inventory has {len(inventory)} probes, expected {expected_total_probes}")
+
+    partition_ids: Dict[str, set] = {"primary": set(), "auxiliary": set(), "deferred": set()}
+    for probe_id, row in inventory.items():
+        partition = (row.get("partition") or "").strip()
+        if partition not in partition_ids:
+            issues.append(f"Invalid partition {partition!r} for {probe_id}")
+            continue
+        partition_ids[partition].add(probe_id)
+        decision = (row.get("human_decision") or "").strip()
+        if decision not in {"", "PENDING_REVIEW"}:
+            issues.append(
+                f"AI preparation package contains a non-pending human decision for {probe_id}: {decision}"
+            )
+        chunks = [c for c in (row.get("required_chunk_ids") or "").split(";") if c]
+        if partition in {"primary", "auxiliary"} and not chunks:
+            issues.append(f"Missing required chunks for included probe {probe_id}")
+        if len(chunks) != len(set(chunks)):
+            issues.append(f"Duplicate required chunk in inventory for {probe_id}")
+
+    union_count = len(set().union(*partition_ids.values()))
+    summed_count = sum(len(ids) for ids in partition_ids.values())
+    if union_count != summed_count:
+        issues.append("Partition overlap detected in final probe inventory")
+    primary_ids = partition_ids["primary"]
+    if len(primary_ids) != expected_primary_probes:
+        issues.append(f"Primary partition has {len(primary_ids)} probes, expected {expected_primary_probes}")
+
+    semantic = _read_jsonl_by_probe(
+        artifact_dir / "primary_semantic_audit.jsonl", issues, "primary_semantic_audit.jsonl"
+    )
+    if set(semantic) != primary_ids:
+        issues.append("Missing primary semantic audit or audit IDs do not match primary inventory")
+    proposition_counts = {classification: 0 for classification in VALID_SEMANTIC_CLASSIFICATIONS}
+    semantic_blockers = 0
+    for probe_id, row in semantic.items():
+        propositions = row.get("propositions")
+        if not isinstance(propositions, list) or not propositions:
+            issues.append(f"No proposition-level semantic audit for {probe_id}")
+            continue
+        for proposition in propositions:
+            classification = proposition.get("classification")
+            if classification not in VALID_SEMANTIC_CLASSIFICATIONS:
+                issues.append(
+                    f"Invalid semantic classification {classification!r} in {probe_id}"
+                )
+                continue
+            proposition_counts[classification] += 1
+            if classification in {"AMBIGUOUS", "UNSUPPORTED"}:
+                semantic_blockers += 1
+
+    alternatives = _read_jsonl_by_probe(
+        artifact_dir / "alternative_evidence_audit.jsonl",
+        issues,
+        "alternative_evidence_audit.jsonl",
+    )
+    if set(alternatives) != primary_ids:
+        issues.append("Alternative-evidence audit IDs do not match primary inventory")
+    alternative_counts = {
+        classification: 0 for classification in VALID_ALTERNATIVE_CLASSIFICATIONS
+    }
+    multi_gold_blockers = 0
+    for probe_id, row in alternatives.items():
+        classification = row.get("classification")
+        if classification not in VALID_ALTERNATIVE_CLASSIFICATIONS:
+            issues.append(f"Invalid alternative-evidence classification {classification!r} in {probe_id}")
+            continue
+        alternative_counts[classification] += 1
+        if classification == "COMPLETE_ALTERNATIVE_FOUND":
+            multi_gold_blockers += 1
+            if not row.get("complete_alternative_gold_sets"):
+                issues.append(f"Complete alternative gold path not recorded for {probe_id}")
+
+    template = _read_csv_by_probe(
+        artifact_dir / "human_signoff_template.csv", issues, "human_signoff_template.csv"
+    )
+    if set(template) != set(inventory):
+        issues.append("Human sign-off template probe IDs do not match inventory")
+    for probe_id, row in template.items():
+        decision = (row.get("human_decision") or "").strip()
+        if decision not in {"", "PENDING_REVIEW"}:
+            issues.append(f"AI-created approval or decision in sign-off template for {probe_id}")
+        if (row.get("source_package_sha256") or "").strip():
+            issues.append(
+                f"Unsigned in-package template must leave source_package_sha256 blank for {probe_id}"
+            )
+
+    try:
+        report = json.loads((artifact_dir / "validation_report.json").read_text(encoding="utf-8"))
+    except Exception as exc:
+        issues.append(f"Could not parse validation_report.json: {exc}")
+        report = {}
+    if report.get("task_q_executed") is not False:
+        issues.append("validation_report.json must record task_q_executed=false")
+    if report.get("evaluation_allowed") is not False:
+        issues.append("validation_report.json must record evaluation_allowed=false")
+
+    try:
+        manifest = json.loads((artifact_dir / "manifest.json").read_text(encoding="utf-8"))
+    except Exception as exc:
+        issues.append(f"Could not parse manifest.json: {exc}")
+        manifest = {}
+    manifest_files = manifest.get("files", {})
+    expected_manifest_files = required_files - {"manifest.json"}
+    if set(manifest_files) != expected_manifest_files:
+        issues.append(
+            f"Manifest files mismatch: {sorted(manifest_files)} != {sorted(expected_manifest_files)}"
+        )
+    if "manifest.json" in manifest_files:
+        issues.append("Manifest must not hash itself")
+    for name, metadata in manifest_files.items():
+        path = artifact_dir / name
+        if not path.is_file():
+            continue
+        if metadata.get("sha256") != sha256_file(path):
+            issues.append(f"Manifest SHA-256 mismatch for {name}")
+        if metadata.get("bytes") != path.stat().st_size:
+            issues.append(f"Manifest byte-size mismatch for {name}")
+
+    freeze_candidate_gate_pass = semantic_blockers == 0 and multi_gold_blockers == 0
+    if report.get("final_status") == "READY_FOR_HUMAN_SIGNOFF" and not freeze_candidate_gate_pass:
+        issues.append("READY_FOR_HUMAN_SIGNOFF conflicts with recorded technical blockers")
+
+    return {
+        "pass": len(issues) == 0,
+        "issues": issues,
+        "metrics": {
+            "total_probes": len(inventory),
+            "primary_probes": len(primary_ids),
+            "auxiliary_probes": len(partition_ids["auxiliary"]),
+            "deferred_probes": len(partition_ids["deferred"]),
+            "proposition_classification_counts": proposition_counts,
+            "semantic_blockers": semantic_blockers,
+            "alternative_classification_counts": alternative_counts,
+            "multi_gold_blockers": multi_gold_blockers,
+            "human_signoff_complete": False,
+            "task_q_executed": False,
+            "freeze_candidate_gate_pass": freeze_candidate_gate_pass,
+        },
+    }
+
+
+def find_private_validation_content(public_paths: List[Path]) -> List[str]:
+    """Return public files containing private fixture-level content markers."""
+    findings: List[str] = []
+    japanese_re = re.compile(r"[\u3040-\u30ff\u3400-\u9fff]")
+    private_key_re = re.compile(
+        r"(?im)^\s*(question(?:_original)?|expected_answer(?:_original)?|exact_excerpt)\s*[:=]"
+    )
+    for path in public_paths:
+        text = path.read_text(encoding="utf-8")
+        markers = []
+        if japanese_re.search(text):
+            markers.append("Japanese prose")
+        if CHUNK_ID_RE.search(text):
+            markers.append("chunk ID")
+        if PROBE_ID_RE.search(text):
+            markers.append("private probe ID")
+        if private_key_re.search(text):
+            markers.append("private question/answer/excerpt field")
+        if markers:
+            findings.append(f"{path}: {', '.join(markers)}")
+    return findings
 
 
 if __name__ == "__main__":

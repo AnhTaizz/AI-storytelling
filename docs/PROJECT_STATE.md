@@ -377,8 +377,18 @@ M1-30CH-P-HUMAN-REVIEW-HANDOFF — MULTI-GOLD PROTOCOL RECONCILIATION, V_CHRONO_
 
 Private chunk text, probes, and review sheets remain LOCAL_ONLY. No LLM / embedding / retrieval external API performed.
 
+M1-30CH-P-FINAL-VALIDATION-FREEZE-CANDIDATE — EXECUTED — Fixture Status: FIX_REQUIRED
+- Independently rehashed the 30 raw chapters, paragraph pack, and required prior packages; all critical declared hashes matched.
+- Reconstructed 25 candidate probes from source data: 16 primary, 6 auxiliary, and 3 deferred. Human decisions remain pending.
+- Re-read all 40 primary propositions against source and neighboring context. Aggregate result: 34 directly explicit, 3 strongly entailed, 1 interpretive inference, 0 ambiguous, and 2 unsupported.
+- Probe-level result: 12 pass, 2 need revision, and 2 are blocked. All declared primary sets remain multi-evidence within their current wording, but one has a questionable context split.
+- Systematic non-retrieval alternative-evidence audit result: 4 with no complete alternative found, 10 with partial alternatives, 2 with complete alternative gold paths, and 0 uncertain. The two complete paths are primary freeze blockers for the current single-gold evaluator.
+- Corrected the historical claim that one deferred callback was multi-gold: its retrospective evidence is self-contained; continued deferral is justified by overlap, not a second complete gold path.
+- Recorded `PROPOSED_PROTOCOL_REVISION_MULTI_GOLD_SCOPE` as `PROPOSED_PENDING_PRODUCT_OWNER_APPROVAL`. The current population fails both the original global prerequisite and the proposed per-probe rule.
+- Added an unsigned, hash-bound human sign-off workflow and machine-checkable final-package validator. Package mutation makes a separate sign-off stale.
+- No retrieval, model scoring, Task Q, human approval, or fixture freeze was performed. `EVALUATION_ALLOWED = false`.
+
 ## Next Candidate
 
-Human review and formal sign-off by the Product Owner using `.local/story_integration/otonari_30ch/M1_30CH_P_HUMAN_REVIEW_HANDOFF/human_review_guide_vi.md` (or from `M1_30CH_P_HUMAN_REVIEW_HANDOFF.zip`), signing off decisions in `human_decision_template.csv`, formal adoption of `REJECT_AS_CURRENTLY_WRITTEN` for the 3 hallucinated auxiliary probes (`V_TEMP_01`, `V_SPOIL_03`, `V_SPOIL_05`), resolution of the `PRIMARY_FREEZE_BLOCKER` on `V_CHRONO_01` (Option 3A: defer `V_CHRONO_01` to freeze 15 strictly single-gold probes, or Option 3B: implement multi-gold evaluator before freeze), and approval of the `protocol_reconciliation.md` amendment. Do not start evaluation (Task Q) before human review sign-off is complete and the fixture is officially frozen.
-
+Repair or defer the four non-passing primary probes, resolve both complete-alternative paths, then regenerate the unsigned review package. The Product Owner must separately decide the proposed multi-gold protocol revision and all probe dispositions against the exact package hash. Do not start evaluation (Task Q) before a corrected technical gate passes, human review is complete, and a later explicit task freezes the fixture.
 

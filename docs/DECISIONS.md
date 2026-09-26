@@ -445,6 +445,26 @@ BOUNDARIES:
 
 ---
 
+## Proposed Research Protocol Decisions
+
+### PROPOSED_PROTOCOL_REVISION_MULTI_GOLD_SCOPE
+
+STATUS: PROPOSED_PENDING_PRODUCT_OWNER_APPROVAL
+
+PROPOSAL:
+A probe may participate in a frozen single-gold primary fixture only when the defined corpus-wide, cutoff-constrained evidence audit has found no complete alternative gold path. A probe with a confirmed complete alternative remains deferred until multi-gold representation and scoring are implemented and tested.
+
+CONTEXT:
+The published protocol currently makes multi-gold support an open prerequisite for fixture freeze. Final pre-freeze validation also found complete alternative paths inside the current primary population. Treating the narrower per-probe rule as if it had always applied would silently revise the protocol.
+
+IMPACT:
+This proposal changes eligibility of the evaluated population, not retrieval parameters, candidate depth, rank fusion, metric definitions, or thresholds. It was recorded before Task Q and before any validation retrieval result existed. Even if approved, the current primary population still requires repair or deferral of the affected probes.
+
+APPROVAL BOUNDARY:
+This entry records a proposal only. It is not accepted, does not authorize evaluation, and does not freeze the fixture. Product Owner approval is required in a separate action.
+
+---
+
 ## Open Technology Decisions
 
 The following technology choices are not frozen. They require dedicated technical decision records supported by empirical evidence or benchmarks before becoming project commitments.
