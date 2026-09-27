@@ -1,8 +1,8 @@
 # INDEPENDENT_VALIDATION_FIXTURE_V1 Specification & Protocol
 
 ## Status
-**FIX_REQUIRED**
-*(Final pre-freeze validation found semantic and multi-gold blockers in the current primary population. Human sign-off is incomplete, the fixture is not frozen, and retrieval execution remains prohibited.)*
+**READY_FOR_HUMAN_SIGNOFF**
+*(The four confirmed technical blockers are repaired and multi-gold scoring is implemented. Human sign-off is still incomplete, the fixture is not frozen, and retrieval execution remains prohibited.)*
 
 ---
 
@@ -41,12 +41,12 @@ The validation fixture accounts for **25 distinct probes** partitioned into:
   4. **TEMPORAL_STATE (2 probes)**: Determining precise narrative facts or arrangements held at a specific story cutoff.
   5. **SPOILER_BOUNDARY (3 probes)**: Answering inquiries under strict chapter cutoff constraints without leaking post-cutoff events.
 - **6 Auxiliary Single-Chunk Probes**: Probes verified as solvable from a single comprehensive passage (e.g. self-contained retrospective recall). Segregated into an auxiliary pool to preserve multi-evidence benchmark integrity.
-- **3 Deferred Probes**: Probes reserved due to intra-fixture duplicate evidence (1 probe), development-set overlap (1 probe), or multi-evidence ambiguity / evaluator single-gold limitations (1 probe).
+- **3 Deferred Probes**: Probes reserved due to intra-fixture duplicate evidence (1 probe), development-set overlap (1 probe), or semantic/benchmark overlap (1 probe). The last reason is explicitly not a multi-gold rationale.
 
 ### Probe Invariants
 - **Multi-Chunk Requirement**: 100% of primary validation probes (16 / 16) require at least two distinct evidence chunks (`requires_multi_chunk: true`).
-- **Multi-Chapter Span**: 100% of primary validation probes (16 / 16) span multiple chapters (`requires_multi_chapter: true`).
-- **Minimal Gold Evidence**: Only strictly necessary evidence chunks are designated as `required_evidence_chunk_ids`. Redundant or narrative padding chunks are excluded.
+- **Multi-Chapter Span**: 13 / 16 primary validation probes span multiple chapters; this is the observed repaired-fixture structure, not a forced quota.
+- **Minimal Gold Evidence**: Version 2 uses `gold_evidence_sets`, where every inner list is an independently complete minimal evidence path. Historical `required_evidence_chunk_ids` input normalizes to one set. Redundant or narrative-padding chunks are excluded.
 - **Strict Spoiler Cutoff**: For probes with `cutoff_chapter < 30`, all required chunks must satisfy `chapter_number <= cutoff_chapter`. Future chapters are strictly forbidden.
 - **Dedup / Independence**: Zero question overlap and zero identical required chunk sets relative to the original 15 `LONG_RANGE_PROBE_V1` probes.
 
@@ -91,7 +91,20 @@ The final pre-freeze audit independently re-read all 40 primary propositions and
 
 This correction does not erase the earlier report. It clarifies that exact offset/hash validation established mechanical identity, not semantic entailment. It also corrects an earlier deferred-probe rationale: the reviewed retrospective callback is self-contained rather than a second complete gold path; its continued deferral is based on overlap, not multi-gold.
 
-Current lifecycle state is `FIX_REQUIRED`. Human decisions remain pending, the fixture is not frozen, `EVALUATION_ALLOWED = false`, and Task Q has not been executed.
+At that audit stage the lifecycle state was `FIX_REQUIRED`; the targeted repair below supersedes that technical status without erasing the historical finding.
+
+### Blocker repair and multi-gold implementation
+
+The targeted blocker-repair task retained all 16 primary probes and changed only the four confirmed non-passing records. Two semantic formulations were narrowed to what the local source entails, including removal of an unsupported exact-date claim. Two chronology probes now declare all verified complete minimal evidence paths. The resulting 40-proposition audit contains 37 `DIRECTLY_EXPLICIT`, 3 `STRONGLY_ENTAILED`, 0 `INTERPRETIVE_INFERENCE`, 0 `AMBIGUOUS`, and 0 `UNSUPPORTED` propositions.
+
+The evaluator now normalizes both the v2 multi-gold representation and historical single-gold input through one shared implementation. For valid sets `G_i`, retrieved top-K set `R_K`, and union `U`:
+
+- Hit@K is 1 iff `R_K` intersects `U`.
+- Required Evidence Recall@K is `max_i |G_i ∩ R_K| / |G_i|`.
+- Full Evidence Success@K is 1 iff at least one `G_i` is a subset of `R_K`.
+- MRR is the reciprocal rank of the first retrieved member of `U`.
+
+The backward-compatibility regression compared Hit@1/5/10, Recall@1/5/10, Full Evidence Success@1/5/10, and MRR for all 16 historical single-gold primary structures: 160 / 160 metric values were exactly equal. The repaired primary population has 14 single-gold and 2 multi-gold probes. The technical package gate passes, but lifecycle state is only `READY_FOR_HUMAN_SIGNOFF`: human decisions remain pending, `FROZEN = false`, `EVALUATION_ALLOWED = false`, and Task Q has not been executed.
 
 ---
 
@@ -135,10 +148,10 @@ When human review is approved and evaluation commences, execution MUST adhere to
   - **Secondary Exploratory Designations**: All uncertainty analyses for Recall@10, Hit@10, and MRR are explicitly designated as **exploratory**. Non-significant differences shall not be construed or reported as demonstrating "equivalence".
   - **Zero Retrieval Execution**: No retrieval evaluation or model scoring is conducted in this fixture repair task.
 
-- **Evaluator Limitation Blocker**:
-  - The current evaluation harness evaluates against a single gold set. In cases where alternative valid evidence exists in the corpus, single-gold scoring introduces artificial false negatives. Resolving multi-gold scoring representation is an open prerequisite before freezing.
-  - A narrower rule has been recorded as `PROPOSED_PROTOCOL_REVISION_MULTI_GOLD_SCOPE` with status `PROPOSED_PENDING_PRODUCT_OWNER_APPROVAL`: a single-gold probe could participate only after the defined audit finds no complete alternative path, while probes with confirmed complete alternatives remain deferred until multi-gold support exists. This is a proposed protocol revision, not a reinterpretation of the original rule and not an approved decision.
-  - The current primary population fails under both the original rule and the proposed revision because two complete alternative paths are known.
+- **Multi-Gold Evaluator Resolution**:
+  - Multi-gold representation, validation, and scoring are implemented through a shared canonical normalizer. Empty sets, duplicate sets, and duplicate chunks within a set fail validation.
+  - Single-gold inputs retain exact historical metric behavior, while completion of any legitimate gold path is scored as complete.
+  - `PROPOSED_PROTOCOL_REVISION_MULTI_GOLD_SCOPE` was never approved and is preserved historically as `SUPERSEDED_UNAPPROVED_BY_MULTIGOLD_IMPLEMENTATION`. The original stricter prerequisite remains intact.
 
 ---
 
@@ -151,5 +164,6 @@ All private textual assets (probe questions, expected answers, chapter prose, in
 - `.local/story_integration/otonari_30ch/M1_30CH_P_SEMANTIC_FIX/`
 - `.local/story_integration/otonari_30ch/M1_30CH_P_REVIEW_GATE/`
 - `.local/story_integration/otonari_30ch/M1_30CH_P_FINAL_VALIDATION_FREEZE_CANDIDATE/`
+- `.local/story_integration/otonari_30ch/M1_30CH_P_BLOCKER_REPAIR_MULTIGOLD/`
 
 This public specification contains only structural schemas, aggregate counts, audit findings, and protocol definitions.

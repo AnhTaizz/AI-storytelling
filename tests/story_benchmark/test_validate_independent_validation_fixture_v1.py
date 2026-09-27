@@ -16,6 +16,7 @@ from tools.story_benchmark.validate_independent_validation_fixture_v1 import (
     find_private_validation_content,
     find_privacy_leaks_in_manifest,
     sha256_file,
+    validate_blocker_repair_multigold_bundle,
     validate_final_freeze_candidate_bundle,
     validate_human_signoff_artifact,
     validate_human_review_handoff_deliverables,
@@ -882,6 +883,40 @@ class TestFinalFreezeCandidateWorkflow(unittest.TestCase):
             )
             self.assertFalse(result["pass"])
             self.assertTrue(any("Stale or incorrect" in issue for issue in result["issues"]))
+
+    def test_v1_package_hash_signoff_is_stale_for_v2_package(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self._make_package(root)
+            package = root / "M1_30CH_P_BLOCKER_REPAIR_MULTIGOLD.zip"
+            package.write_bytes(b"immutable version-two package")
+            signoff = root / "human_signoff.csv"
+            old_v1_hash = (
+                "ff8833b9071d478ac2834535a184c1465150e71e5fb1a6c69ac5d6fc4c632c12"
+            )
+            self._write_signed(signoff, old_v1_hash)
+            result = validate_human_signoff_artifact(
+                signoff, root / "final_probe_inventory.csv", package
+            )
+            self.assertFalse(result["pass"])
+            self.assertTrue(any("Stale or incorrect" in issue for issue in result["issues"]))
+
+    def test_blocker_repair_multigold_bundle_validates_cleanly(self):
+        repair_dir = (
+            REPO_ROOT
+            / ".local/story_integration/otonari_30ch/M1_30CH_P_BLOCKER_REPAIR_MULTIGOLD"
+        )
+        if not repair_dir.exists():
+            self.skipTest("M1_30CH_P_BLOCKER_REPAIR_MULTIGOLD directory not found")
+        chunks = (
+            REPO_ROOT
+            / ".local/story_integration/otonari_30ch/PARAGRAPH_PACK_V1/chunks.jsonl"
+        )
+        result = validate_blocker_repair_multigold_bundle(repair_dir, chunks)
+        self.assertTrue(result["pass"], result["issues"])
+        self.assertTrue(result["metrics"]["technical_gate_pass"])
+        self.assertEqual(result["metrics"]["multi_gold_probes"], 2)
+        self.assertFalse(result["metrics"]["human_signoff_complete"])
 
     def test_missing_human_decision_is_rejected_when_signing(self):
         with tempfile.TemporaryDirectory() as td:

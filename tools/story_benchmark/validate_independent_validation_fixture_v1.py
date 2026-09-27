@@ -21,6 +21,11 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
 
+from tools.story_benchmark.multi_gold_metrics import (
+    GoldEvidenceValidationError,
+    normalize_gold_evidence_sets,
+)
+
 EXPECTED_PROBE_COUNT = 25
 EXPECTED_PER_CATEGORY = 5
 CATEGORIES = [
@@ -179,32 +184,44 @@ def validate_validation_probes(
         if cat == "SPOILER_BOUNDARY" and cutoff >= 30:
             issues.append(f"SPOILER_BOUNDARY probe must have cutoff_chapter < 30 in {pid}")
 
-        req = p.get("required_evidence_chunk_ids", [])
+        try:
+            gold_sets = normalize_gold_evidence_sets(p)
+        except GoldEvidenceValidationError as exc:
+            issues.append(f"Invalid gold evidence in {pid}: {exc}")
+            gold_sets = ()
+        req = list(dict.fromkeys(cid for gold_set in gold_sets for cid in gold_set))
         sup = p.get("supporting_evidence_chunk_ids", [])
 
         if not req:
-            issues.append(f"required_evidence_chunk_ids empty in {pid}")
-        if len(req) < 2:
-            issues.append(f"Validation probe {pid} must require at least 2 chunks, got {len(req)}")
-
-        if len(req) != len(set(req)):
-            issues.append(f"Duplicate chunk in required list in {pid}")
+            issues.append(f"gold evidence empty in {pid}")
+        for gold_index, gold_set in enumerate(gold_sets):
+            if len(gold_set) < 2:
+                issues.append(
+                    f"Validation probe {pid} gold set {gold_index} must require at least "
+                    f"2 chunks, got {len(gold_set)}"
+                )
         if len(sup) != len(set(sup)):
             issues.append(f"Duplicate chunk in supporting list in {pid}")
         if set(req).intersection(set(sup)):
             issues.append(f"Intersection between required and supporting evidence in {pid}")
 
         # Check required chunk set against original probes
-        req_set = set(req)
-        for idx, o_set in enumerate(orig_chunk_sets):
-            if req_set == o_set:
-                issues.append(f"Required evidence set in {pid} is identical to original probe index {idx}")
+        for gold_set in gold_sets:
+            for idx, o_set in enumerate(orig_chunk_sets):
+                if set(gold_set) == o_set:
+                    issues.append(
+                        f"Required evidence set in {pid} is identical to original probe index {idx}"
+                    )
 
         if check_intra_fixture_duplicates:
-            for seen_pid, seen_set in seen_val_chunk_sets.items():
-                if req_set == seen_set:
-                    issues.append(f"Intra-fixture duplicate required evidence set: {pid} duplicates {seen_pid}")
-            seen_val_chunk_sets[pid] = req_set
+            for gold_set in gold_sets:
+                current_set = set(gold_set)
+                for seen_pid, seen_set in seen_val_chunk_sets.items():
+                    if current_set == seen_set:
+                        issues.append(
+                            f"Intra-fixture duplicate required evidence set: {pid} duplicates {seen_pid}"
+                        )
+                seen_val_chunk_sets[f"{pid}#{len(seen_val_chunk_sets)}"] = current_set
 
         req_chapters = []
         for cid in req:
@@ -1534,6 +1551,256 @@ def validate_final_freeze_candidate_bundle(
             "human_signoff_complete": False,
             "task_q_executed": False,
             "freeze_candidate_gate_pass": freeze_candidate_gate_pass,
+        },
+    }
+
+
+def validate_blocker_repair_multigold_bundle(
+    artifact_dir: Path,
+    chunks_path: Optional[Path] = None,
+    expected_total_probes: int = 25,
+    expected_primary_probes: int = 16,
+) -> Dict[str, Any]:
+    """Validate the unsigned v2 repair package and its technical sign-off gate."""
+    issues: List[str] = []
+    required_files = {
+        "final_probe_inventory_v2.csv",
+        "repaired_primary_fixture.yaml",
+        "repair_audit.jsonl",
+        "primary_semantic_audit_v2.jsonl",
+        "multi_gold_schema.md",
+        "multi_gold_probe_audit.jsonl",
+        "human_review_guide_vi_v2.md",
+        "human_signoff_template_v2.csv",
+        "freeze_candidate_readiness_v2.md",
+        "validation_report.json",
+        "raw_test_log.txt",
+        "manifest.json",
+    }
+    for name in sorted(required_files):
+        if not (artifact_dir / name).is_file():
+            issues.append(f"Missing required blocker-repair deliverable: {name}")
+    if issues:
+        return {"pass": False, "issues": issues, "metrics": {}}
+
+    inventory = _read_csv_by_probe(
+        artifact_dir / "final_probe_inventory_v2.csv",
+        issues,
+        "final_probe_inventory_v2.csv",
+    )
+    if len(inventory) != expected_total_probes:
+        issues.append(f"Inventory has {len(inventory)} probes, expected {expected_total_probes}")
+    partition_ids: Dict[str, set] = {"primary": set(), "auxiliary": set(), "deferred": set()}
+    for probe_id, row in inventory.items():
+        partition = (row.get("partition") or "").strip()
+        if partition not in partition_ids:
+            issues.append(f"Invalid partition {partition!r} for {probe_id}")
+            continue
+        partition_ids[partition].add(probe_id)
+        if (row.get("human_decision") or "").strip() not in {"", "PENDING_REVIEW"}:
+            issues.append(f"AI-created human decision in inventory for {probe_id}")
+
+    primary_ids = partition_ids["primary"]
+    if len(primary_ids) != expected_primary_probes:
+        issues.append(f"Primary partition has {len(primary_ids)} probes, expected {expected_primary_probes}")
+
+    try:
+        fixture = yaml.safe_load(
+            (artifact_dir / "repaired_primary_fixture.yaml").read_text(encoding="utf-8")
+        ) or {}
+    except Exception as exc:
+        issues.append(f"Could not parse repaired_primary_fixture.yaml: {exc}")
+        fixture = {}
+    if fixture.get("gold_schema_version") != 2:
+        issues.append("repaired_primary_fixture.yaml must declare gold_schema_version: 2")
+    probes = fixture.get("probes") if isinstance(fixture.get("probes"), list) else []
+    fixture_by_id: Dict[str, Dict[str, Any]] = {}
+    for probe in probes:
+        probe_id = probe.get("probe_id")
+        if not isinstance(probe_id, str) or not PROBE_ID_RE.fullmatch(probe_id):
+            issues.append(f"Invalid probe_id {probe_id!r} in repaired primary fixture")
+            continue
+        if probe_id in fixture_by_id:
+            issues.append(f"Duplicate probe_id in repaired primary fixture: {probe_id}")
+            continue
+        fixture_by_id[probe_id] = probe
+    if set(fixture_by_id) != primary_ids:
+        issues.append("Repaired fixture IDs do not match primary inventory IDs")
+
+    chunk_meta: Dict[str, int] = {}
+    if chunks_path is not None:
+        if not chunks_path.is_file():
+            issues.append(f"Chunks file not found: {chunks_path}")
+        else:
+            try:
+                with open(chunks_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        if line.strip():
+                            chunk = json.loads(line)
+                            chunk_meta[chunk["chunk_id"]] = chunk["chapter_number"]
+            except Exception as exc:
+                issues.append(f"Could not parse chunks file: {exc}")
+
+    gold_sets_by_probe: Dict[str, Tuple[Tuple[str, ...], ...]] = {}
+    for probe_id, probe in fixture_by_id.items():
+        try:
+            gold_sets = normalize_gold_evidence_sets(probe)
+        except GoldEvidenceValidationError as exc:
+            issues.append(f"Invalid gold evidence in {probe_id}: {exc}")
+            continue
+        if "required_evidence_chunk_ids" in probe:
+            issues.append(f"V2 fixture must use only gold_evidence_sets in {probe_id}")
+        gold_sets_by_probe[probe_id] = gold_sets
+        cutoff = probe.get("cutoff_chapter")
+        if not isinstance(cutoff, int) or not 1 <= cutoff <= 30:
+            issues.append(f"Invalid cutoff_chapter {cutoff!r} in {probe_id}")
+            continue
+        for gold_set in gold_sets:
+            if len(gold_set) < 2:
+                issues.append(f"Primary gold set has fewer than two chunks in {probe_id}")
+            for chunk_id in gold_set:
+                if chunk_meta and chunk_id not in chunk_meta:
+                    issues.append(f"Unknown gold chunk {chunk_id} in {probe_id}")
+                elif chunk_meta and chunk_meta[chunk_id] > cutoff:
+                    issues.append(f"Gold chunk {chunk_id} exceeds cutoff in {probe_id}")
+        inventory_row = inventory.get(probe_id, {})
+        if (inventory_row.get("gold_schema_version") or "").strip() != "2":
+            issues.append(f"Inventory gold_schema_version mismatch for {probe_id}")
+        try:
+            inventory_set_count = int(inventory_row.get("gold_set_count") or "")
+        except ValueError:
+            inventory_set_count = -1
+        if inventory_set_count != len(gold_sets):
+            issues.append(f"Inventory gold_set_count mismatch for {probe_id}")
+
+    semantic = _read_jsonl_by_probe(
+        artifact_dir / "primary_semantic_audit_v2.jsonl",
+        issues,
+        "primary_semantic_audit_v2.jsonl",
+    )
+    if set(semantic) != primary_ids:
+        issues.append("V2 semantic audit IDs do not match primary inventory IDs")
+    proposition_counts = {classification: 0 for classification in VALID_SEMANTIC_CLASSIFICATIONS}
+    for probe_id, row in semantic.items():
+        propositions = row.get("propositions")
+        if not isinstance(propositions, list) or not propositions:
+            issues.append(f"No proposition-level semantic audit for {probe_id}")
+            continue
+        for proposition in propositions:
+            classification = proposition.get("classification")
+            if classification not in VALID_SEMANTIC_CLASSIFICATIONS:
+                issues.append(f"Invalid semantic classification {classification!r} in {probe_id}")
+                continue
+            proposition_counts[classification] += 1
+
+    repairs = _read_jsonl_by_probe(
+        artifact_dir / "repair_audit.jsonl", issues, "repair_audit.jsonl"
+    )
+    if len(repairs) != 4 or not set(repairs) <= primary_ids:
+        issues.append(
+            "repair_audit.jsonl must contain exactly four distinct primary probes"
+        )
+    for probe_id, row in repairs.items():
+        for proposition in row.get("final_propositions", []):
+            if proposition.get("classification") in {"AMBIGUOUS", "UNSUPPORTED"}:
+                issues.append(f"Unresolved repaired proposition in {probe_id}")
+
+    multi_gold = _read_jsonl_by_probe(
+        artifact_dir / "multi_gold_probe_audit.jsonl",
+        issues,
+        "multi_gold_probe_audit.jsonl",
+    )
+    expected_multi_gold_ids = {
+        probe_id for probe_id, sets in gold_sets_by_probe.items() if len(sets) > 1
+    }
+    if set(multi_gold) != expected_multi_gold_ids:
+        issues.append("Multi-gold audit IDs do not match multi-gold fixture probes")
+    for probe_id, row in multi_gold.items():
+        try:
+            recorded = normalize_gold_evidence_sets(
+                {"gold_evidence_sets": row.get("gold_evidence_sets")}
+            )
+        except GoldEvidenceValidationError as exc:
+            issues.append(f"Invalid multi-gold audit for {probe_id}: {exc}")
+            continue
+        if recorded != gold_sets_by_probe.get(probe_id):
+            issues.append(f"Multi-gold audit paths do not match fixture for {probe_id}")
+        if row.get("all_complete_alternative_paths_represented") is not True:
+            issues.append(f"Alternative paths not fully represented for {probe_id}")
+
+    template = _read_csv_by_probe(
+        artifact_dir / "human_signoff_template_v2.csv",
+        issues,
+        "human_signoff_template_v2.csv",
+    )
+    if set(template) != set(inventory):
+        issues.append("Human sign-off template IDs do not match inventory")
+    for probe_id, row in template.items():
+        if (row.get("human_decision") or "").strip() not in {"", "PENDING_REVIEW"}:
+            issues.append(f"AI-created approval or decision in sign-off template for {probe_id}")
+        if (row.get("source_package_sha256") or "").strip():
+            issues.append(f"Unsigned template must leave package hash blank for {probe_id}")
+
+    try:
+        report = json.loads((artifact_dir / "validation_report.json").read_text(encoding="utf-8"))
+    except Exception as exc:
+        issues.append(f"Could not parse validation_report.json: {exc}")
+        report = {}
+    expected_gates = {
+        "artifact_provenance_valid": True,
+        "primary_unsupported_propositions": 0,
+        "primary_ambiguous_propositions": 0,
+        "all_complete_alternative_paths_represented": True,
+        "multi_gold_schema_valid": True,
+        "single_gold_backward_compatibility_pass": True,
+        "all_primary_gold_sets_valid": True,
+        "privacy_pass": True,
+        "human_signoff_complete": False,
+        "frozen": False,
+        "evaluation_allowed": False,
+        "task_q_executed": False,
+    }
+    for field, expected in expected_gates.items():
+        if report.get(field) != expected:
+            issues.append(f"validation_report.json {field} must be {expected!r}")
+    technical_gate_pass = (
+        all(report.get(field) == expected for field, expected in expected_gates.items())
+        and proposition_counts["AMBIGUOUS"] == 0
+        and proposition_counts["UNSUPPORTED"] == 0
+    )
+    if report.get("final_status") != "READY_FOR_HUMAN_SIGNOFF":
+        issues.append("validation_report.json final_status must be READY_FOR_HUMAN_SIGNOFF")
+
+    try:
+        manifest = json.loads((artifact_dir / "manifest.json").read_text(encoding="utf-8"))
+    except Exception as exc:
+        issues.append(f"Could not parse manifest.json: {exc}")
+        manifest = {}
+    manifest_files = manifest.get("files", {})
+    expected_manifest_files = required_files - {"manifest.json"}
+    if set(manifest_files) != expected_manifest_files:
+        issues.append("Manifest file set does not match blocker-repair artifacts")
+    for name, metadata in manifest_files.items():
+        path = artifact_dir / name
+        if path.is_file() and metadata.get("sha256") != sha256_file(path):
+            issues.append(f"Manifest SHA-256 mismatch for {name}")
+        if path.is_file() and metadata.get("bytes") != path.stat().st_size:
+            issues.append(f"Manifest byte-size mismatch for {name}")
+
+    return {
+        "pass": len(issues) == 0,
+        "issues": issues,
+        "metrics": {
+            "total_probes": len(inventory),
+            "primary_probes": len(primary_ids),
+            "auxiliary_probes": len(partition_ids["auxiliary"]),
+            "deferred_probes": len(partition_ids["deferred"]),
+            "single_gold_probes": sum(len(sets) == 1 for sets in gold_sets_by_probe.values()),
+            "multi_gold_probes": sum(len(sets) > 1 for sets in gold_sets_by_probe.values()),
+            "proposition_classification_counts": proposition_counts,
+            "human_signoff_complete": False,
+            "task_q_executed": False,
+            "technical_gate_pass": technical_gate_pass,
         },
     }
 

@@ -3,6 +3,8 @@ import numpy as np
 from typing import List, Tuple, Set
 from sentence_transformers import SentenceTransformer
 
+from tools.story_benchmark.multi_gold_metrics import calculate_probe_metrics
+
 MMR_LAMBDA_V1 = 0.70
 
 def mmr_select(
@@ -176,27 +178,7 @@ class DenseE5MMRV1:
         return mmr_select(q_emb, candidate_embs, candidate_ids, lambda_param, k)
 
 def calculate_metrics(probe: dict, ranked_results: List[str]) -> dict:
-    req_ev = set(probe["required_evidence_chunk_ids"])
-    
-    metrics = {}
-    for k in [1, 3, 5, 10]:
-        top_k = ranked_results[:k]
-        hit = 1 if any(c in req_ev for c in top_k) else 0
-        recall = sum(1 for c in req_ev if c in top_k) / len(req_ev) if req_ev else 0
-        success = 1 if recall == 1.0 else 0
-        
-        metrics[f"hit@{k}"] = hit
-        metrics[f"recall@{k}"] = recall
-        metrics[f"success@{k}"] = success
-        
-    mrr = 0.0
-    for i, doc_id in enumerate(ranked_results):
-        if doc_id in req_ev:
-            mrr = 1.0 / (i + 1)
-            break
-            
-    metrics["mrr"] = mrr
-    return metrics
+    return calculate_probe_metrics(probe, ranked_results)
 
 def calculate_diversity_diagnostics(metrics_list: List[Tuple[dict, dict, List[Tuple[str, float]]]], chunk_meta: dict, doc_ids: List[str], doc_embeddings: np.ndarray) -> dict:
     """

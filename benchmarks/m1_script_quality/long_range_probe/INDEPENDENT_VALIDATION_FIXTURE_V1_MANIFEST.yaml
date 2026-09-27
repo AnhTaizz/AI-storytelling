@@ -1,6 +1,6 @@
 fixture_id: INDEPENDENT_VALIDATION_FIXTURE_V1
-fixture_version: 7
-status: FIX_REQUIRED
+fixture_version: 8
+status: READY_FOR_HUMAN_SIGNOFF
 source_corpus_id: otonari_no_tenshi_wn_jp_30ch
 corpus_fingerprint_sha256: 7f9bb8106d6d50acd2b3760738c0b8040f36ab547c2d2f7eade1ca0b9a827ff8
 passage_contract_id: OTONARI_LOCAL_PASSAGE_V1
@@ -46,7 +46,8 @@ dedup_audit_status:
   intra_fixture_duplicates_in_primary: 0
   deferred_intra_fixture_duplicates: 1
   deferred_dev_overlap_probes: 1
-  deferred_alternative_evidence_probes: 1
+  deferred_alternative_evidence_probes: 0
+  deferred_semantic_or_benchmark_overlap_probes: 2
 
 private_draft_hashes:
   draft_probes.yaml: 9f0051158231841b8a0feb4b90d5acfc7026ffbbc996001b36b6e521b2790480
@@ -117,9 +118,6 @@ intended_evaluation_methods:
   historical_context: DENSE_E5_LARGE_V1
 
 unresolved_blockers:
-  - "Four primary probes require repair or deferral before a freeze candidate can be presented."
-  - "Two primary probes have complete alternative evidence paths that the single-gold evaluator cannot score fairly."
-  - "Three auxiliary source hallucinations remain proposed as REJECT_AS_CURRENTLY_WRITTEN; Product Owner decision is pending."
   - "Human review must bind explicit decisions to the exact corrected package SHA-256 before any later freeze action."
 
 final_validation_audit:
@@ -167,3 +165,45 @@ private_final_validation_hashes:
   M1_30CH_P_FINAL_VALIDATION_FREEZE_CANDIDATE.zip: ff8833b9071d478ac2834535a184c1465150e71e5fb1a6c69ac5d6fc4c632c12
 
 privacy_status: PASS
+
+blocker_repair_multigold:
+  task_id: M1-30CH-P-BLOCKER-REPAIR-MULTIGOLD-FINAL-SIGNOFF-CANDIDATE
+  status: READY_FOR_HUMAN_SIGNOFF
+  technical_gate_pass: true
+  human_signoff_complete: false
+  frozen: false
+  evaluation_allowed: false
+  task_q_executed: false
+  primary_probe_count: 16
+  single_gold_primary: 14
+  multi_gold_primary: 2
+  proposition_classifications:
+    directly_explicit: 37
+    strongly_entailed: 3
+    interpretive_inference: 0
+    ambiguous: 0
+    unsupported: 0
+  backward_compatibility:
+    historical_single_gold_probes: 16
+    metric_values_compared: 160
+    exact_equality: true
+    k_values: [1, 5, 10]
+  protocol_status: MULTI_GOLD_EVALUATOR_SUPPORTED
+  prior_revision_status: SUPERSEDED_UNAPPROVED_BY_MULTIGOLD_IMPLEMENTATION
+  broader_suite_status: INCOMPLETE_DUE_TO_TIMEOUT
+  package_sha256: 15fbecac77b949d9743e38b80e831e79b283f45a3b76fe521d172d575eb4e301
+  superseded_package_sha256: ff8833b9071d478ac2834535a184c1465150e71e5fb1a6c69ac5d6fc4c632c12
+
+private_blocker_repair_multigold_hashes:
+  final_probe_inventory_v2.csv: 64af325a018e4dffee5daba5e32e5e7bb352a1288db3a1d7d94bc23c4d44da2d
+  repaired_primary_fixture.yaml: 322cf5f39e530ea44ea75e72dba1d130b5c3ddec04b83843d6e2994e6b868b01
+  repair_audit.jsonl: e706ca07b0175f2f70b0925ca4bd7a4828ee260ab564ae1ab1291ee620cf9139
+  primary_semantic_audit_v2.jsonl: a94bad7f614206a59bb2a7037ccde1f57b5c50105928e96c304bf60f53010cb4
+  multi_gold_schema.md: 32f174459409b8649fc1e46ac4bf8f1efc863db7f934e6fff8407c89ed21db08
+  multi_gold_probe_audit.jsonl: 34b9e16c44c4c2e434946b0ae5a96caad8aaa8441efa93d480e663095a4bf366
+  human_review_guide_vi_v2.md: 3f9efb5ea6309cc38a4ac8473a8cad76643710cfecface8bc5b20748430606e6
+  human_signoff_template_v2.csv: df32cc912561e54f922ea7a73105fb19449265f4ab574ee54b629cc3da3647c4
+  freeze_candidate_readiness_v2.md: d8bdfd7199ad0382069e764cccce870a48c5994bc0204c6104489eef7a04d634
+  validation_report.json: ab29bde07dc3555b3a12ae768a064cf48cfb2e7ad03e12ba077c5ca390a85dbf
+  raw_test_log.txt: 77964090f57656ee8430acb588a61d6c1e9daa59c020fbbfaf6be5226f60b483
+  M1_30CH_P_BLOCKER_REPAIR_MULTIGOLD.zip: 15fbecac77b949d9743e38b80e831e79b283f45a3b76fe521d172d575eb4e301

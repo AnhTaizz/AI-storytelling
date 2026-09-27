@@ -3,6 +3,8 @@ import numpy as np
 from typing import List, Dict, Tuple, Set
 from sentence_transformers import SentenceTransformer
 
+from tools.story_benchmark.multi_gold_metrics import calculate_probe_metrics
+
 def build_token_windows(text: str, tokenizer, content_window_tokens: int, stride: int) -> dict:
     encoded = tokenizer(text, return_offsets_mapping=True, add_special_tokens=False)
     input_ids = encoded["input_ids"]
@@ -294,24 +296,4 @@ class DenseE5WindowMaxV1:
         return ranked
 
 def calculate_metrics(probe: dict, ranked_results: List[str]) -> dict:
-    req_ev = set(probe["required_evidence_chunk_ids"])
-    
-    metrics = {}
-    for k in [1, 3, 5, 10]:
-        top_k = ranked_results[:k]
-        hit = 1 if any(c in req_ev for c in top_k) else 0
-        recall = sum(1 for c in req_ev if c in top_k) / len(req_ev) if req_ev else 0
-        success = 1 if recall == 1.0 else 0
-        
-        metrics[f"hit@{k}"] = hit
-        metrics[f"recall@{k}"] = recall
-        metrics[f"success@{k}"] = success
-        
-    mrr = 0.0
-    for i, doc_id in enumerate(ranked_results):
-        if doc_id in req_ev:
-            mrr = 1.0 / (i + 1)
-            break
-            
-    metrics["mrr"] = mrr
-    return metrics
+    return calculate_probe_metrics(probe, ranked_results)

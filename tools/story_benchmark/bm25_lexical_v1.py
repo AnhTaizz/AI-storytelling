@@ -3,6 +3,8 @@ import unicodedata
 from collections import Counter
 from typing import List, Dict, Tuple, Set
 
+from tools.story_benchmark.multi_gold_metrics import calculate_probe_metrics
+
 def is_japanese_char(c: str) -> bool:
     """
     Check if a character falls into common Japanese ranges:
@@ -115,33 +117,4 @@ class BM25LexicalV1:
         return ranked
 
 def calculate_metrics(probe: dict, ranked_results: List[str]) -> dict:
-    req_ev = set(probe["required_evidence_chunk_ids"])
-    cutoff = probe["cutoff_chapter"]
-    
-    metrics = {}
-    
-    # K values: 1, 3, 5, 10
-    for k in [1, 3, 5, 10]:
-        top_k = ranked_results[:k]
-        
-        hit = 1 if any(c in req_ev for c in top_k) else 0
-        recall = sum(1 for c in req_ev if c in top_k) / len(req_ev) if req_ev else 0
-        success = 1 if recall == 1.0 else 0
-        
-        # We need chunk metadata to determine spoiler violations.
-        # This will be passed from the runner logic or computed there.
-        # So we defer Spoiler Violation logic to the caller, or just pass a dict of chunk_meta.
-        
-        metrics[f"hit@{k}"] = hit
-        metrics[f"recall@{k}"] = recall
-        metrics[f"success@{k}"] = success
-        
-    # MRR calculation
-    mrr = 0.0
-    for i, doc_id in enumerate(ranked_results):
-        if doc_id in req_ev:
-            mrr = 1.0 / (i + 1)
-            break
-            
-    metrics["mrr"] = mrr
-    return metrics
+    return calculate_probe_metrics(probe, ranked_results)

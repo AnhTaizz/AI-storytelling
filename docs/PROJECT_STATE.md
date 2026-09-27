@@ -390,5 +390,18 @@ M1-30CH-P-FINAL-VALIDATION-FREEZE-CANDIDATE — EXECUTED — Fixture Status: FIX
 
 ## Next Candidate
 
-Repair or defer the four non-passing primary probes, resolve both complete-alternative paths, then regenerate the unsigned review package. The Product Owner must separately decide the proposed multi-gold protocol revision and all probe dispositions against the exact package hash. Do not start evaluation (Task Q) before a corrected technical gate passes, human review is complete, and a later explicit task freezes the fixture.
+M1-30CH-P-BLOCKER-REPAIR-MULTIGOLD — EXECUTED — Fixture Status: READY_FOR_HUMAN_SIGNOFF
 
+- Repaired the four confirmed blockers without running retrieval: two semantic formulations were narrowed to local-source entailment, including removal of an unsupported exact-date assertion, and two chronology probes now contain every verified complete minimal gold path.
+- Preserved 16 primary probes with observed category distribution: CHRONOLOGY 5, RELATIONSHIP_PROGRESSION 4, CALLBACK 2, TEMPORAL_STATE 2, SPOILER_BOUNDARY 3. The repaired fixture has 14 single-gold and 2 multi-gold primary probes.
+- Final proposition audit: 37 `DIRECTLY_EXPLICIT`, 3 `STRONGLY_ENTAILED`, 0 `INTERPRETIVE_INFERENCE`, 0 `AMBIGUOUS`, and 0 `UNSUPPORTED`.
+- Implemented one canonical multi-gold normalizer and shared metric calculator. Hit and MRR use the union of valid evidence; Recall uses the best-compatible valid path; Full Evidence Success accepts completion of any valid path.
+- Proved exact single-gold compatibility across all 16 historical primary structures: 160 / 160 values equal for Hit@1/5/10, Recall@1/5/10, Full Evidence Success@1/5/10, and MRR.
+- Marked the unapproved narrower protocol proposal `SUPERSEDED_UNAPPROVED_BY_MULTIGOLD_IMPLEMENTATION`; the original stricter prerequisite remains intact.
+- Focused validation passed (7 multi-gold metric tests, 38 fixture-validator tests, 21 frozen long-range validator tests, and 20 ingestion/corpus tests). The broader story-benchmark discovery was attempted and is recorded `INCOMPLETE_DUE_TO_TIMEOUT` after 180 seconds, not PASS.
+- Generated a new LOCAL_ONLY unsigned package at `.local/story_integration/otonari_30ch/M1_30CH_P_BLOCKER_REPAIR_MULTIGOLD.zip`, SHA-256 `15fbecac77b949d9743e38b80e831e79b283f45a3b76fe521d172d575eb4e301`. The old v1 package/sign-off hash is stale for this lifecycle.
+- No retrieval, embeddings, reranker scoring, K/M/O execution, Task Q, human approval, or fixture freeze occurred. `HUMAN_REVIEW_PENDING = true`, `FROZEN = false`, and `EVALUATION_ALLOWED = false`.
+
+## Next Candidate
+
+The Product Owner must review the corrected private evidence and create a separate sign-off artifact bound to the exact v2 ZIP SHA-256. Do not freeze the fixture or start Task Q until that human sign-off is complete and a later explicit freeze action succeeds.

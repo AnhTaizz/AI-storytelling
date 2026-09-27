@@ -449,7 +449,7 @@ BOUNDARIES:
 
 ### PROPOSED_PROTOCOL_REVISION_MULTI_GOLD_SCOPE
 
-STATUS: PROPOSED_PENDING_PRODUCT_OWNER_APPROVAL
+STATUS: SUPERSEDED_UNAPPROVED_BY_MULTIGOLD_IMPLEMENTATION
 
 PROPOSAL:
 A probe may participate in a frozen single-gold primary fixture only when the defined corpus-wide, cutoff-constrained evidence audit has found no complete alternative gold path. A probe with a confirmed complete alternative remains deferred until multi-gold representation and scoring are implemented and tested.
@@ -461,7 +461,10 @@ IMPACT:
 This proposal changes eligibility of the evaluated population, not retrieval parameters, candidate depth, rank fusion, metric definitions, or thresholds. It was recorded before Task Q and before any validation retrieval result existed. Even if approved, the current primary population still requires repair or deferral of the affected probes.
 
 APPROVAL BOUNDARY:
-This entry records a proposal only. It is not accepted, does not authorize evaluation, and does not freeze the fixture. Product Owner approval is required in a separate action.
+This entry records a historical proposal only. It was never accepted, does not authorize evaluation, and does not freeze the fixture.
+
+RESOLUTION:
+The project implemented the original stricter multi-gold prerequisite before Task Q. The evaluator now supports alternative complete minimal evidence sets with exact single-gold backward compatibility. Because the technical limitation was removed, this narrower relaxation is superseded without approval. Human sign-off and an explicit later freeze action remain required.
 
 ---
 
