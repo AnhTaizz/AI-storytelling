@@ -404,4 +404,18 @@ M1-30CH-P-BLOCKER-REPAIR-MULTIGOLD — EXECUTED — Fixture Status: READY_FOR_HU
 
 ## Next Candidate
 
-The Product Owner must review the corrected private evidence and create a separate sign-off artifact bound to the exact v2 ZIP SHA-256. Do not freeze the fixture or start Task Q until that human sign-off is complete and a later explicit freeze action succeeds.
+M1-30CH-P-SIGNOFF-PACKAGE-CONSISTENCY-REPAIR — EXECUTED — Fixture Status: READY_FOR_HUMAN_SIGNOFF
+
+- Correction to the previous entry: the v2 package was not sign-off ready. Its evaluated fixture and its review artifacts came from different lineages. For 9 of 16 primary probes, the question and expected answer that Task Q would evaluate differed from the text shown to the reviewer (36 field mismatches across semantic audit and review guide).
+- A new structural audit of v2 also found 21 defects: one probe whose gold set omitted a chunk essential to its reviewed answer (a partial retrieval would have scored Full Evidence Success), two multi-gold probes whose alternative path did not support a proposition as worded, stale or missing minimality records, and 13 evidence excerpts truncated below the span their offsets declared.
+- Established one canonical source of truth per primary probe (question, answer, propositions, proposition support, gold sets). Semantic audit, review guide, inventory, and sign-off template are now generated projections; evaluation facts are derived from propositions.
+- Added a proposition-support model: each proposition lists the chunks that independently support it, and gold sets must equal the minimal hitting sets of that support. This single rule enforces coverage, minimality, and complete alternative-path representation for single- and multi-gold probes.
+- Added validator checks for exact fixture/audit/guide/inventory equality, excerpt-equals-source-slice, stale minimality, and derived facts, with synthetic regression tests (19).
+- Source-verified repairs narrowed several propositions and answers to what the source states, and reclassified two hedged claims from explicit to strongly entailed. Final proposition audit: 35 `DIRECTLY_EXPLICIT`, 5 `STRONGLY_ENTAILED`, 0 `INTERPRETIVE_INFERENCE`, 0 `AMBIGUOUS`, 0 `UNSUPPORTED`. Population unchanged: 16 primary (14 single-gold, 2 multi-gold).
+- Tests: 19 consistency, 38 fixture-validator, 7 multi-gold, 21 frozen long-range, 20 ingestion; the full story-benchmark discovery completed (264 / 264).
+- New LOCAL_ONLY unsigned package `.local/story_integration/otonari_30ch/M1_30CH_P_SIGNOFF_CONSISTENCY_REPAIR.zip`, SHA-256 `fcd147eb57c7b8ab9500c85ad633436524b96a014aa4ef8b68dfdfbf9d4515a6`. The v2 hash `15fbecac77b949d9743e38b80e831e79b283f45a3b76fe521d172d575eb4e301` and the v1 hash are stale and invalid for sign-off.
+- No retrieval, K/M/O execution, Task Q, human approval, or fixture freeze occurred. `HUMAN_REVIEW_PENDING = true`, `FROZEN = false`, `EVALUATION_ALLOWED = false`.
+
+## Next Candidate
+
+The Product Owner must review the v3 package and create a separate sign-off artifact bound to its exact ZIP SHA-256. Do not freeze the fixture or start Task Q until that human sign-off is complete and a later explicit freeze action succeeds.

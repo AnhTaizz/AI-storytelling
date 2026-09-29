@@ -21,6 +21,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
 
+from tools.story_benchmark import probe_consistency
 from tools.story_benchmark.multi_gold_metrics import (
     GoldEvidenceValidationError,
     normalize_gold_evidence_sets,
@@ -1801,6 +1802,208 @@ def validate_blocker_repair_multigold_bundle(
             "human_signoff_complete": False,
             "task_q_executed": False,
             "technical_gate_pass": technical_gate_pass,
+        },
+    }
+
+
+def compare_review_artifacts(
+    fixture_probes: List[Dict[str, Any]],
+    audit_rows: Dict[str, Dict[str, Any]],
+    guide_text: Optional[str],
+    inventory_rows: Dict[str, Dict[str, str]],
+) -> List[Dict[str, Any]]:
+    """Cross-artifact comparison of evaluated probe fields.
+
+    ``fixture_probes`` is the representation Task Q evaluates.  Every review
+    artifact must repeat its evaluated fields exactly; the review guide must
+    contain the evaluated question and expected answer verbatim.
+    """
+    mismatches: List[Dict[str, Any]] = []
+    for probe in fixture_probes:
+        probe_id = probe.get("probe_id")
+        audit = audit_rows.get(probe_id)
+        if audit is None:
+            mismatches.append({"probe_id": probe_id, "artifact": "semantic_audit", "field": "<missing>"})
+        else:
+            mismatches += probe_consistency.compare_probe_fields(probe, audit, "semantic_audit")
+        if guide_text is not None:
+            for field in ("question", "expected_answer"):
+                value = probe.get(field)
+                if not isinstance(value, str) or value not in guide_text:
+                    mismatches.append({"probe_id": probe_id, "artifact": "review_guide", "field": field})
+        row = inventory_rows.get(probe_id)
+        if row is None:
+            mismatches.append({"probe_id": probe_id, "artifact": "inventory", "field": "<missing>"})
+            continue
+        try:
+            gold_count = len(normalize_gold_evidence_sets(probe))
+        except GoldEvidenceValidationError:
+            gold_count = -1
+        expected_inventory = {
+            "category": probe.get("category"),
+            "cutoff": str(probe.get("cutoff_chapter")),
+            "gold_set_count": str(gold_count),
+        }
+        for field, expected in expected_inventory.items():
+            if (row.get(field) or "").strip() != expected:
+                mismatches.append({"probe_id": probe_id, "artifact": "inventory", "field": field})
+    return mismatches
+
+
+def _guide_header_lines(guide_text: str) -> List[str]:
+    header = guide_text.split("\n## ", 1)[0]
+    return [line[2:] for line in header.splitlines() if line.startswith("- ")]
+
+
+SIGNOFF_CONSISTENCY_REQUIRED_FILES = {
+    "canonical_primary_fixture.yaml",
+    "cross_artifact_consistency_report.json",
+    "primary_semantic_audit_v3.jsonl",
+    "human_review_guide_vi_v3.md",
+    "final_probe_inventory_v3.csv",
+    "human_signoff_template_v3.csv",
+    "repair_log.jsonl",
+    "validation_report.json",
+    "raw_test_log.txt",
+    "manifest.json",
+}
+
+
+def validate_signoff_consistency_bundle(
+    artifact_dir: Path,
+    chunks_path: Optional[Path] = None,
+    expected_total_probes: int = 25,
+    expected_primary_probes: int = 16,
+) -> Dict[str, Any]:
+    """Validate a v3 package whose review artifacts are projections of one canonical fixture."""
+    issues: List[str] = []
+    for name in sorted(SIGNOFF_CONSISTENCY_REQUIRED_FILES):
+        if not (artifact_dir / name).is_file():
+            issues.append(f"Missing required consistency-repair deliverable: {name}")
+    if issues:
+        return {"pass": False, "issues": issues, "metrics": {}}
+
+    try:
+        fixture = yaml.safe_load(
+            (artifact_dir / "canonical_primary_fixture.yaml").read_text(encoding="utf-8")
+        ) or {}
+    except Exception as exc:
+        return {"pass": False, "issues": [f"Could not parse canonical fixture: {exc}"], "metrics": {}}
+    probes = fixture.get("probes") if isinstance(fixture.get("probes"), list) else []
+    if fixture.get("gold_schema_version") != 2:
+        issues.append("canonical fixture must declare gold_schema_version: 2")
+    for flag in ("frozen", "evaluation_allowed", "task_q_executed"):
+        if fixture.get(flag) is not False:
+            issues.append(f"canonical fixture {flag} must be false before sign-off")
+    ids = [p.get("probe_id") for p in probes]
+    if len(ids) != len(set(ids)):
+        issues.append("Duplicate probe_id in canonical fixture")
+
+    chunk_texts: Optional[Dict[str, str]] = None
+    chunk_chapters: Dict[str, int] = {}
+    if chunks_path is not None:
+        chunk_texts = {}
+        with open(chunks_path, "r", encoding="utf-8") as f:
+            for line in f:
+                if line.strip():
+                    chunk = json.loads(line)
+                    chunk_texts[chunk["chunk_id"]] = chunk["text"]
+                    chunk_chapters[chunk["chunk_id"]] = chunk["chapter_number"]
+
+    proposition_counts = {c: 0 for c in VALID_SEMANTIC_CLASSIFICATIONS}
+    for probe in probes:
+        probe_id = probe.get("probe_id")
+        issues += probe_consistency.check_probe(probe, chunk_texts)
+        if probe.get("expected_facts") != probe_consistency.expected_facts(probe):
+            issues.append(f"{probe_id}: expected_facts are not derived from propositions")
+        for prop in probe.get("propositions") or []:
+            if prop.get("classification") in proposition_counts:
+                proposition_counts[prop["classification"]] += 1
+        cutoff = probe.get("cutoff_chapter")
+        for gold_set in probe.get("gold_evidence_sets") or []:
+            for chunk_id in gold_set:
+                if chunk_chapters and chunk_chapters.get(chunk_id, 10**6) > cutoff:
+                    issues.append(f"{probe_id}: gold chunk {chunk_id} missing or beyond cutoff")
+
+    audit = _read_jsonl_by_probe(
+        artifact_dir / "primary_semantic_audit_v3.jsonl", issues, "primary_semantic_audit_v3.jsonl"
+    )
+    for probe in probes:
+        row = audit.get(probe.get("probe_id"))
+        if row is not None and row != probe_consistency.audit_projection(probe):
+            issues.append(f"{probe.get('probe_id')}: semantic audit is not the canonical projection")
+
+    guide_text = (artifact_dir / "human_review_guide_vi_v3.md").read_text(encoding="utf-8")
+    rendered = probe_consistency.render_review_guide(probes, _guide_header_lines(guide_text))
+    if guide_text != rendered:
+        issues.append("Human review guide is not generated from the canonical fixture")
+
+    inventory = _read_csv_by_probe(
+        artifact_dir / "final_probe_inventory_v3.csv", issues, "final_probe_inventory_v3.csv"
+    )
+    if len(inventory) != expected_total_probes:
+        issues.append(f"Inventory has {len(inventory)} probes, expected {expected_total_probes}")
+    primary_ids = {pid for pid, row in inventory.items() if row.get("partition") == "primary"}
+    if len(primary_ids) != expected_primary_probes or primary_ids != set(ids):
+        issues.append("Primary inventory IDs do not match canonical fixture")
+    for pid, row in inventory.items():
+        if (row.get("human_decision") or "").strip() not in {"", "PENDING_REVIEW"}:
+            issues.append(f"AI-created human decision in inventory for {pid}")
+
+    mismatches = compare_review_artifacts(probes, audit, guide_text, inventory)
+    for m in mismatches:
+        issues.append(f"{m['probe_id']}: {m['artifact']} mismatch in {m['field']}")
+
+    template = _read_csv_by_probe(
+        artifact_dir / "human_signoff_template_v3.csv", issues, "human_signoff_template_v3.csv"
+    )
+    if set(template) != set(inventory):
+        issues.append("Human sign-off template IDs do not match inventory")
+    for pid, row in template.items():
+        if (row.get("human_decision") or "").strip() not in {"", "PENDING_REVIEW"}:
+            issues.append(f"AI-created decision in sign-off template for {pid}")
+        if (row.get("source_package_sha256") or "").strip():
+            issues.append(f"Unsigned template must leave package hash blank for {pid}")
+        if row.get("agent_recommendation") != inventory.get(pid, {}).get("agent_recommendation"):
+            issues.append(f"Template agent_recommendation differs from inventory for {pid}")
+
+    try:
+        report = json.loads((artifact_dir / "validation_report.json").read_text(encoding="utf-8"))
+    except Exception as exc:
+        issues.append(f"Could not parse validation_report.json: {exc}")
+        report = {}
+    for field, expected in {
+        "human_signoff_complete": False, "frozen": False,
+        "evaluation_allowed": False, "task_q_executed": False, "privacy_pass": True,
+    }.items():
+        if report.get(field) != expected:
+            issues.append(f"validation_report.json {field} must be {expected!r}")
+
+    try:
+        manifest = json.loads((artifact_dir / "manifest.json").read_text(encoding="utf-8"))
+    except Exception as exc:
+        issues.append(f"Could not parse manifest.json: {exc}")
+        manifest = {}
+    manifest_files = manifest.get("files", {})
+    if set(manifest_files) != SIGNOFF_CONSISTENCY_REQUIRED_FILES - {"manifest.json"}:
+        issues.append("Manifest file set does not match consistency-repair artifacts")
+    for name, metadata in manifest_files.items():
+        path = artifact_dir / name
+        if path.is_file() and metadata.get("sha256") != sha256_file(path):
+            issues.append(f"Manifest SHA-256 mismatch for {name}")
+
+    gold_counts = [len(p.get("gold_evidence_sets") or []) for p in probes]
+    return {
+        "pass": len(issues) == 0,
+        "issues": issues,
+        "metrics": {
+            "primary_probes": len(probes),
+            "single_gold_probes": sum(c == 1 for c in gold_counts),
+            "multi_gold_probes": sum(c > 1 for c in gold_counts),
+            "proposition_classification_counts": proposition_counts,
+            "cross_artifact_mismatches": len(mismatches),
+            "human_signoff_complete": False,
+            "task_q_executed": False,
         },
     }
 
