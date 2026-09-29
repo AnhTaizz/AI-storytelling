@@ -468,6 +468,38 @@ The project implemented the original stricter multi-gold prerequisite before Tas
 
 ---
 
+## Accepted Research Protocol Decisions
+
+### INDEPENDENT_VALIDATION_FIXTURE_V1_FREEZE
+
+STATUS: ACCEPTED (Product Owner sign-off, 2026-09-30)
+
+DECISION:
+`INDEPENDENT_VALIDATION_FIXTURE_V1` is frozen as fixture version 1 and is the sole held-out input for Task Q. The frozen package SHA-256 is `f07b2d4048f424d8e885221ff4b14f3d572a22bf2e5a405382782ad1672f1dc1`, derived from reviewed package `fcd147eb57c7b8ab9500c85ad633436524b96a014aa4ef8b68dfdfbf9d4515a6` and bound to human sign-off `03de5485c07ec84d5e8e32624db23e1e3f22d91ffc11828c4a458005513a9037`.
+
+APPROVED POPULATION:
+16 primary multi-evidence probes, all `APPROVED`: 14 single-gold and 2 multi-gold. Three auxiliary probes were `REJECTED` as source-hallucinated as written; six auxiliary or deferred probes were `DEFERRED`. None of these nine enter Task Q.
+
+MULTI-GOLD SUPPORT:
+Gold evidence uses `gold_evidence_sets` (schema v2). Each set is an independently complete minimal evidence path, and the sets must equal the minimal hitting sets of the per-proposition support model. Single-gold scoring is exactly backward compatible.
+
+METRICS:
+Full Evidence Success@10 (primary binary endpoint), Required Evidence Recall@10, Hit@10, and MRR, with the multi-gold definitions in the fixture specification. Primary comparison is Method O against Method M; Method K is a secondary historical baseline. Uncertainty uses paired bootstrap (B = 10,000, seed 42) plus exact McNemar and paired permutation tests on the primary endpoint.
+
+ANTI-TUNING CONTRACT:
+Candidate depth (30), consensus weights, rank tie-breakers, and thresholds are fixed as pre-registered. Any adjustment after observing validation results voids generalization claims and requires a new held-out fixture.
+
+HOLDOUT INTEGRITY:
+At freeze, no validation retrieval had been executed. The consensus method predates fixture creation, and the only later change to K/M/O code replaced the metric function with the proven-equivalent multi-gold implementation. Disclosed pre-existing limitation: the fixture author had prior exposure to the development probes (see fixture specification section 4).
+
+HISTORY NOT ERASED:
+An earlier (v2) package was declared ready for sign-off and was later found to show reviewers text that differed from the evaluated fixture. It was superseded before any sign-off; that correction is recorded in `PROJECT_STATE.md`.
+
+IMMUTABILITY:
+Frozen V1 is never mutated in place. Any change creates a new fixture version and requires new sign-off.
+
+---
+
 ## Open Technology Decisions
 
 The following technology choices are not frozen. They require dedicated technical decision records supported by empirical evidence or benchmarks before becoming project commitments.

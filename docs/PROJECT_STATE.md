@@ -418,4 +418,16 @@ M1-30CH-P-SIGNOFF-PACKAGE-CONSISTENCY-REPAIR — EXECUTED — Fixture Status: RE
 
 ## Next Candidate
 
-The Product Owner must review the v3 package and create a separate sign-off artifact bound to its exact ZIP SHA-256. Do not freeze the fixture or start Task Q until that human sign-off is complete and a later explicit freeze action succeeds.
+M1-30CH-P-HUMAN-SIGNOFF-FREEZE-GATE — EXECUTED — Fixture Status: FROZEN
+
+- The Product Owner explicitly authorized decisions for the v3 package. The agent transcribed them verbatim into a separate sign-off artifact bound to the v3 ZIP SHA-256: 16 primary `APPROVED`, 3 auxiliary `REJECTED`, 6 auxiliary/deferred `DEFERRED`, 0 pending. Sign-off SHA-256 `03de5485c07ec84d5e8e32624db23e1e3f22d91ffc11828c4a458005513a9037`.
+- The sign-off validated against the exact v3 hash, and the stale v2 hash was rejected in both directions (sign-off against v2 package; v2-hash sign-off against v3 package).
+- Freeze gate passed: technical gate, complete sign-off, all primary probes approved, package hash match, privacy, and no Task Q execution. The frozen package was derived from the reviewed ZIP bytes, not an editable directory.
+- Frozen fixture version 1: SHA-256 `f07b2d4048f424d8e885221ff4b14f3d572a22bf2e5a405382782ad1672f1dc1`; 16 primary probes (14 single-gold, 2 multi-gold); frozen from Git `37625d5`. `EVALUATION_ALLOWED = true`, `TASK_Q_EXECUTED = false`.
+- Added `fixture_freeze.py` (eligibility gate, frozen-package validator, Task Q plan binding to the pre-registered protocol) with 15 synthetic tests.
+- Recorded accepted decision `INDEPENDENT_VALIDATION_FIXTURE_V1_FREEZE` in `DECISIONS.md`.
+- Task Q is prepared (local run plan bound to the frozen hash) but NOT executed. No K/M/O run, validation score inspection, or post-freeze tuning occurred.
+
+## Next Candidate
+
+Master Orchestrator review of the freeze record. Only after that review may Task Q execute, against frozen hash `f07b2d4048f424d8e885221ff4b14f3d572a22bf2e5a405382782ad1672f1dc1` and the unchanged pre-registered protocol.

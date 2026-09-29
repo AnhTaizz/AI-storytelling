@@ -1,6 +1,6 @@
 fixture_id: INDEPENDENT_VALIDATION_FIXTURE_V1
-fixture_version: 8
-status: READY_FOR_HUMAN_SIGNOFF
+fixture_version: 9
+status: FROZEN
 source_corpus_id: otonari_no_tenshi_wn_jp_30ch
 corpus_fingerprint_sha256: 7f9bb8106d6d50acd2b3760738c0b8040f36ab547c2d2f7eade1ca0b9a827ff8
 passage_contract_id: OTONARI_LOCAL_PASSAGE_V1
@@ -23,10 +23,11 @@ primary_category_counts:
   SPOILER_BOUNDARY: 3
 
 annotation_review_counts:
-  PENDING_REVIEW: 25
-  APPROVED: 0
+  PENDING_REVIEW: 0
+  APPROVED: 16
   NEEDS_REVISION: 0
-  REJECTED: 0
+  REJECTED: 3
+  DEFERRED: 6
 
 agent_audit_recommendations:
   provisional_keep: 7
@@ -117,8 +118,10 @@ intended_evaluation_methods:
   consensus_method: KM_CONSENSUS_RANK_SUM_V1
   historical_context: DENSE_E5_LARGE_V1
 
-unresolved_blockers:
-  - "Human review must bind explicit decisions to the exact corrected package SHA-256 before any later freeze action."
+unresolved_blockers: []
+
+resolved_blockers:
+  - "Human review bound explicit decisions to the exact corrected (v3) package SHA-256 before the freeze action."
 
 final_validation_audit:
   task_id: M1-30CH-P-FINAL-VALIDATION-FREEZE-CANDIDATE
@@ -207,3 +210,49 @@ private_blocker_repair_multigold_hashes:
   validation_report.json: ab29bde07dc3555b3a12ae768a064cf48cfb2e7ad03e12ba077c5ca390a85dbf
   raw_test_log.txt: 77964090f57656ee8430acb588a61d6c1e9daa59c020fbbfaf6be5226f60b483
   M1_30CH_P_BLOCKER_REPAIR_MULTIGOLD.zip: 15fbecac77b949d9743e38b80e831e79b283f45a3b76fe521d172d575eb4e301
+
+signoff_consistency_repair:
+  task_id: M1-30CH-P-SIGNOFF-PACKAGE-CONSISTENCY-REPAIR
+  status: READY_FOR_HUMAN_SIGNOFF
+  package_sha256: fcd147eb57c7b8ab9500c85ad633436524b96a014aa4ef8b68dfdfbf9d4515a6
+  superseded_package_sha256: 15fbecac77b949d9743e38b80e831e79b283f45a3b76fe521d172d575eb4e301
+  cross_artifact_mismatches_before: 36
+  structural_issues_before: 21
+  cross_artifact_mismatches_after: 0
+  structural_issues_after: 0
+  proposition_classifications:
+    directly_explicit: 35
+    strongly_entailed: 5
+    interpretive_inference: 0
+    ambiguous: 0
+    unsupported: 0
+
+freeze:
+  task_id: M1-30CH-P-HUMAN-SIGNOFF-FREEZE-GATE
+  decision_id: INDEPENDENT_VALIDATION_FIXTURE_V1_FREEZE
+  status: FROZEN
+  frozen_fixture_version: "1"
+  frozen_at: "2026-09-30T00:30:44+07:00"
+  frozen_from_git_sha: 37625d503eed46f2f83be25c57eccbb561729d9c
+  frozen_package_sha256: f07b2d4048f424d8e885221ff4b14f3d572a22bf2e5a405382782ad1672f1dc1
+  source_package_sha256: fcd147eb57c7b8ab9500c85ad633436524b96a014aa4ef8b68dfdfbf9d4515a6
+  human_signoff_sha256: 03de5485c07ec84d5e8e32624db23e1e3f22d91ffc11828c4a458005513a9037
+  human_signoff_complete: true
+  reviewer_role: Product Owner
+  human_decision_counts:
+    approved: 16
+    rejected: 3
+    deferred: 6
+    needs_revision: 0
+    pending_review: 0
+  primary_probe_count: 16
+  single_gold_primary: 14
+  multi_gold_primary: 2
+  gold_schema_version: 2
+  evaluation_allowed: true
+  task_q_executed: false
+  protocol: "INDEPENDENT_VALIDATION_FIXTURE_V1_SPEC.md section 6 (pre-registered, unchanged)"
+  validators:
+    - tools/story_benchmark/fixture_freeze.py
+    - tools/story_benchmark/probe_consistency.py
+  immutability: "Any change to the frozen package creates a new fixture version; V1 is never mutated in place."

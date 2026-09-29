@@ -1,8 +1,10 @@
 # INDEPENDENT_VALIDATION_FIXTURE_V1 Specification & Protocol
 
 ## Status
-**READY_FOR_HUMAN_SIGNOFF**
-*(The four confirmed technical blockers are repaired and multi-gold scoring is implemented. Human sign-off is still incomplete, the fixture is not frozen, and retrieval execution remains prohibited.)*
+**FROZEN** (frozen fixture version 1, 2026-09-30)
+*(Product Owner sign-off is complete and bound to the reviewed v3 package. The frozen package is the immutable Task Q input. `EVALUATION_ALLOWED = true`; Task Q has not been executed. See section 8.)*
+
+*History: this section previously read `READY_FOR_HUMAN_SIGNOFF` for the v2 package; that package was later found to have cross-artifact inconsistencies and was superseded by v3 before any sign-off.*
 
 ---
 
@@ -165,5 +167,18 @@ All private textual assets (probe questions, expected answers, chapter prose, in
 - `.local/story_integration/otonari_30ch/M1_30CH_P_REVIEW_GATE/`
 - `.local/story_integration/otonari_30ch/M1_30CH_P_FINAL_VALIDATION_FREEZE_CANDIDATE/`
 - `.local/story_integration/otonari_30ch/M1_30CH_P_BLOCKER_REPAIR_MULTIGOLD/`
+- `.local/story_integration/otonari_30ch/M1_30CH_P_SIGNOFF_CONSISTENCY_REPAIR/`
+- `.local/story_integration/otonari_30ch/INDEPENDENT_VALIDATION_FIXTURE_V1_FROZEN/`
 
 This public specification contains only structural schemas, aggregate counts, audit findings, and protocol definitions.
+
+---
+
+## 8. Freeze Record (INDEPENDENT_VALIDATION_FIXTURE_V1_FREEZE)
+
+- **Frozen population**: 16 primary probes (14 single-gold, 2 multi-gold), all `APPROVED` by the Product Owner. 3 auxiliary probes `REJECTED`, 6 auxiliary/deferred probes `DEFERRED`; none of these 9 enter Task Q.
+- **Canonical source**: every primary probe has one canonical record; gold sets equal the minimal hitting sets of the proposition-support model. Final audit: 35 directly explicit, 5 strongly entailed, 0 interpretive, 0 ambiguous, 0 unsupported propositions.
+- **Identity**: frozen package SHA-256 `f07b2d4048f424d8e885221ff4b14f3d572a22bf2e5a405382782ad1672f1dc1`; reviewed source package `fcd147eb57c7b8ab9500c85ad633436524b96a014aa4ef8b68dfdfbf9d4515a6`; human sign-off `03de5485c07ec84d5e8e32624db23e1e3f22d91ffc11828c4a458005513a9037`; corpus fingerprint and chunks hash as in section 2.
+- **Protocol**: section 6 applies unchanged. No parameter, tie-break, depth, weight, or threshold was altered at freeze.
+- **Immutability**: Task Q must run against the exact frozen hash. Any change creates a new fixture version.
+- **Validation**: `tools/story_benchmark/fixture_freeze.py` rejects hash mismatches, altered probes, unexpected counts, malformed gold schema, incomplete or non-approved sign-off, and embedded evaluation results; it also rejects Task Q run plans bound to another hash or deviating from section 6.
