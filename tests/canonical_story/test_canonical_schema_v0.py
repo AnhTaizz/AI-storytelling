@@ -50,6 +50,12 @@ class TestSchemaAndRegistry(unittest.TestCase):
             for pred in rule["conclusion_predicates"] + rule["required_premise_predicates"]:
                 self.assertIn(pred, preds, f"{rule_id} references {pred}")
             self.assertIn(rule["max_status"], ("ENTAILED", "SUGGESTED"), rule_id)
+            if "preserves_signed_content_from" in rule:
+                self.assertIn(rule["preserves_signed_content_from"], rule["required_premise_predicates"])
+        self.assertEqual(vocab["signed_polarity"], ["AFFIRMED", "NEGATED"])
+        for pred in ("Conceals", "Conveys"):
+            [pol] = [a for a in preds[pred]["args"] if a["name"] == "content_polarity"]
+            self.assertEqual(pol["vocabulary"], "signed_polarity", pred)
         self.assertEqual(set(reg["holder_relative_predicates"]), {"Says", "Attitude"})
 
     def test_paratext_is_policy_not_ontology(self):

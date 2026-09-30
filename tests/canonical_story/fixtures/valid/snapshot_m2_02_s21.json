@@ -636,6 +636,11 @@
         "content": {
           "kind": "PROPOSITION",
           "ref": "p-001"
+        },
+        "content_polarity": {
+          "kind": "TOKEN",
+          "value": "AFFIRMED",
+          "vocabulary": "signed_polarity"
         }
       },
       "id": "p-004",
@@ -751,7 +756,7 @@
         "content_polarity": {
           "kind": "TOKEN",
           "value": "AFFIRMED",
-          "vocabulary": "polarity"
+          "vocabulary": "signed_polarity"
         },
         "event": {
           "kind": "EVENT",

@@ -2,7 +2,7 @@
 
 ## Current Milestone
 
-M2 — Canonical Story Model (research IN PROGRESS: M2-01 requirements, M2-02 core concepts, M2-03 Canonical Schema v0 and M2-04 as-of projection complete; M2-04 pending Orchestrator review; M2 not complete)
+M2 — Canonical Story Model (research IN PROGRESS: M2-01 requirements, M2-02 core concepts, M2-03 Canonical Schema v0, M2-04 as-of projection (accepted) and M2-05 signed-information hardening complete; M2-05 pending Orchestrator review; M2 not complete)
 
 ## Milestone Lifecycle
 
@@ -519,6 +519,16 @@ M2-04-AS-OF-PROJECTION-AND-DERIVED-VIEWS — COMPLETED — Status: PENDING ORCHE
 - Tests: 36 projection tests covering stress cases A–J, machine-readable M2-02 §21 snapshots (as of 5, 20 and 22), 10+ spoiler-leak cases, holder-relative safety, contradictions, negated belief content, immutability and determinism. With the 24 schema tests, 60/60 pass; the story_benchmark and story_ingestion regressions also pass.
 - Schema v0 and the predicate registry are unchanged. Documentation: `docs/research/m2/M2_AS_OF_PROJECTION_V0.md`. `DECISIONS.md` is unchanged.
 
+M2-05-SIGNED-INFORMATION-SEMANTICS-HARDENING — COMPLETED — Status: PENDING ORCHESTRATOR REVIEW
+
+- **Reproduced first (RED).** Concealed P AFFIRMED with target believing P NEGATED, and the inverse, were reported as secret ENDED instead of ACTIVE. Cause: `Conceals` carried no polarity, so secret matching ignored sign.
+- **Correction to the pre-freeze Schema v0** (schema version unchanged; the JSON Schema file needed no change):
+  - `SignedInformation = Proposition + polarity`, composed from existing parts rather than a new record.
+  - Registry: new `signed_polarity` vocabulary (AFFIRMED / NEGATED). `Conceals` gains `content_polarity`. `Conveys.content_polarity` is restricted to signed polarity. `REVEAL_RESULT` must preserve the Conveys content and polarity, enforced by a new small validator check.
+  - `Says` and `Attitude` keep the full polarity vocabulary; OPEN there means an undetermined stance.
+- **Projection:** secrets match signed content for holding, learning and UNAWARE. UNAWARE is interpreted as polarity-specific in V0. Reader fields are now signed (`reader_knows_signed_content`, `reader_knows_content_resolution`, `reader_signed_content_status`), replacing M2-04's polarity-unaware `reader_has_canonical_content`.
+- **Tests:** 19 new signed-information tests and 2 new negative fixtures (OPEN concealed polarity; reveal flipping polarity). Canonical story suite 79/79; A–J behaviour intact. `DECISIONS.md` unchanged.
+
 ## Next Candidate
 
-Orchestrator review of M2-04. M2-05 must not start before that review and an explicit task.
+Orchestrator review of M2-05. No real-source mapping or M2-06 before that review and an explicit task.

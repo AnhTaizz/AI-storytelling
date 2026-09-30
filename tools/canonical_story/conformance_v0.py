@@ -345,6 +345,20 @@ def _check_support_paths(ix: _Index, calc: Availability, issues: List[str]) -> N
             issues.append(f"assertion {a['id']} has no complete support path (availability undefined)")
 
 
+def _signed_content(ix: _Index, assertion: dict) -> Optional[Tuple[str, str]]:
+    """(content proposition id, content_polarity) for holder/convey/conceal assertions."""
+    content, polarity = ix.arg(assertion, "content"), ix.arg(assertion, "content_polarity")
+    if not content or not polarity:
+        return None
+    return content["ref"], polarity["value"]
+
+
+def _preserves_signed_content(ix: _Index, conclusion: dict, premises: List[dict], source: str) -> bool:
+    target = _signed_content(ix, conclusion)
+    return target is not None and any(
+        ix.predicate_of(p) == source and _signed_content(ix, p) == target for p in premises)
+
+
 def _check_derivations(ix: _Index, calc: Availability, issues: List[str]) -> None:
     holder_relative = set(ix.registry["holder_relative_predicates"])
     for a in ix.assertions.values():
@@ -383,6 +397,11 @@ def _check_derivations(ix: _Index, calc: Availability, issues: List[str]) -> Non
                 missing = [pred for pred in rule["required_premise_predicates"] if pred not in present]
                 if missing:
                     issues.append(f"assertion {a['id']} derivation {d['id']} lacks required premise predicates {missing}")
+                source = rule.get("preserves_signed_content_from")
+                if source and not _preserves_signed_content(ix, a, premises, source):
+                    issues.append(
+                        f"assertion {a['id']} derivation {d['id']} rule {d['rule_id']} does not preserve the signed "
+                        f"content (same content proposition and content_polarity) of a {source} premise")
     for aid in sorted(ix.assertions):
         calc.of(aid)
     for aid in sorted(calc.cycles):

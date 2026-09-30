@@ -396,15 +396,18 @@ class _Projector:
             return self.uf_content.find(arg["ref"])
         return arg["value"]
 
-    def _attitudes(self, holder_class: str, kinds: Sequence[str], content: str) -> List[str]:
+    def _attitudes(self, holder_class: str, kinds: Sequence[str], content: str, polarity: str) -> List[str]:
+        """Visible AFFIRMED attitudes of a holder toward the SIGNED content (content class + polarity)."""
         cls = set(self._content_class(content))
         return sorted(a["id"] for a in self._by_predicate("Attitude")
                       if a["polarity"] == "AFFIRMED"
                       and self._entity_class(self._arg(a, "holder")["ref"]) == holder_class
                       and self._arg(a, "attitude")["value"] in kinds
-                      and self._arg(a, "content")["ref"] in cls)
+                      and self._arg(a, "content")["ref"] in cls
+                      and self._arg(a, "content_polarity")["value"] == polarity)
 
     def _secrets(self) -> List[Dict[str, Any]]:
+        """A secret concerns SIGNED information: (content class, concealed polarity)."""
         out = []
         for a in self._by_predicate("Conceals"):
             if a["polarity"] != "AFFIRMED":
@@ -412,20 +415,32 @@ class _Projector:
             concealer = self._entity_class(self._arg(a, "concealer")["ref"])
             target = self._entity_class(self._arg(a, "concealed_from")["ref"])
             content = self._arg(a, "content")["ref"]
-            holding = self._attitudes(concealer, [HOLDS_TRUE], content)
+            signed = self._arg(a, "content_polarity")["value"]
+            opposite = "NEGATED" if signed == "AFFIRMED" else "AFFIRMED"
+            holding = self._attitudes(concealer, [HOLDS_TRUE], content, signed)
             if not holding:
                 self.diagnostics.append({"code": "CONCEALMENT_WITHOUT_EVIDENCED_HOLDING", "assertions": [a["id"]]})
                 continue
-            unaware = self._attitudes(target, ["UNAWARE", "KEPT_UNAWARE"], content)
-            learned = self._attitudes(target, [HOLDS_TRUE], content)
+            unaware = self._attitudes(target, ["UNAWARE", "KEPT_UNAWARE"], content, signed)
+            learned = self._attitudes(target, [HOLDS_TRUE], content, signed)
+            opposite_belief = self._attitudes(target, [HOLDS_TRUE], content, opposite)
             validity = self._validity(a["id"]) or {"end": {"kind": "OPEN"}}
             ended = bool(learned) or validity["end"]["kind"] == "ANCHOR"
+            canonical = self._commitment_status(content)
+            if canonical in ("AFFIRMED", "NEGATED"):
+                reader_signed = "MATCHES_CANONICAL" if canonical == signed else "OPPOSES_CANONICAL"
+            else:
+                reader_signed = "UNRESOLVED"
             out.append({
                 "conceals_assertion": a["id"], "concealer_class": concealer, "concealed_from_class": target,
-                "content": content, "status": "ENDED" if ended else "ACTIVE",
+                "content": content, "content_polarity": signed, "status": "ENDED" if ended else "ACTIVE",
                 "holder_evidence": holding, "target_unaware_evidence": unaware,
                 "target_learned_evidence": learned,
-                "reader_has_canonical_content": self._commitment_status(content) in ("AFFIRMED", "NEGATED"),
+                "target_opposite_belief_evidence": opposite_belief,
+                "canonical_content_status": canonical,
+                "reader_knows_content_resolution": canonical in ("AFFIRMED", "NEGATED"),
+                "reader_knows_signed_content": reader_signed == "MATCHES_CANONICAL",
+                "reader_signed_content_status": reader_signed,
                 "concealment_validity": self._validity(a["id"]),
             })
         return sorted(out, key=lambda x: x["conceals_assertion"])

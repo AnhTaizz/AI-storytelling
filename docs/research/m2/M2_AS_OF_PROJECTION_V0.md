@@ -119,16 +119,26 @@ Stages are ordered by availability. There is no scalar score and no genre-specif
 
 ## 9. Secret Projection
 
-A secret is reported for each visible AFFIRMED `Conceals(h, P, from: B)` **only if** a visible AFFIRMED `Attitude(h-class, HOLDS_TRUE, P-class)` exists.
+A secret concerns **signed information** `(P-class, X)`, where X is the `content_polarity` of the `Conceals` assertion (AFFIRMED or NEGATED; M2-05). It is reported for each visible AFFIRMED `Conceals(h, P, X, from: B)` **only if** a visible AFFIRMED `Attitude(h-class, HOLDS_TRUE, P-class, X)` exists.
+
+Every match below requires the same content class **and** the same polarity X. `SameContent` resolution changes the content class, never the polarity carried by the assertion.
 
 - Without that evidence of holding, no secret is derived. The diagnostic `CONCEALMENT_WITHOUT_EVIDENCED_HOLDING` is raised instead.
 - **Status:**
-  - `ENDED` if B's class has a visible `HOLDS_TRUE` on the P-class, or the `Conceals` end bound is visible;
+  - `ENDED` if B's class has a visible `HOLDS_TRUE` on `(P-class, X)`, or the `Conceals` end bound is visible;
   - otherwise `ACTIVE`.
+  - A belief in the opposite polarity does not end the secret. It is listed separately as `target_opposite_belief_evidence`.
 - **Evidence lists:**
-  - `target_unaware_evidence` lists only visible UNAWARE or KEPT_UNAWARE assertions. An empty list means "not evidenced", never "unaware".
+  - `target_unaware_evidence` lists only visible UNAWARE or KEPT_UNAWARE assertions on `(P-class, X)`. An empty list means "not evidenced", never "unaware".
   - Secrecy is never inferred from B lacking a knowledge state.
-- **Reader flag:** `reader_has_canonical_content` reports whether the reader already has canonical P in this view. In case E the reader knows at 7 while B learns at 15.
+- **UNAWARE interpretation (V0).** Every Attitude targets signed information, so UNAWARE is **polarity-specific**: `UNAWARE(P, AFFIRMED)` means the holder does not have "P is true". Unawareness of the whole question can be stated as both signed attitudes; a dedicated form is deferred.
+- **Reader fields** (these replace the polarity-unaware `reader_has_canonical_content` of M2-04):
+  - `canonical_content_status`;
+  - `reader_knows_content_resolution`: canonical P is AFFIRMED or NEGATED;
+  - `reader_knows_signed_content`: canonical polarity equals X;
+  - `reader_signed_content_status`: MATCHES_CANONICAL, OPPOSES_CANONICAL, or UNRESOLVED.
+
+  In case E the reader knows the signed content at 7 while B learns it at 15. If the concealed content is (P, AFFIRMED) and canonical P is NEGATED, the reader knows P is false, which is OPPOSES_CANONICAL, not knowledge of the secret.
 
 ## 10. Reader Reveal Assumption
 

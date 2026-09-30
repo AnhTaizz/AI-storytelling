@@ -128,6 +128,20 @@ The registry declares for each predicate:
 
   `Says` and `Attitude` are registered as **holder-relative**. The validator rejects any derivation that concludes the embedded content of a holder-relative premise (negative fixture 06).
 
+**Signed information (correction in M2-05).** `SignedInformation = Proposition + polarity` (AFFIRMED or NEGATED). It is composed from existing parts; there is no separate record.
+
+| Predicate | Content arguments | Content polarity vocabulary |
+|---|---|---|
+| `Says` | `content` + `content_polarity` | `polarity` (OPEN allowed) |
+| `Attitude` | `content` + `content_polarity` | `polarity` (OPEN allowed) |
+| `Conveys` | `content` + `content_polarity` | `signed_polarity` (AFFIRMED / NEGATED only) |
+| `Conceals` | `content` + `content_polarity` | `signed_polarity` (AFFIRMED / NEGATED only) |
+
+- Pre-M2-05 v0 gave `Conceals` a proposition without polarity, so "A conceals NOT-P" could not be stated, and secret matching ignored sign. `Conceals` now has `content_polarity`.
+- OPEN is epistemic uncertainty and is never conveyed or concealed content (negative fixture 18).
+- For `Says` and `Attitude`, an OPEN content polarity means the holder treats P as undetermined. It is never signed information.
+- The schema version is unchanged, because v0 is still a pre-freeze proposal.
+
 **Assertion** fields: `proposition_id`, `polarity`, `epistemic_status`, `support`, `validity` (stative only), `extraction_provenance_id`, `review`, and optional `textual_ambiguity`.
 
 | Field | Values |
@@ -244,7 +258,7 @@ The conformance report (`tests/canonical_story/conformance_report_v0.json`) sepa
 | reference_integrity | Global ID uniqueness; every reference resolves to the right record type; event and anchor pairing; evidence in the story stream; acyclic proposition embedding |
 | predicate_integrity | Registered predicate; exact named arity; argument kinds, vocabularies, literal types, entity kinds; registered event kinds; forbidden stored verdicts |
 | support_path_integrity | Every non-rejected assertion has a support path and at least one complete path |
-| derivation_integrity | Registered rule; existing, non-rejected, non-self premises; allowed conclusion predicate and attitude kind; required premise predicates; no cycles; no holder-relative content leakage |
+| derivation_integrity | Registered rule; existing, non-rejected, non-self premises; allowed conclusion predicate and attitude kind; required premise predicates; no cycles; no holder-relative content leakage; for rules declaring `preserves_signed_content_from` (REVEAL_RESULT), the concluded attitude has the same content proposition and `content_polarity` as a premise of that predicate (M2-05, negative fixture 19) |
 | evidence_set_integrity | Referenced evidence exists; authority policy (PARATEXT not SUFFICIENT under DEFAULT_V0) |
 | temporal_bound_integrity | Validity only on stative predicates; bound anchors exist; supported bounds have a complete path; start ≠ end anchor |
 | epistemic_integrity | EXPLICIT requires direct evidence; derivation status caps; INTERNAL_STATE gate |

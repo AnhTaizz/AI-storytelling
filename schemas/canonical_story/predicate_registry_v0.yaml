@@ -21,6 +21,9 @@ registry_version: predicate_registry/v0
 
 vocabularies:
   polarity: [AFFIRMED, NEGATED, OPEN]
+  # SignedInformation = Proposition + signed polarity (M2-05). Used where content is intentionally
+  # conveyed or concealed; OPEN is epistemic uncertainty, never concealed or conveyed content.
+  signed_polarity: [AFFIRMED, NEGATED]
   attitude_kind: [HOLDS_TRUE, SUSPECTS, PERCEIVES, SEEMS_TO_PERCEIVE, UNAWARE, KEPT_UNAWARE]
   participant_role: [AGENT, PATIENT, SOURCE, RECIPIENT, THEME, EXPERIENCER, WITNESS]
   temporal_relation: [BEFORE, AFTER, SIMULTANEOUS, DURING, OVERLAPS]
@@ -108,7 +111,7 @@ predicates:
     args:
       - {name: event, kind: EVENT}
       - {name: content, kind: PROPOSITION}
-      - {name: content_polarity, kind: TOKEN, vocabulary: polarity}
+      - {name: content_polarity, kind: TOKEN, vocabulary: signed_polarity}
     epistemic_gate: NONE
   TemporalRelation:
     category: TIME
@@ -245,6 +248,7 @@ predicates:
     args:
       - {name: concealer, kind: ENTITY, entity_kinds: [CHARACTER, GROUP]}
       - {name: content, kind: PROPOSITION}
+      - {name: content_polarity, kind: TOKEN, vocabulary: signed_polarity}
       - {name: concealed_from, kind: ENTITY}
     epistemic_gate: INTERNAL_STATE
 
@@ -263,6 +267,9 @@ derivation_rules:
     conclusion_predicates: [Attitude]
     conclusion_attitude_kinds: [HOLDS_TRUE]
     required_premise_predicates: [Occurred, Participates, Conveys]
+    # The concluded attitude must target the same signed information (same content proposition
+    # and same content_polarity) as at least one Conveys premise.
+    preserves_signed_content_from: Conveys
     max_status: ENTAILED
   BEHAVIOUR_ENTAILS_UNAWARE:
     description: Depicted behaviour that is only coherent under ignorance entails UNAWARE. Never applied to missing data.

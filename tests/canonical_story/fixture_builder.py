@@ -130,6 +130,7 @@ def P(ref): return {"kind": "PROPOSITION", "ref": ref}
 def S(value): return {"kind": "LITERAL", "value_type": "STRING", "value": value}
 def TOK(vocab, value): return {"kind": "TOKEN", "vocabulary": vocab, "value": value}
 def POL(value="AFFIRMED"): return TOK("polarity", value)
+def SPOL(value="AFFIRMED"): return TOK("signed_polarity", value)  # signed information (M2-05)
 def ROLE(value): return TOK("participant_role", value)
 def SUF(*refs): return ("SUFFICIENT", refs)
 
@@ -232,7 +233,8 @@ def case_e_secret_and_reveals() -> dict:
     d.assertion(d.prop("Attitude", holder=E(a), attitude=TOK("attitude_kind", "HOLDS_TRUE"),
                        content=P(p_x), content_polarity=POL()), sets=[SUF(d.ev(3))],
                 validity={"start": d.bound(), "end": d.bound()})
-    d.assertion(d.prop("Conceals", concealer=E(a), content=P(p_x), concealed_from=E(b)), sets=[SUF(d.ev(3))],
+    d.assertion(d.prop("Conceals", concealer=E(a), content=P(p_x), content_polarity=SPOL(), concealed_from=E(b)),
+                sets=[SUF(d.ev(3))],
                 validity={"start": d.bound(), "end": d.bound("t-evt-tell", sets=[SUF(d.ev(15))])})
     ask = d.event("evt-ask", "UTTERANCE")
     occ_ask, parts_ask = occurred_with(d, ask, 4, [(b, "AGENT")])
@@ -243,7 +245,7 @@ def case_e_secret_and_reveals() -> dict:
                 validity={"start": d.bound(), "end": d.bound("t-evt-tell", sets=[SUF(d.ev(15))])})
     d.assertion(p_x, sets=[SUF(d.ev(7, "NARRATION_SUMMARY"))])          # reader can learn P_X at 7
     occ_tell, parts_tell = occurred_with(d, tell, 15, [(a, "SOURCE"), (b, "RECIPIENT")])
-    conveys = d.assertion(d.prop("Conveys", event=V(tell), content=P(p_x), content_polarity=POL()),
+    conveys = d.assertion(d.prop("Conveys", event=V(tell), content=P(p_x), content_polarity=SPOL()),
                           sets=[SUF(d.ev(15))])
     d.assertion(d.prop("Attitude", holder=E(b), attitude=TOK("attitude_kind", "HOLDS_TRUE"),
                        content=P(p_x), content_polarity=POL()), status="ENTAILED",
@@ -324,7 +326,8 @@ def snapshot_m2_02_s21() -> dict:
     d.assertion(d.prop("Attitude", holder=E(a), attitude=TOK("attitude_kind", "HOLDS_TRUE"),
                        content=P(p_x), content_polarity=POL()), sets=[SUF(d.ev(3))],
                 validity={"start": d.bound(), "end": d.bound()})
-    d.assertion(d.prop("Conceals", concealer=E(a), content=P(p_x), concealed_from=E(b)), sets=[SUF(d.ev(3))],
+    d.assertion(d.prop("Conceals", concealer=E(a), content=P(p_x), content_polarity=SPOL(), concealed_from=E(b)),
+                sets=[SUF(d.ev(3))],
                 validity={"start": d.bound(), "end": d.bound("t-evt-tell", sets=[SUF(d.ev(15))])})
     ask = d.event("evt-ask", "UTTERANCE")
     occ_ask, parts_ask = occurred_with(d, ask, 4, [(b, "AGENT")])
@@ -335,7 +338,7 @@ def snapshot_m2_02_s21() -> dict:
                 validity={"start": d.bound(), "end": d.bound("t-evt-tell", sets=[SUF(d.ev(15))])})
     d.assertion(p_x, sets=[SUF(d.ev(7, "NARRATION_SUMMARY"))])
     occ_tell, parts_tell = occurred_with(d, tell, 15, [(a, "SOURCE"), (b, "RECIPIENT")])
-    conveys = d.assertion(d.prop("Conveys", event=V(tell), content=P(p_x), content_polarity=POL()),
+    conveys = d.assertion(d.prop("Conveys", event=V(tell), content=P(p_x), content_polarity=SPOL()),
                           sets=[SUF(d.ev(15))])
     d.assertion(d.prop("Attitude", holder=E(b), attitude=TOK("attitude_kind", "HOLDS_TRUE"),
                        content=P(p_x), content_polarity=POL()), status="ENTAILED",
@@ -510,6 +513,29 @@ def neg_self_report_internal_state_explicit():
     return d.build()
 
 
+def neg_conceals_open_polarity():
+    d, _, _ = _base_negative()
+    item, place = d.entity("ent-item", "OBJECT"), d.entity("ent-place", "LOCATION")
+    p = d.prop("LocatedAt", thing=E(item), location=E(place))
+    d.assertion(d.prop("Conceals", concealer=E("ent-a"), content=P(p), content_polarity=SPOL("OPEN"),
+                       concealed_from=E("ent-b")), sets=[SUF(d.ev(3))])
+    return d.build()
+
+
+def neg_reveal_flips_polarity():
+    d, _, _ = _base_negative()
+    item, place = d.entity("ent-item", "OBJECT"), d.entity("ent-place", "LOCATION")
+    p = d.prop("LocatedAt", thing=E(item), location=E(place))
+    tell = d.event("evt-tell", "REVEAL_TELL")
+    occ, parts = occurred_with(d, tell, 4, [("ent-a", "SOURCE"), ("ent-b", "RECIPIENT")])
+    conveys = d.assertion(d.prop("Conveys", event=V(tell), content=P(p), content_polarity=SPOL("NEGATED")),
+                          sets=[SUF(d.ev(4))])
+    d.assertion(d.prop("Attitude", holder=E("ent-b"), attitude=TOK("attitude_kind", "HOLDS_TRUE"),
+                       content=P(p), content_polarity=POL("AFFIRMED")), status="ENTAILED",
+                derivations=[("REVEAL_RESULT", [occ] + parts + [conveys])])
+    return d.build()
+
+
 def neg_arity_mismatch():
     d, _, _ = _base_negative()
     d.assertion(d.prop("Possesses", holder=E("ent-a")), sets=[SUF(d.ev(2))])
@@ -534,4 +560,8 @@ INVALID_CASES = {
     "neg_15_derivation_cycle.json": (neg_derivation_cycle, "derivation_integrity", "derivation cycle"),
     "neg_16_self_report_internal_state.json": (neg_self_report_internal_state_explicit, "epistemic_integrity", "self-report"),
     "neg_17_arity_mismatch.json": (neg_arity_mismatch, "predicate_integrity", "arity mismatch"),
+    "neg_18_conceals_open_polarity.json": (neg_conceals_open_polarity, "predicate_integrity",
+                                           "value OPEN not in signed_polarity"),
+    "neg_19_reveal_flips_polarity.json": (neg_reveal_flips_polarity, "derivation_integrity",
+                                          "does not preserve the signed content"),
 }

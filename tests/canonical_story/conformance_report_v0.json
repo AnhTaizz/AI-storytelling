@@ -1184,6 +1184,180 @@
           "pass": true
         }
       }
+    },
+    "neg_18_conceals_open_polarity.json": {
+      "expected_fragment": "value OPEN not in signed_polarity",
+      "expected_layer": "predicate_integrity",
+      "rejected": true,
+      "result": {
+        "availability": {
+          "a-001": {
+            "assertion": [
+              2,
+              1
+            ],
+            "validity_end": null,
+            "validity_start": null
+          },
+          "a-002": {
+            "assertion": [
+              2,
+              1
+            ],
+            "validity_end": null,
+            "validity_start": null
+          },
+          "a-003": {
+            "assertion": [
+              3,
+              1
+            ],
+            "validity_end": null,
+            "validity_start": null
+          }
+        },
+        "pass": false,
+        "semantic": {
+          "derivation_integrity": {
+            "issues": [],
+            "pass": true
+          },
+          "epistemic_integrity": {
+            "issues": [],
+            "pass": true
+          },
+          "evidence_set_integrity": {
+            "issues": [],
+            "pass": true
+          },
+          "predicate_integrity": {
+            "issues": [
+              "proposition p-004 Conceals.content_polarity value OPEN not in signed_polarity"
+            ],
+            "pass": false
+          },
+          "reference_integrity": {
+            "issues": [],
+            "pass": true
+          },
+          "support_path_integrity": {
+            "issues": [],
+            "pass": true
+          },
+          "temporal_bound_integrity": {
+            "issues": [],
+            "pass": true
+          }
+        },
+        "structural": {
+          "issues": [],
+          "layer": "JSON_SCHEMA_DRAFT_2020_12",
+          "pass": true
+        }
+      }
+    },
+    "neg_19_reveal_flips_polarity.json": {
+      "expected_fragment": "does not preserve the signed content",
+      "expected_layer": "derivation_integrity",
+      "rejected": true,
+      "result": {
+        "availability": {
+          "a-001": {
+            "assertion": [
+              2,
+              1
+            ],
+            "validity_end": null,
+            "validity_start": null
+          },
+          "a-002": {
+            "assertion": [
+              2,
+              1
+            ],
+            "validity_end": null,
+            "validity_start": null
+          },
+          "a-003": {
+            "assertion": [
+              4,
+              1
+            ],
+            "validity_end": null,
+            "validity_start": null
+          },
+          "a-004": {
+            "assertion": [
+              4,
+              1
+            ],
+            "validity_end": null,
+            "validity_start": null
+          },
+          "a-005": {
+            "assertion": [
+              4,
+              1
+            ],
+            "validity_end": null,
+            "validity_start": null
+          },
+          "a-006": {
+            "assertion": [
+              4,
+              1
+            ],
+            "validity_end": null,
+            "validity_start": null
+          },
+          "a-007": {
+            "assertion": [
+              4,
+              1
+            ],
+            "validity_end": null,
+            "validity_start": null
+          }
+        },
+        "pass": false,
+        "semantic": {
+          "derivation_integrity": {
+            "issues": [
+              "assertion a-007 derivation dv-001 rule REVEAL_RESULT does not preserve the signed content (same content proposition and content_polarity) of a Conveys premise"
+            ],
+            "pass": false
+          },
+          "epistemic_integrity": {
+            "issues": [],
+            "pass": true
+          },
+          "evidence_set_integrity": {
+            "issues": [],
+            "pass": true
+          },
+          "predicate_integrity": {
+            "issues": [],
+            "pass": true
+          },
+          "reference_integrity": {
+            "issues": [],
+            "pass": true
+          },
+          "support_path_integrity": {
+            "issues": [],
+            "pass": true
+          },
+          "temporal_bound_integrity": {
+            "issues": [],
+            "pass": true
+          }
+        },
+        "structural": {
+          "issues": [],
+          "layer": "JSON_SCHEMA_DRAFT_2020_12",
+          "pass": true
+        }
+      }
     }
   },
   "layers": {
