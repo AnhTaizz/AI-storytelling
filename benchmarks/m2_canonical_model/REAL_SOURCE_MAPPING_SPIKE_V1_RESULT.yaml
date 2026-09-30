@@ -1,0 +1,135 @@
+# M2-06 — Real-source canonical mapping spike (sanitized aggregate result; no source content)
+task: M2-06-REAL-SOURCE-CANONICAL-MAPPING-SPIKE
+status: M2_06_COMPLETE_READY_FOR_FREEZE_REVIEW
+freeze_readiness_recommendation: READY_FOR_M2_FREEZE_REVIEW
+recommendation_conditions:
+  - "Additive predicate-registry extension (no schema change) is part of the freeze scope; the v0 registry alone rates 1 of 3 difficult cases ACCEPTABLE."
+  - "Correct the AddressesAs functional declaration (add a setting argument or drop functional_on)."
+  - "Add a conformance rule rejecting duplicate-content propositions (identity by content)."
+base_commit: 89386d78b98af149f7d985c185743645cd062dc2
+corpus_fingerprint_sha256: 7f9bb8106d6d50acd2b3760738c0b8040f36ab547c2d2f7eade1ca0b9a827ff8
+chunks_jsonl_sha256: 10ef5681ad1b2db0882c150efa24804cd0fca56bb38e0ffb772d22494e1e40fb
+method:
+  mapping: manual semantic mapping from direct source reading; JSON built mechanically afterwards
+  task_q_gold_used: false
+  task_q_chunk_overlap_disclosed: "3 cases reuse chunks that also appear in frozen Task Q probes; different facts are modelled"
+  model_changes_during_spike: none (schema, registry, validator and projection unchanged)
+  extension_probe: "hypothetical ADDITIVE registry entries held in memory only, to test whether each vocabulary gap is additive"
+
+case_count: 10
+difficulty_mix: {SIMPLE: 3, MEDIUM: 4, DIFFICULT: 3}
+cases_stressing_multiple_invariants: 7
+
+fit_counts:
+  v0_registry_as_is: {NATURAL: 1, ACCEPTABLE: 4, AWKWARD: 4, NOT_REPRESENTABLE: 1}
+  with_additive_vocabulary_extension: {NATURAL: 3, ACCEPTABLE: 6, AWKWARD: 1, NOT_REPRESENTABLE: 0}
+difficult_cases_natural_or_acceptable:
+  v0_registry_as_is: 1
+  with_additive_vocabulary_extension: 3
+
+gap_counts:   # cases may carry several categories
+  NO_GAP: 0
+  PREDICATE_VOCABULARY_GAP: 7
+  SEMANTIC_GAP: 6
+  EPISTEMIC_LIMITATION: 3
+  TEMPORAL_LIMITATION: 1
+  PROJECTION_GAP: 1
+  SCHEMA_GAP: 1
+  ANNOTATION_AMBIGUITY: 1
+  SOURCE_AMBIGUITY: 0
+
+blocking_classification:
+  BLOCKING_MODEL_DEFECT: 0
+  NON_BLOCKING_VOCABULARY_EXTENSION: 6
+  KNOWN_LIMITATION: 4
+  ANNOTATION_PROBLEM: 0
+
+feature_coverage:
+  straightforward_event: [CASE_REAL_01, CASE_REAL_10]
+  entity_state_transition: [CASE_REAL_03, CASE_REAL_06]
+  possession_location_state: [CASE_REAL_01, CASE_REAL_04, CASE_REAL_08, CASE_REAL_10]
+  changing_address_naming: [CASE_REAL_05]
+  directional_relationship_state: [CASE_REAL_05, CASE_REAL_09]
+  belief_or_knowledge: [CASE_REAL_02, CASE_REAL_07, CASE_REAL_08, CASE_REAL_09]
+  concealment_secret_reveal: [CASE_REAL_07, CASE_REAL_08]
+  emotion_intention_evidence_gradient: [CASE_REAL_09, CASE_REAL_10]
+  callback_retrospective: [CASE_REAL_01, CASE_REAL_03, CASE_REAL_04, CASE_REAL_05, CASE_REAL_06]
+  long_range_multi_location_evidence: [CASE_REAL_01, CASE_REAL_04, CASE_REAL_05, CASE_REAL_06, CASE_REAL_07]
+  unknown_content_later_resolved: [CASE_REAL_08]
+  chronology_differs_from_discourse: [CASE_REAL_08]
+  reported_or_false_claim: [CASE_REAL_02, CASE_REAL_07, CASE_REAL_09]
+
+schema_conformance:
+  v0_document: {structural: PASS, semantic: PASS, registry: v0 unchanged}
+  extension_probe_document: {structural: PASS, semantic: PASS, registry: "v0 + additive probe entries (in memory)"}
+mapping_statistics_v0_document:
+  assertions: 77
+  evidence_refs_with_exact_spans: 47
+  multi_path_assertions: 13
+  multi_ref_sufficient_sets: 5
+  derived_assertions: 5
+  non_grounding_evidence_sets: 4
+  epistemic_status: {EXPLICIT: 66, ENTAILED: 11, SUGGESTED: 0}
+projection_checks:
+  v0_document: {passed: 36, total: 36}
+  extension_probe_document: {passed: 41, total: 41}
+  per_case: {PASS: 10, MODEL_GAP: 0, MAPPING_ERROR: 0, TOOLING_LIMITATION: 0}
+  expected_gap_reproductions: 2
+  mapping_errors_found_and_fixed: 1
+
+non_blocking_findings:
+  - id: F-ADDRESS-SETTING
+    category: PREDICATE_VOCABULARY_GAP
+    finding: "Address form depends on setting (private vs public); AddressesAs is functional on (speaker, addressee) with no setting, so co-existing forms raise a functional diagnostic."
+  - id: F-DUP-PROP
+    category: SCHEMA_GAP
+    finding: "Propositions are meant to have identity by content, but duplicate-content propositions are accepted and split canonical commitments (found via a first-pass mapping error)."
+  - id: F-HABITUAL
+    category: PREDICATE_VOCABULARY_GAP
+    finding: "Habitual/iterative facts (someone regularly does X) are central narrative facts; expressible additively as a stative predicate, frequency only as a literal."
+  - id: F-STATE-EMOTION-OWNERSHIP-INTENTION
+    category: PREDICATE_VOCABULARY_GAP
+    finding: "Physical/health condition, emotion toward a target, ownership (vs custody) and intention are missing; all proved additive in the probe."
+  - id: F-EXISTENTIAL-CONTENT
+    category: SEMANTIC_GAP
+    finding: "Vague or de dicto content ('some woman', 'a friend') fits only a placeholder and can never be resolved, because there is no propositional entailment; verdicts under-report safely."
+  - id: F-RESOLUTION-PROPAGATION
+    category: PROJECTION_GAP
+    finding: "SameContent resolution does not propagate into propositions that embed the placeholder (a belief that something is hidden stays unresolved after discovery)."
+  - id: F-CAUSATION-OMISSION
+    category: SEMANTIC_GAP
+    finding: "A cause stated as an omission or state cannot be expressed; Causes takes events only."
+  - id: F-FOCALIZATION
+    category: EPISTEMIC_LIMITATION
+    finding: "Focalized narration of a world claim forces a choice between narrator truth and the focal character's belief (linked to deferred unreliable narration)."
+  - id: F-GATE-BY-ANNOTATION
+    category: EPISTEMIC_LIMITATION
+    finding: "Depicted dialogue can be labelled DEPICTION and so pass the INTERNAL_STATE gate, and motives encoded as Causes are ungated; the gate relies on annotation discipline."
+  - id: F-SPEECH-ACTS
+    category: SEMANTIC_GAP
+    finding: "Requests, permissions and agreements are not propositions; only assertive speech (Says) is modelled."
+  - id: F-CONDITIONAL-BOUND
+    category: TEMPORAL_LIMITATION
+    finding: "Conditional future end bounds ('until we are no longer involved') are not expressible."
+  - id: F-REPEATED-UTTERANCE
+    category: ANNOTATION_AMBIGUITY
+    finding: "Repeated utterances of one claim collapse into one Says proposition with several sufficient paths; acceptable, but utterance events are not distinguished."
+validated_as_working_on_real_prose:
+  - "Proposition vs Assertion vs Says vs Attitude separation (reported, focal and hedged content never became canonical)"
+  - "Signed information (M2-05): concealment, discovery and reveal matched by content and polarity; reveal preserved polarity"
+  - "Polarity-specific UNAWARE was not needed in the panel; no evidence against it"
+  - "Late end bounds stay OPEN in earlier views; possession histories append rather than overwrite"
+  - "Retrospective evidence: sufficient for occurrence but PARTIAL for details it does not repeat"
+  - "Multi-path availability from the earliest complete path; multi-reference sufficient sets"
+  - "Story chronology only from explicit temporal relations, never from discourse order"
+
+private_artifacts:
+  package: .local/story_integration/otonari_30ch/M2_06_REAL_MAPPING_V1.zip
+  package_sha256: 1d3f4cc93965c916071b11a451c54b8adcc7886a4ec4f1086b2e302ea7312e93
+  file_sha256:
+    case_inventory.yaml: d54487209acd73b72fdb27e43ca67ae051e4d9ebfba258cf19ac2ee69a201fed
+    canonical_story_real_cases_v0.json: d935bb6fab8af8634a9ca3b6a0e67f16b477447d79b388f2d80764464272d470
+    canonical_story_real_cases_extension_probe.json: 80f9890df27185432cccded0c2bf24fa048915237d07c8afc26a9c731aa8a150
+    mapping_review.csv: 9f272212a1f5913b3a5e6061b140314a1cb6fe6f0f33bbf9c9e8d95a8d86d3dc
+    conformance_report.json: b4cbee5e58a813a0456a257644522fba594ec889ad59545ebeb50c1d7f6c9843
+    as_of_checks.json: 167cd0f4520fd79950bfcbb5d86a9f517a9728b78800957db62feda533913d36

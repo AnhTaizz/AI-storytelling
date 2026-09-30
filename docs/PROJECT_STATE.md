@@ -2,7 +2,7 @@
 
 ## Current Milestone
 
-M2 — Canonical Story Model (research IN PROGRESS: M2-01 requirements, M2-02 core concepts, M2-03 Canonical Schema v0, M2-04 as-of projection (accepted) and M2-05 signed-information hardening complete; M2-05 pending Orchestrator review; M2 not complete)
+M2 — Canonical Story Model (research IN PROGRESS: M2-01 requirements, M2-02 core concepts, M2-03 Canonical Schema v0, M2-04 as-of projection (accepted), M2-05 signed-information hardening and M2-06 real-source mapping spike complete; M2-06 pending Orchestrator review; M2 not complete)
 
 ## Milestone Lifecycle
 
@@ -529,6 +529,27 @@ M2-05-SIGNED-INFORMATION-SEMANTICS-HARDENING — COMPLETED — Status: PENDING O
 - **Projection:** secrets match signed content for holding, learning and UNAWARE. UNAWARE is interpreted as polarity-specific in V0. Reader fields are now signed (`reader_knows_signed_content`, `reader_knows_content_resolution`, `reader_signed_content_status`), replacing M2-04's polarity-unaware `reader_has_canonical_content`.
 - **Tests:** 19 new signed-information tests and 2 new negative fixtures (OPEN concealed polarity; reveal flipping polarity). Canonical story suite 79/79; A–J behaviour intact. `DECISIONS.md` unchanged.
 
+M2-06-REAL-SOURCE-CANONICAL-MAPPING-SPIKE — COMPLETED — Status: PENDING ORCHESTRATOR REVIEW
+
+- **Method.** Mapped 10 real cases from the private 30-chapter corpus (identity verified; 3 simple, 4 medium, 3 difficult) by hand into Canonical Story Model v0.
+  - Frozen Task Q gold was not used.
+  - Schema, registry, validator and projection were unchanged.
+  - An in-memory additive "extension probe" tested whether vocabulary gaps are additive.
+- **Conformance.** Both private documents (v0 registry; v0 plus additive probe entries) pass the unchanged contract. As-of checks pass 36/36 and 41/41.
+- **Fit.**
+  - v0 registry as-is: NATURAL 1, ACCEPTABLE 4, AWKWARD 4, NOT_REPRESENTABLE 1.
+  - With additive vocabulary: NATURAL 3, ACCEPTABLE 6, AWKWARD 1.
+- **Findings.** No blocking model defect. Non-blocking findings:
+  - setting-dependent address forms (AddressesAs `functional_on` wrong for real data);
+  - duplicate-content propositions accepted (identity by content not enforced);
+  - missing condition, emotion, ownership, intention and habitual vocabulary;
+  - existential content, resolution propagation into embedding propositions, omission causation, focalization, non-assertive speech acts, and conditional bounds.
+- **Recommendation.** READY_FOR_M2_FREEZE_REVIEW, conditional on an additive registry extension, the AddressesAs correction, and a duplicate-proposition conformance rule.
+- **Artifacts.**
+  - Private package `M2_06_REAL_MAPPING_V1.zip`, SHA-256 `1d3f4cc93965c916071b11a451c54b8adcc7886a4ec4f1086b2e302ea7312e93`; not committed.
+  - Public sanitized result `benchmarks/m2_canonical_model/REAL_SOURCE_MAPPING_SPIKE_V1_RESULT.yaml` and `docs/research/m2/M2_REAL_SOURCE_MAPPING_SPIKE.md`.
+- M2 is not closed. `DECISIONS.md` is unchanged.
+
 ## Next Candidate
 
-Orchestrator review of M2-05. No real-source mapping or M2-06 before that review and an explicit task.
+Orchestrator review of M2-06 and a freeze-scope decision. No M2 freeze and no M3 before that decision.
