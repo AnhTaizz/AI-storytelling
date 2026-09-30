@@ -1,0 +1,124 @@
+task_id: M1-30CH-Q-INDEPENDENT-VALIDATION-EXECUTION
+status: TASK_Q_COMPLETE
+executed_at: '2026-09-30T08:43:13+07:00'
+git_sha: b5e9df7df125fa8f489b1d4bb9ba9604641f677e
+frozen_fixture_sha256: f07b2d4048f424d8e885221ff4b14f3d572a22bf2e5a405382782ad1672f1dc1
+source_package_sha256: fcd147eb57c7b8ab9500c85ad633436524b96a014aa4ef8b68dfdfbf9d4515a6
+human_signoff_sha256: 03de5485c07ec84d5e8e32624db23e1e3f22d91ffc11828c4a458005513a9037
+task_q_run_plan_sha256: fce16277fb944f2261d966bc604df72502fa82bf0e22c8c1bd77500a4e45a877
+corpus_fingerprint_sha256: 7f9bb8106d6d50acd2b3760738c0b8040f36ab547c2d2f7eade1ca0b9a827ff8
+chunks_jsonl_sha256: 10ef5681ad1b2db0882c150efa24804cd0fca56bb38e0ffb772d22494e1e40fb
+population:
+  primary_probes: 16
+  single_gold: 14
+  multi_gold: 2
+  eligible_pools_below_30: 2
+protocol:
+  reference: INDEPENDENT_VALIDATION_FIXTURE_V1_SPEC.md section 6 (pre-registered, unchanged)
+  candidate_depth: 30
+  candidate_depth_rule: min(30, eligible pool)
+  top_k: 10
+  primary_comparison: O vs M
+  secondary_baseline: K
+  bootstrap:
+    B: 10000
+    seed: 42
+    ci: 0.95
+    rng: numpy default_rng
+    paired: true
+models:
+  K:
+    method_id: DENSE_E5_LARGE_V1
+    model_id: intfloat/multilingual-e5-large
+    model_revision: 3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3
+    model_weight_sha256: 020afdebf2762b29fcaf286629a96c3b3b65af241f6a08226b1cfee60a21def6
+    tokenizer_sha256: 62c24cdc13d4c9952d63718d6c9fa4c287974249e16b7ade6d5a85e7bbb75626
+    execution_device: cpu
+    torch_default_dtype: torch.float32
+  M:
+    method_id: BGE_RERANKER_V2_M3_TOP30_V1
+    model_id: BAAI/bge-reranker-v2-m3
+    model_revision: 953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e
+    model_weight_sha256: d9e3e081faff1eefb84019509b2f5558fd74c1a05a2c7db22f74174fcedb5286
+    tokenizer_sha256: 69564b696052886ed0ac63fa393e928384e0f8caada38c1f4864a9bfbf379c15
+    execution_device: cpu
+    dtype: torch.float32
+  O:
+    method_id: KM_CONSENSUS_RANK_SUM_V1
+results:
+  K:
+    full_evidence_success@10: 10 / 16
+    full_evidence_success@10_rate: 0.625
+    required_evidence_recall@10: 0.8125
+    hit@10: 16 / 16
+    hit@10_rate: 1.0
+    mrr: 0.6656
+  M:
+    full_evidence_success@10: 11 / 16
+    full_evidence_success@10_rate: 0.6875
+    required_evidence_recall@10: 0.8333
+    hit@10: 16 / 16
+    hit@10_rate: 1.0
+    mrr: 0.7365
+  O:
+    full_evidence_success@10: 11 / 16
+    full_evidence_success@10_rate: 0.6875
+    required_evidence_recall@10: 0.8542
+    hit@10: 16 / 16
+    hit@10_rate: 1.0
+    mrr: 0.8021
+delta_O_minus_M:
+  full_evidence_success@10: 0.0
+  required_evidence_recall@10: 0.0208
+  hit@10: 0.0
+  mrr: 0.0656
+descriptive_classification: PREREGISTERED_RULES_DO_NOT_COVER
+bootstrap_ci95_delta_O_minus_M:
+  full_evidence_success@10:
+    low: -0.1875
+    high: 0.1875
+    status: PRIMARY
+  required_evidence_recall@10:
+    low: -0.0417
+    high: 0.0833
+    status: EXPLORATORY
+  hit@10:
+    low: 0.0
+    high: 0.0
+    status: EXPLORATORY
+  mrr:
+    low: -0.0771
+    high: 0.2042
+    status: EXPLORATORY
+primary_binary_inference:
+  endpoint: Full Evidence Success@10
+  discordant_m_fail_o_success: 1
+  discordant_m_success_o_fail: 1
+  mcnemar_exact_p_two_sided: 1.0
+  paired_permutation_exact_p_two_sided: 1.0
+  paired_permutation_method: exact sign-flip enumeration
+  note: N=16; limited power. Non-significance is not evidence of equivalence.
+transitions_aggregate:
+  success:
+    m_fail_o_success: 1
+    m_success_o_fail: 1
+    both_success: 10
+    both_fail: 4
+  recall:
+    improved: 2
+    unchanged: 13
+    worsened: 1
+limitations:
+- Only 16 held-out primary probes.
+- Same 30-chapter story and corpus as development; query-held-out, not cross-story generalization.
+- The fixture author had prior exposure to the 15 development probes.
+- Statistical power is limited; confidence intervals are wide.
+- Evidence applies only to this frozen fixture and population.
+- Retrieval results do not by themselves demonstrate production storytelling quality.
+anti_tuning: Protocol closed after this first execution; no parameter changed before or after results.
+execution_attempts:
+  aborted_before_any_result: 1
+  completed: 1
+  note: Attempt 1 was terminated by a host session ending before rankings were persisted, gold was read, or metrics existed; attempt 2 re-ran the identical command.
+private_execution_package_sha256: 406999637c5c0d6f0c77e6eb1ae4171e5ee57b9714f482bcaaa1ffca01b3838e
+execution_record_sha256: d14d653be76d15efea6a5cc2be9487857f6752dc8f1ba62c872ff3a5d27b1047

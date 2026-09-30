@@ -2,7 +2,9 @@
 
 ## Status
 **FROZEN** (frozen fixture version 1, 2026-09-30)
-*(Product Owner sign-off is complete and bound to the reviewed v3 package. The frozen package is the immutable Task Q input. `EVALUATION_ALLOWED = true`; Task Q has not been executed. See section 8.)*
+*(Product Owner sign-off is complete and bound to the reviewed v3 package. The frozen package is the immutable Task Q input. See section 8.)*
+
+**Task Q: EXECUTED once (2026-09-30).** Results: `INDEPENDENT_VALIDATION_TASK_Q_V1_RESULT.yaml`. The protocol is closed; no parameter may change for claims on this fixture.
 
 *History: this section previously read `READY_FOR_HUMAN_SIGNOFF` for the v2 package; that package was later found to have cross-artifact inconsistencies and was superseded by v3 before any sign-off.*
 

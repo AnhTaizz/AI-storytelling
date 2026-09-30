@@ -256,3 +256,14 @@ freeze:
     - tools/story_benchmark/fixture_freeze.py
     - tools/story_benchmark/probe_consistency.py
   immutability: "Any change to the frozen package creates a new fixture version; V1 is never mutated in place."
+
+task_q:
+  task_id: M1-30CH-Q-INDEPENDENT-VALIDATION-EXECUTION
+  status: TASK_Q_COMPLETE
+  task_q_executed: true
+  executed_at: "2026-09-30T08:43:13+07:00"
+  frozen_fixture_sha256: f07b2d4048f424d8e885221ff4b14f3d572a22bf2e5a405382782ad1672f1dc1
+  frozen_fixture_note: "The frozen package keeps task_q_executed=false as its state at freeze; execution state lives here and in the result file."
+  result_file: INDEPENDENT_VALIDATION_TASK_Q_V1_RESULT.yaml
+  descriptive_classification: PREREGISTERED_RULES_DO_NOT_COVER
+  protocol_closed: true

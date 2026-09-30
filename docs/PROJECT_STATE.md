@@ -430,4 +430,18 @@ M1-30CH-P-HUMAN-SIGNOFF-FREEZE-GATE — EXECUTED — Fixture Status: FROZEN
 
 ## Next Candidate
 
-Master Orchestrator review of the freeze record. Only after that review may Task Q execute, against frozen hash `f07b2d4048f424d8e885221ff4b14f3d572a22bf2e5a405382782ad1672f1dc1` and the unchanged pre-registered protocol.
+M1-30CH-Q-INDEPENDENT-VALIDATION-EXECUTION — EXECUTED — Status: TASK_Q_COMPLETE
+
+- Executed once against frozen fixture `f07b2d40…1dc1` under the unchanged pre-registered protocol, using the frozen K/M/O cores through a new dedicated executor (`run_independent_validation_task_q_v1.py`). All rankings were persisted before any gold label was read.
+- Results on 16 held-out primary probes (Top-10):
+  - K: Full Evidence Success 10 / 16, Recall 0.8125, Hit 16 / 16, MRR 0.6656.
+  - M: Full Evidence Success 11 / 16, Recall 0.8333, Hit 16 / 16, MRR 0.7365.
+  - O: Full Evidence Success 11 / 16, Recall 0.8542, Hit 16 / 16, MRR 0.8021.
+- O − M: Success 0.0000, Recall +0.0208, Hit 0.0000, MRR +0.0656. Paired bootstrap 95% CI for Success delta [−0.1875, +0.1875]. Discordant pairs 1 / 1; exact McNemar p = 1.0; exact paired permutation p = 1.0. N = 16, so power is limited, and non-significance is not equivalence.
+- Descriptive classification: `PREREGISTERED_RULES_DO_NOT_COVER`. The outcome (Success unchanged, Recall up, Hit unchanged, nothing down) matches none of the four pre-registered classes. The executor declared this handling before execution; interpretation is left to the Master Orchestrator.
+- Disclosure: a first attempt was terminated by a host session ending before rankings were persisted, gold was read, or any metric existed. It is preserved privately; the second attempt re-ran the identical command.
+- The frozen fixture was not modified. No tuning, retry of alternative weights, or new method occurred.
+
+## Next Candidate
+
+Master Orchestrator interpretation of the Task Q result, including how to treat an outcome not covered by the pre-registered descriptive classes. Do not tune K/M/O, begin M2, or claim generalization beyond this fixture without that decision.
