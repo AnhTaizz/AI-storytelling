@@ -1,0 +1,65 @@
+{
+  "description": "Machine-readable expectations for the M2-02 section 21 snapshots (cases E, F, J combined). Content aliases: P_X = LocatedAt(thing=ent-key), P_Y = LocatedAt(thing=ent-box). null means 'not visible in this view'.",
+  "fixture": "snapshot_m2_02_s21.json",
+  "snapshots": [
+    {
+      "as_of": [5, 999],
+      "expect": {
+        "identity_equivalent": [["ent-u", "ent-a", false]],
+        "mention_classes": {"men-u": ["ent-u"]},
+        "identity_known_u": "OPEN",
+        "secret_status": "ACTIVE",
+        "secret_target_unaware_evidenced": true,
+        "verdicts": [
+          ["ent-a", "HOLDS_TRUE", "P_X", "UNRESOLVED_BELIEF"],
+          ["ent-b", "UNAWARE", "P_X", "UNAWARE"],
+          ["ent-b", "HOLDS_TRUE", "P_Y", "UNRESOLVED_BELIEF"]
+        ],
+        "canonical": {"P_X": "UNCOMMITTED", "P_Y": "UNCOMMITTED"},
+        "reader_reveal": {"P_X": null, "P_Y": null},
+        "unaware_end": "OPEN",
+        "events": {"evt-ask": "OCCURRED", "evt-tell": null}
+      }
+    },
+    {
+      "as_of": [20, 999],
+      "expect": {
+        "identity_equivalent": [["ent-u", "ent-a", false]],
+        "mention_classes": {"men-u": ["ent-u"]},
+        "identity_known_u": "OPEN",
+        "secret_status": "ENDED",
+        "secret_target_unaware_evidenced": true,
+        "verdicts": [
+          ["ent-a", "HOLDS_TRUE", "P_X", "KNOWS"],
+          ["ent-b", "UNAWARE", "P_X", "UNAWARE"],
+          ["ent-b", "HOLDS_TRUE", "P_X", "KNOWS"],
+          ["ent-b", "HOLDS_TRUE", "P_Y", "MISTAKEN"]
+        ],
+        "canonical": {"P_X": "AFFIRMED", "P_Y": "NEGATED"},
+        "reader_reveal": {"P_X": [7, 1], "P_Y": [18, 1]},
+        "unaware_end": "t-evt-tell",
+        "events": {"evt-ask": "OCCURRED", "evt-tell": "OCCURRED"}
+      }
+    },
+    {
+      "as_of": [22, 999],
+      "expect": {
+        "identity_equivalent": [["ent-u", "ent-a", true]],
+        "mention_classes": {"men-u": ["ent-a"]},
+        "identity_known_u": "OPEN",
+        "secret_status": "ENDED",
+        "secret_target_unaware_evidenced": true,
+        "verdicts": [
+          ["ent-a", "HOLDS_TRUE", "P_X", "KNOWS"],
+          ["ent-b", "UNAWARE", "P_X", "UNAWARE"],
+          ["ent-b", "HOLDS_TRUE", "P_X", "KNOWS"],
+          ["ent-b", "HOLDS_TRUE", "P_Y", "MISTAKEN"]
+        ],
+        "canonical": {"P_X": "AFFIRMED", "P_Y": "NEGATED"},
+        "reader_reveal": {"P_X": [7, 1], "P_Y": [18, 1]},
+        "unaware_end": "t-evt-tell",
+        "events": {"evt-ask": "OCCURRED", "evt-tell": "OCCURRED"}
+      }
+    }
+  ]
+}

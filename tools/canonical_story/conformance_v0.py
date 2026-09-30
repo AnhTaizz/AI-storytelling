@@ -189,6 +189,15 @@ class Availability:
         return None if bound_completion is None else max(own, bound_completion)
 
 
+def availability_calculator(doc: dict, registry: Optional[dict] = None) -> Availability:
+    """Shared entry point to the normative availability rule (used by the as-of view).
+
+    Returns the calculator; its ``.ix`` attribute exposes the document index.
+    Callers must pass a structurally valid document.
+    """
+    return Availability(_Index(doc, registry or load_registry()))
+
+
 def availability_map(doc: dict, registry: Optional[dict] = None) -> Dict[str, Optional[List[int]]]:
     """Availability per assertion (as key lists), for a structurally valid document."""
     calc = Availability(_Index(doc, registry or load_registry()))

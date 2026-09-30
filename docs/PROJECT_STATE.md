@@ -2,7 +2,7 @@
 
 ## Current Milestone
 
-M2 — Canonical Story Model (research IN PROGRESS: M2-01 requirements, M2-02 core concepts and M2-03 Canonical Schema v0 complete; M2-03 pending Orchestrator review; M2 not complete)
+M2 — Canonical Story Model (research IN PROGRESS: M2-01 requirements, M2-02 core concepts, M2-03 Canonical Schema v0 and M2-04 as-of projection complete; M2-04 pending Orchestrator review; M2 not complete)
 
 ## Milestone Lifecycle
 
@@ -503,6 +503,22 @@ M2-03-CANONICAL-STORY-SCHEMA-V0 — COMPLETED — Status: PENDING ORCHESTRATOR R
 - Derived concepts (Relationship, Secret, StoryClaim, Alias, KNOWS, MISTAKEN, reader reveal, chronology) are not record types.
 - Research proposal only; `DECISIONS.md` is unchanged.
 
+M2-04-AS-OF-PROJECTION-AND-DERIVED-VIEWS — COMPLETED — Status: PENDING ORCHESTRATOR REVIEW
+
+- Declared the Canonical Story tooling dependencies in `requirements-canonical-story.txt` (jsonschema ≥ 4.18 < 5, PyYAML ≥ 6 < 7). Tests now fail loudly, never skip, if they are missing.
+- Added the reference projection `tools/canonical_story/view_v0.py`: `project_as_of(document, position)` returns a derived, disposable view. It reuses the shared availability calculator and never mutates its input.
+- The view covers:
+  - leak-free visibility, including referents and support paths;
+  - delayed bound projection;
+  - identity, mention and content resolution;
+  - canonical commitment status (UNCOMMITTED, OPEN, AFFIRMED, NEGATED, CONTESTED, TIME_SCOPED);
+  - KNOWS, MISTAKEN and UNRESOLVED_BELIEF verdicts;
+  - reported claims and conflicts, relationship stages, and secrets;
+  - reader reveal (valid only under DEFAULT_V0 reliable narration);
+  - event occurrence, explicit temporal relations, and conservative functional-conflict diagnostics.
+- Tests: 36 projection tests covering stress cases A–J, machine-readable M2-02 §21 snapshots (as of 5, 20 and 22), 10+ spoiler-leak cases, holder-relative safety, contradictions, negated belief content, immutability and determinism. With the 24 schema tests, 60/60 pass; the story_benchmark and story_ingestion regressions also pass.
+- Schema v0 and the predicate registry are unchanged. Documentation: `docs/research/m2/M2_AS_OF_PROJECTION_V0.md`. `DECISIONS.md` is unchanged.
+
 ## Next Candidate
 
-Orchestrator review of M2-03. M2-04 (as-of projection) must not start before that review and an explicit task.
+Orchestrator review of M2-04. M2-05 must not start before that review and an explicit task.

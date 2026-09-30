@@ -2,6 +2,7 @@
 import json
 import unittest
 
+import tests.canonical_story._dependencies  # noqa: F401  (fails loudly if jsonschema/PyYAML are missing)
 from jsonschema import Draft202012Validator
 
 from tests.canonical_story import generate_fixtures as gen

@@ -9,7 +9,9 @@ match this output, so fixtures cannot drift from the builder.
 import json
 from pathlib import Path
 
-from tests.canonical_story.fixture_builder import INVALID_CASES, VALID_CASES
+from tests.canonical_story.fixture_builder import EXTRA_VALID_CASES, INVALID_CASES, VALID_CASES
+
+ALL_VALID_CASES = {**VALID_CASES, **EXTRA_VALID_CASES}
 from tools.canonical_story.conformance_v0 import REGISTRY_PATH, REPO_ROOT, SCHEMA_PATH, validate_document
 
 HERE = Path(__file__).resolve().parent
@@ -24,7 +26,7 @@ def dump(obj) -> str:
 
 def expected_files() -> dict:
     files = {}
-    for name, build in VALID_CASES.items():
+    for name, build in ALL_VALID_CASES.items():
         files[VALID_DIR / name] = dump(build())
     for name, (build, _, _) in INVALID_CASES.items():
         files[INVALID_DIR / name] = dump(build())
@@ -43,7 +45,7 @@ def build_report() -> dict:
         "valid_fixtures": {},
         "invalid_fixtures": {},
     }
-    for name, build in VALID_CASES.items():
+    for name, build in ALL_VALID_CASES.items():
         report["valid_fixtures"][name] = validate_document(build())
     for name, (build, layer, fragment) in INVALID_CASES.items():
         result = validate_document(build())
@@ -61,7 +63,7 @@ def main() -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding="utf-8", newline="\n")
     REPORT_PATH.write_text(dump(build_report()), encoding="utf-8", newline="\n")
-    print(f"wrote {len(VALID_CASES)} valid, {len(INVALID_CASES)} invalid fixtures and {REPORT_PATH.name}")
+    print(f"wrote {len(ALL_VALID_CASES)} valid, {len(INVALID_CASES)} invalid fixtures and {REPORT_PATH.name}")
 
 
 if __name__ == "__main__":

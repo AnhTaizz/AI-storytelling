@@ -2174,6 +2174,204 @@
         "layer": "JSON_SCHEMA_DRAFT_2020_12",
         "pass": true
       }
+    },
+    "snapshot_m2_02_s21.json": {
+      "availability": {
+        "a-001": {
+          "assertion": [
+            3,
+            1
+          ],
+          "validity_end": [
+            3,
+            1
+          ],
+          "validity_start": [
+            3,
+            1
+          ]
+        },
+        "a-002": {
+          "assertion": [
+            3,
+            1
+          ],
+          "validity_end": [
+            15,
+            1
+          ],
+          "validity_start": [
+            3,
+            1
+          ]
+        },
+        "a-003": {
+          "assertion": [
+            4,
+            1
+          ],
+          "validity_end": null,
+          "validity_start": null
+        },
+        "a-004": {
+          "assertion": [
+            4,
+            1
+          ],
+          "validity_end": null,
+          "validity_start": null
+        },
+        "a-005": {
+          "assertion": [
+            4,
+            1
+          ],
+          "validity_end": [
+            15,
+            1
+          ],
+          "validity_start": [
+            4,
+            1
+          ]
+        },
+        "a-006": {
+          "assertion": [
+            7,
+            1
+          ],
+          "validity_end": null,
+          "validity_start": null
+        },
+        "a-007": {
+          "assertion": [
+            15,
+            1
+          ],
+          "validity_end": null,
+          "validity_start": null
+        },
+        "a-008": {
+          "assertion": [
+            15,
+            1
+          ],
+          "validity_end": null,
+          "validity_start": null
+        },
+        "a-009": {
+          "assertion": [
+            15,
+            1
+          ],
+          "validity_end": null,
+          "validity_start": null
+        },
+        "a-010": {
+          "assertion": [
+            15,
+            1
+          ],
+          "validity_end": null,
+          "validity_start": null
+        },
+        "a-011": {
+          "assertion": [
+            15,
+            1
+          ],
+          "validity_end": [
+            15,
+            1
+          ],
+          "validity_start": [
+            15,
+            1
+          ]
+        },
+        "a-012": {
+          "assertion": [
+            5,
+            1
+          ],
+          "validity_end": [
+            5,
+            1
+          ],
+          "validity_start": [
+            5,
+            1
+          ]
+        },
+        "a-013": {
+          "assertion": [
+            18,
+            1
+          ],
+          "validity_end": null,
+          "validity_start": null
+        },
+        "a-014": {
+          "assertion": [
+            4,
+            1
+          ],
+          "validity_end": null,
+          "validity_start": null
+        },
+        "a-015": {
+          "assertion": [
+            4,
+            1
+          ],
+          "validity_end": null,
+          "validity_start": null
+        },
+        "a-016": {
+          "assertion": [
+            22,
+            1
+          ],
+          "validity_end": null,
+          "validity_start": null
+        }
+      },
+      "pass": true,
+      "semantic": {
+        "derivation_integrity": {
+          "issues": [],
+          "pass": true
+        },
+        "epistemic_integrity": {
+          "issues": [],
+          "pass": true
+        },
+        "evidence_set_integrity": {
+          "issues": [],
+          "pass": true
+        },
+        "predicate_integrity": {
+          "issues": [],
+          "pass": true
+        },
+        "reference_integrity": {
+          "issues": [],
+          "pass": true
+        },
+        "support_path_integrity": {
+          "issues": [],
+          "pass": true
+        },
+        "temporal_bound_integrity": {
+          "issues": [],
+          "pass": true
+        }
+      },
+      "structural": {
+        "issues": [],
+        "layer": "JSON_SCHEMA_DRAFT_2020_12",
+        "pass": true
+      }
     }
   }
 }

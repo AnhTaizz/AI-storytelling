@@ -1,0 +1,11 @@
+# Dependencies for the Canonical Story tooling (schemas/canonical_story, tools/canonical_story,
+# tests/canonical_story). Scoped to this tooling; it is not a project-wide packaging decision.
+#
+# Install:   python -m pip install -r requirements-canonical-story.txt
+# Test:      python -m unittest discover -s tests/canonical_story -p "test_*.py"
+#
+# jsonschema >= 4.18 provides the referencing-based Draft 2020-12 validator used by the
+# conformance tests; the upper bound avoids unreviewed major-version behaviour changes.
+# Verified with jsonschema 4.26.0 and PyYAML 6.0.3 on Python 3.14.
+jsonschema>=4.18,<5
+PyYAML>=6.0,<7

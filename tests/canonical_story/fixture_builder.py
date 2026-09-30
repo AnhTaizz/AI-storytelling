@@ -311,6 +311,54 @@ def case_j_unknown_identity() -> dict:
     return d.build()
 
 
+def snapshot_m2_02_s21() -> dict:
+    """Cases E, F and J combined in one document, matching the M2-02 section 21 snapshots."""
+    d = Doc("story-snapshot")
+    a, b = d.entity("ent-a", "CHARACTER"), d.entity("ent-b", "CHARACTER")
+    u = d.entity("ent-u", "CHARACTER", placeholder=True, label="the stranger")
+    key, garden = d.entity("ent-key", "OBJECT"), d.entity("ent-garden", "LOCATION")
+    box, shed = d.entity("ent-box", "OBJECT"), d.entity("ent-shed", "LOCATION")
+    p_x = d.prop("LocatedAt", thing=E(key), location=E(garden))
+    p_y = d.prop("LocatedAt", thing=E(box), location=E(shed))
+    # Case E: A holds and conceals P_X (3); B's unawareness entailed (4); reader learns P_X (7); B told (15).
+    d.assertion(d.prop("Attitude", holder=E(a), attitude=TOK("attitude_kind", "HOLDS_TRUE"),
+                       content=P(p_x), content_polarity=POL()), sets=[SUF(d.ev(3))],
+                validity={"start": d.bound(), "end": d.bound()})
+    d.assertion(d.prop("Conceals", concealer=E(a), content=P(p_x), concealed_from=E(b)), sets=[SUF(d.ev(3))],
+                validity={"start": d.bound(), "end": d.bound("t-evt-tell", sets=[SUF(d.ev(15))])})
+    ask = d.event("evt-ask", "UTTERANCE")
+    occ_ask, parts_ask = occurred_with(d, ask, 4, [(b, "AGENT")])
+    tell = d.event("evt-tell", "REVEAL_TELL")
+    d.assertion(d.prop("Attitude", holder=E(b), attitude=TOK("attitude_kind", "UNAWARE"),
+                       content=P(p_x), content_polarity=POL()), status="ENTAILED",
+                derivations=[("BEHAVIOUR_ENTAILS_UNAWARE", [occ_ask] + parts_ask)],
+                validity={"start": d.bound(), "end": d.bound("t-evt-tell", sets=[SUF(d.ev(15))])})
+    d.assertion(p_x, sets=[SUF(d.ev(7, "NARRATION_SUMMARY"))])
+    occ_tell, parts_tell = occurred_with(d, tell, 15, [(a, "SOURCE"), (b, "RECIPIENT")])
+    conveys = d.assertion(d.prop("Conveys", event=V(tell), content=P(p_x), content_polarity=POL()),
+                          sets=[SUF(d.ev(15))])
+    d.assertion(d.prop("Attitude", holder=E(b), attitude=TOK("attitude_kind", "HOLDS_TRUE"),
+                       content=P(p_x), content_polarity=POL()), status="ENTAILED",
+                derivations=[("REVEAL_RESULT", [occ_tell] + parts_tell + [conveys])],
+                validity={"start": d.bound("t-evt-tell"), "end": d.bound()})
+    # Case F: B believes P_Y (5); narration negates it (18).
+    d.assertion(d.prop("Attitude", holder=E(b), attitude=TOK("attitude_kind", "HOLDS_TRUE"),
+                       content=P(p_y), content_polarity=POL()), sets=[SUF(d.ev(5))],
+                validity={"start": d.bound(), "end": d.bound()})
+    d.assertion(p_y, polarity="NEGATED", sets=[SUF(d.ev(18, "NARRATION_SUMMARY"))])
+    # Case J: identity of U explicitly unknown (4); resolved as A (22).
+    m = d.mention("men-u", d.ev(4), "the stranger")
+    d.assertion(d.prop("RefersTo", mention=M(m), entity=E(u)), sets=[SUF(d.ev(4))])
+    d.assertion(d.prop("IdentityKnown", entity=E(u)), polarity="OPEN", sets=[SUF(d.ev(4))])
+    d.assertion(d.prop("SameAs", first=E(u), second=E(a)), sets=[SUF(d.ev(22))])
+    return d.build()
+
+
+EXTRA_VALID_CASES = {
+    "snapshot_m2_02_s21.json": snapshot_m2_02_s21,
+}
+
+
 VALID_CASES = {
     "case_a_multiple_names.json": case_a_multiple_names,
     "case_b_flashback.json": case_b_flashback,

@@ -15,7 +15,7 @@ This document formalizes the M2-02 logical model (`M2_CORE_CONCEPTS_AND_BOUNDARI
 | `tools/canonical_story/conformance_v0.py` | Semantic conformance validator and the normative availability function |
 | `tests/canonical_story/` | Synthetic fixtures (A–J valid, 17 negative), the conformance report `conformance_report_v0.json`, and tests |
 
-**Notation, not technology.** JSON Schema is used only as a language-independent interchange and validation notation. It is not a commitment to JSON storage, PostgreSQL, Neo4j, Pydantic, an ORM, or any framework. The validator uses the standard `jsonschema` Python package (≥ 4.18) for Draft 2020-12 and PyYAML for the registry. Both run offline.
+**Notation, not technology.** JSON Schema is used only as a language-independent interchange and validation notation. It is not a commitment to JSON storage, PostgreSQL, Neo4j, Pydantic, an ORM, or any framework. The validator uses the standard `jsonschema` Python package (≥ 4.18) for Draft 2020-12 and PyYAML for the registry. Both run offline. They are declared in `requirements-canonical-story.txt` (added in M2-04); install with `python -m pip install -r requirements-canonical-story.txt`.
 
 **Out of scope:**
 - M3 ingestion and M4 extraction;
