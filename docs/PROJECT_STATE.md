@@ -2,17 +2,21 @@
 
 ## Current Milestone
 
-M2 — Canonical Story Model (IN PROGRESS: M2-01 domain requirements complete; M2-02 not started)
+M2 — Canonical Story Model (research IN PROGRESS: M2-01 requirements and M2-02 core concepts complete; M2-02 pending Orchestrator review)
 
 ## Milestone Lifecycle
 
 - M0 — Product Foundation: CLOSED.
-- M1 — Script Quality & Narrative Contract: COMPLETED / CLOSED FOR CURRENT RESEARCH SCOPE.
-- M2 — Canonical Story Model: IN PROGRESS. Not complete.
+- M1 — Script Quality & Narrative Contract:
+  - Empirical / research program: CLOSED for the current scope.
+  - Formal Script Quality Contract: still OPEN. The M1 capability gate is therefore not fully complete.
+- M2 — Canonical Story Model: research IN PROGRESS under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015). Not complete.
+
+*Correction (M2-02): an earlier version of this section labelled M1 "COMPLETED / CLOSED FOR CURRENT RESEARCH SCOPE". That overstated completion while the formal Script Quality Contract remains open. The M1 research program is closed; the contract is not.*
 
 ## M1 Closure Note
 
-M1 closed its current research scope on 2026-09-30 (Task Q commit `8c6ff438e5bfafaebf9cbc4c249485ba0f2d1116`).
+The M1 research program closed its current scope on 2026-09-30 (Task Q commit `8c6ff438e5bfafaebf9cbc4c249485ba0f2d1116`). The formal Script Quality Contract remains open.
 
 - **Completed work:**
   - 30-chapter corpus research.
@@ -473,6 +477,19 @@ M2-01-CANONICAL-STORY-MODEL-DOMAIN-REQUIREMENTS — EXECUTED — Status: M2_01_C
 - It proposes 18 domain invariants (INV-01 to INV-18), a candidate concept inventory with first-class / uncertain / deferred status, temporal, epistemic, provenance and source-independence requirements, 13 open questions, and acceptance criteria for M2-02.
 - Research only: no schema, storage, extraction, or technology choice was made, and nothing was added to `DECISIONS.md`.
 
+M2-02-CANONICAL-STORY-MODEL-CORE-CONCEPTS — COMPLETED — Status: PENDING ORCHESTRATOR REVIEW
+
+- Corrected the M1 lifecycle wording at the top of this file: the research program is closed, and the formal Script Quality Contract is still open.
+- Corrected the M2-01 boundary: M2-02 covers logical concepts and boundaries; M2-03 covers Canonical Schema v0.
+- Created `docs/research/m2/M2_CORE_CONCEPTS_AND_BOUNDARIES.md`.
+- Core thesis: a truth-neutral Proposition is distinct from the canonical Assertion that commits to it, with polarity, epistemic status, validity, evidence sets, derivation, and review.
+- Knowledge states are attitude Assertions that embed a Proposition without asserting it. KNOWS and MISTAKEN are derived per view.
+- Relationship, Secret, StoryClaim, Alias, and reader knowledge are derived views. Character reveals are events; reader reveal is derived from evidence availability.
+- A leak-free as-of view is defined through each Assertion's availability position.
+- Proposes an amendment to INV-06: the same distinctions, carried on orthogonal dimensions.
+- All 13 M2-01 open questions are resolved or explicitly deferred. Stress tests A–J are represented.
+- Research proposal only: no schema, no technology choice, and no `DECISIONS.md` entry.
+
 ## Next Candidate
 
-M2-02: propose a canonical story model structure that satisfies the M2-01 invariants, and answer or explicitly defer the open questions. It must remain technology-neutral and must not start before it is explicitly tasked.
+Orchestrator review of M2-02. M2-03 (Canonical Schema v0) must not start before that review and an explicit task.

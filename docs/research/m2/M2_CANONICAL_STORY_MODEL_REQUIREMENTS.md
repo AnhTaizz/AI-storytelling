@@ -2,6 +2,8 @@
 
 Status: RESEARCH — TASK M2-01. Input to M2-02. Not a schema, and not an accepted decision.
 
+*Boundary (corrected in M2-02): M2-02 defines logical domain concepts and boundaries. M2-03 formalizes Canonical Schema v0. Where this document previously implied that M2-02 produces a schema, read "M2-03".*
+
 ## 1. Purpose
 
 This document answers one question:
@@ -189,7 +191,7 @@ Requirements:
 
 ## 5. Domain Invariants
 
-These invariants are proposed as constraints any M2-02 schema must satisfy. Each gives the requirement and why it is needed.
+These invariants are proposed as constraints that the M2-02 logical model and any later schema (M2-03 onward) must satisfy. Each gives the requirement and why it is needed.
 
 - **INV-01 — Identity is independent of surface form.** A canonical entity's identity must not depend on any name, alias, honorific or epithet. Surface references are mentions linked to entities.
   *Why:* multiple names per entity, names that change, and unnamed figures (M1 finding 9).
@@ -354,7 +356,7 @@ M2 does not decide:
 - retrieval algorithms, including any continuation of K/M/O;
 - UI, API framework, or deployment.
 
-M2-01 additionally does not produce Pydantic models, JSON Schema, SQL, graph schemas, or ORM code. A schema proposal is M2-02's responsibility, and freezing it requires an explicit decision.
+M2-01 additionally does not produce Pydantic models, JSON Schema, SQL, graph schemas, or ORM code. M2-02 defines logical concepts and boundaries only. A formal schema (Canonical Schema v0) is M2-03's responsibility, and freezing it requires an explicit decision.
 
 ## 12. Open Questions (Input to M2-02)
 
