@@ -1,0 +1,287 @@
+# Canonical Story Predicate Registry v0 (research proposal, TASK M2-03)
+#
+# A small initial registry: enough to express the core semantics and the
+# synthetic conformance cases A-J. It is NOT an enumeration of story semantics.
+# Predicates are genre-neutral; new predicates are added by registry revision.
+#
+# Field meanings
+#   category        conceptual family
+#   classification  EVENT_OCCURRENCE | EVENT_PROPERTY | STATE | RELATION | REPORT | META
+#   stative         true => assertions may carry a validity interval
+#   args            ordered named arguments: kind (ENTITY|EVENT|ANCHOR|MENTION|PROPOSITION|LITERAL|TOKEN)
+#                   plus entity_kinds / value_type / vocabulary constraints
+#   directionality  DIRECTED | SYMMETRIC | NOT_APPLICABLE
+#   functional_on   argument names that, held fixed, admit at most one affirmed value at a time
+#                   (declared semantics for validation and views; not a storage constraint)
+#   epistemic_gate  NONE | INTERNAL_STATE. INTERNAL_STATE: EXPLICIT requires a SUFFICIENT set
+#                   containing DEPICTION or NARRATION_SUMMARY evidence (self-report alone
+#                   cannot make an internal state EXPLICIT; see M2-02 section 17)
+
+registry_version: predicate_registry/v0
+
+vocabularies:
+  polarity: [AFFIRMED, NEGATED, OPEN]
+  attitude_kind: [HOLDS_TRUE, SUSPECTS, PERCEIVES, SEEMS_TO_PERCEIVE, UNAWARE, KEPT_UNAWARE]
+  participant_role: [AGENT, PATIENT, SOURCE, RECIPIENT, THEME, EXPERIENCER, WITNESS]
+  temporal_relation: [BEFORE, AFTER, SIMULTANEOUS, DURING, OVERLAPS]
+  name_kind: [FORMAL, GIVEN, FAMILY, NICKNAME, TITLE, EPITHET]
+  address_form: [FAMILY_NAME, GIVEN_NAME, NICKNAME, TITLE, OTHER]
+  regard_dimension: [TRUST, RESPECT, FAMILIARITY, HOSTILITY]
+  regard_level: [NEGATIVE, NEUTRAL, POSITIVE]
+  event_kind: [GENERIC, TRANSFER, UTTERANCE, MOVEMENT, ENCOUNTER, ADDRESS_CHANGE,
+               REVEAL_TELL, REVEAL_DISCOVER, REVEAL_INFER]
+
+# Verdicts that are computed per view and must never be stored.
+forbidden_stored_verdicts: [KNOWS, MISTAKEN, UNRESOLVED_BELIEF, KNOWLEDGE, SECRET, RELATIONSHIP]
+
+# Holder-relative predicates: asserting them never asserts their embedded content.
+holder_relative_predicates: [Says, Attitude]
+
+predicates:
+  Occurred:
+    category: EVENT
+    classification: EVENT_OCCURRENCE
+    stative: false
+    directionality: NOT_APPLICABLE
+    args: [{name: event, kind: EVENT}]
+    epistemic_gate: NONE
+  Participates:
+    category: EVENT
+    classification: EVENT_PROPERTY
+    stative: false
+    directionality: DIRECTED
+    args:
+      - {name: event, kind: EVENT}
+      - {name: participant, kind: ENTITY}
+      - {name: role, kind: TOKEN, vocabulary: participant_role}
+    epistemic_gate: NONE
+  OccursAt:
+    category: EVENT
+    classification: EVENT_PROPERTY
+    stative: false
+    directionality: DIRECTED
+    args:
+      - {name: event, kind: EVENT}
+      - {name: location, kind: ENTITY, entity_kinds: [LOCATION]}
+    epistemic_gate: NONE
+  Manner:
+    category: EVENT
+    classification: EVENT_PROPERTY
+    stative: false
+    directionality: NOT_APPLICABLE
+    args:
+      - {name: event, kind: EVENT}
+      - {name: manner, kind: LITERAL, value_type: STRING}
+    epistemic_gate: NONE
+  PartOf:
+    category: EVENT
+    classification: EVENT_PROPERTY
+    stative: false
+    directionality: DIRECTED
+    args:
+      - {name: part, kind: EVENT}
+      - {name: whole, kind: EVENT}
+    epistemic_gate: NONE
+  Causes:
+    category: CAUSAL
+    classification: RELATION
+    stative: false
+    directionality: DIRECTED
+    args:
+      - {name: cause, kind: EVENT}
+      - {name: effect, kind: EVENT}
+    epistemic_gate: NONE
+  Enables:
+    category: CAUSAL
+    classification: RELATION
+    stative: false
+    directionality: DIRECTED
+    args:
+      - {name: enabler, kind: EVENT}
+      - {name: enabled, kind: EVENT}
+    epistemic_gate: NONE
+  Conveys:
+    category: KNOWLEDGE
+    classification: EVENT_PROPERTY
+    stative: false
+    directionality: DIRECTED
+    args:
+      - {name: event, kind: EVENT}
+      - {name: content, kind: PROPOSITION}
+      - {name: content_polarity, kind: TOKEN, vocabulary: polarity}
+    epistemic_gate: NONE
+  TemporalRelation:
+    category: TIME
+    classification: RELATION
+    stative: false
+    directionality: DIRECTED
+    args:
+      - {name: subject, kind: ANCHOR}
+      - {name: relation, kind: TOKEN, vocabulary: temporal_relation}
+      - {name: object, kind: ANCHOR}
+    epistemic_gate: NONE
+  AnchorDate:
+    category: TIME
+    classification: META
+    stative: false
+    directionality: NOT_APPLICABLE
+    args:
+      - {name: anchor, kind: ANCHOR}
+      - {name: date, kind: LITERAL, value_type: DATE}
+    epistemic_gate: NONE
+  RefersTo:
+    category: IDENTITY
+    classification: META
+    stative: false
+    directionality: DIRECTED
+    args:
+      - {name: mention, kind: MENTION}
+      - {name: entity, kind: ENTITY}
+    epistemic_gate: NONE
+  SameAs:
+    category: IDENTITY
+    classification: META
+    stative: false
+    directionality: SYMMETRIC
+    args:
+      - {name: first, kind: ENTITY}
+      - {name: second, kind: ENTITY}
+    epistemic_gate: NONE
+  IdentityKnown:
+    category: IDENTITY
+    classification: META
+    stative: false
+    directionality: NOT_APPLICABLE
+    args: [{name: entity, kind: ENTITY}]
+    epistemic_gate: NONE
+  SameContent:
+    category: KNOWLEDGE
+    classification: META
+    stative: false
+    directionality: DIRECTED
+    args:
+      - {name: placeholder, kind: PROPOSITION}
+      - {name: concrete, kind: PROPOSITION}
+    epistemic_gate: NONE
+  NamedAs:
+    category: NAMING
+    classification: STATE
+    stative: true
+    directionality: DIRECTED
+    args:
+      - {name: entity, kind: ENTITY}
+      - {name: name, kind: LITERAL, value_type: STRING}
+      - {name: name_kind, kind: TOKEN, vocabulary: name_kind}
+    epistemic_gate: NONE
+  AddressesAs:
+    category: NAMING
+    classification: RELATION
+    stative: true
+    directionality: DIRECTED
+    functional_on: [speaker, addressee]
+    args:
+      - {name: speaker, kind: ENTITY, entity_kinds: [CHARACTER, GROUP]}
+      - {name: addressee, kind: ENTITY}
+      - {name: form, kind: TOKEN, vocabulary: address_form}
+    epistemic_gate: NONE
+  Possesses:
+    category: STATE
+    classification: STATE
+    stative: true
+    directionality: DIRECTED
+    functional_on: [item]
+    args:
+      - {name: holder, kind: ENTITY, entity_kinds: [CHARACTER, GROUP]}
+      - {name: item, kind: ENTITY, entity_kinds: [OBJECT]}
+    epistemic_gate: NONE
+  LocatedAt:
+    category: STATE
+    classification: STATE
+    stative: true
+    directionality: DIRECTED
+    functional_on: [thing]
+    args:
+      - {name: thing, kind: ENTITY}
+      - {name: location, kind: ENTITY, entity_kinds: [LOCATION]}
+    epistemic_gate: NONE
+  Regard:
+    category: STATE
+    classification: RELATION
+    stative: true
+    directionality: DIRECTED
+    functional_on: [holder, target, dimension]
+    args:
+      - {name: holder, kind: ENTITY, entity_kinds: [CHARACTER, GROUP]}
+      - {name: target, kind: ENTITY}
+      - {name: dimension, kind: TOKEN, vocabulary: regard_dimension}
+      - {name: level, kind: TOKEN, vocabulary: regard_level}
+    epistemic_gate: INTERNAL_STATE
+  Says:
+    category: REPORT
+    classification: REPORT
+    stative: false
+    directionality: DIRECTED
+    args:
+      - {name: speaker, kind: ENTITY, entity_kinds: [CHARACTER, GROUP]}
+      - {name: content, kind: PROPOSITION}
+      - {name: content_polarity, kind: TOKEN, vocabulary: polarity}
+    epistemic_gate: NONE
+  Attitude:
+    category: KNOWLEDGE
+    classification: STATE
+    stative: true
+    directionality: DIRECTED
+    args:
+      - {name: holder, kind: ENTITY, entity_kinds: [CHARACTER, GROUP]}
+      - {name: attitude, kind: TOKEN, vocabulary: attitude_kind}
+      - {name: content, kind: PROPOSITION}
+      - {name: content_polarity, kind: TOKEN, vocabulary: polarity}
+    epistemic_gate: INTERNAL_STATE
+  Conceals:
+    category: KNOWLEDGE
+    classification: STATE
+    stative: true
+    directionality: DIRECTED
+    args:
+      - {name: concealer, kind: ENTITY, entity_kinds: [CHARACTER, GROUP]}
+      - {name: content, kind: PROPOSITION}
+      - {name: concealed_from, kind: ENTITY}
+    epistemic_gate: INTERNAL_STATE
+
+# Registered derivation rules. A derivation path is valid only with a registered rule.
+# max_status caps the derived assertion's epistemic status on that path; the status can
+# also never exceed the weakest premise (INV-07). No rule may conclude the embedded
+# content of a holder-relative premise (belief or report never establishes truth).
+derivation_rules:
+  TRANSFER_RESULT:
+    description: A transfer event with a recipient entails the recipient's possession afterwards.
+    conclusion_predicates: [Possesses]
+    required_premise_predicates: [Occurred, Participates]
+    max_status: ENTAILED
+  REVEAL_RESULT:
+    description: A reveal event conveying content to a recipient entails the recipient's attitude afterwards.
+    conclusion_predicates: [Attitude]
+    conclusion_attitude_kinds: [HOLDS_TRUE]
+    required_premise_predicates: [Occurred, Participates, Conveys]
+    max_status: ENTAILED
+  BEHAVIOUR_ENTAILS_UNAWARE:
+    description: Depicted behaviour that is only coherent under ignorance entails UNAWARE. Never applied to missing data.
+    conclusion_predicates: [Attitude]
+    conclusion_attitude_kinds: [UNAWARE, KEPT_UNAWARE]
+    required_premise_predicates: [Occurred, Participates]
+    max_status: ENTAILED
+  BEHAVIOUR_SUGGESTS_STATE:
+    description: Depicted behaviour suggests an internal or relational state.
+    conclusion_predicates: [Regard, Attitude, Conceals]
+    required_premise_predicates: [Occurred]
+    max_status: SUGGESTED
+
+# Source-authority policies (governance, not ontology).
+authority_policies:
+  DEFAULT_V0:
+    description: >
+      Ordinary narration is canonical-capable evidence. PARATEXT is not accepted as
+      sufficient story-world grounding under this default policy. Unreliable narration
+      is deferred; a later policy may change which roles ground which assertions without
+      changing the schema.
+    roles_not_sufficient_for_story_world: [PARATEXT]

@@ -1,0 +1,405 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-storytelling:canonical-story:v0",
+  "title": "Canonical Story Document v0",
+  "description": "Structural contract for Canonical Story Schema v0 (layers L1-L4 only). JSON Schema is used as a language-independent interchange/validation notation; it implies no storage technology. Semantic invariants that JSON Schema cannot express are enforced by the conformance validator (tools/canonical_story/conformance_v0.py). Derived concepts (Relationship, Secret, StoryClaim, Alias, KNOWS, MISTAKEN, reader reveal, chronology, progression, biography) are intentionally NOT representable as records.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "authority_policy",
+    "story",
+    "source_documents",
+    "source_segments",
+    "evidence_refs",
+    "mentions",
+    "entities",
+    "events",
+    "temporal_anchors",
+    "propositions",
+    "extraction_provenance",
+    "assertions"
+  ],
+  "properties": {
+    "schema_version": { "const": "canonical_story/v0" },
+    "authority_policy": {
+      "description": "Source-authority policy governing which evidence roles may ground story-world assertions. A governance setting, not a property of truth.",
+      "enum": ["DEFAULT_V0"]
+    },
+    "story": { "$ref": "#/$defs/Story" },
+    "source_documents": { "type": "array", "items": { "$ref": "#/$defs/SourceDocument" } },
+    "source_segments": { "type": "array", "items": { "$ref": "#/$defs/SourceSegment" } },
+    "evidence_refs": { "type": "array", "items": { "$ref": "#/$defs/EvidenceRef" } },
+    "mentions": { "type": "array", "items": { "$ref": "#/$defs/Mention" } },
+    "entities": { "type": "array", "items": { "$ref": "#/$defs/Entity" } },
+    "events": { "type": "array", "items": { "$ref": "#/$defs/Event" } },
+    "temporal_anchors": { "type": "array", "items": { "$ref": "#/$defs/TemporalAnchor" } },
+    "propositions": { "type": "array", "items": { "$ref": "#/$defs/Proposition" } },
+    "extraction_provenance": { "type": "array", "items": { "$ref": "#/$defs/ExtractionProvenance" } },
+    "assertions": { "type": "array", "items": { "$ref": "#/$defs/Assertion" } }
+  },
+  "$defs": {
+    "Id": {
+      "description": "Opaque stable identifier. Carries no semantics: prefixes are for human readability only and must never be interpreted. Must not encode database IDs, graph node IDs, filenames, or source-language names.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "EditorialLabel": {
+      "description": "Human-facing, non-identifying label. Never used for identity or truth; names are expressed through NamedAs assertions.",
+      "type": "string",
+      "maxLength": 200
+    },
+    "Story": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "discourse_stream_id"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Id" },
+        "discourse_stream_id": {
+          "description": "The discourse stream in which positions of this document are totally ordered. V0 supports one ordered stream per canonical document.",
+          "$ref": "#/$defs/Id"
+        },
+        "editorial_label": { "$ref": "#/$defs/EditorialLabel" }
+      }
+    },
+    "DiscoursePosition": {
+      "description": "Source-neutral sortable position. Positions in the same stream are ordered lexicographically by `key` (a shorter key that is a prefix of a longer key sorts first). Adapters map chapters/pages/panels/offsets onto keys; the source-specific meaning stays in locators.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stream_id", "key"],
+      "properties": {
+        "stream_id": { "$ref": "#/$defs/Id" },
+        "key": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": { "type": "integer", "minimum": 0 }
+        },
+        "display": { "type": "string", "maxLength": 120 }
+      }
+    },
+    "SourceDocument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "story_id", "stream_id", "version"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Id" },
+        "story_id": { "$ref": "#/$defs/Id" },
+        "stream_id": { "$ref": "#/$defs/Id" },
+        "version": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "media_kind": {
+          "description": "Adapter-declared media kind (free string; no core semantics).",
+          "type": "string",
+          "maxLength": 64
+        },
+        "editorial_label": { "$ref": "#/$defs/EditorialLabel" }
+      }
+    },
+    "SourceSegment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "document_id", "position", "locator"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Id" },
+        "document_id": { "$ref": "#/$defs/Id" },
+        "position": { "$ref": "#/$defs/DiscoursePosition" },
+        "locator": { "$ref": "#/$defs/SourceLocator" }
+      }
+    },
+    "SourceLocator": {
+      "description": "Adapter-owned, source-specific locator (for example text offsets or page/panel). Opaque to the canonical model beyond its kind.",
+      "type": "object",
+      "required": ["kind"],
+      "properties": { "kind": { "type": "string", "minLength": 1, "maxLength": 64 } },
+      "additionalProperties": true
+    },
+    "EvidenceRole": {
+      "description": "Role of the evidence relative to the story world. Authority to ground story-world assertions is governed by authority_policy, not by this vocabulary.",
+      "enum": ["DEPICTION", "RETROSPECTIVE", "IN_WORLD_REPORT", "NARRATION_SUMMARY", "PARATEXT"]
+    },
+    "EvidenceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "segment_id", "position", "role"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Id" },
+        "segment_id": { "$ref": "#/$defs/Id" },
+        "position": { "$ref": "#/$defs/DiscoursePosition" },
+        "span": { "$ref": "#/$defs/SourceLocator" },
+        "role": { "$ref": "#/$defs/EvidenceRole" }
+      }
+    },
+    "Mention": {
+      "description": "Located surface reference (evidence side). Resolution to an entity is an Assertion (RefersTo), never a field here.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "evidence_ref_id", "surface_form"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Id" },
+        "evidence_ref_id": { "$ref": "#/$defs/Id" },
+        "surface_form": { "type": "string", "minLength": 1, "maxLength": 200 }
+      }
+    },
+    "EntityKind": { "enum": ["CHARACTER", "LOCATION", "OBJECT", "GROUP", "OTHER"] },
+    "Entity": {
+      "description": "Identity-bearing referent. Identity is independent of names; the record carries no facts.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Id" },
+        "kind": { "$ref": "#/$defs/EntityKind" },
+        "placeholder": {
+          "description": "True for a not-yet-identified referent (for example 'the stranger'). Resolution is a SameAs assertion; nothing is merged.",
+          "type": "boolean"
+        },
+        "editorial_label": { "$ref": "#/$defs/EditorialLabel" }
+      }
+    },
+    "Event": {
+      "description": "Identity of one occurrence. The existence of this record does NOT mean the event occurred; occurrence is the assertion Occurred(event).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "event_kind", "anchor_id"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Id" },
+        "event_kind": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "anchor_id": { "$ref": "#/$defs/Id" },
+        "editorial_label": { "$ref": "#/$defs/EditorialLabel" }
+      }
+    },
+    "TemporalAnchor": {
+      "description": "A point or span in story time. Carries no truth: dates and orderings are assertions (AnchorDate, TemporalRelation). Story chronology is never inferred from discourse order.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "anchor_kind"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Id" },
+        "anchor_kind": { "enum": ["EVENT_TIME", "NAMED_TIME"] },
+        "event_id": { "$ref": "#/$defs/Id" },
+        "editorial_label": { "$ref": "#/$defs/EditorialLabel" }
+      },
+      "if": { "properties": { "anchor_kind": { "const": "EVENT_TIME" } } },
+      "then": { "required": ["event_id"] },
+      "else": { "not": { "required": ["event_id"] } }
+    },
+    "Argument": {
+      "description": "Typed predicate argument. Referent and proposition arguments are by reference, which keeps recursion bounded and acyclicity checkable.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "ref"],
+          "properties": {
+            "kind": { "enum": ["ENTITY", "EVENT", "ANCHOR", "MENTION", "PROPOSITION"] },
+            "ref": { "$ref": "#/$defs/Id" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "value_type", "value"],
+          "properties": {
+            "kind": { "const": "LITERAL" },
+            "value_type": { "enum": ["STRING", "NUMBER", "BOOLEAN", "DATE"] },
+            "value": { "type": ["string", "number", "boolean"] }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "vocabulary", "value"],
+          "properties": {
+            "kind": { "const": "TOKEN" },
+            "vocabulary": { "type": "string", "minLength": 1 },
+            "value": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    },
+    "Proposition": {
+      "description": "Truth-neutral content. Carries no polarity, epistemic status, evidence, review, validity, or confidence. A placeholder proposition stands for content not yet revealed.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "predicate", "args"],
+          "properties": {
+            "id": { "$ref": "#/$defs/Id" },
+            "predicate": { "type": "string", "pattern": "^[A-Z][A-Za-z0-9]*$" },
+            "args": {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": { "$ref": "#/$defs/Argument" }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "placeholder"],
+          "properties": {
+            "id": { "$ref": "#/$defs/Id" },
+            "placeholder": { "const": true },
+            "editorial_label": { "$ref": "#/$defs/EditorialLabel" }
+          }
+        }
+      ]
+    },
+    "EvidenceSet": {
+      "description": "Group of evidence refs labelled relative to the ONE assertion that contains it. Embedded in that assertion, so a set cannot be reused as another assertion's support. Only SUFFICIENT sets form direct support paths.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "evidence_ref_ids"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Id" },
+        "label": { "enum": ["SUFFICIENT", "CORROBORATING", "PARTIAL"] },
+        "evidence_ref_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/Id" }
+        }
+      }
+    },
+    "Derivation": {
+      "description": "A derivation support path: ALL premise assertions plus one named, registered rule.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "rule_id", "premise_assertion_ids"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Id" },
+        "rule_id": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" },
+        "premise_assertion_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/Id" }
+        }
+      }
+    },
+    "Support": {
+      "description": "Alternative support paths: each SUFFICIENT evidence set is a direct path; each derivation is a derivation path. CORROBORATING and PARTIAL sets never make an assertion available.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidence_sets", "derivations"],
+      "properties": {
+        "evidence_sets": { "type": "array", "items": { "$ref": "#/$defs/EvidenceSet" } },
+        "derivations": { "type": "array", "items": { "$ref": "#/$defs/Derivation" } }
+      }
+    },
+    "Bound": {
+      "description": "A validity bound. An ANCHOR bound may carry its own support, because an end bound is often learned later than the state itself.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": { "kind": { "const": "OPEN" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "anchor_id"],
+          "properties": {
+            "kind": { "const": "ANCHOR" },
+            "anchor_id": { "$ref": "#/$defs/Id" },
+            "support": { "$ref": "#/$defs/Support" }
+          }
+        }
+      ]
+    },
+    "ValidityInterval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end"],
+      "properties": {
+        "start": { "$ref": "#/$defs/Bound" },
+        "end": { "$ref": "#/$defs/Bound" }
+      }
+    },
+    "ReviewRecord": {
+      "description": "Validation outcome. Separate from epistemic status. REJECTED assertions are retained for audit and excluded from canonical truth views.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state"],
+      "properties": {
+        "state": { "enum": ["UNREVIEWED", "CONFIRMED", "CORRECTED", "REJECTED"] },
+        "reason": { "enum": ["UNSUPPORTED", "WRONG_EVIDENCE", "OVERSTATED", "DUPLICATE", "OTHER"] },
+        "corrects_assertion_id": { "$ref": "#/$defs/Id" },
+        "reviewer_kind": { "enum": ["HUMAN", "AUTOMATED"] },
+        "note": { "type": "string", "maxLength": 500 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "state": { "const": "REJECTED" } } },
+          "then": { "required": ["reason"] }
+        }
+      ]
+    },
+    "ExtractionProvenance": {
+      "description": "How a candidate or canonical assertion was produced. Vendor-neutral. Confidence, if present, is extraction confidence, NOT truth probability.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "method", "process_id", "process_version"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Id" },
+        "method": { "enum": ["HUMAN_ANNOTATION", "AUTOMATED_EXTRACTION", "RULE_DERIVATION", "IMPORTED"] },
+        "process_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "process_version": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "run_id": { "type": "string", "maxLength": 128 },
+        "confidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["meaning", "scale", "value"],
+          "properties": {
+            "meaning": { "const": "EXTRACTION_CONFIDENCE" },
+            "scale": { "type": "string", "minLength": 1, "maxLength": 64 },
+            "value": { "type": ["number", "string"] }
+          }
+        }
+      }
+    },
+    "Assertion": {
+      "description": "The canonical model's qualified commitment to exactly one proposition. Holder-relative content (Says, Attitude) is committed to as content; asserting it never asserts the embedded proposition.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "proposition_id",
+        "polarity",
+        "epistemic_status",
+        "support",
+        "extraction_provenance_id",
+        "review"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/Id" },
+        "proposition_id": { "$ref": "#/$defs/Id" },
+        "polarity": { "enum": ["AFFIRMED", "NEGATED", "OPEN"] },
+        "epistemic_status": {
+          "description": "Strength of canonical commitment. REPORTED and UNKNOWN are deliberately absent: reported is derived from perspective (Says/Attitude content) and unknown from OPEN polarity.",
+          "enum": ["EXPLICIT", "ENTAILED", "SUGGESTED"]
+        },
+        "validity": { "$ref": "#/$defs/ValidityInterval" },
+        "support": { "$ref": "#/$defs/Support" },
+        "textual_ambiguity": {
+          "description": "Recorded when the source text genuinely admits alternative readings. Contestation between assertions is derived, not stored.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["alternative_proposition_ids"],
+          "properties": {
+            "alternative_proposition_ids": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": { "$ref": "#/$defs/Id" }
+            }
+          }
+        },
+        "extraction_provenance_id": { "$ref": "#/$defs/Id" },
+        "review": { "$ref": "#/$defs/ReviewRecord" }
+      }
+    }
+  }
+}

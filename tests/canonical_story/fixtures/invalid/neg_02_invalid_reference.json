@@ -1,0 +1,201 @@
+{
+  "assertions": [
+    {
+      "epistemic_status": "EXPLICIT",
+      "extraction_provenance_id": "xp-human",
+      "id": "a-001",
+      "polarity": "AFFIRMED",
+      "proposition_id": "p-001",
+      "review": {
+        "state": "UNREVIEWED"
+      },
+      "support": {
+        "derivations": [],
+        "evidence_sets": [
+          {
+            "evidence_ref_ids": [
+              "ev-2-1-depiction"
+            ],
+            "id": "es-001",
+            "label": "SUFFICIENT"
+          }
+        ]
+      }
+    },
+    {
+      "epistemic_status": "EXPLICIT",
+      "extraction_provenance_id": "xp-human",
+      "id": "a-002",
+      "polarity": "AFFIRMED",
+      "proposition_id": "p-002",
+      "review": {
+        "state": "UNREVIEWED"
+      },
+      "support": {
+        "derivations": [],
+        "evidence_sets": [
+          {
+            "evidence_ref_ids": [
+              "ev-2-1-depiction"
+            ],
+            "id": "es-002",
+            "label": "SUFFICIENT"
+          }
+        ]
+      }
+    },
+    {
+      "epistemic_status": "EXPLICIT",
+      "extraction_provenance_id": "xp-human",
+      "id": "a-003",
+      "polarity": "AFFIRMED",
+      "proposition_id": "p-003",
+      "review": {
+        "state": "UNREVIEWED"
+      },
+      "support": {
+        "derivations": [],
+        "evidence_sets": [
+          {
+            "evidence_ref_ids": [
+              "ev-2-1-depiction"
+            ],
+            "id": "es-003",
+            "label": "SUFFICIENT"
+          }
+        ]
+      }
+    }
+  ],
+  "authority_policy": "DEFAULT_V0",
+  "entities": [
+    {
+      "id": "ent-a",
+      "kind": "CHARACTER"
+    },
+    {
+      "id": "ent-b",
+      "kind": "CHARACTER"
+    }
+  ],
+  "events": [
+    {
+      "anchor_id": "t-evt-1",
+      "event_kind": "UTTERANCE",
+      "id": "evt-1"
+    }
+  ],
+  "evidence_refs": [
+    {
+      "id": "ev-2-1-depiction",
+      "position": {
+        "key": [
+          2,
+          1
+        ],
+        "stream_id": "stream-main"
+      },
+      "role": "DEPICTION",
+      "segment_id": "seg-2-1"
+    }
+  ],
+  "extraction_provenance": [
+    {
+      "id": "xp-human",
+      "method": "HUMAN_ANNOTATION",
+      "process_id": "synthetic-fixture",
+      "process_version": "v0"
+    }
+  ],
+  "mentions": [],
+  "propositions": [
+    {
+      "args": {
+        "event": {
+          "kind": "EVENT",
+          "ref": "evt-1"
+        }
+      },
+      "id": "p-001",
+      "predicate": "Occurred"
+    },
+    {
+      "args": {
+        "event": {
+          "kind": "EVENT",
+          "ref": "evt-1"
+        },
+        "participant": {
+          "kind": "ENTITY",
+          "ref": "ent-a"
+        },
+        "role": {
+          "kind": "TOKEN",
+          "value": "AGENT",
+          "vocabulary": "participant_role"
+        }
+      },
+      "id": "p-002",
+      "predicate": "Participates"
+    },
+    {
+      "args": {
+        "event": {
+          "kind": "EVENT",
+          "ref": "evt-1"
+        },
+        "participant": {
+          "kind": "ENTITY",
+          "ref": "ent-missing"
+        },
+        "role": {
+          "kind": "TOKEN",
+          "value": "AGENT",
+          "vocabulary": "participant_role"
+        }
+      },
+      "id": "p-003",
+      "predicate": "Participates"
+    }
+  ],
+  "schema_version": "canonical_story/v0",
+  "source_documents": [
+    {
+      "id": "doc-1",
+      "media_kind": "synthetic_text",
+      "story_id": "story-neg",
+      "stream_id": "stream-main",
+      "version": "synthetic-1"
+    }
+  ],
+  "source_segments": [
+    {
+      "document_id": "doc-1",
+      "id": "seg-2-1",
+      "locator": {
+        "kind": "synthetic_unit",
+        "part": 1,
+        "unit": 2
+      },
+      "position": {
+        "key": [
+          2,
+          1
+        ],
+        "stream_id": "stream-main"
+      }
+    }
+  ],
+  "story": {
+    "discourse_stream_id": "stream-main",
+    "editorial_label": "synthetic story",
+    "id": "story-neg"
+  },
+  "temporal_anchors": [
+    {
+      "anchor_kind": "EVENT_TIME",
+      "event_id": "evt-1",
+      "id": "t-evt-1"
+    }
+  ]
+}

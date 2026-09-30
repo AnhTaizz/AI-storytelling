@@ -1,0 +1,197 @@
+{
+  "assertions": [
+    {
+      "epistemic_status": "EXPLICIT",
+      "extraction_provenance_id": "xp-human",
+      "id": "a-001",
+      "polarity": "AFFIRMED",
+      "proposition_id": "p-002",
+      "review": {
+        "state": "UNREVIEWED"
+      },
+      "support": {
+        "derivations": [],
+        "evidence_sets": [
+          {
+            "evidence_ref_ids": [
+              "ev-5-1-depiction"
+            ],
+            "id": "es-001",
+            "label": "SUFFICIENT"
+          }
+        ]
+      },
+      "validity": {
+        "end": {
+          "kind": "OPEN"
+        },
+        "start": {
+          "kind": "OPEN"
+        }
+      }
+    },
+    {
+      "epistemic_status": "EXPLICIT",
+      "extraction_provenance_id": "xp-human",
+      "id": "a-002",
+      "polarity": "NEGATED",
+      "proposition_id": "p-001",
+      "review": {
+        "state": "UNREVIEWED"
+      },
+      "support": {
+        "derivations": [],
+        "evidence_sets": [
+          {
+            "evidence_ref_ids": [
+              "ev-18-1-narration_summary"
+            ],
+            "id": "es-002",
+            "label": "SUFFICIENT"
+          }
+        ]
+      }
+    }
+  ],
+  "authority_policy": "DEFAULT_V0",
+  "entities": [
+    {
+      "id": "ent-b",
+      "kind": "CHARACTER"
+    },
+    {
+      "id": "ent-box",
+      "kind": "OBJECT"
+    },
+    {
+      "id": "ent-shed",
+      "kind": "LOCATION"
+    }
+  ],
+  "events": [],
+  "evidence_refs": [
+    {
+      "id": "ev-5-1-depiction",
+      "position": {
+        "key": [
+          5,
+          1
+        ],
+        "stream_id": "stream-main"
+      },
+      "role": "DEPICTION",
+      "segment_id": "seg-5-1"
+    },
+    {
+      "id": "ev-18-1-narration_summary",
+      "position": {
+        "key": [
+          18,
+          1
+        ],
+        "stream_id": "stream-main"
+      },
+      "role": "NARRATION_SUMMARY",
+      "segment_id": "seg-18-1"
+    }
+  ],
+  "extraction_provenance": [
+    {
+      "id": "xp-human",
+      "method": "HUMAN_ANNOTATION",
+      "process_id": "synthetic-fixture",
+      "process_version": "v0"
+    }
+  ],
+  "mentions": [],
+  "propositions": [
+    {
+      "args": {
+        "location": {
+          "kind": "ENTITY",
+          "ref": "ent-shed"
+        },
+        "thing": {
+          "kind": "ENTITY",
+          "ref": "ent-box"
+        }
+      },
+      "id": "p-001",
+      "predicate": "LocatedAt"
+    },
+    {
+      "args": {
+        "attitude": {
+          "kind": "TOKEN",
+          "value": "HOLDS_TRUE",
+          "vocabulary": "attitude_kind"
+        },
+        "content": {
+          "kind": "PROPOSITION",
+          "ref": "p-001"
+        },
+        "content_polarity": {
+          "kind": "TOKEN",
+          "value": "AFFIRMED",
+          "vocabulary": "polarity"
+        },
+        "holder": {
+          "kind": "ENTITY",
+          "ref": "ent-b"
+        }
+      },
+      "id": "p-002",
+      "predicate": "Attitude"
+    }
+  ],
+  "schema_version": "canonical_story/v0",
+  "source_documents": [
+    {
+      "id": "doc-1",
+      "media_kind": "synthetic_text",
+      "story_id": "story-f",
+      "stream_id": "stream-main",
+      "version": "synthetic-1"
+    }
+  ],
+  "source_segments": [
+    {
+      "document_id": "doc-1",
+      "id": "seg-5-1",
+      "locator": {
+        "kind": "synthetic_unit",
+        "part": 1,
+        "unit": 5
+      },
+      "position": {
+        "key": [
+          5,
+          1
+        ],
+        "stream_id": "stream-main"
+      }
+    },
+    {
+      "document_id": "doc-1",
+      "id": "seg-18-1",
+      "locator": {
+        "kind": "synthetic_unit",
+        "part": 1,
+        "unit": 18
+      },
+      "position": {
+        "key": [
+          18,
+          1
+        ],
+        "stream_id": "stream-main"
+      }
+    }
+  ],
+  "story": {
+    "discourse_stream_id": "stream-main",
+    "editorial_label": "synthetic story",
+    "id": "story-f"
+  },
+  "temporal_anchors": []
+}

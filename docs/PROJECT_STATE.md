@@ -2,7 +2,7 @@
 
 ## Current Milestone
 
-M2 — Canonical Story Model (research IN PROGRESS: M2-01 requirements and M2-02 core concepts complete; M2-02 pending Orchestrator review)
+M2 — Canonical Story Model (research IN PROGRESS: M2-01 requirements, M2-02 core concepts and M2-03 Canonical Schema v0 complete; M2-03 pending Orchestrator review; M2 not complete)
 
 ## Milestone Lifecycle
 
@@ -490,6 +490,19 @@ M2-02-CANONICAL-STORY-MODEL-CORE-CONCEPTS — COMPLETED — Status: PENDING ORCH
 - All 13 M2-01 open questions are resolved or explicitly deferred. Stress tests A–J are represented.
 - Research proposal only: no schema, no technology choice, and no `DECISIONS.md` entry.
 
+M2-03-CANONICAL-STORY-SCHEMA-V0 — COMPLETED — Status: PENDING ORCHESTRATOR REVIEW
+
+- Formalized layers L1–L4 as Canonical Story Schema v0, using JSON Schema Draft 2020-12 as notation only; no storage or framework was chosen.
+  - `schemas/canonical_story/canonical_story_v0.schema.json`
+  - `schemas/canonical_story/predicate_registry_v0.yaml`
+  - `docs/research/m2/M2_CANONICAL_SCHEMA_V0.md`
+- Added a semantic conformance validator (`tools/canonical_story/conformance_v0.py`) with the normative support-path availability rule. Only SUFFICIENT evidence sets and derivations count, as alternatives.
+- Corrected the PARATEXT rule to an authority-policy matter (not accepted as sufficient grounding under `DEFAULT_V0`).
+- Synthetic fixtures: stress tests A–J all pass the structural and semantic layers; 17 negative fixtures are each rejected for the expected reason. A machine-readable conformance report is committed.
+- Tests: 24 canonical-schema tests pass, with no model, API or network. The standard `jsonschema` package (Draft 2020-12) is now a test dependency.
+- Derived concepts (Relationship, Secret, StoryClaim, Alias, KNOWS, MISTAKEN, reader reveal, chronology) are not record types.
+- Research proposal only; `DECISIONS.md` is unchanged.
+
 ## Next Candidate
 
-Orchestrator review of M2-02. M2-03 (Canonical Schema v0) must not start before that review and an explicit task.
+Orchestrator review of M2-03. M2-04 (as-of projection) must not start before that review and an explicit task.

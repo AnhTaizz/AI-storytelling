@@ -1,0 +1,219 @@
+{
+  "assertions": [
+    {
+      "epistemic_status": "EXPLICIT",
+      "extraction_provenance_id": "xp-human",
+      "id": "a-001",
+      "polarity": "AFFIRMED",
+      "proposition_id": "p-002",
+      "review": {
+        "state": "UNREVIEWED"
+      },
+      "support": {
+        "derivations": [],
+        "evidence_sets": [
+          {
+            "evidence_ref_ids": [
+              "ev-6-1-depiction"
+            ],
+            "id": "es-001",
+            "label": "SUFFICIENT"
+          }
+        ]
+      }
+    },
+    {
+      "epistemic_status": "EXPLICIT",
+      "extraction_provenance_id": "xp-human",
+      "id": "a-002",
+      "polarity": "AFFIRMED",
+      "proposition_id": "p-003",
+      "review": {
+        "state": "UNREVIEWED"
+      },
+      "support": {
+        "derivations": [],
+        "evidence_sets": [
+          {
+            "evidence_ref_ids": [
+              "ev-6-1-depiction"
+            ],
+            "id": "es-002",
+            "label": "SUFFICIENT"
+          }
+        ]
+      }
+    },
+    {
+      "epistemic_status": "EXPLICIT",
+      "extraction_provenance_id": "xp-human",
+      "id": "a-003",
+      "polarity": "AFFIRMED",
+      "proposition_id": "p-004",
+      "review": {
+        "state": "UNREVIEWED"
+      },
+      "support": {
+        "derivations": [],
+        "evidence_sets": [
+          {
+            "evidence_ref_ids": [
+              "ev-6-1-depiction"
+            ],
+            "id": "es-003",
+            "label": "SUFFICIENT"
+          }
+        ]
+      }
+    }
+  ],
+  "authority_policy": "DEFAULT_V0",
+  "entities": [
+    {
+      "id": "ent-a",
+      "kind": "CHARACTER"
+    },
+    {
+      "id": "ent-bridge",
+      "kind": "OBJECT"
+    },
+    {
+      "id": "ent-north",
+      "kind": "LOCATION"
+    }
+  ],
+  "events": [
+    {
+      "anchor_id": "t-evt-say",
+      "event_kind": "UTTERANCE",
+      "id": "evt-say"
+    }
+  ],
+  "evidence_refs": [
+    {
+      "id": "ev-6-1-depiction",
+      "position": {
+        "key": [
+          6,
+          1
+        ],
+        "stream_id": "stream-main"
+      },
+      "role": "DEPICTION",
+      "segment_id": "seg-6-1"
+    }
+  ],
+  "extraction_provenance": [
+    {
+      "id": "xp-human",
+      "method": "HUMAN_ANNOTATION",
+      "process_id": "synthetic-fixture",
+      "process_version": "v0"
+    }
+  ],
+  "mentions": [],
+  "propositions": [
+    {
+      "args": {
+        "location": {
+          "kind": "ENTITY",
+          "ref": "ent-north"
+        },
+        "thing": {
+          "kind": "ENTITY",
+          "ref": "ent-bridge"
+        }
+      },
+      "id": "p-001",
+      "predicate": "LocatedAt"
+    },
+    {
+      "args": {
+        "event": {
+          "kind": "EVENT",
+          "ref": "evt-say"
+        }
+      },
+      "id": "p-002",
+      "predicate": "Occurred"
+    },
+    {
+      "args": {
+        "event": {
+          "kind": "EVENT",
+          "ref": "evt-say"
+        },
+        "participant": {
+          "kind": "ENTITY",
+          "ref": "ent-a"
+        },
+        "role": {
+          "kind": "TOKEN",
+          "value": "AGENT",
+          "vocabulary": "participant_role"
+        }
+      },
+      "id": "p-003",
+      "predicate": "Participates"
+    },
+    {
+      "args": {
+        "content": {
+          "kind": "PROPOSITION",
+          "ref": "p-001"
+        },
+        "content_polarity": {
+          "kind": "TOKEN",
+          "value": "AFFIRMED",
+          "vocabulary": "polarity"
+        },
+        "speaker": {
+          "kind": "ENTITY",
+          "ref": "ent-a"
+        }
+      },
+      "id": "p-004",
+      "predicate": "Says"
+    }
+  ],
+  "schema_version": "canonical_story/v0",
+  "source_documents": [
+    {
+      "id": "doc-1",
+      "media_kind": "synthetic_text",
+      "story_id": "story-g",
+      "stream_id": "stream-main",
+      "version": "synthetic-1"
+    }
+  ],
+  "source_segments": [
+    {
+      "document_id": "doc-1",
+      "id": "seg-6-1",
+      "locator": {
+        "kind": "synthetic_unit",
+        "part": 1,
+        "unit": 6
+      },
+      "position": {
+        "key": [
+          6,
+          1
+        ],
+        "stream_id": "stream-main"
+      }
+    }
+  ],
+  "story": {
+    "discourse_stream_id": "stream-main",
+    "editorial_label": "synthetic story",
+    "id": "story-g"
+  },
+  "temporal_anchors": [
+    {
+      "anchor_kind": "EVENT_TIME",
+      "event_id": "evt-say",
+      "id": "t-evt-say"
+    }
+  ]
+}

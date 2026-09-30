@@ -1,0 +1,459 @@
+{
+  "assertions": [
+    {
+      "epistemic_status": "EXPLICIT",
+      "extraction_provenance_id": "xp-human",
+      "id": "a-001",
+      "polarity": "AFFIRMED",
+      "proposition_id": "p-001",
+      "review": {
+        "state": "UNREVIEWED"
+      },
+      "support": {
+        "derivations": [],
+        "evidence_sets": [
+          {
+            "evidence_ref_ids": [
+              "ev-6-1-depiction"
+            ],
+            "id": "es-001",
+            "label": "SUFFICIENT"
+          }
+        ]
+      }
+    },
+    {
+      "epistemic_status": "EXPLICIT",
+      "extraction_provenance_id": "xp-human",
+      "id": "a-002",
+      "polarity": "AFFIRMED",
+      "proposition_id": "p-002",
+      "review": {
+        "state": "UNREVIEWED"
+      },
+      "support": {
+        "derivations": [],
+        "evidence_sets": [
+          {
+            "evidence_ref_ids": [
+              "ev-6-1-depiction"
+            ],
+            "id": "es-002",
+            "label": "SUFFICIENT"
+          }
+        ]
+      }
+    },
+    {
+      "epistemic_status": "EXPLICIT",
+      "extraction_provenance_id": "xp-human",
+      "id": "a-003",
+      "polarity": "AFFIRMED",
+      "proposition_id": "p-003",
+      "review": {
+        "state": "UNREVIEWED"
+      },
+      "support": {
+        "derivations": [],
+        "evidence_sets": [
+          {
+            "evidence_ref_ids": [
+              "ev-6-1-depiction"
+            ],
+            "id": "es-003",
+            "label": "SUFFICIENT"
+          }
+        ]
+      }
+    },
+    {
+      "epistemic_status": "EXPLICIT",
+      "extraction_provenance_id": "xp-human",
+      "id": "a-004",
+      "polarity": "AFFIRMED",
+      "proposition_id": "p-004",
+      "review": {
+        "state": "UNREVIEWED"
+      },
+      "support": {
+        "derivations": [],
+        "evidence_sets": [
+          {
+            "evidence_ref_ids": [
+              "ev-2-1-narration_summary"
+            ],
+            "id": "es-004",
+            "label": "SUFFICIENT"
+          }
+        ]
+      },
+      "validity": {
+        "end": {
+          "anchor_id": "t-shift-1",
+          "kind": "ANCHOR",
+          "support": {
+            "derivations": [
+              {
+                "id": "dv-001",
+                "premise_assertion_ids": [
+                  "a-001"
+                ],
+                "rule_id": "BEHAVIOUR_SUGGESTS_STATE"
+              }
+            ],
+            "evidence_sets": []
+          }
+        },
+        "start": {
+          "kind": "OPEN"
+        }
+      }
+    },
+    {
+      "epistemic_status": "SUGGESTED",
+      "extraction_provenance_id": "xp-human",
+      "id": "a-005",
+      "polarity": "AFFIRMED",
+      "proposition_id": "p-005",
+      "review": {
+        "state": "UNREVIEWED"
+      },
+      "support": {
+        "derivations": [
+          {
+            "id": "dv-002",
+            "premise_assertion_ids": [
+              "a-001",
+              "a-002",
+              "a-003"
+            ],
+            "rule_id": "BEHAVIOUR_SUGGESTS_STATE"
+          }
+        ],
+        "evidence_sets": []
+      },
+      "validity": {
+        "end": {
+          "anchor_id": "t-shift-2",
+          "kind": "ANCHOR",
+          "support": {
+            "derivations": [],
+            "evidence_sets": [
+              {
+                "evidence_ref_ids": [
+                  "ev-11-1-narration_summary"
+                ],
+                "id": "es-005",
+                "label": "SUFFICIENT"
+              }
+            ]
+          }
+        },
+        "start": {
+          "anchor_id": "t-shift-1",
+          "kind": "ANCHOR"
+        }
+      }
+    },
+    {
+      "epistemic_status": "EXPLICIT",
+      "extraction_provenance_id": "xp-human",
+      "id": "a-006",
+      "polarity": "AFFIRMED",
+      "proposition_id": "p-006",
+      "review": {
+        "state": "UNREVIEWED"
+      },
+      "support": {
+        "derivations": [],
+        "evidence_sets": [
+          {
+            "evidence_ref_ids": [
+              "ev-11-1-narration_summary"
+            ],
+            "id": "es-006",
+            "label": "SUFFICIENT"
+          }
+        ]
+      },
+      "validity": {
+        "end": {
+          "kind": "OPEN"
+        },
+        "start": {
+          "anchor_id": "t-shift-2",
+          "kind": "ANCHOR"
+        }
+      }
+    }
+  ],
+  "authority_policy": "DEFAULT_V0",
+  "entities": [
+    {
+      "id": "ent-a",
+      "kind": "CHARACTER"
+    },
+    {
+      "id": "ent-b",
+      "kind": "CHARACTER"
+    }
+  ],
+  "events": [
+    {
+      "anchor_id": "t-evt-help",
+      "event_kind": "GENERIC",
+      "id": "evt-help"
+    }
+  ],
+  "evidence_refs": [
+    {
+      "id": "ev-6-1-depiction",
+      "position": {
+        "key": [
+          6,
+          1
+        ],
+        "stream_id": "stream-main"
+      },
+      "role": "DEPICTION",
+      "segment_id": "seg-6-1"
+    },
+    {
+      "id": "ev-2-1-narration_summary",
+      "position": {
+        "key": [
+          2,
+          1
+        ],
+        "stream_id": "stream-main"
+      },
+      "role": "NARRATION_SUMMARY",
+      "segment_id": "seg-2-1"
+    },
+    {
+      "id": "ev-11-1-narration_summary",
+      "position": {
+        "key": [
+          11,
+          1
+        ],
+        "stream_id": "stream-main"
+      },
+      "role": "NARRATION_SUMMARY",
+      "segment_id": "seg-11-1"
+    }
+  ],
+  "extraction_provenance": [
+    {
+      "id": "xp-human",
+      "method": "HUMAN_ANNOTATION",
+      "process_id": "synthetic-fixture",
+      "process_version": "v0"
+    }
+  ],
+  "mentions": [],
+  "propositions": [
+    {
+      "args": {
+        "event": {
+          "kind": "EVENT",
+          "ref": "evt-help"
+        }
+      },
+      "id": "p-001",
+      "predicate": "Occurred"
+    },
+    {
+      "args": {
+        "event": {
+          "kind": "EVENT",
+          "ref": "evt-help"
+        },
+        "participant": {
+          "kind": "ENTITY",
+          "ref": "ent-b"
+        },
+        "role": {
+          "kind": "TOKEN",
+          "value": "AGENT",
+          "vocabulary": "participant_role"
+        }
+      },
+      "id": "p-002",
+      "predicate": "Participates"
+    },
+    {
+      "args": {
+        "event": {
+          "kind": "EVENT",
+          "ref": "evt-help"
+        },
+        "participant": {
+          "kind": "ENTITY",
+          "ref": "ent-a"
+        },
+        "role": {
+          "kind": "TOKEN",
+          "value": "RECIPIENT",
+          "vocabulary": "participant_role"
+        }
+      },
+      "id": "p-003",
+      "predicate": "Participates"
+    },
+    {
+      "args": {
+        "dimension": {
+          "kind": "TOKEN",
+          "value": "TRUST",
+          "vocabulary": "regard_dimension"
+        },
+        "holder": {
+          "kind": "ENTITY",
+          "ref": "ent-a"
+        },
+        "level": {
+          "kind": "TOKEN",
+          "value": "NEGATIVE",
+          "vocabulary": "regard_level"
+        },
+        "target": {
+          "kind": "ENTITY",
+          "ref": "ent-b"
+        }
+      },
+      "id": "p-004",
+      "predicate": "Regard"
+    },
+    {
+      "args": {
+        "dimension": {
+          "kind": "TOKEN",
+          "value": "TRUST",
+          "vocabulary": "regard_dimension"
+        },
+        "holder": {
+          "kind": "ENTITY",
+          "ref": "ent-a"
+        },
+        "level": {
+          "kind": "TOKEN",
+          "value": "NEUTRAL",
+          "vocabulary": "regard_level"
+        },
+        "target": {
+          "kind": "ENTITY",
+          "ref": "ent-b"
+        }
+      },
+      "id": "p-005",
+      "predicate": "Regard"
+    },
+    {
+      "args": {
+        "dimension": {
+          "kind": "TOKEN",
+          "value": "TRUST",
+          "vocabulary": "regard_dimension"
+        },
+        "holder": {
+          "kind": "ENTITY",
+          "ref": "ent-a"
+        },
+        "level": {
+          "kind": "TOKEN",
+          "value": "POSITIVE",
+          "vocabulary": "regard_level"
+        },
+        "target": {
+          "kind": "ENTITY",
+          "ref": "ent-b"
+        }
+      },
+      "id": "p-006",
+      "predicate": "Regard"
+    }
+  ],
+  "schema_version": "canonical_story/v0",
+  "source_documents": [
+    {
+      "id": "doc-1",
+      "media_kind": "synthetic_text",
+      "story_id": "story-d",
+      "stream_id": "stream-main",
+      "version": "synthetic-1"
+    }
+  ],
+  "source_segments": [
+    {
+      "document_id": "doc-1",
+      "id": "seg-6-1",
+      "locator": {
+        "kind": "synthetic_unit",
+        "part": 1,
+        "unit": 6
+      },
+      "position": {
+        "key": [
+          6,
+          1
+        ],
+        "stream_id": "stream-main"
+      }
+    },
+    {
+      "document_id": "doc-1",
+      "id": "seg-2-1",
+      "locator": {
+        "kind": "synthetic_unit",
+        "part": 1,
+        "unit": 2
+      },
+      "position": {
+        "key": [
+          2,
+          1
+        ],
+        "stream_id": "stream-main"
+      }
+    },
+    {
+      "document_id": "doc-1",
+      "id": "seg-11-1",
+      "locator": {
+        "kind": "synthetic_unit",
+        "part": 1,
+        "unit": 11
+      },
+      "position": {
+        "key": [
+          11,
+          1
+        ],
+        "stream_id": "stream-main"
+      }
+    }
+  ],
+  "story": {
+    "discourse_stream_id": "stream-main",
+    "editorial_label": "synthetic story",
+    "id": "story-d"
+  },
+  "temporal_anchors": [
+    {
+      "anchor_kind": "NAMED_TIME",
+      "editorial_label": "first shift",
+      "id": "t-shift-1"
+    },
+    {
+      "anchor_kind": "NAMED_TIME",
+      "editorial_label": "second shift",
+      "id": "t-shift-2"
+    },
+    {
+      "anchor_kind": "EVENT_TIME",
+      "event_id": "evt-help",
+      "id": "t-evt-help"
+    }
+  ]
+}
