@@ -2,9 +2,31 @@
 
 ## Current Milestone
 
-M1 — Script Quality & Narrative Contract
+M2 — Canonical Story Model (IN PROGRESS: M2-01 domain requirements complete; M2-02 not started)
 
-## Current Status
+## Milestone Lifecycle
+
+- M0 — Product Foundation: CLOSED.
+- M1 — Script Quality & Narrative Contract: COMPLETED / CLOSED FOR CURRENT RESEARCH SCOPE.
+- M2 — Canonical Story Model: IN PROGRESS. Not complete.
+
+## M1 Closure Note
+
+M1 closed its current research scope on 2026-09-30 (Task Q commit `8c6ff438e5bfafaebf9cbc4c249485ba0f2d1116`).
+
+- **Completed work:**
+  - 30-chapter corpus research.
+  - Script-side hypotheses H1, H2, H6 and H6b (partially supported or supported, as recorded below).
+  - Development retrieval experiments E–O.
+  - Creation, Product Owner sign-off, and freeze of the independent validation fixture V1.
+  - Task Q, executed once.
+- **Task Q primary endpoint:** Full Evidence Success@10 was M 11 / 16 and O 11 / 16. O showed exploratory Recall@10 and MRR improvements but no primary-endpoint improvement. The outcome is not covered by the pre-registered descriptive classes.
+- **Claims not made:** M1 does not show that O generalizes better than M, nor that M and O are equivalent (N = 16, limited power).
+- **Protocol closed:** the K/M/O protocol is closed for frozen fixture V1, and no post-hoc tuning on that fixture is permitted.
+- **Not produced:** M1 did not freeze a formal Script Quality Contract. That item remains an open decision below; M1 contributed evidence for it.
+- **Next:** lessons carried into M2 are recorded in `docs/research/m2/M2_CANONICAL_STORY_MODEL_REQUIREMENTS.md`.
+
+## M1 History (status notes recorded during M1)
 
 M0 Product Foundation complete.
 M1 ready for planning.
@@ -442,6 +464,15 @@ M1-30CH-Q-INDEPENDENT-VALIDATION-EXECUTION — EXECUTED — Status: TASK_Q_COMPL
 - Disclosure: a first attempt was terminated by a host session ending before rankings were persisted, gold was read, or any metric existed. It is preserved privately; the second attempt re-ran the identical command.
 - The frozen fixture was not modified. No tuning, retry of alternative weights, or new method occurred.
 
+Master Orchestrator interpretation followed: M1 closed for its current research scope (see M1 Closure Note at the top).
+
+M2-01-CANONICAL-STORY-MODEL-DOMAIN-REQUIREMENTS — EXECUTED — Status: M2_01_COMPLETE_READY_FOR_M2_02
+
+- Created `docs/research/m2/M2_CANONICAL_STORY_MODEL_REQUIREMENTS.md`.
+- It derives capability groups from the foundation documents and M1 findings: identity, events, time, relationships, entity state, information and knowledge, claims, provenance, spoiler scope, and uncertainty.
+- It proposes 18 domain invariants (INV-01 to INV-18), a candidate concept inventory with first-class / uncertain / deferred status, temporal, epistemic, provenance and source-independence requirements, 13 open questions, and acceptance criteria for M2-02.
+- Research only: no schema, storage, extraction, or technology choice was made, and nothing was added to `DECISIONS.md`.
+
 ## Next Candidate
 
-Master Orchestrator interpretation of the Task Q result, including how to treat an outcome not covered by the pre-registered descriptive classes. Do not tune K/M/O, begin M2, or claim generalization beyond this fixture without that decision.
+M2-02: propose a canonical story model structure that satisfies the M2-01 invariants, and answer or explicitly defer the open questions. It must remain technology-neutral and must not start before it is explicitly tasked.
