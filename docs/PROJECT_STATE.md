@@ -2,7 +2,7 @@
 
 ## Current Milestone
 
-Next milestone: M4 — Story Extraction. Status: READY TO START. M4 has not started; no M4 work exists yet.
+M4 — Story Extraction: IN PROGRESS. Current task: M4-01 Story Extraction Contract & Evaluation Protocol (complete, pending Orchestrator review). Nothing in M4 is frozen. No extractor or model has been selected or run. M5 has not started.
 
 M3 — Light Novel Ingestion: COMPLETE / FROZEN (`LIGHT_NOVEL_INGESTION/v0`, DEC-018).
 
@@ -19,7 +19,8 @@ M2 — Canonical Story Model capability: COMPLETE / FROZEN (Canonical Story Mode
   - The contract defines the standard. It does not show that any current Writer or critic meets it. The M9 Script Quality Gate is not evaluated.
 - M2 — Canonical Story Model: capability COMPLETE / FROZEN (DEC-016). The expected capability has been established as `canonical_story/v0` + `predicate_registry/v0.1`. M2 ran under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015).
 - M3 — Light Novel Ingestion: COMPLETE / FROZEN — `LIGHT_NOVEL_INGESTION/v0`, DEC-018, freeze record `benchmarks/m3_ingestion/LIGHT_NOVEL_INGESTION_V0_FROZEN.yaml`. The roadmap is unchanged.
-- M4 — Story Extraction: READY TO START. Not started.
+- M4 — Story Extraction: IN PROGRESS (M4-01 research baseline delivered; nothing frozen; no extraction run).
+- M5: NOT STARTED.
 
 *Correction (M2-02): an earlier version of this section labelled M1 "COMPLETED / CLOSED FOR CURRENT RESEARCH SCOPE". That overstated completion while the formal Script Quality Contract remains open. The M1 research program is closed; the contract is not.*
 
@@ -717,6 +718,23 @@ M3-03-FREEZE-LIGHT-NOVEL-INGESTION-V0 — COMPLETED — Status: M3_INGESTION_V0_
 - **Freeze gate (before any edit).** Private package SHA-256 and internal manifest verified (19 files); core M3-02 results re-read from public and private evidence; tests story_ingestion 70/70, canonical_story 99/99, script_quality 64/64, story_benchmark 298/298; M1 and M2 frozen hashes exact.
 - M1 COMPLETE / FROZEN (DEC-017). M2 COMPLETE / FROZEN (DEC-016). M3 COMPLETE / FROZEN (DEC-018). M4 is READY TO START and has not been started. `ROADMAP.md` is unchanged.
 
+M4-01-STORY-EXTRACTION-CONTRACT-AND-EVALUATION-PROTOCOL — COMPLETED — Status: M4_01_EXTRACTION_CONTRACT_READY_FOR_ORCHESTRATOR_REVIEW
+
+- **Purpose.** Define what an extractor may emit into the frozen Canonical Story Model, what grounding is required, and how extraction is evaluated. The task defines the measuring stick. It selected no model and ran no extraction.
+- **Contract `STORY_EXTRACTION/v0`** (research baseline, not frozen): `docs/research/m4/M4_STORY_EXTRACTION_CONTRACT_V0.md`.
+  - `ExtractionScope` and the `STORY_EXTRACTION_BATCH/v0` envelope are process records, not story records. Candidate records use only frozen canonical shapes; parallel semantic records are rejected.
+  - Validation: base canonical document plus candidate records, merged deterministically, then checked by the frozen validator.
+  - Evidence: every evidence reference has an exact span and an explicitly chosen role; no default role; one segment is not one role; context-only passages and prior canonical context are never evidence; nothing after the as-of boundary.
+  - Review: automated output is AUTOMATED_EXTRACTION and UNREVIEWED; confidence is not truth; human confirmation needs a recorded human review.
+  - Semantics kept from M2: mention is not entity; an event record is not an occurrence; holder-relative content is not canonical truth; states keep open ends unless evidence bounds them; no stored relationship, knowledge or secret verdicts; only registered derivation rules.
+- **Evaluation protocol** (`docs/research/m4/M4_EXTRACTION_EVALUATION_PROTOCOL_V0.md`): layers L0–L5; alignment by evidence and content, never by id; assertion precision and recall, grounding precision and recall, epistemic, role and resolution accuracy; an explicit unsupported-assertion rate; and the strict endpoint FULL_CANONICAL_CASE_SUCCESS.
+- **Tooling.** `tools/story_extraction/extraction_contract_v0.py` (validate and merge) and `evaluate_extraction_v0.py` (evaluator skeleton). Neither extracts anything or calls a model.
+- **Synthetic fixtures.** 26 cases built on the frozen M3 adapter; all gold batches conform; perfect predictions with different ids succeed on all 26; 15 negative variants are caught with the expected failure codes and 2 are rejected by the frozen validator. Gold is agent-authored and UNREVIEWED.
+- **Dev / holdout.** The private M2 real-source mappings are development evidence only. No holdout case or answer was selected.
+- **Open questions.** Nine evaluation questions (span tolerance, mention-less entities, identity classes, event granularity, free-text literals, materiality, gold completeness and others) are left open for M4-02 instead of being settled by a heuristic.
+- **Tests.** story_extraction 39/39; story_ingestion 79/79; canonical_story 99/99; script_quality 64/64; story_benchmark 298/298. M1, M2 and M3 frozen hashes unchanged.
+- **Result.** `benchmarks/m4_extraction/M4_01_EXTRACTION_CONTRACT_BASELINE_RESULT.yaml`. `DECISIONS.md` and `ROADMAP.md` are unchanged. M4-02 and M5 have not started.
+
 ## Next Candidate
 
-M4 — Story Extraction: READY TO START, awaiting an Orchestrator task. No M4 work has been done.
+Orchestrator review of M4-01. Recommended M4-02: real-source development cases and a sealed fresh holdout, settling the open evaluation questions before any model is selected. Not started.

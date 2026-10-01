@@ -1,0 +1,141 @@
+# M4-01 — Story extraction contract and evaluation protocol baseline (no source content)
+task: M4-01-STORY-EXTRACTION-CONTRACT-AND-EVALUATION-PROTOCOL
+status: M4_01_EXTRACTION_CONTRACT_READY_FOR_ORCHESTRATOR_REVIEW
+base_commit: e7c37574b61248c24868a1280d164f5b30df1714
+milestone_status: {M1: COMPLETE_FROZEN, M2: COMPLETE_FROZEN, M3: COMPLETE_FROZEN, M4: IN_PROGRESS, M5: NOT_STARTED}
+frozen: false                      # research baseline; DECISIONS.md unchanged
+
+contract:
+  contract_version: STORY_EXTRACTION/v0
+  batch_version: STORY_EXTRACTION_BATCH/v0
+  evaluator_version: evaluate_extraction_v0/0.1.0
+  contract_document: docs/research/m4/M4_STORY_EXTRACTION_CONTRACT_V0.md
+  evaluation_protocol: docs/research/m4/M4_EXTRACTION_EVALUATION_PROTOCOL_V0.md
+  envelope_schema: schemas/story_extraction/story_extraction_batch_v0.schema.json
+  contract_tool: tools/story_extraction/extraction_contract_v0.py
+  evaluator: tools/story_extraction/evaluate_extraction_v0.py
+  depends_on:
+    canonical: canonical_story/v0 + predicate_registry/v0.1 (DEC-016)
+    ingestion: LIGHT_NOVEL_INGESTION/v0 (DEC-018)
+
+not_done_in_this_task:
+  llm_selected: false
+  extraction_performed: false
+  real_source_extraction_run: false
+  real_source_gold_committed: false
+  prompt_or_model_tuning: false
+  tooling_contains_nlp_or_model_calls: false
+
+canonical_conformance:
+  frozen_artifacts_modified: false
+  conflict_with_frozen_model_found: false
+  strategy: "base canonical document + candidate records -> deterministic merge -> frozen validator"
+  envelope_schema_copies_canonical_shapes: false
+  all_valid_fixtures_pass_frozen_validator: true
+  parallel_semantic_records_allowed: false
+
+tests:
+  requires_model_api_or_network: false
+  story_extraction: {passed: 39, total: 39}
+  story_ingestion: {passed: 79, total: 79}
+  canonical_story: {passed: 99, total: 99}
+  script_quality: {passed: 64, total: 64}
+  story_benchmark: {passed: 298, total: 298}
+  m1_m2_m3_frozen_hashes_unchanged: true
+
+synthetic_fixtures:
+  count: 26
+  source: "invented English text, ingested through the frozen M3 adapter"
+  gold: "agent-authored draft: HUMAN_ANNOTATION, review UNREVIEWED; not human-confirmed"
+  valid_gold_batches_passing_frozen_validation: 26
+  perfect_predictions_with_different_ids_reaching_full_case_success: 26
+  negative_variants_scored_by_evaluator: 15
+  negative_variants_rejected_at_layer_0: 2
+  coverage:
+    1_named_character_mention: c01
+    2_two_mentions_same_entity: c02
+    3_unknown_referent_placeholder: c03
+    4_later_same_as_resolution: c04
+    5_event_plus_occurred: c05
+    6_event_participant: c06
+    7_location: c07
+    8_possession: c08
+    9_ownership: c09
+    10_relationship_state: c10
+    11_explicit_emotion: c11
+    12_suggested_emotion_from_behaviour: c12
+    13_self_report_not_canonical: c13
+    14_reported_event_not_canonical: c14
+    15_says_with_embedded_proposition: c15
+    16_attitude_belief: c16
+    17_conceals_conveys: c17
+    18_explicit_causality: c18
+    19_adjacency_without_causality: c19
+    20_state_with_open_end: c20
+    21_state_end_learned_later: c21
+    22_mixed_segment_two_evidence_roles: c22
+    23_multi_evidence_sufficient_set: c23
+    24_partial_evidence_not_sufficient: c24
+    25_wrong_polarity_negative: c25
+    26_duplicate_proposition_negative: c26
+
+contract_rules_tested:
+  - batch envelope validation and rejection of non-canonical collections
+  - deterministic merge independent of candidate order
+  - id collision and dangling reference rejection
+  - batch bound to its base document identity
+  - automated assertions must be UNREVIEWED; confidence does not change that
+  - human confirmation requires a recorded human review
+  - evidence role explicit; exact span required and checked against the source
+  - context-only passages cannot be cited as evidence
+  - evidence after the as-of boundary rejected
+  - mixed segment with role-specific sub-spans; paratext cannot ground a story assertion
+  - unregistered derivation rule and invented epistemic status rejected by the frozen validator
+  - holder-relative content not promoted to canonical truth
+  - event record without Occurred is not an occurrence
+  - prior canonical context extended without rewriting earlier records
+
+metric_definitions:
+  assertion_precision: "predicted assertions matched to gold (required or acceptable) / predicted assertions"
+  assertion_recall: "required gold assertions recovered / required gold assertions"
+  evidence_grounding_precision: "matched predictions with valid grounding / matched predictions"
+  evidence_grounding_recall: "required gold assertions recovered with valid grounding / required gold assertions"
+  epistemic_accuracy: "matched predictions with the gold epistemic status / matched predictions"
+  evidence_role_accuracy: "predicted evidence refs with a gold role / predicted evidence refs whose span exists in gold"
+  referent_resolution_accuracy: "required gold RefersTo recovered / required gold RefersTo"
+  unsupported_assertion_rate: "predicted assertions matched to no gold assertion / predicted assertions"
+  full_canonical_case_success: "L0 passes; every required commitment recovered with right polarity, status, validity and grounding; no material unsupported commitment"
+  single_overall_accuracy_defined: false
+
+failure_taxonomy:
+  codes_defined: 19
+  codes_assigned_mechanically: 15
+  codes_needing_human_relabel: [WRONG_PREDICATE, WRONG_ARGUMENT, WRONG_EVENT_GRANULARITY, NON_ATOMIC_ASSERTION]
+  severity_levels: [CRITICAL, HIGH, MEDIUM, LOW]
+
+dev_holdout_protocol:
+  m2_private_real_source_mappings: "development evidence only; never an independent M4 holdout"
+  holdout_cases_selected: false
+  holdout_gold_exists: false
+  rule: "fresh holdout spans selected before any extractor is tuned; gold sealed until baseline and protocol are fixed"
+
+unresolved_evaluation_questions:
+  - Q1 span tolerance on real text
+  - Q2 entities with no mention
+  - Q3 identity classes (one entity vs two entities joined by SameAs)
+  - Q4 event granularity differences
+  - Q5 named-time anchors and placeholder propositions
+  - Q6 free-text literal equivalence
+  - Q7 materiality of unsupported assertions
+  - Q8 completeness of real gold
+  - Q9 alternative acceptable groundings
+
+known_limitations:
+  - "Nothing is frozen; no real-source extraction has been run against the contract"
+  - "Fixtures are synthetic English; gold is agent-authored and unreviewed"
+  - "Exact span matching; alignment is greedy, not general graph matching"
+  - "Unsupported means 'not in gold'; on real text it needs adjudication before being read as hallucination"
+  - "Event individuation and coverage are guidance, not operational rules"
+  - "The validator checks that evidence lies in eligible inputs, not that it truly supports the claim"
+
+m4_02_recommendation: "Build real-source development cases from already-seen material as extraction batches on the private M3 source layer; settle Q1-Q9 on development cases; select and seal a fresh holdout before any extractor or prompt is tuned. No model selection until the measuring stick is exercised on real gold."

@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-storytelling:story-extraction:batch:v0",
+  "title": "Story Extraction Batch v0 (process envelope)",
+  "description": "Process envelope for STORY_EXTRACTION/v0. It is NOT a story schema. It wraps candidate records whose shapes are defined only by the frozen Canonical Story schema (canonical_story/v0). Those shapes are deliberately not repeated here: after a deterministic merge with the base canonical document, the frozen validator checks them. This file checks only the envelope.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["batch_version", "contract_version", "process", "scope", "base_canonical_identity", "candidate_records"],
+  "properties": {
+    "batch_version": { "const": "STORY_EXTRACTION_BATCH/v0" },
+    "contract_version": { "const": "STORY_EXTRACTION/v0" },
+    "process": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "process_id", "process_version"],
+      "properties": {
+        "method": { "enum": ["AUTOMATED_EXTRACTION", "HUMAN_ANNOTATION"] },
+        "process_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "process_version": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "run_id": { "type": "string", "maxLength": 128 },
+        "human_review_record": {
+          "description": "Reference to an actual human review or sign-off. Required before any assertion in the batch may be CONFIRMED or CORRECTED. An AI agent must not fill this in on its own authority.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "scope": {
+      "description": "ExtractionScope: what the extractor was given. A process record, not a Canonical Story record.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["story_id", "ingestion", "passage_inputs", "as_of_position", "prior_canonical_context", "profile_id"],
+      "properties": {
+        "story_id": { "$ref": "#/$defs/Id" },
+        "ingestion": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["contract_version", "corpus_fingerprint_sha256"],
+          "properties": {
+            "contract_version": { "const": "LIGHT_NOVEL_INGESTION/v0" },
+            "corpus_fingerprint_sha256": { "$ref": "#/$defs/Sha256" }
+          }
+        },
+        "passage_inputs": {
+          "description": "Ordered source passages shown to the extractor. Only EVIDENCE_ELIGIBLE passages may be cited as evidence; CONTEXT_ONLY passages help interpretation and are never evidence.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["use", "passage_ref"],
+            "properties": {
+              "use": { "enum": ["EVIDENCE_ELIGIBLE", "CONTEXT_ONLY"] },
+              "passage_ref": {
+                "type": "object",
+                "required": ["kind", "segment_id", "position", "span"],
+                "properties": { "kind": { "const": "SOURCE_PASSAGE_REF_V0" } }
+              }
+            }
+          }
+        },
+        "as_of_position": {
+          "description": "Discourse boundary: no input and no evidence may lie after it.",
+          "type": "object",
+          "required": ["stream_id", "key"],
+          "properties": {
+            "stream_id": { "$ref": "#/$defs/Id" },
+            "key": { "type": "array", "minItems": 1, "maxItems": 8, "items": { "type": "integer", "minimum": 0 } }
+          }
+        },
+        "prior_canonical_context": {
+          "description": "Whether the base canonical document already holds earlier canonical records. Prior context is not evidence from the current passages.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": { "kind": { "enum": ["NONE", "BASE_DOCUMENT_RECORDS"] } }
+        },
+        "profile_id": { "type": "string", "minLength": 1, "maxLength": 128 }
+      }
+    },
+    "base_canonical_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "base_document_sha256"],
+      "properties": {
+        "schema_version": { "const": "canonical_story/v0" },
+        "base_document_sha256": { "$ref": "#/$defs/Sha256" }
+      }
+    },
+    "candidate_records": {
+      "description": "Candidate Canonical Story records. Source-layer collections (story, source_documents, source_segments) are not allowed here: M4 does not create provenance.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidence_refs", "mentions", "entities", "events", "temporal_anchors", "propositions",
+                   "extraction_provenance", "assertions"],
+      "properties": {
+        "evidence_refs": { "$ref": "#/$defs/Records" },
+        "mentions": { "$ref": "#/$defs/Records" },
+        "entities": { "$ref": "#/$defs/Records" },
+        "events": { "$ref": "#/$defs/Records" },
+        "temporal_anchors": { "$ref": "#/$defs/Records" },
+        "propositions": { "$ref": "#/$defs/Records" },
+        "extraction_provenance": { "$ref": "#/$defs/Records" },
+        "assertions": { "$ref": "#/$defs/Records" }
+      }
+    }
+  },
+  "$defs": {
+    "Id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "Sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "Records": {
+      "type": "array",
+      "items": { "type": "object", "required": ["id"], "properties": { "id": { "$ref": "#/$defs/Id" } } }
+    }
+  }
+}
