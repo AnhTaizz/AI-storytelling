@@ -445,6 +445,58 @@ BOUNDARIES:
 
 ---
 
+## DEC-016 — Canonical Story Model v0 Freeze
+
+STATUS: ACCEPTED (Master Orchestrator / Project Owner authorization, 2026-10-01, TASK M2-08)
+
+DECISION:
+Canonical Story Model V0 is accepted as the project's initial source-independent story-understanding contract.
+
+1. The schema is `canonical_story/v0`.
+2. The predicate registry is `predicate_registry/v0.1`. The authority policy is `DEFAULT_V0`.
+3. The frozen identities are those in `benchmarks/m2_canonical_model/CANONICAL_STORY_V0_FROZEN.yaml`: exact paths and SHA-256 hashes of the schema, registry, conformance validator, reference projection and the M2 documents. That record, not this text, defines what is frozen.
+4. Storage technology remains undecided.
+5. JSON Schema is a contract notation. It is not a commitment to JSON storage.
+6. Relationship, Secret, StoryClaim, KNOWS and MISTAKEN remain derived views. They are never stored.
+7. Proposition and Assertion remain distinct. A Proposition is truth-neutral; only an Assertion carries canonical commitment.
+8. Evidence provenance (support paths, availability) and as-of semantics are normative.
+9. The registry governance policy from M2-07 is accepted (`docs/research/m2/M2_PRE_FREEZE_REVIEW.md` §7).
+10. The known limitations listed below are explicitly accepted for V0.
+
+EMPIRICAL BASIS:
+- Synthetic stress and conformance tests: cases A–J, 20 negative fixtures, 99 canonical tests.
+- Real-source 10-case mapping spike (M2-06): no blocking model defect.
+- Pre-freeze rerun against the committed contract (M2-07): conformance PASS, as-of checks 54/54, fit NATURAL 3 / ACCEPTABLE 6 / AWKWARD 1 / NOT_REPRESENTABLE 0. One borderline rating was confirmed by the Orchestrator.
+- Freeze gate (M2-08): every bound hash and the private evidence package were re-verified, and the tests were re-run, before the freeze record was written.
+
+SCOPE OF THE CLAIM:
+Validation covers one 30-chapter story in one genre with one primary human/agent annotator. The freeze is a stable V0 engineering contract. It is not a claim of universal narrative ontology completeness, and no generalization beyond the tested scope is claimed.
+
+ACCEPTED KNOWN LIMITATIONS (not solved in V0):
+- F-EXISTENTIAL-CONTENT, F-RESOLUTION-PROPAGATION, F-CAUSATION-OMISSION, F-FOCALIZATION, F-GATE-BY-ANNOTATION, F-SPEECH-ACTS, F-CONDITIONAL-BOUND, F-REPEATED-UTTERANCE.
+- Address-selection context is not first-class.
+- Polarity-specific UNAWARE is provisional and not real-source validated.
+- Free-text literal normalization is absent.
+- Single discourse stream.
+- No full story-time verdict slicing.
+- No temporal closure.
+- `DEFAULT_V0` assumes reliable narration.
+
+IMMUTABILITY:
+Frozen `canonical_story/v0 + predicate_registry/v0.1` artifacts are never silently modified in place.
+- Additive registry evolution may create `predicate_registry/v0.2` under the accepted governance policy.
+- A breaking model change requires a new schema/registry version, explicit architecture review, stated migration implications, and renewed conformance evidence.
+- Historical frozen hashes remain unchanged.
+
+BOUNDARIES:
+- This decision does NOT select a storage, graph or vector technology (see Open Technology Decisions).
+- This decision does NOT start M3 and does NOT amend the roadmap. The M1 Formal Script Quality Contract remains open.
+- This decision does NOT freeze extraction, ingestion or any production implementation.
+
+RELATED: DEC-001, DEC-002, DEC-008, DEC-010, DEC-011, DEC-015
+
+---
+
 ## Proposed Research Protocol Decisions
 
 ### PROPOSED_PROTOCOL_REVISION_MULTI_GOLD_SCOPE

@@ -2,7 +2,9 @@
 
 ## Current Milestone
 
-M2 — Canonical Story Model (IN PROGRESS — FREEZE CANDIDATE PENDING ORCHESTRATOR REVIEW: M2-01 to M2-06 complete and accepted; M2-07 pre-freeze hardening complete; M2 not frozen, not complete)
+M2 — Canonical Story Model capability: COMPLETE / FROZEN (Canonical Story Model v0: FROZEN / ACCEPTED, DEC-016).
+
+Project transition to M3: PENDING closure of the outstanding M1 Formal Script Quality Contract, unless the roadmap dependency is explicitly amended by a future decision. M3 has not started.
 
 ## Milestone Lifecycle
 
@@ -10,7 +12,8 @@ M2 — Canonical Story Model (IN PROGRESS — FREEZE CANDIDATE PENDING ORCHESTRA
 - M1 — Script Quality & Narrative Contract:
   - Empirical / research program: CLOSED for the current scope.
   - Formal Script Quality Contract: still OPEN. The M1 capability gate is therefore not fully complete.
-- M2 — Canonical Story Model: IN PROGRESS — FREEZE CANDIDATE PENDING ORCHESTRATOR REVIEW, under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015). Not frozen. Not complete.
+- M2 — Canonical Story Model: capability COMPLETE / FROZEN (DEC-016). The expected capability has been established as `canonical_story/v0` + `predicate_registry/v0.1`. M2 ran under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015).
+- M3: NOT STARTED. Transition is pending closure of the M1 Formal Script Quality Contract, unless a future decision amends that roadmap dependency. The roadmap is unchanged.
 
 *Correction (M2-02): an earlier version of this section labelled M1 "COMPLETED / CLOSED FOR CURRENT RESEARCH SCOPE". That overstated completion while the formal Script Quality Contract remains open. The M1 research program is closed; the contract is not.*
 
@@ -569,6 +572,24 @@ M2-07-CANONICAL-STORY-PRE-FREEZE-HARDENING — COMPLETED — Status: M2_07_FREEZ
   - Private package `M2_07_PRE_FREEZE_V1.zip`, SHA-256 `2b1d65a9ea43f646be519577ec60cc43d3ae64108de97e3b9963670baadf5eaf`; not committed.
 - Validation covers one 30-chapter story in one genre with one primary annotator. M2 is not frozen. `DECISIONS.md` is unchanged.
 
+M2-08-FREEZE-CANONICAL-STORY-MODEL-V0 — COMPLETED — Status: M2_08_CANONICAL_STORY_V0_FROZEN
+
+- **Authorization.** The Master Orchestrator accepted M2-07, confirmed CASE_REAL_05 as ACCEPTABLE, accepted the registry governance policy, and approved the freeze. The agent transcribed that authorization and did not originate it.
+- **Canonical Story Model v0: FROZEN / ACCEPTED** (`DECISIONS.md` DEC-016).
+  - Schema `canonical_story/v0`; registry `predicate_registry/v0.1`; authority policy `DEFAULT_V0`.
+  - Freeze record: `benchmarks/m2_canonical_model/CANONICAL_STORY_V0_FROZEN.yaml`, SHA-256 `bde15f84b6e72a202a833622ff1fe0822d6d3b5a3e926c1195b437a348b9034e`.
+  - Candidate commit `61ac00a8ff601af4b8f51a4815b3a6e1a095e6b9`. The candidate manifest is kept unchanged as history.
+- **Freeze gate (re-run before the record was written).**
+  - All 11 bound artifacts match the candidate hashes; none was edited.
+  - Private package `M2_07_PRE_FREEZE_V1.zip` matches its SHA-256 and its internal manifest (18 entries).
+  - Tests: canonical story 99/99, story_benchmark 298/298, story_ingestion 20/20.
+  - Private real-source document against the committed contract: structural PASS, semantic PASS, as-of 54/54.
+- **No model change.** Schema, registry, validator, projection and tests are untouched in this task.
+- **Known limitations** are recorded in the freeze record and DEC-016 as accepted for V0, not solved.
+- **Immutability.** Frozen artifacts are never silently modified in place. Additive registry changes create `predicate_registry/v0.2`; breaking changes need a new version, architecture review, migration implications and renewed conformance evidence.
+- **Scope.** Validation covers one 30-chapter story in one genre with one primary annotator. The freeze is a V0 engineering contract, not universal ontology completeness.
+- This is the final M2 research record. The M1 Formal Script Quality Contract remains OPEN. M3 has not started and the roadmap is unchanged.
+
 ## Next Candidate
 
-Orchestrator freeze review of the Canonical Story Model v0 candidate. No M2 freeze and no M3 before that decision.
+Orchestrator action on the still-open M1 Formal Script Quality Contract. No M3 work before that, unless the roadmap dependency is explicitly amended by a future decision.

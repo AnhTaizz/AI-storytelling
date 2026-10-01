@@ -1,0 +1,147 @@
+# Canonical Story Model v0 — FROZEN CONTRACT RECORD (sanitized; no source content)
+#
+# This record freezes a stable V0 engineering contract.
+# It is NOT a claim of universal narrative ontology completeness.
+# Decision: docs/DECISIONS.md, DEC-016.
+task: M2-08-FREEZE-CANONICAL-STORY-MODEL-V0
+freeze_status: FROZEN
+schema_version: canonical_story/v0
+registry_version: predicate_registry/v0.1
+registry_compatible_schema_versions: [canonical_story/v0]
+authority_policy: DEFAULT_V0
+
+candidate_commit: 61ac00a8ff601af4b8f51a4815b3a6e1a095e6b9
+candidate_manifest:
+  path: benchmarks/m2_canonical_model/CANONICAL_STORY_V0_FREEZE_CANDIDATE.yaml
+  sha256: 921905f2798274077aa1739d3f26e6da55d42f6d04550221ef39229cd09846bb
+  note: "Kept unchanged as historical evidence. This frozen record supersedes it operationally."
+
+frozen_scope:
+  - Canonical Story domain invariants (INV-01 to INV-18)
+  - logical Proposition / Assertion model
+  - signed-information semantics
+  - schema canonical_story/v0
+  - predicate registry predicate_registry/v0.1
+  - conformance semantics
+  - support-path and availability semantics
+  - reference project_as_of semantics
+  - registry governance (M2_PRE_FREEZE_REVIEW.md, section 7)
+  - documented known limitations
+
+# SHA-256 of the committed (LF) blob content. Identical to the candidate manifest;
+# re-verified at the candidate commit before this record was written. No bound artifact was edited.
+bound_artifacts:
+  schema:
+    path: schemas/canonical_story/canonical_story_v0.schema.json
+    sha256: f67410fcb1a95253abe5877b1619f0e9057430ec7cba4afa66431e964142d5e9
+  predicate_registry:
+    path: schemas/canonical_story/predicate_registry_v0.yaml
+    sha256: 44f3eafc6982f84bcc74ccb91abe7cd467a453352ee96be147095f27559c5350
+  conformance_validator:
+    path: tools/canonical_story/conformance_v0.py
+    sha256: 6a016f9c614eb10cd32e993ce0d902bd3eeba14b25a71eb5496449147f8d0599
+  projection:
+    path: tools/canonical_story/view_v0.py
+    sha256: 2fa78ae881a92fce4a8b65f3f51fbaa4e084d6512b6a284e55ff74d5fdada04d
+  requirements_doc:
+    path: docs/research/m2/M2_CANONICAL_STORY_MODEL_REQUIREMENTS.md
+    sha256: a8b5d5bef02398fe52a5a3aeb27811beecbc5b2305da008e1dee3e23c15f0cfc
+  core_concepts_doc:
+    path: docs/research/m2/M2_CORE_CONCEPTS_AND_BOUNDARIES.md
+    sha256: bb298f1c6f8c5ebbc1de12e83e658084730fa70d0de886c629e1aad5bf42501a
+  schema_doc:
+    path: docs/research/m2/M2_CANONICAL_SCHEMA_V0.md
+    sha256: b145b7b757e386936694a002b7adc30433b1a123ab7c525ca27f05c043864909
+  projection_doc:
+    path: docs/research/m2/M2_AS_OF_PROJECTION_V0.md
+    sha256: da73585d737d1541095cdba6905633fdf5683032147de3cd219928124d17b56a
+  real_source_spike_result:
+    path: benchmarks/m2_canonical_model/REAL_SOURCE_MAPPING_SPIKE_V1_RESULT.yaml
+    sha256: 1138f231e20c50b168cdbb775f61152e85a5283efd7a5d0b8224201c91e93afa
+  pre_freeze_review_doc:
+    path: docs/research/m2/M2_PRE_FREEZE_REVIEW.md
+    sha256: f9666efd4f3f1c68c21bbc234213e12137f44f85cea28b24dcfe3b9eea2f60b4
+  python_dependencies:
+    path: requirements-canonical-story.txt
+    sha256: 4d962c3c1fbe7adee2d18606ce514131fbee5fc89fbc7f7298c9f0f9a9018c9c
+
+validation:
+  requires_model_api_or_network: false
+  synthetic:
+    valid_fixtures: 11            # stress cases A-J plus the M2-02 section 21 snapshot document
+    negative_fixtures: 20         # each rejected in its expected layer
+  real_source:
+    scope_statement: "Validation currently covers one 30-chapter story in one genre and one primary human/agent annotator. Freeze means a stable V0 engineering contract, not universal narrative ontology completeness."
+    corpus_fingerprint_sha256: 7f9bb8106d6d50acd2b3760738c0b8040f36ab547c2d2f7eade1ca0b9a827ff8
+    case_count: 10
+    difficulty_mix: {SIMPLE: 3, MEDIUM: 4, DIFFICULT: 3}
+    conformance: {structural: PASS, semantic: PASS}
+    as_of_checks: {passed: 54, total: 54}
+    fit_distribution: {NATURAL: 3, ACCEPTABLE: 6, AWKWARD: 1, NOT_REPRESENTABLE: 0}
+    difficult_cases_natural_or_acceptable: {count: 3, total: 3}
+    case_real_05: "ACCEPTABLE — borderline agent rating, confirmed by the Master Orchestrator at freeze review"
+    rating_independence: "Ratings were made by the annotating agent; one rating was confirmed by the Orchestrator. No independent second annotator."
+  test_counts:
+    canonical_story: {passed: 99, total: 99}
+    story_benchmark: {passed: 298, total: 298}
+    story_ingestion: {passed: 20, total: 20}
+  freeze_gate_rerun:          # M2-08, at the candidate commit, before this record was written
+    bound_artifact_hash_mismatches: 0
+    private_package_manifest_mismatches: 0
+    private_document_vs_committed_contract: {structural: PASS, semantic: PASS, as_of_checks: "54/54"}
+    private_document_rebuild: "identical content to the sealed document (line endings aside)"
+
+private_evidence:             # local only, never committed
+  package: .local/story_integration/otonari_30ch/M2_07_PRE_FREEZE_V1.zip
+  package_sha256: 2b1d65a9ea43f646be519577ec60cc43d3ae64108de97e3b9963670baadf5eaf
+  internal_manifest_entries: 18
+  earlier_package:
+    package: .local/story_integration/otonari_30ch/M2_06_REAL_MAPPING_V1.zip
+    package_sha256: 1d3f4cc93965c916071b11a451c54b8adcc7886a4ec4f1086b2e302ea7312e93
+
+known_limitations:            # accepted for V0; NOT solved
+  - id: F-EXISTENTIAL-CONTENT
+    note: "Vague or de dicto content fits only an unresolvable placeholder; verdicts under-report safely."
+  - id: F-RESOLUTION-PROPAGATION
+    note: "SameContent resolution does not propagate into propositions that embed the placeholder."
+  - id: F-CAUSATION-OMISSION
+    note: "Causes takes events only; an omission or a state cannot be a cause."
+  - id: F-FOCALIZATION
+    note: "Focalized narration forces a choice between narrator truth and the focal character's belief."
+  - id: F-GATE-BY-ANNOTATION
+    note: "The INTERNAL_STATE gate checks evidence roles and relies on annotation discipline."
+  - id: F-SPEECH-ACTS
+    note: "Requests, permissions and agreements are not propositions; only assertive speech is modelled."
+  - id: F-CONDITIONAL-BOUND
+    note: "Conditional future end bounds are not expressible."
+  - id: F-REPEATED-UTTERANCE
+    note: "Repeated utterances of one claim collapse into one Says proposition."
+  - id: ADDRESS-CONTEXT
+    note: "Address-selection context is not first-class."
+  - id: UNAWARE-PROVISIONAL
+    note: "Polarity-specific UNAWARE is PROVISIONAL / NOT REAL-SOURCE VALIDATED."
+  - id: LITERAL-NORMALIZATION
+    note: "Free-text literal normalization is absent; proposition uniqueness is by exact content."
+  - id: SINGLE-STREAM
+    note: "Single discourse stream per document."
+  - id: NO-STORY-TIME-SLICING
+    note: "No full story-time slicing of verdicts."
+  - id: NO-TEMPORAL-CLOSURE
+    note: "No transitive closure of temporal relations."
+  - id: RELIABLE-NARRATION
+    note: "DEFAULT_V0 assumes reliable narration."
+
+immutability:
+  rule: "Frozen canonical_story/v0 + predicate_registry/v0.1 artifacts are never silently modified in place."
+  additive_registry_evolution: "May create predicate_registry/v0.2 under the accepted governance policy (M2_PRE_FREEZE_REVIEW.md, section 7), as a new version with its own record."
+  breaking_model_change: "Requires a new schema/registry version, explicit architecture review, stated migration implications, and renewed conformance evidence."
+  historical_hashes: "The hashes in this record remain unchanged; later versions get their own record."
+  storage_note: "JSON Schema is a contract notation, not a storage commitment. Storage technology remains undecided."
+
+approved_by:
+  role: Master Orchestrator / Project Owner authorization
+  basis: "Explicit authorization in task M2-08 (M2-07 accepted; CASE_REAL_05 ACCEPTABLE confirmed; registry governance accepted; freeze approved)"
+  recorded_by: "AI agent acting as Release / Architecture Record Maintainer; the agent transcribed the authorization and did not originate it"
+approval_date: 2026-10-01
+decision_record: docs/DECISIONS.md#DEC-016
+m3_started: false
