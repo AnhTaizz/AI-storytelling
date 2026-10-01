@@ -1,12 +1,16 @@
 # Script Quality Contract v0
 
-Status: REPAIRED CANDIDATE — pending Orchestrator freeze review. **Not frozen.** Not recorded in `DECISIONS.md`.
+Status: **FROZEN / ACCEPTED** (2026-10-01, Master Orchestrator / Project Owner authorization). Recorded in `DECISIONS.md` as DEC-017.
 
-Revision note: the candidate was repaired once before freeze, after the operational dry-run (`benchmarks/m1_script_quality/evaluations/CONTRACT_V0_DRY_RUN/`). The version stays `v0` because it has never been frozen. Changes: severity now also measures impact on the requested deliverable, so request and output findings can be material (section 14); two taxonomy subtypes added (section 13); rules added for dialogue (4.4), ambiguous speakers (5.3), recording findings (13.1) and escalation records (14.4); trace verdict separated from official verdict (section 16).
+Freeze record (exact frozen identity and hashes): `benchmarks/m1_script_quality/SCRIPT_QUALITY_CONTRACT_V0_FREEZE_RECORD.yaml`
+
+Freezing this contract fixes the quality standard. It does not show that any current Writer or critic meets it, and it does not validate H7 (section 21).
+
+Pre-freeze history: the candidate was repaired once before freeze, after the operational dry-run (`benchmarks/m1_script_quality/evaluations/CONTRACT_V0_DRY_RUN/`). The version stays `v0` because it has never been frozen. Changes: severity now also measures impact on the requested deliverable, so request and output findings can be material (section 14); two taxonomy subtypes added (section 13); rules added for dialogue (4.4), ambiguous speakers (5.3), recording findings (13.1) and escalation records (14.4); trace verdict separated from official verdict (section 16).
 
 Contract identity: `SCRIPT_QUALITY_CONTRACT/v0`
 
-Machine-readable companion: `benchmarks/m1_script_quality/SCRIPT_QUALITY_CONTRACT_V0_CANDIDATE.yaml`
+Machine-readable companion: `benchmarks/m1_script_quality/SCRIPT_QUALITY_CONTRACT_V0.yaml` (the earlier `SCRIPT_QUALITY_CONTRACT_V0_CANDIDATE.yaml` is kept unchanged as history)
 
 ## 1. Purpose
 

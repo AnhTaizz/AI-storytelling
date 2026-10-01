@@ -55,7 +55,8 @@ class TestCandidateStructure(unittest.TestCase):
         self.assertEqual(self.c["status"], "CANDIDATE_REPAIRED_PENDING_ORCHESTRATOR_FREEZE_REVIEW")
         self.assertFalse(self.c["revision"]["frozen"])
         self.assertIn("`SCRIPT_QUALITY_CONTRACT/v0`", self.spec)
-        self.assertIn("**Not frozen.**", self.spec)
+        # The candidate file is history; the Markdown contract was frozen later (DEC-017).
+        self.assertIn("**FROZEN / ACCEPTED**", self.spec)
         self.assertNotIn("FROZEN", self.c["status"])
 
     def test_referenced_files_exist(self):

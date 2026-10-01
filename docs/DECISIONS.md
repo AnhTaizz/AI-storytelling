@@ -497,6 +497,60 @@ RELATED: DEC-001, DEC-002, DEC-008, DEC-010, DEC-011, DEC-015
 
 ---
 
+## DEC-017 — Script Quality Contract v0 Freeze
+
+STATUS: ACCEPTED (Master Orchestrator / Project Owner authorization, 2026-10-01, TASK M1-FREEZE-SCRIPT-QUALITY-CONTRACT-V0)
+
+DECISION:
+`SCRIPT_QUALITY_CONTRACT/v0` is the project's initial formal script-quality standard.
+
+1. The standard is `docs/contracts/SCRIPT_QUALITY_CONTRACT_V0.md`, with its machine-readable form and review template.
+2. Hard integrity gates are separate from soft narrative dimensions.
+3. Soft scores cannot compensate for a failed integrity gate. Nothing is averaged across the two.
+4. Creative presentation is allowed; factual mutation is not. Engagement may increase through presentation transformation, not through factual mutation.
+5. Claims are judged against the authorized truth boundary for the request, not against outside knowledge.
+6. Epistemic strength, chronology and state, and spoiler boundaries must be preserved.
+7. Material request non-compliance is a real hard-gate failure. Severity is judged by impact and repair scope, not by a percentage.
+8. The Narrative Profile defines style, tone and target length. These are request constraints, not universal quality.
+9. The semantic hard gates require a human audit before an official `PASS` or `PASS_WITH_MINOR_EDITS` under v0. An AI or model-assisted review may produce a `REVIEW_TRACE_VERDICT`; without the human audit the `OFFICIAL_CONTRACT_VERDICT` is `REVIEW_REQUIRED`.
+10. Current validators are advisory sources of candidate findings.
+11. The H7 confirmatory verdict remains `NOT_EVALUATED`. H7 Stage A is development evidence only; Stage B has not been executed.
+12. The exact frozen identity is defined by `benchmarks/m1_script_quality/SCRIPT_QUALITY_CONTRACT_V0_FREEZE_RECORD.yaml` and the hashes it binds. That record, not this text, defines what is frozen.
+
+EVIDENCE BASIS:
+- Script experiments H1, H2, H6 and H6b.
+- H7 Stage A, as development evidence only.
+- Operational dry-run of the candidate on RUN_0003 and RUN_0004 (AI reviewer; not an independent human review).
+- Post-dry-run repair of request-compliance and severity semantics.
+- Deterministic contract consistency and verdict tests.
+
+SCOPE OF THE CLAIM:
+The contract defines desired quality. It is not a claim that any current Writer, critic or pipeline meets it, and freezing it does not validate H7.
+
+ACCEPTED KNOWN LIMITATIONS:
+- Narrow evidence base: one story, early controlled runs.
+- Independent human use of the rubric is still pending.
+- No inter-reviewer agreement measurement.
+- No calibrated automatic semantic thresholds.
+- Current critics have incomplete detection.
+- H7 Stage B not executed.
+- The procedure for identifying narratively necessary coverage is not operationalized.
+- Long-range, multi-chapter script behaviour is untested.
+- Materiality requires reviewer judgement.
+
+IMMUTABILITY:
+The frozen artifacts are not modified in place. A clarification that leaves acceptance semantics unchanged is recorded as a change note with a new freeze record. A change to hard invariants, hard gates, the meaning of a story claim, severity semantics or verdict semantics requires a new contract version and explicit review (contract section 22).
+
+BOUNDARIES:
+- This decision does NOT start M3 and does NOT amend the roadmap.
+- This decision does NOT select a Writer, critic, model or validation implementation.
+- This decision does NOT define a Narrative Profile.
+- This decision does NOT evaluate the M9 Script Quality Gate.
+
+RELATED: DEC-001, DEC-004, DEC-006, DEC-009, DEC-012, DEC-013, DEC-014, DEC-016
+
+---
+
 ## Proposed Research Protocol Decisions
 
 ### PROPOSED_PROTOCOL_REVISION_MULTI_GOLD_SCOPE

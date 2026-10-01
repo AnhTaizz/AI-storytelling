@@ -1,0 +1,118 @@
+# Script Quality Contract v0 — FREEZE RECORD
+#
+# This record fixes the identity of the frozen quality standard.
+# It is NOT a claim that any current Writer, critic or pipeline meets the standard,
+# and it does NOT validate H7. Decision: docs/DECISIONS.md, DEC-017.
+task: M1-FREEZE-SCRIPT-QUALITY-CONTRACT-V0
+freeze_status: FROZEN
+contract_version: SCRIPT_QUALITY_CONTRACT/v0
+
+authorized_candidate_commit: 7fb410570107954e920893458ca30444b29d2adb
+
+approval:
+  role: Master Orchestrator / Project Owner authorization
+  date: 2026-10-01
+  basis: "Explicit authorization in task M1-FREEZE-SCRIPT-QUALITY-CONTRACT-V0 (candidate design, operational dry-run and pre-freeze repair accepted; freeze authorized)"
+  recorded_by: "AI agent acting as contract maintainer; the agent transcribed the authorization and did not originate it"
+decision_record: docs/DECISIONS.md#DEC-017
+
+# SHA-256 of the committed (LF) blob content.
+normative_frozen_artifacts:
+  specification:
+    path: docs/contracts/SCRIPT_QUALITY_CONTRACT_V0.md
+    sha256: a945de86d29f23173a35dfc102bc612a74bc6dfd86e97138f3458776f0a37244
+  machine_readable_contract:
+    path: benchmarks/m1_script_quality/SCRIPT_QUALITY_CONTRACT_V0.yaml
+    sha256: c65f06d88e9fde79c6cbc485fcad69bfbed1133d1cf0661cfc4a47841885edc5
+  human_review_template:
+    path: benchmarks/m1_script_quality/evaluations/HUMAN_REVIEW_TEMPLATE.md
+    sha256: 8523b1d2767bfe3366029084bfc2e3b4e8c0f38d519abb7a8ddb1477dfe26358
+
+validation_and_historical_evidence:    # kept unchanged; not normative
+  repaired_candidate:
+    path: benchmarks/m1_script_quality/SCRIPT_QUALITY_CONTRACT_V0_CANDIDATE.yaml
+    sha256: 599ee4b2390aea498503de1ba4effdd54801cac60c427e16582787796af702c2
+  dry_run_review_run_0003:
+    path: benchmarks/m1_script_quality/evaluations/CONTRACT_V0_DRY_RUN/RUN_0003_REVIEW.md
+    sha256: c707dbed0f67c46035e1d8df5a45968ca3195a38d2ded7bbd37a89e6b66cd139
+  dry_run_review_run_0004:
+    path: benchmarks/m1_script_quality/evaluations/CONTRACT_V0_DRY_RUN/RUN_0004_REVIEW.md
+    sha256: 75d5eea18ce10e35d926a3c3d6a23151be06c643d0a3fc59520c0c47ef58f22e
+  dry_run_summary:
+    path: benchmarks/m1_script_quality/evaluations/CONTRACT_V0_DRY_RUN/DRY_RUN_SUMMARY.yaml
+    sha256: 2404094e05ea99c1017dca3b6d28db6aa0e30bd5478f246e1c58852808a4f2bd
+  dry_run_cross_check_and_findings:
+    path: benchmarks/m1_script_quality/evaluations/CONTRACT_V0_DRY_RUN/DRY_RUN_CROSS_CHECK_AND_FINDINGS.md
+    sha256: bdc9f31979eac3557b955a073b711581e01db6fc1b17b9af8ae64692a0850e8d
+  post_repair_reevaluation:
+    path: benchmarks/m1_script_quality/evaluations/CONTRACT_V0_DRY_RUN/POST_REPAIR_REEVALUATION.yaml
+    sha256: 76b8e4c2efb1b22f6de34f39f860542988702a6bf4ccfad00a54894ef2f35c7b
+  post_repair_note:
+    path: benchmarks/m1_script_quality/evaluations/CONTRACT_V0_DRY_RUN/POST_REPAIR_NOTE.md
+    sha256: d0dcac8d8b91103c62c3db50f465660e49af13b56ea88c896727f5f311cccac9
+
+semantic_changes_at_freeze: none
+changes_at_freeze:
+  specification: "status and release metadata only"
+  machine_readable_contract: "copy of the repaired candidate with status FROZEN and release metadata"
+  human_review_template: "status line only"
+
+freeze_gate:              # run at the authorized candidate commit, before any edit
+  candidate_facts_verified:
+    contract_version: SCRIPT_QUALITY_CONTRACT/v0
+    candidate_status: CANDIDATE_REPAIRED_PENDING_ORCHESTRATOR_FREEZE_REVIEW
+    run_0003: {finding: REQUEST_NONCOMPLIANCE/LENGTH_NONCOMPLIANCE, severity: HIGH, GATE_REQUEST_COMPLIANCE: GATE_FAIL}
+    run_0004: {length_compliant: true, GATE_REQUEST_COMPLIANCE: GATE_PASS}
+  tests_at_candidate_commit:
+    script_quality: {passed: 55, total: 55}
+    canonical_story: {passed: 99, total: 99}
+    story_benchmark: {passed: 298, total: 298}
+    story_ingestion: {passed: 20, total: 20}
+  requires_model_api_or_network: false
+  m2_frozen_artifact_hash_mismatches: 0
+
+contract_shape:           # summary only; the bound files are authoritative
+  hard_invariants: 17
+  hard_gates: 7
+  severity_levels: [CRITICAL, HIGH, MEDIUM, LOW]
+  soft_dimensions: 8
+  verdicts: [FAIL, REVIEW_REQUIRED, PASS, PASS_WITH_MINOR_EDITS]
+
+human_audit_rule:         # frozen; not weakened
+  rule: "Semantic hard gates require human audit before an official PASS or PASS_WITH_MINOR_EDITS under V0."
+  semantic_gates: [GATE_FACTUAL_GROUNDING, GATE_EPISTEMIC_INTEGRITY, GATE_TEMPORAL_STATE_INTEGRITY, GATE_SPOILER_DISCIPLINE, GATE_NECESSARY_COVERAGE]
+  ai_or_model_assisted_review_may_produce: REVIEW_TRACE_VERDICT
+  official_contract_verdict_without_human_audit: REVIEW_REQUIRED
+  current_validators: advisory
+
+validator_status:         # evidence only; not upgraded by this freeze
+  h7_stage_a: development evidence only
+  h7_stage_b: NOT EXECUTED
+  h7_confirmatory_verdict: NOT_EVALUATED
+  any_writer_or_critic_shown_to_satisfy_contract: false
+  m9_script_quality_gate: NOT YET EVALUATED
+
+operational_dry_run:
+  reviewer: AI agent (not the independent human review)
+  scripts: [RUN_0003_H2_STORY_BRIEF, RUN_0004_H6_CRITIC]
+  review_trace_verdicts_after_repair: {RUN_0003_H2_STORY_BRIEF: FAIL, RUN_0004_H6_CRITIC: PASS_WITH_MINOR_EDITS}
+  official_contract_verdicts: {RUN_0003_H2_STORY_BRIEF: REVIEW_REQUIRED, RUN_0004_H6_CRITIC: REVIEW_REQUIRED}
+
+known_limitations:        # accepted for V0
+  - "Narrow evidence base: one story, early controlled runs"
+  - "Independent human use of the new rubric still pending"
+  - "No inter-reviewer agreement measurement"
+  - "No calibrated automatic semantic thresholds"
+  - "Current critics have incomplete detection"
+  - "H7 Stage B not executed"
+  - "Coverage / narratively-necessary procedure not operationalized"
+  - "Long-range multi-chapter script behaviour untested"
+  - "Materiality requires reviewer judgement"
+  - "The contract defines desired quality, not current system performance"
+
+immutability:
+  rule: "Frozen artifacts are not modified in place."
+  minor_clarification: "No change to acceptance semantics; change note and a new freeze record."
+  breaking_revision: "New contract version and explicit review (contract section 22)."
+
+m3_started: false

@@ -1,0 +1,285 @@
+# Script Quality Contract v0 — FROZEN (machine-readable contract)
+# Normative text: docs/contracts/SCRIPT_QUALITY_CONTRACT_V0.md
+# Decision: docs/DECISIONS.md, DEC-017. Frozen identity: SCRIPT_QUALITY_CONTRACT_V0_FREEZE_RECORD.yaml
+# Semantics are identical to the repaired candidate (SCRIPT_QUALITY_CONTRACT_V0_CANDIDATE.yaml, kept as history).
+contract_version: SCRIPT_QUALITY_CONTRACT/v0
+status: FROZEN
+freeze:
+  decision: DEC-017
+  freeze_record: benchmarks/m1_script_quality/SCRIPT_QUALITY_CONTRACT_V0_FREEZE_RECORD.yaml
+  authorized_candidate_commit: 7fb410570107954e920893458ca30444b29d2adb
+  frozen_from: benchmarks/m1_script_quality/SCRIPT_QUALITY_CONTRACT_V0_CANDIDATE.yaml
+  semantic_changes_at_freeze: none
+revision:
+  frozen: true
+  pre_freeze_repair_task: M1-SCRIPT-QUALITY-V0-CANDIDATE-REPAIR
+  basis: benchmarks/m1_script_quality/evaluations/CONTRACT_V0_DRY_RUN/DRY_RUN_CROSS_CHECK_AND_FINDINGS.md
+  note: "Repaired once before freeze; the version stayed v0."
+specification: docs/contracts/SCRIPT_QUALITY_CONTRACT_V0.md
+human_review_template: benchmarks/m1_script_quality/evaluations/HUMAN_REVIEW_TEMPLATE.md
+
+claim_types:
+  acceptable: [SUPPORTED_FACT, SUPPORTED_INFERENCE, ATTRIBUTED_REPORT, COMMENTARY_RHETORIC]
+  violating: [UNSUPPORTED_STORY_CLAIM, STRENGTHENED_STORY_CLAIM, CONTRADICTED_STORY_CLAIM]
+  review_trigger: [UNDETERMINED]
+  h6b_class_mapping:
+    DIRECTLY_SUPPORTED: SUPPORTED_FACT
+    SUPPORTED_PARAPHRASE: SUPPORTED_FACT
+    SUPPORTED_INFERENCE: SUPPORTED_INFERENCE
+    CREATIVE_BUT_SAFE: COMMENTARY_RHETORIC   # only if it passes the story claim test
+    QUESTIONABLE: UNDETERMINED
+    UNSUPPORTED: UNSUPPORTED_STORY_CLAIM
+    STRONGER_THAN_BRIEF: STRENGTHENED_STORY_CLAIM
+    CONTRADICTS_BRIEF: CONTRADICTED_STORY_CLAIM
+
+hard_invariants:
+  - {id: SQ-INV-01, name: NO_UNSUPPORTED_STORY_CLAIM, gate: GATE_FACTUAL_GROUNDING}
+  - {id: SQ-INV-02, name: NO_CONTRADICTION, gate: GATE_FACTUAL_GROUNDING}
+  - {id: SQ-INV-03, name: NO_INVENTED_CAUSALITY, gate: GATE_FACTUAL_GROUNDING}
+  - {id: SQ-INV-04, name: NO_INVENTED_INTERNAL_STATE, gate: GATE_FACTUAL_GROUNDING}
+  - {id: SQ-INV-05, name: NO_STRENGTHENING, gate: GATE_EPISTEMIC_INTEGRITY}
+  - {id: SQ-INV-06, name: NO_KNOWLEDGE_OVERCLAIM, gate: GATE_EPISTEMIC_INTEGRITY}
+  - {id: SQ-INV-07, name: ATTRIBUTION_PRESERVED, gate: GATE_EPISTEMIC_INTEGRITY}
+  - {id: SQ-INV-08, name: CHRONOLOGY_PRESERVED, gate: GATE_TEMPORAL_STATE_INTEGRITY}
+  - {id: SQ-INV-09, name: STATE_AS_OF_NARRATED_POINT, gate: GATE_TEMPORAL_STATE_INTEGRITY}
+  - {id: SQ-INV-10, name: IDENTITY_AND_RELATIONSHIP_AS_OF_NARRATED_POINT, gate: GATE_TEMPORAL_STATE_INTEGRITY}
+  - {id: SQ-INV-11, name: NECESSARY_INFORMATION_PRESENT, gate: GATE_NECESSARY_COVERAGE}
+  - {id: SQ-INV-12, name: NO_FUTURE_INFORMATION_LEAK, gate: GATE_SPOILER_DISCIPLINE}
+  - {id: SQ-INV-13, name: COMMENTARY_CARRIES_NO_STORY_CLAIM, gate: GATE_FACTUAL_GROUNDING}
+  - {id: SQ-INV-14, name: LENGTH_COMPLIANCE, gate: GATE_REQUEST_COMPLIANCE}
+  - {id: SQ-INV-15, name: TARGET_LANGUAGE_INTEGRITY, gate: GATE_OUTPUT_INTEGRITY}
+  - {id: SQ-INV-16, name: CLEAN_DELIVERABLE, gate: GATE_OUTPUT_INTEGRITY}
+  - {id: SQ-INV-17, name: AUDITABLE, gate: GATE_FACTUAL_GROUNDING}
+
+hard_gates:
+  material_severities: [HIGH, CRITICAL]
+  statuses: [GATE_PASS, GATE_CONDITIONAL, GATE_FAIL, GATE_NOT_DETERMINED]
+  human_audit_required_in_v0:
+    - GATE_FACTUAL_GROUNDING
+    - GATE_EPISTEMIC_INTEGRITY
+    - GATE_TEMPORAL_STATE_INTEGRITY
+    - GATE_SPOILER_DISCIPLINE
+    - GATE_NECESSARY_COVERAGE
+  gates:
+    - id: GATE_FACTUAL_GROUNDING
+    - id: GATE_EPISTEMIC_INTEGRITY
+    - id: GATE_TEMPORAL_STATE_INTEGRITY
+    - id: GATE_SPOILER_DISCIPLINE
+    - id: GATE_NECESSARY_COVERAGE
+    - id: GATE_OUTPUT_INTEGRITY
+    - id: GATE_REQUEST_COMPLIANCE
+
+failure_taxonomy:
+  integrity:
+    - {id: FACTUAL_ERROR, gate: GATE_FACTUAL_GROUNDING, subtypes: []}
+    - id: UNSUPPORTED_INVENTION
+      gate: GATE_FACTUAL_GROUNDING
+      subtypes:
+        - UNSUPPORTED_EVENT
+        - UNSUPPORTED_ACTION_OR_STAGING
+        - INVENTED_SPEECH
+        - UNSUPPORTED_DESCRIPTIVE_ATTRIBUTE
+        - PHYSICAL_OR_EMOTIONAL_STATE_INVENTION
+        - MOTIVE_OR_INTERNAL_STATE_INVENTION
+        - HIDDEN_INTENTION_INFERENCE
+    - {id: CAUSALITY_ERROR, gate: GATE_FACTUAL_GROUNDING, subtypes: [CAUSALITY_INVENTION, CAUSALITY_DISTORTION]}
+    - id: SOURCE_GROUNDING_FAILURE
+      gate: GATE_FACTUAL_GROUNDING
+      subtypes: [OUT_OF_BOUNDARY_KNOWLEDGE, BOUNDARY_FIDELITY_DEFECT, UNTRACEABLE_CLAIM]
+    - id: EPISTEMIC_ERROR
+      gate: GATE_EPISTEMIC_INTEGRITY
+      subtypes:
+        - CERTAINTY_INFLATION
+        - EPISTEMIC_KNOWLEDGE_OVERCLAIM
+        - REPUTATION_OR_FREQUENCY_STRENGTHENING
+        - ATTRIBUTION_LOSS
+    - {id: TEMPORAL_ERROR, gate: GATE_TEMPORAL_STATE_INTEGRITY, subtypes: [CHRONOLOGY_ERROR, ANACHRONISTIC_STATE]}
+    - {id: CHARACTER_STATE_ERROR, gate: GATE_TEMPORAL_STATE_INTEGRITY, subtypes: [SCENE_STATE_INCONSISTENCY]}
+    - {id: RELATIONSHIP_ERROR, gate: GATE_TEMPORAL_STATE_INTEGRITY, subtypes: []}
+    - {id: PREMATURE_SPOILER, gate: GATE_SPOILER_DISCIPLINE, subtypes: []}
+    - {id: MISSING_IMPORTANT_EVENT, gate: GATE_NECESSARY_COVERAGE, subtypes: []}
+    - {id: OUTPUT_INTEGRITY_FAILURE, gate: GATE_OUTPUT_INTEGRITY, subtypes: [OUTPUT_LANGUAGE_CORRUPTION, OUTPUT_ARTIFACT]}
+    - {id: REQUEST_NONCOMPLIANCE, gate: GATE_REQUEST_COMPLIANCE, subtypes: [LENGTH_NONCOMPLIANCE, SCOPE_NONCOMPLIANCE]}
+  narrative:      # no gate; these inform soft dimensions and edit cost
+    - {id: WEAK_HOOK, subtypes: []}
+    - {id: NARRATIVE_STRUCTURE_WEAKNESS, subtypes: [MISSED_CALLBACK, MISSED_FORESHADOWING]}
+    - {id: POOR_PACING, subtypes: [OVER_COMPRESSION, UNDER_COMPRESSION]}
+    - {id: FLAT_EMOTIONAL_PAYOFF, subtypes: []}
+    - {id: GENERIC_COMMENTARY, subtypes: []}
+    - {id: STYLE_MISMATCH, subtypes: []}
+    - {id: OTHER, subtypes: []}
+
+severity_levels:
+  - {id: CRITICAL, material: true}
+  - {id: HIGH, material: true}
+  - {id: MEDIUM, material: false}
+  - {id: LOW, material: false}
+severity_basis:          # not category alone; H6b severity labels are not inherited
+  measures:
+    - impact_on_audience_understanding
+    - impact_on_requested_deliverable_correctness_or_usability
+  assigned_by: review_judgement_with_stated_reason
+  computed_from_percentage_or_count: false
+  percentage_bands_defined: false
+request_compliance_severity:
+  MEDIUM: "request violated; correction localized; no substantial restructuring"
+  HIGH: "request materially violated; satisfying it needs substantial changes across the deliverable"
+  CRITICAL: "deliverable fundamentally does not answer the requested task or is unusable as that deliverable"
+output_integrity_severity:
+  LOW_OR_MEDIUM: "isolated unjustified contamination token; small removable meta artifact"
+  HIGH: "repeated contamination or structural artifact that substantially damages usability"
+  CRITICAL: "mostly wrong language; not the requested deliverable; unusable corruption"
+calibration_examples:
+  - id: CAL-LENGTH-MAJOR
+    source: operational dry-run, RUN_0003
+    request_words: "900-1100"
+    recorded_words: 1648
+    observed_repair: "about one third removed; changes across large portions of the script; edit cost MAJOR"
+    taxonomy: REQUEST_NONCOMPLIANCE/LENGTH_NONCOMPLIANCE
+    severity: HIGH
+    gate_status: {GATE_REQUEST_COMPLIANCE: GATE_FAIL}
+    generalizes_to_all_similar_magnitudes: false
+  - id: CAL-LENGTH-SMALL
+    source: synthetic
+    request: "at most 1100 words"
+    output: "slightly above the limit"
+    repair: "remove or rephrase one short local passage"
+    taxonomy: REQUEST_NONCOMPLIANCE/LENGTH_NONCOMPLIANCE
+    severity: MEDIUM
+    gate_status: {GATE_REQUEST_COMPLIANCE: GATE_CONDITIONAL}
+cumulative_escalation:
+  basis: reviewer_judgement_with_stated_reason
+  numeric_density_threshold: null
+  member_findings_keep_their_severity: true
+  record_fields: [escalation_id, member_findings, original_severities, escalated_severity, affected_gate, impact_rationale]
+
+finding_rules:
+  granularity: one_semantic_defect_independently_evidenced_and_independently_corrected
+  sentence_or_token_level_findings_required: false
+  multi_category:
+    one_finding_may_carry_multiple_violation_tags: true
+    severity_assigned_once_from_total_impact: true
+    all_affected_gates_receive_the_finding: true
+    counted_once_in_summaries: true
+  free_indirect_thought: evaluate_semantic_content_one_assertion_one_finding
+  ambiguous_speaker_hedged_guess: UNDETERMINED     # when context and boundary do not settle narrator vs character
+  dialogue:
+    literal_source_wording_required: false
+    allowed: [translation, natural_paraphrase, compression, spoken_language_adaptation]
+    not_allowed: [invented_factual_content, invented_knowledge, invented_intention, invented_promise_or_agreement,
+                  stronger_certainty, new_causal_claims, new_relationship_implications]
+
+soft_dimensions:
+  rating_scale: {min: 1, max: 5, anchors: {1: poor, 3: usable_with_noticeable_editing, 5: publication_ready_for_this_dimension}}
+  averaging_across_dimensions: false
+  evidence_required_per_rating: true
+  dimensions:
+    - {id: HOOK_STRENGTH, may_be_not_applicable: false}
+    - {id: NARRATIVE_FLOW, may_be_not_applicable: false}
+    - {id: PACING, may_be_not_applicable: false}
+    - {id: EMOTIONAL_IMPACT, may_be_not_applicable: true}
+    - {id: HUMOR_COMMENTARY_QUALITY, may_be_not_applicable: true}
+    - {id: CALLBACK_QUALITY, may_be_not_applicable: true}
+    - {id: NARRATION_NATURALNESS, may_be_not_applicable: false}
+    - {id: OVERALL_USEFULNESS, may_be_not_applicable: false}
+
+edit_cost_levels: [MINIMAL, MODERATE, MAJOR, REWRITE]
+
+verdicts:       # evaluated in order; first match wins
+  - id: FAIL
+    when: "any gate GATE_FAIL, or edit cost REWRITE"
+  - id: REVIEW_REQUIRED
+    when: "any gate GATE_NOT_DETERMINED, or required human audit missing, or an applicable soft dimension <= 2, or edit cost MAJOR"
+  - id: PASS
+    when: "all gates GATE_PASS, no applicable soft dimension < 3, OVERALL_USEFULNESS >= 4, edit cost MINIMAL"
+  - id: PASS_WITH_MINOR_EDITS
+    when: "otherwise (gates PASS or CONDITIONAL, no soft dimension < 3, edit cost MINIMAL or MODERATE)"
+verdict_kinds:
+  REVIEW_TRACE_VERDICT: "follows from the reviewer's recorded states; any reviewer may compute it"
+  OFFICIAL_CONTRACT_VERDICT: "REVIEW_REQUIRED whenever the required human audit of the semantic gates is missing"
+verdict_rules:
+  weighted_average_used: false
+  ai_only_review_can_yield_official_pass: false
+  absence_of_automated_findings_is_pass: false
+  automated_metric_thresholds_frozen: false
+
+request_constraints:    # set by the request / Narrative Profile, not by this contract
+  length_default_tolerance_when_only_target_given: 0.10
+  counting_method_must_be_stated: true
+  spoiler_mode_default: NONE
+
+known_limitations:
+  - NARROW_EVIDENCE_BASE_ONE_STORY_EARLY_RUNS
+  - HUMAN_PREFERENCE_REVIEW_INCOMPLETE
+  - SUBJECTIVE_DIMENSIONS_AGREEMENT_NOT_MEASURED
+  - NO_CALIBRATED_AUTOMATIC_THRESHOLDS
+  - VALIDATORS_DO_NOT_GUARANTEE_DETECTION
+  - H7_STAGE_B_NOT_EXECUTED
+  - CONTRACT_DEFINES_DESIRED_QUALITY_NOT_CURRENT_PERFORMANCE
+  - MATERIALITY_AND_COMMENTARY_BOUNDARY_NEED_JUDGEMENT
+  - COVERAGE_NOT_OPERATIONALIZED
+  - LONG_RANGE_SCRIPT_BEHAVIOUR_UNTESTED
+
+evidence_sources:
+  - benchmarks/m1_script_quality/README.md
+  - benchmarks/m1_script_quality/evaluations/FAILURE_REPORT_TEMPLATE.md
+  - benchmarks/m1_script_quality/runs/RUN_0001_BASELINE_A/FAILURES.md
+  - benchmarks/m1_script_quality/comparisons/RUN_0001_VS_RUN_0002_H1.md
+  - benchmarks/m1_script_quality/comparisons/RUN_0002_VS_RUN_0003_H2.md
+  - benchmarks/m1_script_quality/comparisons/RUN_0003_VS_RUN_0004_H6.md
+  - benchmarks/m1_script_quality/experiments/H1_STRONGER_NARRATIVE_INSTRUCTIONS.md
+  - benchmarks/m1_script_quality/experiments/H2_SEPARATE_STORY_BRIEF.md
+  - benchmarks/m1_script_quality/experiments/H6_FACTUAL_SCRIPT_CRITIC.md
+  - benchmarks/m1_script_quality/experiments/NEXT_VALIDATION_EXPERIMENT_PLAN.yaml
+  - benchmarks/m1_script_quality/experiments/h6b/evaluation/H6B_FINAL_EVIDENCE_VERDICT.md
+  - benchmarks/m1_script_quality/experiments/h6b/evaluation/H6B_CRITIC_COMPARISON_METRICS.yaml
+  - docs/research/H6B_RESIDUAL_FAILURE_ANALYSIS.md
+  - benchmarks/m1_script_quality/experiments/h7/stage_a_v2/H7_V2_STAGE_A_CLOSURE.yaml
+  - benchmarks/m1_script_quality/experiments/h7/stage_a_v2/STAGE_A_V2_EXPLORATORY_METRICS.yaml
+  - benchmarks/m1_script_quality/runs/RUN_0010_H7_STAGE_A_V2_EIC_REAL/run_manifest.yaml
+
+validator_evidence_status:    # evidence/history only; NOT part of the quality standard
+  part_of_quality_standard: false
+  h1_stronger_narrative_instructions: {verdict: PARTIALLY_SUPPORTED}
+  h2_separate_story_brief: {verdict: PARTIALLY_SUPPORTED}
+  h6_factual_critic_v1: {verdict: PARTIALLY_SUPPORTED, robust_issues_detected: 2, robust_issues_total: 33}
+  h6b_deterministic_claim_audit:
+    verdict: SUPPORTED
+    claim_scope: narrow_comparative_on_one_development_instance
+    robust_issues_detected: 11
+    robust_issues_total: 33
+    recall: 0.3333
+    mapped_false_positives: 0
+    residual_false_negatives: 22
+    residual_semantic_families: 8
+    sufficient_as_sole_gate: false
+  h7_targeted_epistemic_pass:
+    protocol_status: APPROVED
+    stage_a:
+      run: RUN_0010_H7_STAGE_A_V2_EIC_REAL
+      role: EXPLORATORY_DEVELOPMENT_SET
+      strict_mechanical_contract: PASS
+      semantic_scoring_in_run: false
+      later_exploratory_mapping: {robust_issues_detected: 14, robust_issues_total: 33, recall: 0.4242, confirmatory: false}
+    stage_b_authorized: false
+    stage_b_executed: false
+    confirmatory_verdict: NOT_EVALUATED
+    generalization_claim_allowed: false
+  human_project_owner_reviews: PENDING
+
+versioning:
+  minor_clarification: "no change to acceptance semantics; same version with a change note"
+  breaking_revision_triggers:
+    - hard_invariants_or_hard_gates_changed
+    - meaning_of_story_claim_or_factual_correctness_changed
+    - severity_semantics_changed
+    - verdict_semantics_changed
+    - soft_vs_hard_assignment_changed
+  validator_evidence_updates_change_contract: false
+
+operational_dry_run:
+  evidence: benchmarks/m1_script_quality/evaluations/CONTRACT_V0_DRY_RUN/
+  reviewer: AI agent (not the independent human review)
+  result_before_repair: SCRIPT_QUALITY_V0_NEEDS_REPAIR
+  repair_note: benchmarks/m1_script_quality/evaluations/CONTRACT_V0_DRY_RUN/POST_REPAIR_NOTE.md
+m1_closure_recommendation: FROZEN_BY_DEC-017

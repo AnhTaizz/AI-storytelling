@@ -1,6 +1,6 @@
 # Human Review Template
 
-**CANDIDATE — aligned with `SCRIPT_QUALITY_CONTRACT/v0` (repaired candidate). Not frozen.**
+**Review template for `SCRIPT_QUALITY_CONTRACT/v0` — FROZEN.**
 
 Contract: `docs/contracts/SCRIPT_QUALITY_CONTRACT_V0.md`. Section numbers below refer to it.
 

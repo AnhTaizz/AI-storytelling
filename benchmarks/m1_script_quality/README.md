@@ -43,12 +43,14 @@ Which failures actually justify more advanced Story Memory, graph retrieval, or 
 ## Quality Contract Status
 
 Script Quality Contract:
-NOT YET FROZEN
+FROZEN — `SCRIPT_QUALITY_CONTRACT/v0` (DEC-017)
 
-A candidate exists and is pending Orchestrator review: `SCRIPT_QUALITY_CONTRACT/v0`.
 - Specification: `docs/contracts/SCRIPT_QUALITY_CONTRACT_V0.md`
-- Machine-readable companion: `SCRIPT_QUALITY_CONTRACT_V0_CANDIDATE.yaml`
-- The candidate defines desired quality. It does not claim that any current Writer or critic meets it.
+- Machine-readable contract: `SCRIPT_QUALITY_CONTRACT_V0.yaml`
+- Freeze record (frozen hashes): `SCRIPT_QUALITY_CONTRACT_V0_FREEZE_RECORD.yaml`
+- Review template: `evaluations/HUMAN_REVIEW_TEMPLATE.md`
+- History: `SCRIPT_QUALITY_CONTRACT_V0_CANDIDATE.yaml` and `evaluations/CONTRACT_V0_DRY_RUN/`
+- The contract defines desired quality. It does not claim that any current Writer or critic meets it.
 
 The intended process is:
 Reference analysis

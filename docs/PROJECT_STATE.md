@@ -2,22 +2,25 @@
 
 ## Current Milestone
 
+Next milestone: M3 — Light Novel Ingestion. Status: READY TO START. M3 has not started; no M3 work exists yet.
+
+M1 — Script Quality & Narrative Contract: COMPLETE / FROZEN (`SCRIPT_QUALITY_CONTRACT/v0`, DEC-017).
+
 M2 — Canonical Story Model capability: COMPLETE / FROZEN (Canonical Story Model v0: FROZEN / ACCEPTED, DEC-016).
-
-M1 research: CLOSED. M1 Formal Script Quality Contract: REPAIRED CANDIDATE — READY FOR FREEZE REVIEW (`SCRIPT_QUALITY_CONTRACT/v0`; not frozen).
-
-Project transition to M3: PENDING closure of the outstanding M1 Formal Script Quality Contract, unless the roadmap dependency is explicitly amended by a future decision. M3 has not started.
 
 ## Milestone Lifecycle
 
 - M0 — Product Foundation: CLOSED.
-- M1 — Script Quality & Narrative Contract:
-  - Empirical / research program: CLOSED for the current scope.
-  - Formal Script Quality Contract: REPAIRED CANDIDATE — READY FOR FREEZE REVIEW (`SCRIPT_QUALITY_CONTRACT/v0`, not frozen). The operational dry-run found a semantic gap in length / request-compliance handling; the candidate was repaired before freeze. The M1 capability gate is not complete until the contract is frozen.
+- M1 — Script Quality & Narrative Contract: COMPLETE / FROZEN.
+  - Empirical research: CLOSED.
+  - Formal Script Quality Contract: FROZEN / ACCEPTED — `SCRIPT_QUALITY_CONTRACT/v0`, DEC-017, freeze record `benchmarks/m1_script_quality/SCRIPT_QUALITY_CONTRACT_V0_FREEZE_RECORD.yaml`.
+  - The contract defines the standard. It does not show that any current Writer or critic meets it. The M9 Script Quality Gate is not evaluated.
 - M2 — Canonical Story Model: capability COMPLETE / FROZEN (DEC-016). The expected capability has been established as `canonical_story/v0` + `predicate_registry/v0.1`. M2 ran under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015).
-- M3: NOT STARTED. Transition is pending closure of the M1 Formal Script Quality Contract, unless a future decision amends that roadmap dependency. The roadmap is unchanged.
+- M3 — Light Novel Ingestion: READY TO START. Not started. Its roadmap dependencies (M1, M2) are complete. The roadmap is unchanged.
 
 *Correction (M2-02): an earlier version of this section labelled M1 "COMPLETED / CLOSED FOR CURRENT RESEARCH SCOPE". That overstated completion while the formal Script Quality Contract remains open. The M1 research program is closed; the contract is not.*
+
+*Update (M1 freeze, 2026-10-01): the formal Script Quality Contract was later drafted, dry-run, repaired and frozen (DEC-017). The notes below are kept as written at the time.*
 
 ## M1 Closure Note
 
@@ -106,8 +109,8 @@ Not yet implemented:
 
 ## Open Decisions
 
-- Script Quality Contract
-- Canonical Story Model
+- Script Quality Contract — DECIDED: frozen as `SCRIPT_QUALITY_CONTRACT/v0` (DEC-017)
+- Canonical Story Model — DECIDED: frozen as `canonical_story/v0` + `predicate_registry/v0.1` (DEC-016)
 - Narrative Profile / behavior specification
 - Persistence architecture
 - Graph representation and persistence technology
@@ -641,6 +644,21 @@ M1-SCRIPT-QUALITY-V0-CANDIDATE-REPAIR — COMPLETED — Status: M1_SCRIPT_QUALIT
 - **Tests.** script_quality 55/55; canonical_story 99/99; story_benchmark 298/298; story_ingestion 20/20.
 - The contract is not frozen. `DECISIONS.md`, `ROADMAP.md` and all frozen M2 artifacts are unchanged. M3 has not started.
 
+M1-FREEZE-SCRIPT-QUALITY-CONTRACT-V0 — COMPLETED — Status: M1_SCRIPT_QUALITY_V0_FROZEN_M1_CLOSED
+
+- **Authorization.** The Master Orchestrator accepted the candidate design, the operational dry-run and the pre-freeze repair, and authorized the freeze. The agent transcribed that authorization and did not originate it.
+- **Script Quality Contract v0: FROZEN / ACCEPTED** (`DECISIONS.md` DEC-017).
+  - Normative artifacts: `docs/contracts/SCRIPT_QUALITY_CONTRACT_V0.md`, `benchmarks/m1_script_quality/SCRIPT_QUALITY_CONTRACT_V0.yaml`, `benchmarks/m1_script_quality/evaluations/HUMAN_REVIEW_TEMPLATE.md`.
+  - Freeze record: `benchmarks/m1_script_quality/SCRIPT_QUALITY_CONTRACT_V0_FREEZE_RECORD.yaml`, SHA-256 `a7b8c07e6a4d63f62b521a0ba5401fb40db3e02e4a646a52d9fd77aee2c06031`.
+  - Authorized candidate commit `7fb410570107954e920893458ca30444b29d2adb`. The candidate YAML and the dry-run files are kept unchanged as history.
+- **Freeze gate (before any edit).** Candidate facts verified (version, repaired status, RUN_0003 length HIGH and request gate FAIL, RUN_0004 request gate PASS, human audit required, H7 NOT_EVALUATED). Tests: script_quality 55/55, canonical_story 99/99, story_benchmark 298/298, story_ingestion 20/20. All 11 frozen M2 artifact hashes match.
+- **No semantic change.** The frozen YAML equals the repaired candidate apart from status and release metadata (checked by test). The Markdown contract and the template changed in status lines only.
+- **Human-audit rule frozen.** Semantic hard gates need a human audit before an official PASS or PASS_WITH_MINOR_EDITS. An AI or model-assisted review yields only a trace verdict.
+- **H7 not upgraded.** Stage A is development evidence only; Stage B is not executed; confirmatory verdict NOT_EVALUATED.
+- **Not claimed.** No current Writer, critic or pipeline is shown to satisfy the contract. The M9 Script Quality Gate is not evaluated.
+- **Accepted limitations.** Narrow evidence base; independent human use of the rubric pending; no inter-reviewer agreement measurement; no calibrated automatic thresholds; incomplete critic detection; coverage procedure not operationalized; long-range script behaviour untested; materiality needs reviewer judgement.
+- M1 is COMPLETE / FROZEN. M2 remains COMPLETE / FROZEN (DEC-016), untouched. M3 is READY TO START and has not been started. `ROADMAP.md` is unchanged.
+
 ## Next Candidate
 
-Orchestrator freeze review of the repaired Script Quality Contract v0 candidate. No freeze and no M3 work before that decision, unless the roadmap dependency is explicitly amended by a future decision.
+M3 — Light Novel Ingestion: READY TO START, awaiting an Orchestrator task. No M3 work has been done.
