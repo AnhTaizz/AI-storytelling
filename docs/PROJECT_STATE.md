@@ -2,7 +2,7 @@
 
 ## Current Milestone
 
-M4 — Story Extraction: IN PROGRESS. Current task: M4-01 Story Extraction Contract & Evaluation Protocol (complete, pending Orchestrator review). Nothing in M4 is frozen. No extractor or model has been selected or run. M5 has not started.
+M4 — Story Extraction: IN PROGRESS. M4-01: ACCEPTED. M4-02: REAL-SOURCE DEVELOPMENT CALIBRATION COMPLETE — PENDING ORCHESTRATOR REVIEW. Fresh holdout: NOT SELECTED. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. M5 has not started.
 
 M3 — Light Novel Ingestion: COMPLETE / FROZEN (`LIGHT_NOVEL_INGESTION/v0`, DEC-018).
 
@@ -19,7 +19,7 @@ M2 — Canonical Story Model capability: COMPLETE / FROZEN (Canonical Story Mode
   - The contract defines the standard. It does not show that any current Writer or critic meets it. The M9 Script Quality Gate is not evaluated.
 - M2 — Canonical Story Model: capability COMPLETE / FROZEN (DEC-016). The expected capability has been established as `canonical_story/v0` + `predicate_registry/v0.1`. M2 ran under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015).
 - M3 — Light Novel Ingestion: COMPLETE / FROZEN — `LIGHT_NOVEL_INGESTION/v0`, DEC-018, freeze record `benchmarks/m3_ingestion/LIGHT_NOVEL_INGESTION_V0_FROZEN.yaml`. The roadmap is unchanged.
-- M4 — Story Extraction: IN PROGRESS (M4-01 research baseline delivered; nothing frozen; no extraction run).
+- M4 — Story Extraction: IN PROGRESS (M4-01 accepted; M4-02 real-source development calibration complete, pending review; no holdout, no model, nothing frozen).
 - M5: NOT STARTED.
 
 *Correction (M2-02): an earlier version of this section labelled M1 "COMPLETED / CLOSED FOR CURRENT RESEARCH SCOPE". That overstated completion while the formal Script Quality Contract remains open. The M1 research program is closed; the contract is not.*
@@ -735,6 +735,23 @@ M4-01-STORY-EXTRACTION-CONTRACT-AND-EVALUATION-PROTOCOL — COMPLETED — Status
 - **Tests.** story_extraction 39/39; story_ingestion 79/79; canonical_story 99/99; script_quality 64/64; story_benchmark 298/298. M1, M2 and M3 frozen hashes unchanged.
 - **Result.** `benchmarks/m4_extraction/M4_01_EXTRACTION_CONTRACT_BASELINE_RESULT.yaml`. `DECISIONS.md` and `ROADMAP.md` are unchanged. M4-02 and M5 have not started.
 
+M4-02-REAL-SOURCE-DEV-GOLD-AND-EVALUATION-CALIBRATION — COMPLETED — Status: M4_02_REAL_SOURCE_CALIBRATION_READY_FOR_HOLDOUT_REVIEW
+
+- **Context.** M4-01 was accepted. This task calibrated the evaluator on real-source DEVELOPMENT material only. No holdout passage was selected, no holdout gold was written, no model was run.
+- **Development population.** 14 cases from material already exposed: 10 converted from the earlier real-source canonical mapping onto M3 provenance, 1 reference-resolution case, 3 mixed heading/author-note/prose segments. 102 gold assertions (98 required, 4 acceptable optional), 121 evidence references. Private; nothing with source prose is committed.
+- **Gold status.** AGENT_DRAFT_GOLD / NOT_HUMAN_CONFIRMED: method HUMAN_ANNOTATION, review UNREVIEWED. All 14 gold batches pass the frozen validator with source spans verified.
+- **Profile.** `STORY_UNDERSTANDING_CORE_V0`, a development extraction profile, not a canonical record and not universal.
+- **Questions.** Q1, Q2, Q6, Q7, Q8, Q9 RESOLVED. Q3, Q4, Q5 PARTIALLY_RESOLVED, each operational with an explicit route to human adjudication. None deferred; no hidden blocker.
+  - Span rule: containment inside one segment; exact span in mixed-role segments. No percentage.
+  - Unmatched predictions on real text are GOLD_UNMATCHED_PENDING_ADJUDICATION, not hallucinations, until a reviewer decides.
+  - Materiality of an unsupported assertion comes from its severity (HIGH or CRITICAL), not from its code.
+  - Gold completeness is relative to the profile and case objective: 4 cases COMPLETE_FOR_PROFILE, 10 UNCERTAIN.
+- **Evaluator** `evaluate_extraction_v0/0.2.0`. Two alignment defects were found by stressing real cases and repaired (state histories; events named only by a validity bound).
+- **Dry evaluation.** 67 controlled variants derived from gold, all with the expected outcome, no alignment ambiguity. Adjudications were made by the AI agent on those variants, not by a human and not on model output.
+- **Tests.** story_extraction 71/71; story_ingestion 79/79; canonical_story 99/99; script_quality 64/64; story_benchmark 298/298. M1, M2 and M3 frozen hashes unchanged.
+- **Artifacts.** `benchmarks/m4_extraction/M4_02_REAL_SOURCE_DEV_CALIBRATION_RESULT.yaml`; protocol document updated to REAL-SOURCE DEVELOPMENT CALIBRATED / NOT FROZEN. Private package SHA-256 `a991921d0ca0afb5643948346acc407a84e17206bd6d0692c362d86de47da809`; not committed.
+- **Recommendation.** READY_FOR_M4_FRESH_HOLDOUT_SELECTION. `DECISIONS.md` and `ROADMAP.md` are unchanged. M4-03 and M5 have not started.
+
 ## Next Candidate
 
-Orchestrator review of M4-01. Recommended M4-02: real-source development cases and a sealed fresh holdout, settling the open evaluation questions before any model is selected. Not started.
+Orchestrator review of the calibrated evaluation protocol. M4-03 (fresh holdout selection and sealing) starts only after that review. Not started.

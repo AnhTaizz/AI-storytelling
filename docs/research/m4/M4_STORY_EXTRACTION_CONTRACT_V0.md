@@ -1,6 +1,6 @@
 # M4 — Story Extraction Contract v0
 
-Status: RESEARCH BASELINE — TASK M4-01. Pending Orchestrator review. **Not frozen.** Not recorded in `DECISIONS.md`.
+Status: RESEARCH BASELINE — TASK M4-01 (accepted), with three clarifications from the M4-02 real-source calibration. **Not frozen.** Not recorded in `DECISIONS.md`.
 
 Contract identity: `STORY_EXTRACTION/v0`. Process envelope: `STORY_EXTRACTION_BATCH/v0`.
 
@@ -65,6 +65,7 @@ flowchart TD
 - A passage marked `CONTEXT_ONLY` helps interpretation. It can never be cited as evidence.
 - Being visible to the extractor does not make a passage evidence. Only the exact passages that actually support an assertion enter its evidence sets.
 - Prior canonical context may help resolve identity. It must not be re-emitted as fresh evidence from the current passages.
+- A referent that already exists in prior canonical context is referenced by its existing id. The extractor does not create a second record for it (clarified in M4-02).
 
 ## 4. Extraction Batch
 
@@ -215,6 +216,7 @@ Avoid one event per sentence, and avoid one event per scene or document. V0 does
 - A missing end stays `OPEN`. An end is not invented.
 - An end learned later is an anchored bound with its own support from the later evidence.
 - A later state is never derived from discourse order.
+- **State history** (clarified in M4-02). When a state holds, ends and holds again, it is one proposition asserted several times, each assertion with its own validity interval and its own support. It is not a new proposition per interval.
 - **Causality.** `Causes` and `Enables` are strong commitments. Order of events and adjacency of clauses are not evidence of causation. Causal assertions need explicit or sufficiently entailed evidence. Unsupported causal strengthening is a high-value failure.
 - **Relationships.** No persistent relationship object is emitted. A relationship is a later view over assertions such as `Regard`, `AddressesAs` and `EmotionToward`. Relationship progression is derived, not stored.
 
@@ -268,6 +270,8 @@ Exactly three statuses exist, with their frozen meanings:
 - later retrieval and storytelling.
 
 Normally leave out every decorative adjective, every syntactic relation and every trivial sentence fact, unless story understanding needs it.
+
+The scope's `profile_id` names the profile that applies. The development profile used in M4-02 is `STORY_UNDERSTANDING_CORE_V0` (evaluation protocol, section 4). A profile is an M4 process setting, not a canonical record.
 
 ## 14. Failure Taxonomy
 

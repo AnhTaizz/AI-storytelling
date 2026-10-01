@@ -1,0 +1,170 @@
+# M4-02 — real-source development gold and evaluation calibration (sanitized; no source content)
+task: M4-02-REAL-SOURCE-DEV-GOLD-AND-EVALUATION-CALIBRATION
+status: M4_02_REAL_SOURCE_CALIBRATION_READY_FOR_HOLDOUT_REVIEW
+base_commit: 61a0073c29501be634efd4f483d955fb96710243
+frozen: false                      # nothing in M4 is frozen; DECISIONS.md unchanged
+
+boundaries_respected:
+  holdout_passages_selected: false
+  holdout_gold_created: false
+  extraction_model_run: false
+  llm_selected: false
+  frozen_upstream_contract_changed: false
+  upstream_contract_conflict_found: false
+
+development_population:
+  status: DEVELOPMENT_ONLY          # never a holdout; no generalization evidence
+  case_count: 14
+  source_basis:
+    earlier_real_source_canonical_mapping_converted_to_m3_provenance: 10
+    address_terms_inside_spans_already_used_by_that_mapping: 1
+    mixed_segments_found_by_the_ingestion_validation_audit: 3
+  untouched_spans_selected_to_raise_the_count: false
+  primary_categories:
+    SIMPLE_EVENT: 1
+    ENTITY_RESOLUTION: 1
+    STATE_CHANGE: 2
+    RELATIONSHIP_STATE: 1
+    KNOWLEDGE_OR_BELIEF: 1
+    REPORTED_INFORMATION: 1
+    CONCEALMENT_OR_REVEAL: 1
+    CAUSALITY: 1
+    TEMPORAL_RELATION: 1
+    LONG_RANGE_OR_MULTI_EVIDENCE: 1
+    MIXED_PARATEXT_PROSE: 3
+    AMBIGUITY: 0                    # present only as a secondary category (2 cases)
+  secondary_categories: {AMBIGUITY: 2, CAUSALITY: 1, CONCEALMENT_OR_REVEAL: 1, KNOWLEDGE_OR_BELIEF: 2, LONG_RANGE_OR_MULTI_EVIDENCE: 2, RELATIONSHIP_STATE: 1, REPORTED_INFORMATION: 1, STATE_CHANGE: 2, TEMPORAL_RELATION: 3}
+  extraction_profile: STORY_UNDERSTANDING_CORE_V0
+  eligible_segments: 116
+  context_only_segments: 98
+  prior_canonical_context: "five recurring characters as identity records only"
+
+gold:
+  status: [AGENT_DRAFT_GOLD, NOT_HUMAN_CONFIRMED]
+  provenance_method: HUMAN_ANNOTATION
+  review_state: UNREVIEWED
+  human_review_performed: false
+  all_gold_batches_pass_frozen_validation: true
+  source_text_verified_against_m3: true
+  assertions: 102
+  required: 98
+  acceptable_optional: 4
+  epistemic_status: {EXPLICIT: 86, ENTAILED: 14, SUGGESTED: 2}
+  predicates: {Participates: 31, Occurred: 23, Attitude: 9, Possesses: 5, Says: 5, AddressesAs: 4, PhysicalCondition: 4, RefersTo: 4, Owns: 3, TemporalRelation: 3, Conceals: 2, EmotionToward: 2, Habitually: 2, Causes: 1, Conveys: 1, Intends: 1, LocatedAt: 1, SameContent: 1}
+  evidence_refs: 121
+  evidence_roles: {DEPICTION: 102, NARRATION_SUMMARY: 10, RETROSPECTIVE: 5, PARATEXT: 3, IN_WORLD_REPORT: 1}
+  events: 25
+  mentions: 4
+  case_local_entities: 9
+  case_local_entities_without_mention: 9
+  named_time_anchors: 1
+  placeholder_propositions: 2
+  free_text_literal_arguments: 9
+  gold_completeness: {COMPLETE_FOR_PROFILE: 4, UNCERTAIN: 10, INCOMPLETE: 0}
+  support_audit_of_required_assertions:
+    one_sufficient_set: 79
+    several_sufficient_sets: 13
+    derivation_only: 6
+    also_has_partial_set: 2
+    also_has_corroborating_set: 3
+    sufficient_sets_with_several_references: 40
+  conversion_from_earlier_mapping:
+    annotated_ranges: 59
+    ranges_crossing_segment_boundaries: 17
+    gold_evidence_refs_that_are_strict_sub_spans_of_their_segment: 50
+
+question_outcomes:
+  Q1_span_tolerance: {outcome: RESOLVED, rule: "containment inside one SourceSegment; exact span in mixed-role or case-declared narrow segments; no percentage"}
+  Q2_entities_without_mentions: {outcome: RESOLVED, rule: "prior canonical identity, then mentions, then structural role with overlapping evidence; never labels; ambiguity goes to a human"}
+  Q3_identity_equivalence: {outcome: PARTIALLY_RESOLVED, rule: "identity classes from SameAs inside the scope", limit: "real gold has no SameAs; checked on one constructed variant"}
+  Q4_event_granularity: {outcome: PARTIALLY_RESOLVED, rule: "commitments, not event objects; split/merge routed to human adjudication", limit: "merged-event predictions are not handled mechanically"}
+  Q5_named_time_and_placeholders: {outcome: PARTIALLY_RESOLVED, rule: "structural role", limit: "one named-time anchor and two placeholders in real gold"}
+  Q6_free_text_literals: {outcome: RESOLVED, rule: "exact, plus case-declared variants; no fuzzy, embedding or model matching"}
+  Q7_materiality: {outcome: RESOLVED, rule: "severity from downstream effect; material = HIGH or CRITICAL"}
+  Q8_gold_completeness: {outcome: RESOLVED, rule: "complete for profile and case objective; unmatched = GOLD_UNMATCHED_PENDING_ADJUDICATION unless gold is COMPLETE_FOR_PROFILE"}
+  Q9_alternative_groundings: {outcome: RESOLVED, rule: "one matching SUFFICIENT set among the gold alternatives"}
+  deferred_with_limitation: 0
+  hidden_blockers: 0
+
+evaluator_changes:
+  version: {from: evaluate_extraction_v0/0.1.0, to: evaluate_extraction_v0/0.2.0}
+  changes:
+    - span containment rule with automatic narrow segments
+    - entity alignment by prior identity, mentions and structural role; structural alignment of events, named-time anchors and placeholders
+    - identity classes from SameAs inside the scope
+    - REAL_SOURCE mode with GOLD_UNMATCHED_PENDING_ADJUDICATION and four adjudication states
+    - severity-based materiality of unsupported assertions
+    - gold completeness states
+    - case-declared literal variants
+    - state histories matched by validity
+    - events named only by a validity bound aligned through their anchor
+    - alignment ambiguities reported
+  batch_contract_tool_changed: false
+  alignment_defects_found_and_repaired:
+    - {id: AD-1, class: EVALUATOR_ALIGNMENT_DEFECT, finding: "one proposition asserted over several validity intervals collided on the match key", status: REPAIRED}
+    - {id: AD-2, class: EVALUATOR_ALIGNMENT_DEFECT, finding: "an event named only by a validity bound was never aligned", status: REPAIRED}
+  unresolved_blocking_alignment_defects: 0
+
+dry_evaluation:                   # controlled variants derived from gold; NO model output
+  runs: 67
+  runs_with_expected_outcome: 67
+  alignment_ambiguities: 0
+  variants:
+    perfect_prediction_different_ids_shuffled: {runs: 14, SUCCESS: 14}
+    perfect_prediction_without_prior_context: {runs: 14, SUCCESS: 14}
+    alternative_sufficient_set: {runs: 7, SUCCESS: 7}
+    whole_segment_spans: {runs: 13, SUCCESS: 10, FAIL: 3, note: "the 3 failures are the mixed-role cases, as intended"}
+    optional_assertions_omitted: {runs: 3, SUCCESS: 3}
+    unmatched_before_adjudication: {runs: 3, PENDING_ADJUDICATION: 3}
+    out_of_profile_adjudicated: {runs: 1, SUCCESS: 1}
+    valid_additional_adjudicated: {runs: 1, SUCCESS: 1}
+    unsupported_low_impact: {runs: 1, SUCCESS: 1}
+    genuine_hallucination_adjudicated_high: {runs: 1, FAIL: 1}
+    split_event_equivalent_for_case: {runs: 1, SUCCESS: 1}
+    split_event_wrong_granularity: {runs: 1, FAIL: 1}
+    split_entity_plus_same_as: {runs: 1, SUCCESS: 1}
+    split_entity_without_same_as: {runs: 1, FAIL: 1}
+    literal_variant_exact_matching: {runs: 1, FAIL: 1}
+    literal_variant_declared: {runs: 1, SUCCESS: 1}
+    wrong_evidence_role: {runs: 1, FAIL: 1}
+    epistemic_overstatement: {runs: 1, FAIL: 1}
+    unmatched_on_complete_gold: {runs: 1, FAIL: 1}
+  adjudicator: "AI agent, on controlled variants; no human decision"
+
+issues:
+  blocking: 0
+  non_blocking:
+    - "Development gold is agent-drafted and unreviewed"
+    - "10 of 14 cases have UNCERTAIN completeness; completing them means re-annotating 116 eligible segments"
+    - "Merged-event predictions are not handled mechanically"
+    - "A narrower-than-gold span is rejected unless gold lists it"
+    - "Bound support is used for alignment but not scored as grounding"
+    - "No real model output has been scored"
+
+tests:
+  requires_model_api_or_network: false
+  story_extraction: {passed: 71, total: 71}
+  story_ingestion: {passed: 79, total: 79}
+  canonical_story: {passed: 99, total: 99}
+  script_quality: {passed: 64, total: 64}
+  story_benchmark: {passed: 298, total: 298}
+  m1_m2_m3_frozen_hashes_unchanged: true
+
+holdout_readiness_gate:
+  1_evaluator_works_on_real_development_gold: true
+  2_no_unresolved_blocking_alignment_defect: true
+  3_unmatched_prediction_adjudication_explicit: true
+  4_gold_completeness_protocol_exists: true
+  5_required_vs_acceptable_semantics_work: true
+  6_alternative_evidence_sets_work: true
+  7_event_and_identity_equivalence_operationalized_or_routed_to_human: true
+  8_no_hidden_blocker_in_q1_to_q9: true
+  9_no_frozen_upstream_contract_changed: true
+recommendation: READY_FOR_M4_FRESH_HOLDOUT_SELECTION
+
+private_evidence:                 # local only, never committed
+  package: M4_02_DEV_CALIBRATION_V1.zip
+  package_sha256: a991921d0ca0afb5643948346acc407a84e17206bd6d0692c362d86de47da809
+  files: 27
+  development_cases_sha256: 74e3f92635b23b5a4aeb061a1737a9d4b8fe451d2ebb2a48e2d912a8862f6e5c
+  base_document_sha256: cea9bc20484c24eb6c8af8110395e96ba70c6e46ff1dbbfcf17a40f91becd72d
