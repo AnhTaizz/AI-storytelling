@@ -2,7 +2,7 @@
 
 ## Current Milestone
 
-M2 — Canonical Story Model (research IN PROGRESS: M2-01 requirements, M2-02 core concepts, M2-03 Canonical Schema v0, M2-04 as-of projection (accepted), M2-05 signed-information hardening and M2-06 real-source mapping spike complete; M2-06 pending Orchestrator review; M2 not complete)
+M2 — Canonical Story Model (IN PROGRESS — FREEZE CANDIDATE PENDING ORCHESTRATOR REVIEW: M2-01 to M2-06 complete and accepted; M2-07 pre-freeze hardening complete; M2 not frozen, not complete)
 
 ## Milestone Lifecycle
 
@@ -10,7 +10,7 @@ M2 — Canonical Story Model (research IN PROGRESS: M2-01 requirements, M2-02 co
 - M1 — Script Quality & Narrative Contract:
   - Empirical / research program: CLOSED for the current scope.
   - Formal Script Quality Contract: still OPEN. The M1 capability gate is therefore not fully complete.
-- M2 — Canonical Story Model: research IN PROGRESS under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015). Not complete.
+- M2 — Canonical Story Model: IN PROGRESS — FREEZE CANDIDATE PENDING ORCHESTRATOR REVIEW, under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015). Not frozen. Not complete.
 
 *Correction (M2-02): an earlier version of this section labelled M1 "COMPLETED / CLOSED FOR CURRENT RESEARCH SCOPE". That overstated completion while the formal Script Quality Contract remains open. The M1 research program is closed; the contract is not.*
 
@@ -550,6 +550,25 @@ M2-06-REAL-SOURCE-CANONICAL-MAPPING-SPIKE — COMPLETED — Status: PENDING ORCH
   - Public sanitized result `benchmarks/m2_canonical_model/REAL_SOURCE_MAPPING_SPIKE_V1_RESULT.yaml` and `docs/research/m2/M2_REAL_SOURCE_MAPPING_SPIKE.md`.
 - M2 is not closed. `DECISIONS.md` is unchanged.
 
+M2-07-CANONICAL-STORY-PRE-FREEZE-HARDENING — COMPLETED — Status: M2_07_FREEZE_CANDIDATE_READY (PENDING ORCHESTRATOR REVIEW)
+
+- **Context.** M2-06 was accepted with no blocking defect; freeze was not authorized until three conditions were met.
+- **Registry `predicate_registry/v0.1`** (schema stays `canonical_story/v0`):
+  - added `PhysicalCondition`, `EmotionToward`, `Intends` (holder-relative), `Owns`, `Habitually`;
+  - `BEHAVIOUR_SUGGESTS_STATE` may conclude `EmotionToward`;
+  - `AddressesAs` no longer declares `functional_on`. No `setting` argument was added; address context is a recorded limitation.
+- **Validator.** Duplicate concrete proposition content is rejected (placeholders exempt). Negative fixture 20.
+- **Real-source re-validation against the committed registry.** Same 10 cases, annotations unchanged apart from mechanical predicate migration. Conformance PASS; as-of checks 54/54.
+  - Fit: NATURAL 3, ACCEPTABLE 6, AWKWARD 1, NOT_REPRESENTABLE 0. All three difficult cases ACCEPTABLE.
+  - One rating (CASE_REAL_05) is a disclosed borderline judgement for the Orchestrator to confirm.
+- **Tests.** Canonical story 99/99; story_benchmark 298/298; story_ingestion 20/20.
+- **Not changed.** Schema, projection, and the known limitations listed in `docs/research/m2/M2_PRE_FREEZE_REVIEW.md` §8. Polarity-specific UNAWARE remains PROVISIONAL / NOT REAL-SOURCE VALIDATED.
+- **Artifacts.**
+  - `benchmarks/m2_canonical_model/CANONICAL_STORY_V0_FREEZE_CANDIDATE.yaml` (`freeze_status: CANDIDATE_PENDING_ORCHESTRATOR_REVIEW`; binds schema, registry, validator, projection and M2 documents by SHA-256).
+  - `docs/research/m2/M2_PRE_FREEZE_REVIEW.md` (includes registry governance).
+  - Private package `M2_07_PRE_FREEZE_V1.zip`, SHA-256 `2b1d65a9ea43f646be519577ec60cc43d3ae64108de97e3b9963670baadf5eaf`; not committed.
+- Validation covers one 30-chapter story in one genre with one primary annotator. M2 is not frozen. `DECISIONS.md` is unchanged.
+
 ## Next Candidate
 
-Orchestrator review of M2-06 and a freeze-scope decision. No M2 freeze and no M3 before that decision.
+Orchestrator freeze review of the Canonical Story Model v0 candidate. No M2 freeze and no M3 before that decision.

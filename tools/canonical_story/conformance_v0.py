@@ -277,7 +277,49 @@ def _check_references(ix: _Index, issues: List[str]) -> None:
             break
 
 
+def proposition_signature(proposition: dict) -> Optional[str]:
+    """Deterministic semantic signature of a CONCRETE proposition (None for placeholders).
+
+    Identity by content: predicate + named arguments, each with its kind and its
+    referenced id / token (vocabulary, value) / literal (type, value). Argument order,
+    the proposition id and editorial labels do not affect the signature.
+
+    Embedded propositions contribute their id. That is safe under v0 because a referenced
+    concrete proposition is itself unique by content, and a referenced placeholder is an
+    identity-bearing unknown whose id IS its identity. No logical equivalence is attempted.
+    """
+    if proposition.get("placeholder"):
+        return None
+    parts = []
+    for name in sorted(proposition["args"]):
+        arg = proposition["args"][name]
+        if arg["kind"] == "LITERAL":
+            value = [arg["value_type"], arg["value"]]
+        elif arg["kind"] == "TOKEN":
+            value = [arg["vocabulary"], arg["value"]]
+        else:
+            value = [arg["ref"]]
+        parts.append([name, arg["kind"]] + value)
+    return json.dumps([proposition["predicate"], parts], ensure_ascii=False, separators=(",", ":"))
+
+
+def _check_proposition_uniqueness(ix: _Index, issues: List[str]) -> None:
+    """Two concrete propositions with the same content would split canonical commitments."""
+    seen: Dict[str, str] = {}
+    for pid in sorted(ix.propositions):
+        signature = proposition_signature(ix.propositions[pid])
+        if signature is None:
+            continue  # placeholders are distinct unknowns, never deduplicated
+        if signature in seen:
+            issues.append(
+                f"duplicate concrete proposition content: {seen[signature]} and {pid} are the same "
+                f"{ix.propositions[pid]['predicate']} proposition; reuse one proposition id")
+        else:
+            seen[signature] = pid
+
+
 def _check_predicates(ix: _Index, issues: List[str]) -> None:
+    _check_proposition_uniqueness(ix, issues)
     vocab = ix.registry["vocabularies"]
     forbidden = set(ix.registry["forbidden_stored_verdicts"])
     for ev in ix.events.values():

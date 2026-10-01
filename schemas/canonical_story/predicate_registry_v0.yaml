@@ -1,8 +1,17 @@
-# Canonical Story Predicate Registry v0 (research proposal, TASK M2-03)
+# Canonical Story Predicate Registry v0.1 (pre-freeze candidate, TASK M2-07)
 #
-# A small initial registry: enough to express the core semantics and the
-# synthetic conformance cases A-J. It is NOT an enumeration of story semantics.
-# Predicates are genre-neutral; new predicates are added by registry revision.
+# A small registry: the core semantics, the synthetic conformance cases A-J, and the
+# additive vocabulary demonstrated by the real-source mapping spike (M2-06).
+# It is NOT an enumeration of story semantics. Predicates are genre-neutral.
+#
+# Compatibility: works with schema `canonical_story/v0` (schema unchanged).
+# Changes from predicate_registry/v0:
+#   ADDITIVE  PhysicalCondition, EmotionToward, Intends, Owns, Habitually
+#             (Intends is holder-relative; BEHAVIOUR_SUGGESTS_STATE may conclude EmotionToward)
+#   CORRECTED AddressesAs no longer declares functional_on [speaker, addressee]:
+#             real prose shows several address forms co-existing by social context.
+# The file name is kept for tool stability; `registry_version` is the authoritative version.
+# Evolution policy: docs/research/m2/M2_PRE_FREEZE_REVIEW.md, section 7.
 #
 # Field meanings
 #   category        conceptual family
@@ -17,7 +26,8 @@
 #                   containing DEPICTION or NARRATION_SUMMARY evidence (self-report alone
 #                   cannot make an internal state EXPLICIT; see M2-02 section 17)
 
-registry_version: predicate_registry/v0
+registry_version: predicate_registry/v0.1
+compatible_schema_versions: [canonical_story/v0]
 
 vocabularies:
   polarity: [AFFIRMED, NEGATED, OPEN]
@@ -38,7 +48,7 @@ vocabularies:
 forbidden_stored_verdicts: [KNOWS, MISTAKEN, UNRESOLVED_BELIEF, KNOWLEDGE, SECRET, RELATIONSHIP]
 
 # Holder-relative predicates: asserting them never asserts their embedded content.
-holder_relative_predicates: [Says, Attitude]
+holder_relative_predicates: [Says, Attitude, Intends]
 
 predicates:
   Occurred:
@@ -181,7 +191,9 @@ predicates:
     classification: RELATION
     stative: true
     directionality: DIRECTED
-    functional_on: [speaker, addressee]
+    # v0.1: NOT functional. Several forms may hold for one speaker/addressee at the same time
+    # (the choice depends on social context). The determining context is not first-class in v0;
+    # it is representable only as several grounded assertions.
     args:
       - {name: speaker, kind: ENTITY, entity_kinds: [CHARACTER, GROUP]}
       - {name: addressee, kind: ENTITY}
@@ -252,6 +264,62 @@ predicates:
       - {name: concealed_from, kind: ENTITY}
     epistemic_gate: INTERNAL_STATE
 
+  # ---- Added in v0.1: promoted from the M2-06 real-source extension probe -------------------
+  PhysicalCondition:
+    # Health or physical condition of a character, or physical state of a place/object.
+    category: STATE
+    classification: STATE
+    stative: true
+    directionality: NOT_APPLICABLE
+    args:
+      - {name: entity, kind: ENTITY}
+      - {name: condition, kind: LITERAL, value_type: STRING}
+    epistemic_gate: NONE
+  EmotionToward:
+    # An emotion a holder has toward a target entity (a person, object, or a concept entity).
+    category: STATE
+    classification: RELATION
+    stative: true
+    directionality: DIRECTED
+    args:
+      - {name: holder, kind: ENTITY, entity_kinds: [CHARACTER, GROUP]}
+      - {name: target, kind: ENTITY}
+      - {name: emotion, kind: LITERAL, value_type: STRING}
+    epistemic_gate: INTERNAL_STATE
+  Intends:
+    # A holder intends signed content to be the case. Holder-relative: never asserts the content.
+    category: KNOWLEDGE
+    classification: STATE
+    stative: true
+    directionality: DIRECTED
+    args:
+      - {name: holder, kind: ENTITY, entity_kinds: [CHARACTER, GROUP]}
+      - {name: content, kind: PROPOSITION}
+      - {name: content_polarity, kind: TOKEN, vocabulary: signed_polarity}
+    epistemic_gate: INTERNAL_STATE
+  Owns:
+    # Ownership, distinct from custody (Possesses): a lent item is owned by one and held by another.
+    category: STATE
+    classification: STATE
+    stative: true
+    directionality: DIRECTED
+    functional_on: [item]
+    args:
+      - {name: owner, kind: ENTITY, entity_kinds: [CHARACTER, GROUP]}
+      - {name: item, kind: ENTITY, entity_kinds: [OBJECT]}
+    epistemic_gate: NONE
+  Habitually:
+    # A habitual or iterative activity as a standing state. Frequency lives in the literal only.
+    category: STATE
+    classification: STATE
+    stative: true
+    directionality: DIRECTED
+    args:
+      - {name: agent, kind: ENTITY, entity_kinds: [CHARACTER, GROUP]}
+      - {name: activity, kind: LITERAL, value_type: STRING}
+      - {name: beneficiary, kind: ENTITY}
+    epistemic_gate: NONE
+
 # Registered derivation rules. A derivation path is valid only with a registered rule.
 # max_status caps the derived assertion's epistemic status on that path; the status can
 # also never exceed the weakest premise (INV-07). No rule may conclude the embedded
@@ -279,7 +347,7 @@ derivation_rules:
     max_status: ENTAILED
   BEHAVIOUR_SUGGESTS_STATE:
     description: Depicted behaviour suggests an internal or relational state.
-    conclusion_predicates: [Regard, Attitude, Conceals]
+    conclusion_predicates: [Regard, Attitude, Conceals, EmotionToward]
     required_premise_predicates: [Occurred]
     max_status: SUGGESTED
 

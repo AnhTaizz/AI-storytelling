@@ -56,7 +56,7 @@ class TestSchemaAndRegistry(unittest.TestCase):
         for pred in ("Conceals", "Conveys"):
             [pol] = [a for a in preds[pred]["args"] if a["name"] == "content_polarity"]
             self.assertEqual(pol["vocabulary"], "signed_polarity", pred)
-        self.assertEqual(set(reg["holder_relative_predicates"]), {"Says", "Attitude"})
+        self.assertEqual(set(reg["holder_relative_predicates"]), {"Says", "Attitude", "Intends"})
 
     def test_paratext_is_policy_not_ontology(self):
         roles = load_schema()["$defs"]["EvidenceRole"]["enum"]

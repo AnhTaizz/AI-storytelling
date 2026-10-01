@@ -115,11 +115,32 @@ The registry declares for each predicate:
 
 `Regard` is a deliberately generic directed relational predicate with a dimension (TRUST, RESPECT, FAMILIARITY, HOSTILITY). No romance-specific concept is part of the foundation. New predicates require a registry revision.
 
+**Registry v0.1 (M2-07).** The registry is versioned separately from the schema. Schema version stays `canonical_story/v0`; the registry is `predicate_registry/v0.1` and declares `compatible_schema_versions: [canonical_story/v0]`. The file name is unchanged. v0.1 is additive except for one correction.
+
+Predicates promoted from the M2-06 real-source spike (all genre-neutral, all stative):
+
+| Predicate | Arguments | Classification | `functional_on` | Epistemic gate | Why existing predicates were insufficient |
+|---|---|---|---|---|---|
+| `PhysicalCondition` | `entity`, `condition` (LITERAL STRING) | STATE | — | NONE | No way to state a health or physical condition of an entity; a case was not representable |
+| `EmotionToward` | `holder`, `target`, `emotion` (LITERAL STRING) | RELATION, directed | — | INTERNAL_STATE | `Regard` has a closed dimension and level; emotions toward a target did not fit it |
+| `Intends` | `holder`, `content` (PROPOSITION), `content_polarity` (`signed_polarity`) | STATE, directed | — | INTERNAL_STATE | `Attitude` is doxastic; an intention is not a belief |
+| `Owns` | `owner`, `item` (OBJECT) | STATE, directed | `item` | NONE | `Possesses` means custody; ownership and custody diverge in real cases |
+| `Habitually` | `agent`, `activity` (LITERAL STRING), `beneficiary` | STATE, directed | — | NONE | A recurring practice is not one event and not a list of occurrences |
+
+- `Intends` is **holder-relative**, like `Says` and `Attitude`: its content is never canonical because someone intends it, and no derivation may conclude it.
+- `BEHAVIOUR_SUGGESTS_STATE` may also conclude `EmotionToward` (capped at SUGGESTED as before).
+- **`AddressesAs` correction.** `functional_on` is removed. Real prose shows two address forms for the same speaker and addressee that are both true in different social contexts. The context that selects a form is **not first-class in V0**; this is a recorded limitation, and no `setting` argument was added. Co-existing forms therefore no longer raise a functional diagnostic.
+
+Registry governance is defined in `M2_PRE_FREEZE_REVIEW.md` §7.
+
 ## 5. Proposition and Assertion Rules
 
 **Proposition**
 - A Proposition carries no polarity, epistemic status, evidence, review, validity or confidence. The schema forbids those properties (`additionalProperties: false`).
 - A placeholder Proposition (`placeholder: true`) stands for content not yet revealed. It is resolved by a `SameContent` assertion.
+- **Identity by content (M2-07).** Two concrete Propositions in one document must not have the same content. The content signature is the predicate plus every named argument with its kind and value (reference id; literal value type and value; token vocabulary and value). Argument order in the file does not matter. The validator rejects duplicates in `predicate_integrity` (negative fixture 20); the fix is to reuse one proposition id.
+  - Placeholders are exempt: each stands for separately unknown content.
+  - The comparison is on stored ids, not on identity classes. Two propositions that differ only by entities later joined with `SameAs` are allowed; the view already merges them.
 - One Proposition P can be the content of all of the following. Only the first asserts P:
   - canonical `Assertion(P)`;
   - `Says(A, P)`;
@@ -243,7 +264,7 @@ These stay separate. None is folded into another.
 **Epistemic rules enforced:**
 - **No inferred EXPLICIT.** EXPLICIT requires a complete direct evidence path (negative 13).
 - **Derivation caps.** A derivation-only status may not exceed the rule's `max_status`, nor the weakest premise (INV-07).
-- **INTERNAL_STATE gate** (`Regard`, `Attitude`, `Conceals`). EXPLICIT requires a SUFFICIENT set containing DEPICTION or NARRATION_SUMMARY evidence. Self-report alone (IN_WORLD_REPORT) cannot make an internal state EXPLICIT (negative 16).
+- **INTERNAL_STATE gate** (`Regard`, `Attitude`, `Conceals`; from registry v0.1 also `EmotionToward`, `Intends`). EXPLICIT requires a SUFFICIENT set containing DEPICTION or NARRATION_SUMMARY evidence. Self-report alone (IN_WORLD_REPORT) cannot make an internal state EXPLICIT (negative 16).
 
 ## 10. Validation Rules
 
@@ -256,7 +277,7 @@ The conformance report (`tests/canonical_story/conformance_report_v0.json`) sepa
 | Section | Checks |
 |---|---|
 | reference_integrity | Global ID uniqueness; every reference resolves to the right record type; event and anchor pairing; evidence in the story stream; acyclic proposition embedding |
-| predicate_integrity | Registered predicate; exact named arity; argument kinds, vocabularies, literal types, entity kinds; registered event kinds; forbidden stored verdicts |
+| predicate_integrity | Unique concrete proposition content (M2-07); registered predicate; exact named arity; argument kinds, vocabularies, literal types, entity kinds; registered event kinds; forbidden stored verdicts |
 | support_path_integrity | Every non-rejected assertion has a support path and at least one complete path |
 | derivation_integrity | Registered rule; existing, non-rejected, non-self premises; allowed conclusion predicate and attitude kind; required premise predicates; no cycles; no holder-relative content leakage; for rules declaring `preserves_signed_content_from` (REVEAL_RESULT), the concluded attitude has the same content proposition and `content_polarity` as a premise of that predicate (M2-05, negative fixture 19) |
 | evidence_set_integrity | Referenced evidence exists; authority policy (PARATEXT not SUFFICIENT under DEFAULT_V0) |
@@ -265,7 +286,7 @@ The conformance report (`tests/canonical_story/conformance_report_v0.json`) sepa
 
 **Results:**
 - All ten synthetic cases A–J pass both layers.
-- All 17 negative fixtures are rejected, each in its expected layer with its expected message.
+- All negative fixtures (17 at M2-03, 20 as of M2-07) are rejected, each in its expected layer with its expected message.
 - Tests also assert that committed fixtures and the committed report match the builder, so fixtures cannot drift.
 
 ## 11. Derived Concepts (not persisted)
@@ -285,13 +306,15 @@ A test asserts that no such top-level collection exists.
 ## 12. Known Limitations
 
 1. **Single discourse stream per document.** Multiple editions, translations or parallel streams need an alignment model (deferred).
-2. **Registry scope.** The registry is intentionally small. Predicate governance (who may add predicates, and how they are versioned) is not yet defined.
+2. **Registry scope.** The registry is intentionally small. Predicate governance was defined in M2-07 (`M2_PRE_FREEZE_REVIEW.md` §7).
 3. **`functional_on` is declared but not enforced** across overlapping validity. Detecting conflicting functional values needs interval reasoning (M2-04 or M11).
 4. **ID governance.** The rule that IDs must not encode storage or source names cannot be fully checked mechanically.
 5. **Coarse INTERNAL_STATE gate.** It checks evidence roles, not whether the evidence text actually states the internal state. That remains extraction and review responsibility (M4).
 6. **Unreliable narration, hypothetical or dream worlds, arcs, themes and foreshadowing** remain deferred (M2-02 §24).
 7. **Derivation rules are named contracts, not executable inference.** Their soundness is reviewed, not machine-proven.
 8. **Extraction confidence has no fixed scale.**
+9. **Address context is not first-class** (M2-07). `AddressesAs` records that a form is used, not the social context that selects it.
+10. **Limitations found on real prose** (M2-06) are listed in `M2_PRE_FREEZE_REVIEW.md` §8 and are not fixed in V0.
 
 ## 13. M2-04 Handoff
 

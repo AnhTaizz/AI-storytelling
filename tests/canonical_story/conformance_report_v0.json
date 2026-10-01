@@ -1358,6 +1358,85 @@
           "pass": true
         }
       }
+    },
+    "neg_20_duplicate_proposition.json": {
+      "expected_fragment": "duplicate concrete proposition content",
+      "expected_layer": "predicate_integrity",
+      "rejected": true,
+      "result": {
+        "availability": {
+          "a-001": {
+            "assertion": [
+              2,
+              1
+            ],
+            "validity_end": null,
+            "validity_start": null
+          },
+          "a-002": {
+            "assertion": [
+              2,
+              1
+            ],
+            "validity_end": null,
+            "validity_start": null
+          },
+          "a-003": {
+            "assertion": [
+              3,
+              1
+            ],
+            "validity_end": null,
+            "validity_start": null
+          },
+          "a-004": {
+            "assertion": [
+              4,
+              1
+            ],
+            "validity_end": null,
+            "validity_start": null
+          }
+        },
+        "pass": false,
+        "semantic": {
+          "derivation_integrity": {
+            "issues": [],
+            "pass": true
+          },
+          "epistemic_integrity": {
+            "issues": [],
+            "pass": true
+          },
+          "evidence_set_integrity": {
+            "issues": [],
+            "pass": true
+          },
+          "predicate_integrity": {
+            "issues": [
+              "duplicate concrete proposition content: p-003 and p-004 are the same LocatedAt proposition; reuse one proposition id"
+            ],
+            "pass": false
+          },
+          "reference_integrity": {
+            "issues": [],
+            "pass": true
+          },
+          "support_path_integrity": {
+            "issues": [],
+            "pass": true
+          },
+          "temporal_bound_integrity": {
+            "issues": [],
+            "pass": true
+          }
+        },
+        "structural": {
+          "issues": [],
+          "layer": "JSON_SCHEMA_DRAFT_2020_12",
+          "pass": true
+        }
+      }
     }
   },
   "layers": {

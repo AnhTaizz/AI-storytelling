@@ -1,0 +1,123 @@
+# Canonical Story Model v0 — FREEZE CANDIDATE (sanitized; no source content)
+# This file does NOT freeze M2. Freezing requires an Orchestrator decision recorded in DECISIONS.md.
+task: M2-07-CANONICAL-STORY-PRE-FREEZE-HARDENING
+freeze_status: CANDIDATE_PENDING_ORCHESTRATOR_REVIEW
+base_commit: 2bcdc34440de33967ae3d9db7b7a88c9d4d77647
+
+contract_versions:
+  schema_version: canonical_story/v0
+  registry_version: predicate_registry/v0.1
+  registry_compatible_schema_versions: [canonical_story/v0]
+  authority_policy: DEFAULT_V0
+
+# SHA-256 of the committed (LF) blob content of each file.
+bound_artifacts:
+  schema:
+    path: schemas/canonical_story/canonical_story_v0.schema.json
+    sha256: f67410fcb1a95253abe5877b1619f0e9057430ec7cba4afa66431e964142d5e9
+  predicate_registry:
+    path: schemas/canonical_story/predicate_registry_v0.yaml
+    sha256: 44f3eafc6982f84bcc74ccb91abe7cd467a453352ee96be147095f27559c5350
+  conformance_validator:
+    path: tools/canonical_story/conformance_v0.py
+    sha256: 6a016f9c614eb10cd32e993ce0d902bd3eeba14b25a71eb5496449147f8d0599
+  projection:
+    path: tools/canonical_story/view_v0.py
+    sha256: 2fa78ae881a92fce4a8b65f3f51fbaa4e084d6512b6a284e55ff74d5fdada04d
+  requirements_doc:
+    path: docs/research/m2/M2_CANONICAL_STORY_MODEL_REQUIREMENTS.md
+    sha256: a8b5d5bef02398fe52a5a3aeb27811beecbc5b2305da008e1dee3e23c15f0cfc
+  core_concepts_doc:
+    path: docs/research/m2/M2_CORE_CONCEPTS_AND_BOUNDARIES.md
+    sha256: bb298f1c6f8c5ebbc1de12e83e658084730fa70d0de886c629e1aad5bf42501a
+  schema_doc:
+    path: docs/research/m2/M2_CANONICAL_SCHEMA_V0.md
+    sha256: b145b7b757e386936694a002b7adc30433b1a123ab7c525ca27f05c043864909
+  projection_doc:
+    path: docs/research/m2/M2_AS_OF_PROJECTION_V0.md
+    sha256: da73585d737d1541095cdba6905633fdf5683032147de3cd219928124d17b56a
+  real_source_spike_result:
+    path: benchmarks/m2_canonical_model/REAL_SOURCE_MAPPING_SPIKE_V1_RESULT.yaml
+    sha256: 1138f231e20c50b168cdbb775f61152e85a5283efd7a5d0b8224201c91e93afa
+  pre_freeze_review_doc:
+    path: docs/research/m2/M2_PRE_FREEZE_REVIEW.md
+    sha256: f9666efd4f3f1c68c21bbc234213e12137f44f85cea28b24dcfe3b9eea2f60b4
+  python_dependencies:
+    path: requirements-canonical-story.txt
+    sha256: 4d962c3c1fbe7adee2d18606ce514131fbee5fc89fbc7f7298c9f0f9a9018c9c
+
+changes_since_m2_06:
+  schema: none
+  projection: none
+  registry_added_predicates: [PhysicalCondition, EmotionToward, Intends, Owns, Habitually]
+  registry_holder_relative_added: [Intends]
+  registry_rule_extended: "BEHAVIOUR_SUGGESTS_STATE may conclude EmotionToward"
+  registry_correction: "AddressesAs no longer declares functional_on; no setting argument added"
+  validator: "duplicate concrete proposition content rejected in predicate_integrity (placeholders exempt)"
+
+tests:
+  requires_model_api_or_network: false
+  canonical_story: {passed: 99, total: 99}
+  story_benchmark: {passed: 298, total: 298}
+  story_ingestion: {passed: 20, total: 20}
+  synthetic_valid_fixtures: 11
+  synthetic_negative_fixtures: 20
+
+real_source_validation:
+  scope_statement: "Validation currently covers one 30-chapter story in one genre and one primary human/agent annotator. Freeze means a stable V0 engineering contract, not universal narrative ontology completeness."
+  corpus_fingerprint_sha256: 7f9bb8106d6d50acd2b3760738c0b8040f36ab547c2d2f7eade1ca0b9a827ff8
+  chunks_jsonl_sha256: 10ef5681ad1b2db0882c150efa24804cd0fca56bb38e0ffb772d22494e1e40fb
+  validated_against: committed schema canonical_story/v0 and committed registry predicate_registry/v0.1
+  annotation_changes: "mechanical predicate migration only; case inventory unchanged (same SHA-256 as M2-06)"
+  case_count: 10
+  difficulty_mix: {SIMPLE: 3, MEDIUM: 4, DIFFICULT: 3}
+  conformance: {structural: PASS, semantic: PASS}
+  as_of_checks: {passed: 54, total: 54}
+  document_statistics: {assertions: 93, propositions: 100, evidence_refs: 57, EXPLICIT: 77, ENTAILED: 14, SUGGESTED: 2}
+  fit_distribution: {NATURAL: 3, ACCEPTABLE: 6, AWKWARD: 1, NOT_REPRESENTABLE: 0}
+  fit_distribution_m2_06_v0_registry: {NATURAL: 1, ACCEPTABLE: 4, AWKWARD: 4, NOT_REPRESENTABLE: 1}
+  per_case:
+    CASE_REAL_01: {difficulty: SIMPLE, fit: NATURAL}
+    CASE_REAL_02: {difficulty: MEDIUM, fit: AWKWARD}
+    CASE_REAL_03: {difficulty: SIMPLE, fit: NATURAL}
+    CASE_REAL_04: {difficulty: MEDIUM, fit: ACCEPTABLE}
+    CASE_REAL_05: {difficulty: DIFFICULT, fit: ACCEPTABLE, rating_confidence: BORDERLINE}
+    CASE_REAL_06: {difficulty: MEDIUM, fit: NATURAL}
+    CASE_REAL_07: {difficulty: DIFFICULT, fit: ACCEPTABLE}
+    CASE_REAL_08: {difficulty: DIFFICULT, fit: ACCEPTABLE}
+    CASE_REAL_09: {difficulty: MEDIUM, fit: ACCEPTABLE}
+    CASE_REAL_10: {difficulty: SIMPLE, fit: ACCEPTABLE}
+  gate:
+    not_representable_is_zero: true
+    difficult_cases_natural_or_acceptable: 3
+    difficult_cases_total: 3
+    result: PASS
+  disclosures:
+    - "CASE_REAL_05 is a borderline judgement (ACCEPTABLE vs AWKWARD); a stricter rating would fail the gate. Orchestrator confirmation requested."
+    - "Ratings were made by the annotating agent and are not independently reviewed."
+
+known_limitations:   # documented, deliberately not fixed in V0
+  - F-EXISTENTIAL-CONTENT
+  - F-RESOLUTION-PROPAGATION
+  - F-CAUSATION-OMISSION
+  - F-FOCALIZATION
+  - F-GATE-BY-ANNOTATION
+  - F-SPEECH-ACTS
+  - F-CONDITIONAL-BOUND
+  - F-REPEATED-UTTERANCE
+  - "Address context (what selects an address form) is not first-class"
+  - "Polarity-specific UNAWARE — STATUS: PROVISIONAL / NOT REAL-SOURCE VALIDATED"
+  - "Free-text literals are not normalized; uniqueness is by exact content"
+  - "Single discourse stream; no story-time slicing of verdicts; no temporal closure; reliable-narration assumption"
+
+private_validation_packages:   # local only, never committed
+  m2_07_pre_freeze:
+    package: .local/story_integration/otonari_30ch/M2_07_PRE_FREEZE_V1.zip
+    package_sha256: 2b1d65a9ea43f646be519577ec60cc43d3ae64108de97e3b9963670baadf5eaf
+  m2_06_real_mapping:
+    package: .local/story_integration/otonari_30ch/M2_06_REAL_MAPPING_V1.zip
+    package_sha256: 1d3f4cc93965c916071b11a451c54b8adcc7886a4ec4f1086b2e302ea7312e93
+
+review: docs/research/m2/M2_PRE_FREEZE_REVIEW.md
+decisions_md_changed: false
+m3_started: false

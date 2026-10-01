@@ -271,7 +271,7 @@
       "extraction_provenance_id": "xp-human",
       "id": "a-011",
       "polarity": "AFFIRMED",
-      "proposition_id": "p-011",
+      "proposition_id": "p-001",
       "review": {
         "state": "UNREVIEWED"
       },
@@ -537,20 +537,6 @@
       },
       "id": "p-010",
       "predicate": "Participates"
-    },
-    {
-      "args": {
-        "holder": {
-          "kind": "ENTITY",
-          "ref": "ent-a"
-        },
-        "item": {
-          "kind": "ENTITY",
-          "ref": "ent-item"
-        }
-      },
-      "id": "p-011",
-      "predicate": "Possesses"
     }
   ],
   "schema_version": "canonical_story/v0",

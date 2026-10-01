@@ -132,6 +132,7 @@ Every match below requires the same content class **and** the same polarity X. `
   - `target_unaware_evidence` lists only visible UNAWARE or KEPT_UNAWARE assertions on `(P-class, X)`. An empty list means "not evidenced", never "unaware".
   - Secrecy is never inferred from B lacking a knowledge state.
 - **UNAWARE interpretation (V0).** Every Attitude targets signed information, so UNAWARE is **polarity-specific**: `UNAWARE(P, AFFIRMED)` means the holder does not have "P is true". Unawareness of the whole question can be stated as both signed attitudes; a dedicated form is deferred.
+  - **STATUS: PROVISIONAL / NOT REAL-SOURCE VALIDATED.** The M2-06 real-source panel never needed UNAWARE, so this interpretation is tested only on synthetic fixtures (M2-07 record).
 - **Reader fields** (these replace the polarity-unaware `reader_has_canonical_content` of M2-04):
   - `canonical_content_status`;
   - `reader_knows_content_resolution`: canonical P is AFFIRMED or NEGATED;
@@ -173,6 +174,7 @@ The view lists visible `TemporalRelation` assertions (BEFORE, AFTER, SIMULTANEOU
   - Scopes neither identical nor provably disjoint: `FUNCTIONAL_OVERLAP_NOT_DETERMINED`.
   - Disjoint (meeting) scopes raise nothing.
   - Nothing is rejected or resolved. Cases A, C and D produce no false conflict (tested).
+  - From registry v0.1 (M2-07), `AddressesAs` is no longer functional, so co-existing address forms raise no diagnostic and appear as separate stages. `Owns` is functional on `item`.
 
 ## 14. Open-World Semantics
 

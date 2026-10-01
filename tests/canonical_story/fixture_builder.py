@@ -73,6 +73,14 @@ class Doc:
 
     # --- L3 -------------------------------------------------------------
     def prop(self, predicate: str, **args) -> str:
+        """Concrete proposition with identity by content: identical content reuses one id."""
+        for existing in self.doc["propositions"]:
+            if existing.get("predicate") == predicate and existing.get("args") == args:
+                return existing["id"]
+        return self.prop_new(predicate, **args)
+
+    def prop_new(self, predicate: str, **args) -> str:
+        """Always create a new record (only for building duplicate-content negative cases)."""
         self._n["p"] += 1
         pid = f"p-{self._n['p']:03d}"
         self.doc["propositions"].append({"id": pid, "predicate": predicate, "args": args})
@@ -536,6 +544,17 @@ def neg_reveal_flips_polarity():
     return d.build()
 
 
+def neg_duplicate_proposition():
+    d, _, _ = _base_negative()
+    item, place = d.entity("ent-item", "OBJECT"), d.entity("ent-place", "LOCATION")
+    first = d.prop("LocatedAt", thing=E(item), location=E(place))
+    second = d.prop_new("LocatedAt", location=E(place), thing=E(item))  # same content, other key order
+    d.assertion(first, sets=[SUF(d.ev(3))])
+    d.assertion(d.prop("Attitude", holder=E("ent-a"), attitude=TOK("attitude_kind", "HOLDS_TRUE"),
+                       content=P(second), content_polarity=POL()), sets=[SUF(d.ev(4))])
+    return d.build()
+
+
 def neg_arity_mismatch():
     d, _, _ = _base_negative()
     d.assertion(d.prop("Possesses", holder=E("ent-a")), sets=[SUF(d.ev(2))])
@@ -564,4 +583,6 @@ INVALID_CASES = {
                                            "value OPEN not in signed_polarity"),
     "neg_19_reveal_flips_polarity.json": (neg_reveal_flips_polarity, "derivation_integrity",
                                           "does not preserve the signed content"),
+    "neg_20_duplicate_proposition.json": (neg_duplicate_proposition, "predicate_integrity",
+                                          "duplicate concrete proposition content"),
 }
