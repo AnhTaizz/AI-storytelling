@@ -1,6 +1,8 @@
 # Script Quality Contract v0
 
-Status: CANDIDATE — pending Orchestrator review. **Not frozen.** Not recorded in `DECISIONS.md`.
+Status: REPAIRED CANDIDATE — pending Orchestrator freeze review. **Not frozen.** Not recorded in `DECISIONS.md`.
+
+Revision note: the candidate was repaired once before freeze, after the operational dry-run (`benchmarks/m1_script_quality/evaluations/CONTRACT_V0_DRY_RUN/`). The version stays `v0` because it has never been frozen. Changes: severity now also measures impact on the requested deliverable, so request and output findings can be material (section 14); two taxonomy subtypes added (section 13); rules added for dialogue (4.4), ambiguous speakers (5.3), recording findings (13.1) and escalation records (14.4); trace verdict separated from official verdict (section 16).
 
 Contract identity: `SCRIPT_QUALITY_CONTRACT/v0`
 
@@ -111,6 +113,29 @@ Intensifiers and figures of speech are not automatically safe. If a figure chang
 - `SQ-INV-03` **No invented causality.** A script must not assert a cause, reason or consequence the boundary does not establish, and must not alter an established causal chain.
 - `SQ-INV-04` **No invented internal state.** Motives, intentions, emotions, thoughts and traits may be stated as fact only when the boundary establishes them. Observed behaviour does not license a stated motive or intention.
 
+### 4.4 Reconstructed and translated dialogue
+
+Dialogue does not need to reproduce source wording literally. A spoken line in a script is judged by its meaning, like any other story claim.
+
+Allowed, provided the semantic content is preserved:
+
+- translation;
+- natural paraphrase;
+- compression;
+- spoken-language adaptation.
+
+Not allowed inside a line of dialogue, exactly as outside it:
+
+- invented factual content;
+- invented knowledge;
+- invented intention;
+- an invented promise or agreement;
+- stronger certainty;
+- new causal claims;
+- new relationship implications.
+
+Example. If the boundary establishes only "Character A refuses", the Writer may phrase that refusal naturally. The Writer may not give Character A a detailed reason for refusing unless the boundary supports it. A line of speech with no basis in the boundary is `INVENTED_SPEECH` (section 13).
+
 ## 5. Epistemic Contract
 
 A script must preserve the difference between what is established, what is inferred, what is only reported, and what is unknown.
@@ -140,6 +165,10 @@ The following distinctions are meaningful and must not be collapsed upward:
 - **Self-report versus story truth.** What a character says about themselves is a report. It may be narrated as what they said. It becomes fact only if the boundary establishes it independently.
 - **Inferred motive.** A hedged narrator inference ("maybe he just didn't want the hassle") is commentary if clearly the narrator's guess. Stated flatly ("he didn't want the hassle") it is a story claim.
 - **Hidden intention.** Attributing an unstated plan or wish to a character from their behaviour is a story claim and needs support.
+- **Hedged guess with an unclear speaker.** A guess may belong to the narrator or to a character.
+  - If context clearly marks it as the narrator speculating to the audience, it may be `COMMENTARY_RHETORIC`.
+  - If it is clearly the character's thought, it is a story claim about what the character thinks, and the rules of this section apply.
+  - If the wording is genuinely ambiguous and the truth boundary does not settle it, classify it `UNDETERMINED`. Do not force either reading. The finding goes to review (section 16).
 - **Conceptual alignment with Canonical Story Model v0.** The frozen model separates explicit, entailed and merely suggested content, and separates what is asserted from what a character says or holds. This contract uses the same distinctions at the script level: suggested content must be presented as suggested; said or believed content must stay attributed. The contract does not depend on that model's implementation.
 
 ## 6. Temporal / State Contract
@@ -295,7 +324,7 @@ One hierarchy replaces the provisional list and the H6b residual families. A fin
 | Category | Subtypes | Gate |
 |---|---|---|
 | `FACTUAL_ERROR` | — | `GATE_FACTUAL_GROUNDING` |
-| `UNSUPPORTED_INVENTION` | `UNSUPPORTED_EVENT`, `UNSUPPORTED_ACTION_OR_STAGING`, `PHYSICAL_OR_EMOTIONAL_STATE_INVENTION`, `MOTIVE_OR_INTERNAL_STATE_INVENTION`, `HIDDEN_INTENTION_INFERENCE` | `GATE_FACTUAL_GROUNDING` |
+| `UNSUPPORTED_INVENTION` | `UNSUPPORTED_EVENT`, `UNSUPPORTED_ACTION_OR_STAGING`, `INVENTED_SPEECH`, `UNSUPPORTED_DESCRIPTIVE_ATTRIBUTE`, `PHYSICAL_OR_EMOTIONAL_STATE_INVENTION`, `MOTIVE_OR_INTERNAL_STATE_INVENTION`, `HIDDEN_INTENTION_INFERENCE` | `GATE_FACTUAL_GROUNDING` |
 | `CAUSALITY_ERROR` | `CAUSALITY_INVENTION`, `CAUSALITY_DISTORTION` | `GATE_FACTUAL_GROUNDING` |
 | `SOURCE_GROUNDING_FAILURE` | `OUT_OF_BOUNDARY_KNOWLEDGE`, `BOUNDARY_FIDELITY_DEFECT`, `UNTRACEABLE_CLAIM` | `GATE_FACTUAL_GROUNDING` |
 | `EPISTEMIC_ERROR` | `CERTAINTY_INFLATION`, `EPISTEMIC_KNOWLEDGE_OVERCLAIM`, `REPUTATION_OR_FREQUENCY_STRENGTHENING`, `ATTRIBUTION_LOSS` | `GATE_EPISTEMIC_INTEGRITY` |
@@ -322,6 +351,7 @@ One hierarchy replaces the provisional list and the H6b residual families. A fin
 Notes on the unification:
 
 - The eight H6b residual families are all subtypes here. Three sit under `EPISTEMIC_ERROR`, four under `UNSUPPORTED_INVENTION`, one under `CAUSALITY_ERROR`.
+- `INVENTED_SPEECH` and `UNSUPPORTED_DESCRIPTIVE_ATTRIBUTE` were added after the dry-run. The first is a spoken line with no basis in the boundary (section 4.4). The second is an invented lasting property of a character, object or place (appearance, size, position), as opposed to a momentary state. All earlier IDs remain valid.
 - `ATTRIBUTION_LOSS` is new. H2 observed hearsay flattened into fact, which no earlier category named.
 - `SCENE_STATE_INCONSISTENCY` and `OUTPUT_LANGUAGE_CORRUPTION` were used in RUN_0001 but were missing from the provisional list.
 - `SOURCE_GROUNDING_FAILURE` now means a defect in the evidence chain itself: a claim taken from outside the boundary, a boundary that misstates the source, or a claim that cannot be traced at all.
@@ -329,22 +359,107 @@ Notes on the unification:
 
 **Mapping from H6b claim classes.** `UNSUPPORTED` → `UNSUPPORTED_STORY_CLAIM`. `STRONGER_THAN_BRIEF` → `STRENGTHENED_STORY_CLAIM`. `CONTRADICTS_BRIEF` → `CONTRADICTED_STORY_CLAIM`. `QUESTIONABLE` → `UNDETERMINED`. `CREATIVE_BUT_SAFE` → `COMMENTARY_RHETORIC`, but only if it passes the test in section 4.2. H6b showed that the "creative but safe" label absorbed real staging and internal-state inventions.
 
+### 13.1 Recording findings
+
+**Granularity.** One finding corresponds to one semantic defect that can be independently evidenced and independently corrected. Findings are not required per sentence or per word.
+
+- Split when different propositions are wrong, when different evidence is needed, or when one edit could correct one defect and leave another.
+- Bundle when several words express the same single error.
+
+**More than one category.** One underlying claim may break more than one invariant. A future possibility stated as certain can be both `CERTAINTY_INFLATION` and `PREMATURE_SPOILER`.
+
+- Record one finding with a primary taxonomy ID and additional violation tags. Do not force a single category when both violations matter.
+- Assign severity once, from the total impact.
+- Every affected gate receives the finding.
+- Count it once in summaries. It is one defect, not two.
+- Record separate findings only when separate edits or separate evidence are needed.
+
+**Free indirect thought.** When prose gives a character's thought without quotation marks, evaluate the meaning, not the typography. One semantic assertion is one finding. Do not record one finding for attributing the thought and another for its content. Split only when the passage holds independently repairable claims.
+
 ## 14. Severity Model
 
-Severity measures **narrative impact**: how much the audience's understanding of the story is changed, or how much the deliverable is damaged. It is not set by category alone.
+Severity measures **impact**. Two kinds of impact count:
+
+- impact on the audience's understanding of the story;
+- impact on the correctness and usability of the requested deliverable.
+
+Severity is not set by category alone, and it is not computed from a number.
 
 | Level | Definition | Typical cases |
 |---|---|---|
-| `CRITICAL` | The audience leaves with a false plot-level belief, or the deliverable is unusable | Fabricated or missing major event; false identity or relationship; chronology reversal of plot events; leak of a major reveal; output largely in the wrong language |
-| `HIGH` | The interpretation of a character, scene or causal chain is materially changed | Wrong cause for a key event; knowledge overclaim that changes who knows what; material state error; omitted setup that a payoff needs; leak of a lesser future fact |
-| `MEDIUM` | A real but localized change to story truth, or a defect needing a deliberate edit | Unsupported motive or intention; certainty or frequency strengthening; lost attribution; local state slip; contamination token; length outside tolerance |
-| `LOW` | Localized and does not change interpretation | Minor unsupported gesture or staging; small wording issue; slight style mismatch |
+| `CRITICAL` | The audience leaves with a false plot-level belief, **or** the deliverable fundamentally is not the requested deliverable or cannot be used as it | Fabricated or missing major event; false identity or relationship; chronology reversal of plot events; leak of a major reveal; output mostly in the wrong language |
+| `HIGH` | The interpretation of a character, scene or causal chain is materially changed, **or** the request is materially violated or usability substantially damaged, so that the fix needs substantial changes across the deliverable | Wrong cause for a key event; knowledge overclaim that changes who knows what; material state error; omitted setup that a payoff needs; leak of a lesser future fact; a length overrun that needs structural compression across several sections |
+| `MEDIUM` | A real but localized change to story truth, **or** a request or output defect that a local edit corrects without restructuring | Unsupported motive or intention; certainty or frequency strengthening; lost attribution; local state slip; a modest length overrun; an isolated contamination token |
+| `LOW` | Localized and does not change interpretation or usability | Minor unsupported gesture or staging; small wording issue; slight style mismatch |
 
-Rules:
+General rules:
 
 - The reviewer assigns severity by impact and states the reason. Category gives a starting point, not the answer. An invented shrug is `LOW`. An invented action that the plot later depends on is not.
-- **Cumulative escalation.** Many `MEDIUM` findings of one kind can together change how a character or scene is understood. The reviewer may escalate the set to `HIGH` with a stated reason. No numeric density threshold is fixed in v0.
 - H6b severity labels are **not** inherited. H6b used three levels, and critic-versus-reference severity agreement was about half. Those labels were assigned per family under a different procedure.
+
+### 14.1 Request-compliance findings
+
+For `REQUEST_NONCOMPLIANCE` (length, scope, or another explicit request constraint), severity depends on impact and on how much of the deliverable must change to satisfy the request.
+
+| Level | Meaning | Examples |
+|---|---|---|
+| `MEDIUM` | The explicit request is violated, but the correction is localized and needs no substantial restructuring | A modest length overrun outside tolerance; a small format or scope mismatch fixable locally |
+| `HIGH` | The request is materially violated, and satisfying it needs substantial changes across the deliverable | A major length overrun or underrun that needs structural compression or expansion across several sections; materially wrong requested scope; a violated constraint that changes whether the deliverable can be used for its purpose |
+| `CRITICAL` | The deliverable fundamentally does not answer the requested task, or cannot be used as the requested deliverable | A script for the wrong story range; an output that is not a script |
+
+There are no percentage bands. The size of a deviation is evidence, not the rule. The same deviation can be `MEDIUM` in one script and `HIGH` in another, depending on what the repair requires.
+
+### 14.2 Output-integrity findings
+
+| Level | Examples |
+|---|---|
+| `LOW` / `MEDIUM` | An isolated unjustified contamination token; a small removable meta artifact |
+| `HIGH` | Repeated contamination, or a structural artifact, that substantially damages usability |
+| `CRITICAL` | Output mostly in the wrong language; output that is not the requested deliverable at all; corruption severe enough to make it unusable |
+
+The justified cases in section 12 still apply first. A flagged token is not a finding until they are ruled out.
+
+### 14.3 Calibration examples
+
+**Example 1 — major length overrun (from the operational dry-run, RUN_0003).**
+
+| Item | Value |
+|---|---|
+| Request | 900–1100 words |
+| Recorded output | 1648 words |
+| Observed repair | About one third of the text removed; changes spread across large portions of the script; edit cost `MAJOR` |
+| Taxonomy | `REQUEST_NONCOMPLIANCE` / `LENGTH_NONCOMPLIANCE` |
+| Severity | `HIGH` |
+| Gate | `GATE_REQUEST_COMPLIANCE` = `GATE_FAIL` |
+
+Reason: the violation cannot be repaired locally, and it materially fails an explicit constraint of the requested deliverable. This does not mean that every deviation of a similar size is `HIGH`. The severity follows from the repair scope observed here.
+
+**Example 2 — small length overrun (synthetic).**
+
+| Item | Value |
+|---|---|
+| Request | At most 1100 words |
+| Output | Slightly above the limit |
+| Repair | Remove or rephrase one short local passage |
+| Severity | `MEDIUM` |
+| Gate | `GATE_REQUEST_COMPLIANCE` = `GATE_CONDITIONAL` |
+
+The two examples differ in repair scope, and that is what separates `MEDIUM` from `HIGH`.
+
+### 14.4 Cumulative escalation
+
+Several non-material findings of one kind can together change how a character or scene is understood, or how usable the deliverable is. The reviewer may then escalate the **set**. No numeric density threshold is fixed in v0.
+
+The escalation is a separate review judgement over the set. The member findings keep their own severities; they are not rewritten. Record:
+
+| Field | Content |
+|---|---|
+| `escalation_id` | Identifier of the escalation |
+| `member_findings` | The findings in the set |
+| `original_severities` | Their individual severities, unchanged |
+| `escalated_severity` | The severity given to the set |
+| `affected_gate` | The gate that receives the escalated severity |
+| `impact_rationale` | Why the set, taken together, has that impact |
 
 ## 15. Hard Gates
 
@@ -357,10 +472,10 @@ A hard gate is an integrity requirement that narrative quality cannot compensate
 | `GATE_TEMPORAL_STATE_INTEGRITY` | `SQ-INV-08`–`SQ-INV-10` | Material chronology, state, identity or relationship error |
 | `GATE_SPOILER_DISCIPLINE` | `SQ-INV-12` | Leak of information beyond requested scope |
 | `GATE_NECESSARY_COVERAGE` | `SQ-INV-11` | Missing narratively necessary information |
-| `GATE_OUTPUT_INTEGRITY` | `SQ-INV-15`, `SQ-INV-16` | Deliverable not usable as delivered |
-| `GATE_REQUEST_COMPLIANCE` | `SQ-INV-14` | Requested length or scope not met |
+| `GATE_OUTPUT_INTEGRITY` | `SQ-INV-15`, `SQ-INV-16` | Material damage to the usability of the deliverable |
+| `GATE_REQUEST_COMPLIANCE` | `SQ-INV-14` | Material violation of the requested length, scope or other explicit request constraint |
 
-**Material** means severity `HIGH` or `CRITICAL`.
+**Material** means severity `HIGH` or `CRITICAL`, for every gate. Sections 14.1 and 14.2 say when a request or output finding is material. A material finding fails its gate; a `MEDIUM` finding makes it conditional. A cumulative escalation (section 14.4) counts as a finding of its escalated severity for its gate.
 
 Gate status:
 
@@ -370,6 +485,8 @@ Gate status:
 | `GATE_CONDITIONAL` | At least one `MEDIUM` finding, none material |
 | `GATE_FAIL` | At least one material finding |
 | `GATE_NOT_DETERMINED` | The gate could not be evaluated (no boundary, unresolved `UNDETERMINED` claims, required check not performed) |
+
+A gate with a material finding is `GATE_FAIL` even if other claims under it are still `UNDETERMINED`.
 
 A highly entertaining script with a material integrity violation does not pass. Soft scores are never averaged with gates.
 
@@ -394,10 +511,20 @@ Rules:
 - A finding raised by an automated check counts once a human confirms it, or immediately if the check is purely mechanical (length, parse, declared format).
 - The rubric numbers above are human anchors. Numerical thresholds for automated metrics are not part of v0 and may be set separately.
 - A verdict applies to one script against one request. It is not a claim about a pipeline.
+- A material request-compliance finding fails its gate like any other, so it leads to `FAIL` through the first row. No special case is needed.
+
+**Trace verdict and official verdict.** A review records two things:
+
+- `REVIEW_TRACE_VERDICT`: the verdict that follows from the reviewer's recorded gate statuses, ratings and edit cost. Any reviewer, including an AI or model-assisted one, may compute it. It is useful for testing the rubric and for triage.
+- `OFFICIAL_CONTRACT_VERDICT`: the verdict of this contract. Where the required human audit of the semantic gates has not been done, those gates are `GATE_NOT_DETERMINED` and the official verdict is `REVIEW_REQUIRED`, whatever the trace says.
+
+An AI or model-assisted review without the human audit can never produce an official `PASS` or `PASS_WITH_MINOR_EDITS`. Once a human has audited the semantic gates, the two verdicts are the same.
 
 ## 17. Human Review Rubric
 
 Template: `benchmarks/m1_script_quality/evaluations/HUMAN_REVIEW_TEMPLATE.md`.
+
+**Request record.** The review starts by recording the request: requested scope, truth boundary, target language, target length or duration, length tolerance, counting method, spoiler mode and the relevant Narrative Profile constraints. A review must be readable without opening other files.
 
 **Part A — integrity.** The reviewer does not give a 1–5 score. For each gate the reviewer records findings (script passage, taxonomy ID, claim type, severity, boundary evidence or its absence, suggested fix) and a gate status.
 
@@ -443,7 +570,7 @@ Edit cost counts the work to fix integrity findings as well as narrative ones. W
 
 | Requirement | Mechanical | Model-assisted | Human |
 |---|---|---|---|
-| Length compliance (`SQ-INV-14`) | Decides | — | — |
+| Length compliance (`SQ-INV-14`) | Decides whether the output is inside tolerance | — | Decides severity when it is not (section 14.1) |
 | Unexpected-script tokens (`SQ-INV-15`) | Flags | — | Confirms (justified or not) |
 | Meta text, malformed structure (`SQ-INV-16`) | Flags obvious cases | Flags | Confirms |
 | Unsupported / contradicted claims (`SQ-INV-01`, `SQ-INV-02`) | — | Proposes findings | Audits and decides |
@@ -467,7 +594,7 @@ Auditability invariant:
 ## 20. Known Limitations
 
 1. **Narrow evidence base.** Script-generation evidence comes from one story, mostly one chapter, in early controlled runs with one model family and one language pair.
-2. **Human preference review is incomplete.** Project Owner reviews of the M1 runs are still pending. The rubric in section 17 has not yet been exercised by a human reviewer on a real script.
+2. **Human preference review is incomplete.** Project Owner reviews of the M1 runs are still pending. The rubric in section 17 has been exercised once, by an AI reviewer in an operational dry-run on two scripts. It has not yet been exercised by a human reviewer.
 3. **Subjective dimensions.** Hook, pacing, emotional impact and humor are partly subjective. Inter-reviewer agreement has not been measured.
 4. **No calibrated automatic thresholds.** No numeric threshold for any automated metric is fixed.
 5. **Validators are incomplete.** The current validator implementations do not guarantee detection (section 21).

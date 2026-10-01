@@ -52,7 +52,8 @@ class TestCandidateStructure(unittest.TestCase):
 
     def test_identity_and_candidate_status(self):
         self.assertEqual(self.c["contract_version"], "SCRIPT_QUALITY_CONTRACT/v0")
-        self.assertEqual(self.c["status"], "CANDIDATE_PENDING_ORCHESTRATOR_REVIEW")
+        self.assertEqual(self.c["status"], "CANDIDATE_REPAIRED_PENDING_ORCHESTRATOR_FREEZE_REVIEW")
+        self.assertFalse(self.c["revision"]["frozen"])
         self.assertIn("`SCRIPT_QUALITY_CONTRACT/v0`", self.spec)
         self.assertIn("**Not frozen.**", self.spec)
         self.assertNotIn("FROZEN", self.c["status"])
@@ -229,6 +230,100 @@ class TestValidatorEvidenceIsNotOverclaimed(unittest.TestCase):
         self.assertFalse(self.c["versioning"]["validator_evidence_updates_change_contract"])
         self.assertFalse(self.c["validator_evidence_status"]["h6b_deterministic_claim_audit"]["sufficient_as_sole_gate"])
         self.assertIn("**It is not part of the quality standard.**", self.spec)
+
+
+class TestPreFreezeRepair(unittest.TestCase):
+    """Checks for the pre-freeze repair that followed the operational dry-run."""
+
+    DRY_RUN = REPO / "benchmarks/m1_script_quality/evaluations/CONTRACT_V0_DRY_RUN"
+    LOCKED = {
+        "RUN_0003_REVIEW.md": "c707dbed0f67c46035e1d8df5a45968ca3195a38d2ded7bbd37a89e6b66cd139",
+        "RUN_0004_REVIEW.md": "75d5eea18ce10e35d926a3c3d6a23151be06c643d0a3fc59520c0c47ef58f22e",
+        "DRY_RUN_SUMMARY.yaml": "2404094e05ea99c1017dca3b6d28db6aa0e30bd5478f246e1c58852808a4f2bd",
+    }
+
+    def setUp(self):
+        self.c = load()
+        self.spec = SPEC.read_text(encoding="utf-8")
+        self.template = TEMPLATE.read_text(encoding="utf-8")
+
+    def test_locked_first_pass_files_are_unchanged(self):
+        import hashlib
+        for name, expected in self.LOCKED.items():
+            data = (self.DRY_RUN / name).read_bytes().replace(b"\r\n", b"\n")
+            self.assertEqual(hashlib.sha256(data).hexdigest(), expected, name)
+
+    def test_severity_measures_story_and_deliverable_impact(self):
+        basis = self.c["severity_basis"]
+        self.assertEqual(basis["measures"], ["impact_on_audience_understanding",
+                                             "impact_on_requested_deliverable_correctness_or_usability"])
+        self.assertFalse(basis["computed_from_percentage_or_count"])
+        self.assertFalse(basis["percentage_bands_defined"])
+        self.assertEqual([s["id"] for s in self.c["severity_levels"]], ["CRITICAL", "HIGH", "MEDIUM", "LOW"])
+        self.assertIn("There are no percentage bands.", self.spec)
+
+    def test_request_and_output_findings_can_be_material(self):
+        material = set(self.c["hard_gates"]["material_severities"])
+        self.assertTrue(material & set(self.c["request_compliance_severity"]))
+        self.assertTrue(material & set(self.c["output_integrity_severity"]))
+        self.assertIn("### 14.1 Request-compliance findings", self.spec)
+        self.assertIn("### 14.2 Output-integrity findings", self.spec)
+        self.assertNotIn("Requested length or scope not met", self.spec)
+
+    def test_calibration_examples(self):
+        examples = {e["id"]: e for e in self.c["calibration_examples"]}
+        major, small = examples["CAL-LENGTH-MAJOR"], examples["CAL-LENGTH-SMALL"]
+        self.assertEqual((major["severity"], major["gate_status"]["GATE_REQUEST_COMPLIANCE"]), ("HIGH", "GATE_FAIL"))
+        self.assertEqual((small["severity"], small["gate_status"]["GATE_REQUEST_COMPLIANCE"]),
+                         ("MEDIUM", "GATE_CONDITIONAL"))
+        self.assertFalse(major["generalizes_to_all_similar_magnitudes"])
+        self.assertEqual(major["taxonomy"], small["taxonomy"])
+        section = self.spec.split("### 14.3 Calibration examples")[1].split("### 14.4")[0]
+        for text in ("900–1100 words", "1648 words", "`GATE_REQUEST_COMPLIANCE` = `GATE_FAIL`",
+                     "`GATE_REQUEST_COMPLIANCE` = `GATE_CONDITIONAL`"):
+            self.assertIn(text, section)
+
+    def test_added_subtypes_sit_under_existing_parent(self):
+        parents = {e["id"]: e["subtypes"] for e in self.c["failure_taxonomy"]["integrity"]}
+        for subtype in ("INVENTED_SPEECH", "UNSUPPORTED_DESCRIPTIVE_ATTRIBUTE"):
+            self.assertIn(subtype, parents["UNSUPPORTED_INVENTION"])
+        self.assertEqual(len(parents), 12)
+
+    def test_finding_rules(self):
+        rules = self.c["finding_rules"]
+        self.assertFalse(rules["sentence_or_token_level_findings_required"])
+        self.assertTrue(rules["multi_category"]["counted_once_in_summaries"])
+        self.assertTrue(rules["multi_category"]["all_affected_gates_receive_the_finding"])
+        self.assertEqual(rules["ambiguous_speaker_hedged_guess"], "UNDETERMINED")
+        self.assertFalse(rules["dialogue"]["literal_source_wording_required"])
+        for heading in ("### 4.4 Reconstructed and translated dialogue", "### 13.1 Recording findings",
+                        "### 14.4 Cumulative escalation"):
+            self.assertIn(heading, self.spec)
+
+    def test_escalation_record_fields_agree(self):
+        fields = self.c["cumulative_escalation"]["record_fields"]
+        self.assertTrue(self.c["cumulative_escalation"]["member_findings_keep_their_severity"])
+        for field in fields:
+            self.assertIn(f"`{field}`", self.spec)
+            self.assertIn(f"`{field}`", self.template)
+
+    def test_trace_and_official_verdicts_are_distinct(self):
+        self.assertFalse(self.c["verdict_rules"]["ai_only_review_can_yield_official_pass"])
+        for name in self.c["verdict_kinds"]:
+            self.assertIn(f"`{name}`", self.spec)
+            self.assertIn(f"`{name}`", self.template)
+
+    def test_template_has_request_record(self):
+        section = self.template.split("## 0. Request Record")[1].split("## 1.")[0]
+        for item in ("Requested scope", "Truth boundary", "Target language", "Target length or duration",
+                     "Length tolerance", "Counting method", "Spoiler mode", "Narrative Profile constraints"):
+            self.assertIn(item, section)
+        self.assertTrue(self.c["request_constraints"]["counting_method_must_be_stated"])
+
+    def test_human_audit_and_h7_status_unchanged(self):
+        self.assertEqual(len(self.c["hard_gates"]["human_audit_required_in_v0"]), 5)
+        h7 = self.c["validator_evidence_status"]["h7_targeted_epistemic_pass"]
+        self.assertEqual((h7["stage_b_executed"], h7["confirmatory_verdict"]), (False, "NOT_EVALUATED"))
 
 
 class TestPrivacy(unittest.TestCase):

@@ -2,7 +2,12 @@
 # Normative text: docs/contracts/SCRIPT_QUALITY_CONTRACT_V0.md
 # This file does NOT freeze the contract. Freezing requires an Orchestrator decision.
 contract_version: SCRIPT_QUALITY_CONTRACT/v0
-status: CANDIDATE_PENDING_ORCHESTRATOR_REVIEW
+status: CANDIDATE_REPAIRED_PENDING_ORCHESTRATOR_FREEZE_REVIEW
+revision:
+  frozen: false
+  pre_freeze_repair_task: M1-SCRIPT-QUALITY-V0-CANDIDATE-REPAIR
+  basis: benchmarks/m1_script_quality/evaluations/CONTRACT_V0_DRY_RUN/DRY_RUN_CROSS_CHECK_AND_FINDINGS.md
+  note: "Version stays v0: the candidate has never been frozen."
 specification: docs/contracts/SCRIPT_QUALITY_CONTRACT_V0.md
 human_review_template: benchmarks/m1_script_quality/evaluations/HUMAN_REVIEW_TEMPLATE.md
 
@@ -65,6 +70,8 @@ failure_taxonomy:
       subtypes:
         - UNSUPPORTED_EVENT
         - UNSUPPORTED_ACTION_OR_STAGING
+        - INVENTED_SPEECH
+        - UNSUPPORTED_DESCRIPTIVE_ATTRIBUTE
         - PHYSICAL_OR_EMOTIONAL_STATE_INVENTION
         - MOTIVE_OR_INTERNAL_STATE_INVENTION
         - HIDDEN_INTENTION_INFERENCE
@@ -100,8 +107,60 @@ severity_levels:
   - {id: HIGH, material: true}
   - {id: MEDIUM, material: false}
   - {id: LOW, material: false}
-severity_basis: narrative_impact      # not category alone; H6b severity labels are not inherited
-cumulative_escalation: reviewer_judgement_with_stated_reason
+severity_basis:          # not category alone; H6b severity labels are not inherited
+  measures:
+    - impact_on_audience_understanding
+    - impact_on_requested_deliverable_correctness_or_usability
+  assigned_by: review_judgement_with_stated_reason
+  computed_from_percentage_or_count: false
+  percentage_bands_defined: false
+request_compliance_severity:
+  MEDIUM: "request violated; correction localized; no substantial restructuring"
+  HIGH: "request materially violated; satisfying it needs substantial changes across the deliverable"
+  CRITICAL: "deliverable fundamentally does not answer the requested task or is unusable as that deliverable"
+output_integrity_severity:
+  LOW_OR_MEDIUM: "isolated unjustified contamination token; small removable meta artifact"
+  HIGH: "repeated contamination or structural artifact that substantially damages usability"
+  CRITICAL: "mostly wrong language; not the requested deliverable; unusable corruption"
+calibration_examples:
+  - id: CAL-LENGTH-MAJOR
+    source: operational dry-run, RUN_0003
+    request_words: "900-1100"
+    recorded_words: 1648
+    observed_repair: "about one third removed; changes across large portions of the script; edit cost MAJOR"
+    taxonomy: REQUEST_NONCOMPLIANCE/LENGTH_NONCOMPLIANCE
+    severity: HIGH
+    gate_status: {GATE_REQUEST_COMPLIANCE: GATE_FAIL}
+    generalizes_to_all_similar_magnitudes: false
+  - id: CAL-LENGTH-SMALL
+    source: synthetic
+    request: "at most 1100 words"
+    output: "slightly above the limit"
+    repair: "remove or rephrase one short local passage"
+    taxonomy: REQUEST_NONCOMPLIANCE/LENGTH_NONCOMPLIANCE
+    severity: MEDIUM
+    gate_status: {GATE_REQUEST_COMPLIANCE: GATE_CONDITIONAL}
+cumulative_escalation:
+  basis: reviewer_judgement_with_stated_reason
+  numeric_density_threshold: null
+  member_findings_keep_their_severity: true
+  record_fields: [escalation_id, member_findings, original_severities, escalated_severity, affected_gate, impact_rationale]
+
+finding_rules:
+  granularity: one_semantic_defect_independently_evidenced_and_independently_corrected
+  sentence_or_token_level_findings_required: false
+  multi_category:
+    one_finding_may_carry_multiple_violation_tags: true
+    severity_assigned_once_from_total_impact: true
+    all_affected_gates_receive_the_finding: true
+    counted_once_in_summaries: true
+  free_indirect_thought: evaluate_semantic_content_one_assertion_one_finding
+  ambiguous_speaker_hedged_guess: UNDETERMINED     # when context and boundary do not settle narrator vs character
+  dialogue:
+    literal_source_wording_required: false
+    allowed: [translation, natural_paraphrase, compression, spoken_language_adaptation]
+    not_allowed: [invented_factual_content, invented_knowledge, invented_intention, invented_promise_or_agreement,
+                  stronger_certainty, new_causal_claims, new_relationship_implications]
 
 soft_dimensions:
   rating_scale: {min: 1, max: 5, anchors: {1: poor, 3: usable_with_noticeable_editing, 5: publication_ready_for_this_dimension}}
@@ -128,8 +187,12 @@ verdicts:       # evaluated in order; first match wins
     when: "all gates GATE_PASS, no applicable soft dimension < 3, OVERALL_USEFULNESS >= 4, edit cost MINIMAL"
   - id: PASS_WITH_MINOR_EDITS
     when: "otherwise (gates PASS or CONDITIONAL, no soft dimension < 3, edit cost MINIMAL or MODERATE)"
+verdict_kinds:
+  REVIEW_TRACE_VERDICT: "follows from the reviewer's recorded states; any reviewer may compute it"
+  OFFICIAL_CONTRACT_VERDICT: "REVIEW_REQUIRED whenever the required human audit of the semantic gates is missing"
 verdict_rules:
   weighted_average_used: false
+  ai_only_review_can_yield_official_pass: false
   absence_of_automated_findings_is_pass: false
   automated_metric_thresholds_frozen: false
 
@@ -207,4 +270,9 @@ versioning:
     - soft_vs_hard_assignment_changed
   validator_evidence_updates_change_contract: false
 
+operational_dry_run:
+  evidence: benchmarks/m1_script_quality/evaluations/CONTRACT_V0_DRY_RUN/
+  reviewer: AI agent (not the independent human review)
+  result_before_repair: SCRIPT_QUALITY_V0_NEEDS_REPAIR
+  repair_note: benchmarks/m1_script_quality/evaluations/CONTRACT_V0_DRY_RUN/POST_REPAIR_NOTE.md
 m1_closure_recommendation: READY_FOR_M1_CONTRACT_FREEZE_REVIEW

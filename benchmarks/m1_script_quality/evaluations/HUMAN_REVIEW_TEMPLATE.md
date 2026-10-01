@@ -1,6 +1,6 @@
 # Human Review Template
 
-**CANDIDATE — aligned with `SCRIPT_QUALITY_CONTRACT/v0` (candidate). Not frozen.**
+**CANDIDATE — aligned with `SCRIPT_QUALITY_CONTRACT/v0` (repaired candidate). Not frozen.**
 
 Contract: `docs/contracts/SCRIPT_QUALITY_CONTRACT_V0.md`. Section numbers below refer to it.
 
@@ -10,27 +10,53 @@ Rules for the reviewer:
 - Every finding and every rating needs a cited passage and a reason. A rating without evidence is invalid.
 - Do not average. Integrity is decided by gates; narrative dimensions are separate.
 
-## 0. Review Header
+## 0. Request Record
+
+Fill this in first. The review must be readable without opening other files.
 
 - Script / run ID:
+- Requested scope (story range, and the story point up to which information is authorized):
+- Truth boundary (file or view used):
+- Target language and register:
+- Target length or duration:
+- Length tolerance:
+- Counting method (and the count obtained):
+- Spoiler mode:
+- Relevant Narrative Profile constraints (perspective, tone, humor level, hook style, other hard constraints):
+
+## 1. Review Header
+
 - Reviewer role:
+- Reviewer kind: human / AI or model-assisted
+- Human audit of the semantic gates done: yes / no
 - Date:
-- Requested scope:
-- Truth boundary used:
-- Narrative Profile (language, register, length target, spoiler mode):
+- Contract version and commit:
 - Automated checks consulted (if any):
 
-## 1. Part A — Integrity (hard gates)
+## 2. Part A — Integrity (hard gates)
 
-*Did the script keep the story true?*
+*Did the script keep the story true, and is it the deliverable that was requested?*
 
-Record each finding once, using the taxonomy in section 13.
+Record each finding once (section 13.1):
 
-| # | Script passage | Taxonomy ID | Claim type (§4.1) | Severity (§14) | Boundary evidence, or "absent" | Suggested fix |
-|---|---|---|---|---|---|---|
-| 1 | | | | | | |
+- One finding is one semantic defect that can be evidenced and corrected on its own. Bundle words that express the same error; split different propositions.
+- If one claim breaks more than one invariant, keep one finding, give it a primary taxonomy ID and list the other violation tags. It counts once, and every affected gate receives it.
+- Judge dialogue and unquoted thoughts by their meaning (sections 4.4 and 13.1).
+- If a hedged guess could be the narrator's or a character's and nothing settles it, use claim type `UNDETERMINED` (section 5.3).
 
-Then give each gate a status: `GATE_PASS` (nothing above LOW), `GATE_CONDITIONAL` (MEDIUM, none material), `GATE_FAIL` (any HIGH or CRITICAL), `GATE_NOT_DETERMINED` (could not be evaluated).
+| # | Script passage | Primary taxonomy ID | Other violation tags | Claim type (§4.1) | Severity (§14) | Invariant(s) | Gate(s) | Boundary evidence, or "absent" | Reason | Suggested fix |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | | | | | | | | | | |
+
+Severity is assigned by impact on the audience's understanding or on the requested deliverable. For length and other request findings it depends on the repair scope, not on a percentage (section 14.1).
+
+**Cumulative escalations** (section 14.4). Member findings keep their own severities.
+
+| `escalation_id` | `member_findings` | `original_severities` | `escalated_severity` | `affected_gate` | `impact_rationale` |
+|---|---|---|---|---|---|
+| | | | | | |
+
+Then give each gate a status: `GATE_PASS` (nothing above LOW), `GATE_CONDITIONAL` (MEDIUM, none material), `GATE_FAIL` (any HIGH or CRITICAL, including an escalation), `GATE_NOT_DETERMINED` (could not be evaluated).
 
 | Gate | Status | Finding numbers | Note |
 |---|---|---|---|
@@ -44,16 +70,17 @@ Then give each gate a status: `GATE_PASS` (nothing above LOW), `GATE_CONDITIONAL
 
 Prompts for the reviewer:
 
-- Any event, action, posture or detail the boundary does not contain?
+- Any event, action, posture, spoken line or detail the boundary does not contain?
 - Any motive, intention, feeling or thought stated as fact without support?
 - Any "might" turned into "will", "some" into "all", "seems" into "knows"?
 - Any rumour or self-report restated as narrator fact?
 - After reordering, is the true order of events still clear?
 - Is anything from beyond the requested scope stated or implied?
 - Is anything left out that the audience needs to understand what is told?
-- Stray foreign-script tokens, meta text, or length outside the target (state the counting method)?
+- Stray foreign-script tokens or meta text?
+- Is the length inside tolerance? If not, can it be fixed locally, or does it need changes across the script?
 
-## 2. Part B — Narrative (soft dimensions)
+## 3. Part B — Narrative (soft dimensions)
 
 *Did the script tell the story effectively, for this profile?*
 
@@ -72,9 +99,9 @@ Rating anchors: **1** poor · **3** usable with noticeable editing · **5** stro
 
 Judge appropriateness and effectiveness, not quantity. A script is not better for having more jokes.
 
-## 3. Edit Cost
+## 4. Edit Cost
 
-Choose one and say why (section 18):
+Choose one, list the concrete edits, and say why (section 18):
 
 - `MINIMAL` — word-level fixes
 - `MODERATE` — several sentences rewritten, softened or removed; structure stays
@@ -82,9 +109,10 @@ Choose one and say why (section 18):
 - `REWRITE` — faster to write again
 
 Edit cost:
+Concrete edits:
 Reason:
 
-## 4. Verdict
+## 5. Verdict
 
 Apply section 16 in order:
 
@@ -93,10 +121,17 @@ Apply section 16 in order:
 3. `PASS` — all gates `GATE_PASS`, no soft dimension below 3, `OVERALL_USEFULNESS` at least 4, edit cost `MINIMAL`.
 4. `PASS_WITH_MINOR_EDITS` — otherwise.
 
-Verdict:
+Record both verdicts:
+
+- `REVIEW_TRACE_VERDICT` (from the states recorded above):
+- Decision trace:
+- `OFFICIAL_CONTRACT_VERDICT`:
+
+If no human has audited the semantic gates (factual grounding, epistemic, temporal/state, spoiler, coverage), those gates are `GATE_NOT_DETERMINED` for the official verdict, and `OFFICIAL_CONTRACT_VERDICT` is `REVIEW_REQUIRED`. An AI or model-assisted review alone never gives an official `PASS` or `PASS_WITH_MINOR_EDITS`.
+
 Single biggest remaining problem:
 
-## 5. Comparison (only when reviewing two scripts)
+## 6. Comparison (only when reviewing two scripts)
 
 - Which would you rather narrate, and why?
 - Which needs less editing to publish (edit cost for each)?

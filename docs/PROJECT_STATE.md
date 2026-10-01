@@ -4,7 +4,7 @@
 
 M2 — Canonical Story Model capability: COMPLETE / FROZEN (Canonical Story Model v0: FROZEN / ACCEPTED, DEC-016).
 
-M1 research: CLOSED. M1 Formal Script Quality Contract: FIX REQUIRED (`SCRIPT_QUALITY_CONTRACT/v0` candidate; operational dry-run found one semantic gap; not frozen).
+M1 research: CLOSED. M1 Formal Script Quality Contract: REPAIRED CANDIDATE — READY FOR FREEZE REVIEW (`SCRIPT_QUALITY_CONTRACT/v0`; not frozen).
 
 Project transition to M3: PENDING closure of the outstanding M1 Formal Script Quality Contract, unless the roadmap dependency is explicitly amended by a future decision. M3 has not started.
 
@@ -13,7 +13,7 @@ Project transition to M3: PENDING closure of the outstanding M1 Formal Script Qu
 - M0 — Product Foundation: CLOSED.
 - M1 — Script Quality & Narrative Contract:
   - Empirical / research program: CLOSED for the current scope.
-  - Formal Script Quality Contract: FIX REQUIRED (`SCRIPT_QUALITY_CONTRACT/v0` candidate, not frozen). The design was accepted for an operational dry-run; the dry-run found a semantic gap in length / request-compliance handling. The M1 capability gate is therefore not yet complete.
+  - Formal Script Quality Contract: REPAIRED CANDIDATE — READY FOR FREEZE REVIEW (`SCRIPT_QUALITY_CONTRACT/v0`, not frozen). The operational dry-run found a semantic gap in length / request-compliance handling; the candidate was repaired before freeze. The M1 capability gate is not complete until the contract is frozen.
 - M2 — Canonical Story Model: capability COMPLETE / FROZEN (DEC-016). The expected capability has been established as `canonical_story/v0` + `predicate_registry/v0.1`. M2 ran under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015).
 - M3: NOT STARTED. Transition is pending closure of the M1 Formal Script Quality Contract, unless a future decision amends that roadmap dependency. The roadmap is unchanged.
 
@@ -627,6 +627,20 @@ M1-SCRIPT-QUALITY-V0-OPERATIONAL-DRY-RUN — COMPLETED — Status: M1_SCRIPT_QUA
 - **Artifacts.** `benchmarks/m1_script_quality/evaluations/CONTRACT_V0_DRY_RUN/` (two reviews, summary, cross-check and findings); `tests/script_quality/test_verdict_sanity_v0.py`.
 - **Recommendation.** SCRIPT_QUALITY_V0_NEEDS_REPAIR. The contract is not frozen. `DECISIONS.md`, `ROADMAP.md`, the candidate contract files and all frozen M2 artifacts are unchanged. M3 has not started.
 
+M1-SCRIPT-QUALITY-V0-CANDIDATE-REPAIR — COMPLETED — Status: M1_SCRIPT_QUALITY_V0_REPAIRED_READY_FOR_FREEZE_REVIEW
+
+- **Orchestrator decision applied.** `GATE_REQUEST_COMPLIANCE` stays a real hard gate. Severity semantics were repaired so that request and output violations can be material by impact and repair scope. No percentage bands were introduced.
+- **Severity.** Severity now measures impact on the audience's understanding or on the correctness and usability of the requested deliverable. The four levels are unchanged. Request-compliance and output-integrity severity tables were added.
+- **Calibration examples.** RUN_0003 (900–1100 requested, 1648 recorded, about one third to remove across the script, edit cost MAJOR) is HIGH and fails the gate. A small local overrun is MEDIUM and makes the gate conditional. Severity is a review judgement from repair scope, not a calculation.
+- **Clarifications.** Dialogue is judged by meaning; one finding may carry several violation tags and counts once; free indirect thought is one finding per assertion; a hedged guess with an unclear speaker is UNDETERMINED; cumulative escalation has its own record and members keep their severities; finding granularity is defined.
+- **Taxonomy.** Added `INVENTED_SPEECH` and `UNSUPPORTED_DESCRIPTIVE_ATTRIBUTE` under `UNSUPPORTED_INVENTION`. Earlier IDs remain valid.
+- **Template.** Request record first; escalation table; `REVIEW_TRACE_VERDICT` separated from `OFFICIAL_CONTRACT_VERDICT`. An AI-only review cannot yield an official PASS.
+- **Unchanged.** Verdict labels and order; human audit of the semantic gates; H7 Stage B not executed, confirmatory verdict NOT_EVALUATED.
+- **Dry-run history.** The locked first-pass files are untouched (hashes verified by test). `POST_REPAIR_NOTE.md` and `POST_REPAIR_REEVALUATION.yaml` re-derive only the affected logic: RUN_0003 length HIGH, request gate FAIL, trace verdict FAIL; RUN_0004 unchanged.
+- **Identity.** Version stays `SCRIPT_QUALITY_CONTRACT/v0` (never frozen). Candidate status: `CANDIDATE_REPAIRED_PENDING_ORCHESTRATOR_FREEZE_REVIEW`.
+- **Tests.** script_quality 55/55; canonical_story 99/99; story_benchmark 298/298; story_ingestion 20/20.
+- The contract is not frozen. `DECISIONS.md`, `ROADMAP.md` and all frozen M2 artifacts are unchanged. M3 has not started.
+
 ## Next Candidate
 
-Orchestrator repair task for the Script Quality Contract v0 candidate (decide how length non-compliance affects the request-compliance gate; then apply the non-breaking clarifications). No freeze and no M3 work before that, unless the roadmap dependency is explicitly amended by a future decision.
+Orchestrator freeze review of the repaired Script Quality Contract v0 candidate. No freeze and no M3 work before that decision, unless the roadmap dependency is explicitly amended by a future decision.

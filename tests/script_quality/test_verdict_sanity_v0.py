@@ -3,6 +3,7 @@
 The helper below is a test-only transcription of the contract's gate-status and
 verdict rules. It is NOT a production evaluator. Deterministic; no model, API or network.
 """
+import inspect
 import itertools
 import unittest
 from pathlib import Path
@@ -113,6 +114,70 @@ class TestVerdictLogicProperties(unittest.TestCase):
             unaudited = {g: ("GATE_NOT_DETERMINED" if g in SEMANTIC_GATES else s) for g, s in run["gates"].items()}
             self.assertEqual(verdict(unaudited, run["soft_dimensions"], run["edit_cost"]),
                              run["strict_contract_verdict"])
+
+
+class TestLengthSeverityAfterRepair(unittest.TestCase):
+    """Request-compliance findings can be material; severity is a review judgement, not a formula."""
+
+    def test_l1_small_local_length_violation_is_conditional(self):
+        self.assertEqual(gate_status("GATE_REQUEST_COMPLIANCE", ["MEDIUM"], True), "GATE_CONDITIONAL")
+        self.assertEqual(review({"GATE_REQUEST_COMPLIANCE": ["MEDIUM"]}, edit_cost="MODERATE"),
+                         "PASS_WITH_MINOR_EDITS")
+
+    def test_l2_large_structural_length_violation_fails(self):
+        self.assertEqual(gate_status("GATE_REQUEST_COMPLIANCE", ["HIGH"], True), "GATE_FAIL")
+        self.assertEqual(review({"GATE_REQUEST_COMPLIANCE": ["HIGH"]}, edit_cost="MAJOR"), "FAIL")
+
+    def test_l3_narrative_scores_cannot_compensate(self):
+        self.assertEqual(review({"GATE_REQUEST_COMPLIANCE": ["HIGH"]}, soft={d: 5 for d in SOFT}), "FAIL")
+
+    def test_l4_severity_is_supplied_by_judgement_not_computed_from_magnitude(self):
+        # Two reviews of outputs with the SAME request and the SAME word count may differ in severity,
+        # because repair scope differs. Nothing in the logic reads a word count or a percentage.
+        same_numbers = {"requested_max_words": 1100, "output_words": 1300}
+        local_repair = dict(same_numbers, judged_severity="MEDIUM")
+        structural_repair = dict(same_numbers, judged_severity="HIGH")
+        statuses = [gate_status("GATE_REQUEST_COMPLIANCE", [r["judged_severity"]], True)
+                    for r in (local_repair, structural_repair)]
+        self.assertEqual(statuses, ["GATE_CONDITIONAL", "GATE_FAIL"])
+        for fn in (gate_status, verdict):
+            self.assertFalse({"words", "length", "percentage", "ratio"} & set(inspect.signature(fn).parameters))
+        basis = CANDIDATE["severity_basis"]
+        self.assertFalse(basis["computed_from_percentage_or_count"])
+        self.assertFalse(basis["percentage_bands_defined"])
+        self.assertFalse(CANDIDATE["calibration_examples"][0]["generalizes_to_all_similar_magnitudes"])
+
+    def test_request_compliance_gate_needs_no_semantic_audit_flag(self):
+        self.assertNotIn("GATE_REQUEST_COMPLIANCE", SEMANTIC_GATES)
+
+    def test_post_repair_reevaluation_of_dry_run(self):
+        reeval = yaml.safe_load((REPO / "benchmarks/m1_script_quality/evaluations/CONTRACT_V0_DRY_RUN"
+                                 / "POST_REPAIR_REEVALUATION.yaml").read_text(encoding="utf-8"))
+        summary = yaml.safe_load((REPO / "benchmarks/m1_script_quality/evaluations/CONTRACT_V0_DRY_RUN"
+                                  / reeval["first_pass_summary"]).read_text(encoding="utf-8"))
+        a = reeval["reviews"]["RUN_0003_H2_STORY_BRIEF"]
+        b = reeval["reviews"]["RUN_0004_H6_CRITIC"]
+        self.assertEqual((a["changed_findings"][0]["severity_after"], a["gates"]["GATE_REQUEST_COMPLIANCE"]),
+                         ("HIGH", "GATE_FAIL"))
+        self.assertFalse(a["changed_findings"][0]["severity_computed_from_percentage"])
+        self.assertEqual(b["gates"]["GATE_REQUEST_COMPLIANCE"], "GATE_PASS")
+        self.assertEqual(b["changed_findings"], [])
+        for run_id, run in reeval["reviews"].items():
+            first = summary["reviews"][run_id]
+            self.assertEqual(verdict(run["gates"], first["soft_dimensions"], run["edit_cost"]),
+                             run["review_trace_verdict"])
+            unaudited = {g: ("GATE_NOT_DETERMINED" if g in SEMANTIC_GATES else s) for g, s in run["gates"].items()}
+            self.assertEqual(run["official_contract_verdict"], "REVIEW_REQUIRED")
+            self.assertIn(verdict(unaudited, first["soft_dimensions"], run["edit_cost"]), ("REVIEW_REQUIRED", "FAIL"))
+        # Length alone: every other gate passing, good narrative scores, MAJOR repair.
+        length_only = {g: "GATE_PASS" for g in GATES}
+        length_only["GATE_REQUEST_COMPLIANCE"] = "GATE_FAIL"
+        self.assertEqual(verdict(length_only, {d: 4 for d in SOFT}, "MAJOR"),
+                         a["length_alone_trace_verdict"]["after_repair"])
+        escalation = a["escalations"][0]
+        self.assertEqual(len(escalation["member_findings"]), len(escalation["original_severities"]))
+        self.assertEqual(set(escalation) - {"escalation_id"} | {"escalation_id"},
+                         set(CANDIDATE["cumulative_escalation"]["record_fields"]))
 
 
 if __name__ == "__main__":

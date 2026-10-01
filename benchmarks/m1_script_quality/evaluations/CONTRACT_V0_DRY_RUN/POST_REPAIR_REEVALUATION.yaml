@@ -1,0 +1,57 @@
+# Re-derivation of the logic changed by M1-SCRIPT-QUALITY-V0-CANDIDATE-REPAIR.
+# The locked first-pass files are not modified. The semantic review was not redone.
+task: M1-SCRIPT-QUALITY-V0-CANDIDATE-REPAIR
+contract_version: SCRIPT_QUALITY_CONTRACT/v0
+first_pass_summary: DRY_RUN_SUMMARY.yaml
+first_pass_files_modified: false
+semantic_review_redone: false
+reviewer: AI agent (not the independent human review)
+
+reviews:
+  RUN_0003_H2_STORY_BRIEF:
+    changed_findings:
+      - id: A29
+        taxonomy: REQUEST_NONCOMPLIANCE/LENGTH_NONCOMPLIANCE
+        severity_before: MEDIUM
+        severity_after: HIGH
+        reason: "about one third must be removed, across most paragraphs; cannot be repaired locally (section 14.1)"
+        severity_computed_from_percentage: false
+    escalations:
+      - escalation_id: ESC-A-01
+        member_findings: [A05, A06, A07, A12, A15, A18, A23, A24, A27]
+        original_severities: [MEDIUM, MEDIUM, LOW, LOW, LOW, LOW, LOW, MEDIUM, LOW]
+        escalated_severity: HIGH
+        affected_gate: GATE_FACTUAL_GROUNDING
+        impact_rationale: "nine invented motives or internal states of one character together change how that character is understood"
+    gates:
+      GATE_FACTUAL_GROUNDING: GATE_FAIL
+      GATE_EPISTEMIC_INTEGRITY: GATE_FAIL
+      GATE_TEMPORAL_STATE_INTEGRITY: GATE_PASS
+      GATE_SPOILER_DISCIPLINE: GATE_PASS
+      GATE_NECESSARY_COVERAGE: GATE_PASS
+      GATE_OUTPUT_INTEGRITY: GATE_PASS
+      GATE_REQUEST_COMPLIANCE: GATE_FAIL          # was GATE_CONDITIONAL before the repair
+    edit_cost: MAJOR
+    review_trace_verdict: FAIL
+    official_contract_verdict: REVIEW_REQUIRED
+    length_alone_trace_verdict: {before_repair: REVIEW_REQUIRED, after_repair: FAIL}
+  RUN_0004_H6_CRITIC:
+    changed_findings: []
+    escalations: []
+    gates:
+      GATE_FACTUAL_GROUNDING: GATE_CONDITIONAL
+      GATE_EPISTEMIC_INTEGRITY: GATE_CONDITIONAL
+      GATE_TEMPORAL_STATE_INTEGRITY: GATE_PASS
+      GATE_SPOILER_DISCIPLINE: GATE_PASS
+      GATE_NECESSARY_COVERAGE: GATE_PASS
+      GATE_OUTPUT_INTEGRITY: GATE_PASS
+      GATE_REQUEST_COMPLIANCE: GATE_PASS          # 1074 words recorded; inside 900-1100
+    edit_cost: MODERATE
+    review_trace_verdict: PASS_WITH_MINOR_EDITS
+    official_contract_verdict: REVIEW_REQUIRED
+
+unchanged:
+  verdict_labels_and_order: true
+  human_audit_required_for_semantic_gates: true
+  h7_stage_b_executed: false
+  h7_confirmatory_verdict: NOT_EVALUATED
