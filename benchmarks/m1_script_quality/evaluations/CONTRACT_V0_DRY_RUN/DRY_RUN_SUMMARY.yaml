@@ -1,0 +1,114 @@
+# Script Quality Contract v0 — operational dry-run, FIRST-PASS SUMMARY
+# Locked before the historical cross-check. Not edited afterwards.
+task: M1-SCRIPT-QUALITY-V0-OPERATIONAL-DRY-RUN
+contract_version: SCRIPT_QUALITY_CONTRACT/v0
+contract_commit: cacdc2daf02d85c5f83e0daf9e48cf31dd272cd6
+contract_modified_during_first_pass: false
+reviewer: AI agent (operational dry-run; NOT the independent human review required by contract section 16)
+models_invoked_for_generation_or_criticism: none
+purpose: test whether the rubric can be applied; not a test of any Writer or critic
+
+inputs_used: [contract, human review template, run manifests, prompts referenced by the manifests, truth boundary, scripts]
+isolation:
+  historical_reviews_reopened_during_first_pass: false
+  critic_report_and_critic_review_read: false
+  h6b_reference_and_h7_outputs_read: false
+  reviewer_naive: false
+  disclosure: "Earlier in the same working session the reviewer read the H1/H2/H6 comparison documents and the H6b residual analysis for the contract-drafting task. Independence of the first pass from those documents cannot be claimed."
+
+truth_boundary: benchmarks/m1_script_quality/runs/RUN_0003_H2_STORY_BRIEF/story_brief.yaml
+request: {output_language: vi, length_words: "900-1100", requested_scope: "chapter 1 only", spoiler_mode: NONE}
+
+reviews:
+  RUN_0003_H2_STORY_BRIEF:
+    review: RUN_0003_REVIEW.md
+    script: benchmarks/m1_script_quality/runs/RUN_0003_H2_STORY_BRIEF/script.md
+    length: {recorded_words: 1648, whitespace_recount: 1565, in_range: false}
+    findings: {total: 29, CRITICAL: 0, HIGH: 1, MEDIUM: 9, LOW: 19}
+    cumulative_escalation: {applied: true, set: MOTIVE_OR_INTERNAL_STATE_INVENTION, findings: 9, escalated_to: HIGH}
+    gates:
+      GATE_FACTUAL_GROUNDING: GATE_FAIL            # by cumulative escalation; GATE_CONDITIONAL without it
+      GATE_EPISTEMIC_INTEGRITY: GATE_FAIL          # one HIGH knowledge overclaim
+      GATE_TEMPORAL_STATE_INTEGRITY: GATE_PASS
+      GATE_SPOILER_DISCIPLINE: GATE_PASS
+      GATE_NECESSARY_COVERAGE: GATE_PASS
+      GATE_OUTPUT_INTEGRITY: GATE_PASS
+      GATE_REQUEST_COMPLIANCE: GATE_CONDITIONAL    # length MEDIUM under the existing wording
+    soft_dimensions:
+      HOOK_STRENGTH: 3
+      NARRATIVE_FLOW: 3
+      PACING: 2
+      EMOTIONAL_IMPACT: 3
+      HUMOR_COMMENTARY_QUALITY: 4
+      CALLBACK_QUALITY: 4
+      NARRATION_NATURALNESS: 4
+      OVERALL_USEFULNESS: 2
+    edit_cost: MAJOR
+    dry_run_verdict: FAIL
+    dry_run_trace: "GATE_EPISTEMIC_INTEGRITY = GATE_FAIL -> FAIL"
+    strict_contract_verdict: REVIEW_REQUIRED       # no human audit: semantic gates GATE_NOT_DETERMINED
+    verdict_sensitivity: "FAIL vs REVIEW_REQUIRED rests on the severity of one finding (A22). PASS and PASS_WITH_MINOR_EDITS unreachable."
+  RUN_0004_H6_CRITIC:
+    review: RUN_0004_REVIEW.md
+    script: benchmarks/m1_script_quality/runs/RUN_0004_H6_CRITIC/revised_script.md
+    length: {recorded_words: 1074, whitespace_recount: 1021, in_range: true}
+    findings: {total: 19, CRITICAL: 0, HIGH: 0, MEDIUM: 4, LOW: 15}
+    cumulative_escalation: {applied: false}
+    gates:
+      GATE_FACTUAL_GROUNDING: GATE_CONDITIONAL
+      GATE_EPISTEMIC_INTEGRITY: GATE_CONDITIONAL
+      GATE_TEMPORAL_STATE_INTEGRITY: GATE_PASS
+      GATE_SPOILER_DISCIPLINE: GATE_PASS
+      GATE_NECESSARY_COVERAGE: GATE_PASS
+      GATE_OUTPUT_INTEGRITY: GATE_PASS
+      GATE_REQUEST_COMPLIANCE: GATE_PASS
+    soft_dimensions:
+      HOOK_STRENGTH: 4
+      NARRATIVE_FLOW: 4
+      PACING: 4
+      EMOTIONAL_IMPACT: 4
+      HUMOR_COMMENTARY_QUALITY: 3
+      CALLBACK_QUALITY: 3
+      NARRATION_NATURALNESS: 3
+      OVERALL_USEFULNESS: 4
+    edit_cost: MODERATE
+    dry_run_verdict: PASS_WITH_MINOR_EDITS
+    dry_run_trace: "no GATE_FAIL -> no NOT_DETERMINED, no soft <= 2, edit cost not MAJOR -> gates not all PASS -> PASS_WITH_MINOR_EDITS"
+    strict_contract_verdict: REVIEW_REQUIRED
+
+length_edge_case:      # RUN_0003: target 900-1100, recorded 1648
+  severity_under_existing_wording: MEDIUM
+  reason: "Section 14 lists 'length outside tolerance' as a typical MEDIUM case. HIGH and CRITICAL are defined by story interpretation or an unusable deliverable; neither fits. No rule scales severity with the size of the overrun."
+  required_repair: MAJOR
+  gate_status: GATE_CONDITIONAL
+  verdict_from_length_alone: REVIEW_REQUIRED      # through edit cost MAJOR, not through the gate
+  assessment: CONTRACT_SEMANTIC_GAP
+  gap: "Section 15 says GATE_REQUEST_COMPLIANCE fails on 'requested length or scope not met', but under sections 14-15 a length finding can never be material, so the gate cannot fail on length. A 1-word and a 500-word overrun get the same gate status."
+
+materiality_sanity_check:
+  levels_assigned_without_contradiction: [LOW, MEDIUM, HIGH]
+  CRITICAL: "not observed in either script; definition was usable to rule it out"
+  examples:
+    - {kind: unsupported minor staging, findings: [A13, A16, B15], severity: LOW}
+    - {kind: unsupported motive or internal state, findings: [A05, A06, A24, B14], severity: MEDIUM}
+    - {kind: internal state close to supported content, findings: [A07, A23, B04, B18], severity: LOW}
+    - {kind: certainty inflation, findings: [A11, A14, B16], severity: MEDIUM}
+    - {kind: certainty inflation with negligible impact, findings: [A28, B05, B19], severity: LOW}
+    - {kind: knowledge overclaim resolving the scope's central unknown, findings: [A22], severity: HIGH}
+    - {kind: major factual contradiction, findings: [], severity: "none observed"}
+    - {kind: length noncompliance, findings: [A29], severity: MEDIUM}
+    - {kind: pacing weakness, findings: [], note: "soft dimension PACING = 2 for RUN_0003; not a severity"}
+  observation: "Severity by impact was workable for story-truth findings. The same family received different levels by impact, as section 14 intends. The framework has no described HIGH case for request or output findings."
+
+operational_issues_first_pass:
+  - {id: OP-01, issue: "Length severity and GATE_REQUEST_COMPLIANCE 'fails on' wording conflict; no magnitude rule"}
+  - {id: OP-02, issue: "Severity definitions are story-centric; request/output findings have MEDIUM and CRITICAL examples but no HIGH"}
+  - {id: OP-03, issue: "No subtype for invented speech or invented descriptive attributes; recorded at parent level"}
+  - {id: OP-04, issue: "No stated fidelity standard for reconstructed or translated direct quotes"}
+  - {id: OP-05, issue: "No tie-break when PREMATURE_SPOILER and CERTAINTY_INFLATION both apply (boundary-level suggestion about the future stated as fact)"}
+  - {id: OP-06, issue: "Free indirect thought: one finding or two (the thought, and its content)"}
+  - {id: OP-07, issue: "Hedged guess: narrator's or character's is sometimes undecidable"}
+  - {id: OP-08, issue: "Cumulative escalation decided a gate; no guidance on recording the escalated set"}
+  - {id: OP-09, issue: "Request and Narrative Profile had to be assembled from manifest plus prompt"}
+  - {id: OP-10, issue: "Recorded word count method unstated; two counts differ by 5%"}
+  - {id: OP-11, issue: "Template has no place to distinguish a provisional AI trace from the contract verdict"}
