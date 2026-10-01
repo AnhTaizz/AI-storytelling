@@ -1,0 +1,33 @@
+# Sample source manifest for LIGHT_NOVEL_INGESTION/v0 (tracked sample documents only).
+# Identifiers are opaque. `path` is adapter metadata, not identity.
+contract_version: LIGHT_NOVEL_INGESTION/v0
+story_id: story-sample-0001
+stream_id: stream-sample-0001-main
+source_language: ja
+story_editorial_label: Tracked sample story
+documents:
+  - document_id: srcdoc-sample-0001
+    order: 1
+    path: raw/chapter_001.txt
+    expected_sha256: 917ec0448e01dbb3eff0564280f2abd13d42db507cbf34e9bb716af0f538fe45
+    editorial_label: Sample document 1
+  - document_id: srcdoc-sample-0002
+    order: 2
+    path: raw/chapter_002.txt
+    expected_sha256: fa3540edfb0aabfc38d58d7ee6e893c7a41274ebf734044393e5d40c7f1ac35e
+    editorial_label: Sample document 2
+  - document_id: srcdoc-sample-0003
+    order: 3
+    path: raw/chapter_003.txt
+    expected_sha256: 9c907a851a0018c748613356a8c3ed9e699d4d7854077704d1b402f8db00973f
+    editorial_label: Sample document 3
+  - document_id: srcdoc-sample-0004
+    order: 4
+    path: raw/chapter_004.txt
+    expected_sha256: 6539b73367673a91cd99236d818811702982759cf033b5a179cdf001ae20f525
+    editorial_label: Sample document 4
+  - document_id: srcdoc-sample-0005
+    order: 5
+    path: raw/chapter_005.txt
+    expected_sha256: d7afe58aae4b5086c4ea88b99b9caee3cde4ee9fd26df5971b75a122fa345fd5
+    editorial_label: Sample document 5

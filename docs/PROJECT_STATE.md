@@ -2,7 +2,7 @@
 
 ## Current Milestone
 
-Next milestone: M3 — Light Novel Ingestion. Status: READY TO START. M3 has not started; no M3 work exists yet.
+M3 — Light Novel Ingestion: IN PROGRESS. Current task: M3-01 Light Novel Ingestion Contract & Adapter Baseline (complete, pending Orchestrator review). M3 is not complete. M4 has not started.
 
 M1 — Script Quality & Narrative Contract: COMPLETE / FROZEN (`SCRIPT_QUALITY_CONTRACT/v0`, DEC-017).
 
@@ -16,7 +16,8 @@ M2 — Canonical Story Model capability: COMPLETE / FROZEN (Canonical Story Mode
   - Formal Script Quality Contract: FROZEN / ACCEPTED — `SCRIPT_QUALITY_CONTRACT/v0`, DEC-017, freeze record `benchmarks/m1_script_quality/SCRIPT_QUALITY_CONTRACT_V0_FREEZE_RECORD.yaml`.
   - The contract defines the standard. It does not show that any current Writer or critic meets it. The M9 Script Quality Gate is not evaluated.
 - M2 — Canonical Story Model: capability COMPLETE / FROZEN (DEC-016). The expected capability has been established as `canonical_story/v0` + `predicate_registry/v0.1`. M2 ran under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015).
-- M3 — Light Novel Ingestion: READY TO START. Not started. Its roadmap dependencies (M1, M2) are complete. The roadmap is unchanged.
+- M3 — Light Novel Ingestion: IN PROGRESS (M3-01 baseline delivered; nothing frozen). Not complete. The roadmap is unchanged.
+- M4: NOT STARTED.
 
 *Correction (M2-02): an earlier version of this section labelled M1 "COMPLETED / CLOSED FOR CURRENT RESEARCH SCOPE". That overstated completion while the formal Script Quality Contract remains open. The M1 research program is closed; the contract is not.*
 
@@ -659,6 +660,28 @@ M1-FREEZE-SCRIPT-QUALITY-CONTRACT-V0 — COMPLETED — Status: M1_SCRIPT_QUALITY
 - **Accepted limitations.** Narrow evidence base; independent human use of the rubric pending; no inter-reviewer agreement measurement; no calibrated automatic thresholds; incomplete critic detection; coverage procedure not operationalized; long-range script behaviour untested; materiality needs reviewer judgement.
 - M1 is COMPLETE / FROZEN. M2 remains COMPLETE / FROZEN (DEC-016), untouched. M3 is READY TO START and has not been started. `ROADMAP.md` is unchanged.
 
+M3-01-LIGHT-NOVEL-INGESTION-CONTRACT-AND-ADAPTER-BASELINE — COMPLETED — Status: M3_01_LIGHT_NOVEL_ADAPTER_BASELINE_READY_FOR_ORCHESTRATOR_REVIEW
+
+- **Purpose.** Establish a source-generic Light Novel ingestion contract and a deterministic baseline adapter. M3 records where evidence came from; it interprets nothing.
+- **Contract `LIGHT_NOVEL_INGESTION/v0`** (research baseline, not frozen): `docs/research/m3/M3_LIGHT_NOVEL_INGESTION_CONTRACT_V0.md`.
+  - Manifest schema with caller-supplied opaque ids, unique order, SHA-256 per document; path is metadata only.
+  - `SourceDocument.version` is the SHA-256 of the exact bytes. Document identity and version are distinct.
+  - Corpus fingerprint binds contract version, story, stream and the ordered document ids and versions; location does not affect it.
+  - No text normalization: bytes are hashed, strictly decoded and sliced.
+  - `PARAGRAPH_SEGMENT_V0`: each run of non-blank lines is one segment; a long paragraph is never split. A SourceSegment is a provenance unit, not a retrieval chunk.
+  - `DiscoursePosition` key is [document order, segment ordinal]. It is presentation order, not story time.
+  - `TEXT_RANGE_V0` locator with exact character (code point) and byte ranges and a text hash.
+  - Opaque deterministic segment ids derived from the document version; a changed document gets new segment ids.
+  - `SourcePassageRef` for exact sub-spans. The adapter creates no EvidenceRef; a helper materializes one only when the caller supplies the role.
+- **Adapter.** `tools/story_ingestion/light_novel_adapter_v0.py` emits a canonical source-layer skeleton (story, source documents, source segments; all later collections empty) that passes the frozen `canonical_story/v0` validator, plus a deterministic report. It fails closed.
+- **No M4 work.** No entities, events, mentions, propositions, assertions or evidence roles. No model, network or database.
+- **Tests.** story_ingestion 70/70 (50 new, 20 existing paragraph-pack tests unchanged); canonical_story 99/99; script_quality 64/64; story_benchmark 298/298.
+- **Tracked-sample smoke.** Five already-tracked sample documents: 353 segments, all round-trips pass, skeleton conforms. Only mechanical data is recorded. The private corpus was not used.
+- **Historical `PARAGRAPH_PACK_V1`.** Unchanged (hash checked by test). It is retrieval-benchmark infrastructure, not the M3 contract; no code is shared.
+- **Frozen contracts.** M1 and M2 frozen artifacts are hash-identical. `DECISIONS.md` and `ROADMAP.md` are unchanged.
+- **Result.** `benchmarks/m3_ingestion/M3_01_LIGHT_NOVEL_ADAPTER_BASELINE_RESULT.yaml`.
+- M3 is IN PROGRESS, not complete. M3-02 and M4 have not started.
+
 ## Next Candidate
 
-M3 — Light Novel Ingestion: READY TO START, awaiting an Orchestrator task. No M3 work has been done.
+Orchestrator review of M3-01. Recommended M3-02: private validation on the full controlled corpus and traceability from historical chunks to M3 segments. Not started.

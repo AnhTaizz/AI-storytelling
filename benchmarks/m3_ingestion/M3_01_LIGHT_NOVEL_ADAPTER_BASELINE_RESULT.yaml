@@ -1,0 +1,108 @@
+# M3-01 — Light Novel ingestion contract and adapter baseline (mechanical result; no source text)
+task: M3-01-LIGHT-NOVEL-INGESTION-CONTRACT-AND-ADAPTER-BASELINE
+status: M3_01_LIGHT_NOVEL_ADAPTER_BASELINE_READY_FOR_ORCHESTRATOR_REVIEW
+base_commit: e30c0f31aa20ce23cb92bd381afb9837e2f36760
+milestone_status: {M1: COMPLETE_FROZEN, M2: COMPLETE_FROZEN, M3: IN_PROGRESS}
+frozen: false                      # research baseline; nothing is frozen and DECISIONS.md is unchanged
+
+contract:
+  contract_version: LIGHT_NOVEL_INGESTION/v0
+  adapter_version: light_novel_adapter_v0/0.1.0
+  segmentation_version: PARAGRAPH_SEGMENT_V0
+  locator_kind: TEXT_RANGE_V0
+  passage_ref_kind: SOURCE_PASSAGE_REF_V0
+  document: docs/research/m3/M3_LIGHT_NOVEL_INGESTION_CONTRACT_V0.md
+  manifest_schema: schemas/light_novel_ingestion/light_novel_source_manifest_v0.schema.json
+  adapter: tools/story_ingestion/light_novel_adapter_v0.py
+
+scope:
+  produces: [SourceDocument, SourceSegment, TEXT_RANGE_V0 locators, SourcePassageRef, canonical source-layer skeleton, ingestion report]
+  does_not_produce: [EvidenceRef roles, Mention, Entity, Event, Proposition, Assertion, any story interpretation]
+  model_api_network_database_embeddings_used: false
+  text_normalization_applied: false
+
+canonical_compatibility:
+  target: canonical_story/v0
+  frozen_m2_artifacts_modified: false
+  skeleton_structural_conformance: PASS
+  skeleton_semantic_conformance: PASS
+  conflict_found: false
+  notes:
+    - "SourceDocument.version is the SHA-256 of the exact source bytes (64 characters; the schema allows at most 64)."
+    - "The locator is adapter-owned, as the schema intends (SourceLocator requires only `kind`)."
+    - "EvidenceRef requires a role, so the adapter emits no EvidenceRef. It offers a helper that takes the role from the caller."
+
+tests:
+  requires_model_api_or_network: false
+  story_ingestion: {passed: 70, total: 70, of_which_new_adapter_tests: 50, of_which_existing_paragraph_pack_tests: 20}
+  canonical_story: {passed: 99, total: 99}
+  script_quality: {passed: 64, total: 64}
+  story_benchmark: {passed: 298, total: 298}
+
+synthetic_coverage:          # numbers follow the task's required list
+  1_one_document_one_paragraph: PASS
+  2_multiple_paragraphs: PASS
+  3_multiple_ordered_documents: PASS
+  4_crlf: PASS
+  5_unicode_multibyte: PASS
+  6_leading_trailing_blank_regions: PASS
+  7_multi_line_paragraph: PASS
+  8_very_long_paragraph_one_segment: PASS
+  9_bad_utf8_rejected: PASS
+  10_sha_mismatch_rejected: PASS
+  11_duplicate_document_id_rejected: PASS
+  12_duplicate_order_rejected: PASS
+  13_changed_bytes_change_version_and_fingerprint: PASS
+  14_changed_order_changes_fingerprint: PASS
+  15_relocation_keeps_fingerprint: PASS
+  16_deterministic_repeated_run: PASS
+  17_exact_char_round_trip: PASS
+  18_exact_byte_round_trip: PASS
+  19_invalid_sub_span_rejected: PASS
+  20_canonical_skeleton_validates: PASS
+  additional:
+    - missing file, invalid manifest, unsafe path, id collision, empty document rejected
+    - lone CR as line terminator; Unicode separators do not end a line
+    - byte-order mark preserved and reported, never stripped
+    - tampered and stale passage references rejected
+    - evidence role must be supplied by the caller; no default
+    - re-ingestion after a change gives new segment ids for the changed document only
+
+tracked_source_smoke:
+  manifest: data/sample/otonari_no_tenshi/wn_jp/LIGHT_NOVEL_SOURCE_MANIFEST_SAMPLE_V0.yaml
+  source: "five already-tracked sample documents; no new source text added; private corpus not used"
+  document_count: 5
+  segment_count: 353
+  corpus_fingerprint_sha256: 1ec4acef7168522533733616a2370daf5e287533559fe6e948ef4e1a4396877a
+  canonical_source_layer_sha256: b84108664f16bfedc0f70aea24b358c79f95bb94f8034c032cc92737f1c81bb2
+  round_trip_all_segments: PASS
+  canonical_structural_conformance: PASS
+  canonical_semantic_conformance: PASS
+  documents:
+    - {order: 1, version: 917ec0448e01dbb3eff0564280f2abd13d42db507cbf34e9bb716af0f538fe45, byte_length: 8324, char_length: 2926, segment_count: 61, max_segment_chars: 107}
+    - {order: 2, version: fa3540edfb0aabfc38d58d7ee6e893c7a41274ebf734044393e5d40c7f1ac35e, byte_length: 8366, char_length: 2972, segment_count: 82, max_segment_chars: 87}
+    - {order: 3, version: 9c907a851a0018c748613356a8c3ed9e699d4d7854077704d1b402f8db00973f, byte_length: 12221, char_length: 4303, segment_count: 103, max_segment_chars: 90}
+    - {order: 4, version: 6539b73367673a91cd99236d818811702982759cf033b5a179cdf001ae20f525, byte_length: 7951, char_length: 2799, segment_count: 67, max_segment_chars: 86}
+    - {order: 5, version: d7afe58aae4b5086c4ea88b99b9caee3cde4ee9fd26df5971b75a122fa345fd5, byte_length: 4335, char_length: 1531, segment_count: 40, max_segment_chars: 79}
+  observation: "In this sample every paragraph is short (at most 107 characters), so PARAGRAPH_SEGMENT_V0 gives fine-grained segments. The no-split rule for long paragraphs was exercised only on synthetic input."
+
+historical_paragraph_pack:
+  module: tools/story_ingestion/paragraph_pack_v1.py
+  status: unchanged (hash checked by test); its 20 tests still pass
+  relationship: "Historical research chunking for the retrieval benchmark. Not the M3 contract. The adapter shares no code with it."
+  not_adopted: [OTONARI_LOCAL_PASSAGE_V1, PARAGRAPH_PACK_V1 packing, 1200-character hard split, chNNN_cNNNN ids, 30-chapter assumptions, hard-coded private paths, ordinal-only corpus fingerprint]
+  historical_fingerprint: "7f9bb810... remains the identity of the historical benchmark corpus; it is not a LIGHT_NOVEL_INGESTION/v0 fingerprint"
+
+known_limitations:
+  - "Plain UTF-8 text only. No EPUB, HTML, ruby/furigana markup, illustrations or front matter handling."
+  - "Paragraphs are separated only by blank lines. A source that separates paragraphs by single line breaks yields one segment per block of consecutive lines."
+  - "Any change to a document's bytes gives all of its segments new ids. There is no mapping between versions of a document."
+  - "Discourse positions have segment granularity. A sub-span reference shares its segment's position."
+  - "One discourse stream per manifest (as in canonical_story/v0)."
+  - "Character offsets are Unicode code points, not UTF-16 units or grapheme clusters."
+  - "A byte-order mark is treated as source content and stays in the first segment."
+  - "The adapter holds whole documents in memory; no streaming."
+  - "Evidence roles and paratext detection are out of scope; front or back matter inside a document is segmented like any other text."
+  - "Validated on synthetic input and five tracked sample documents of one story. The private 30-document corpus was not used."
+
+next_step_recommendation: "M3-02: validate the adapter on the full controlled corpus (privately), compare segment spans with the historical chunk spans for traceability, and decide whether the contract is ready for a freeze review."
