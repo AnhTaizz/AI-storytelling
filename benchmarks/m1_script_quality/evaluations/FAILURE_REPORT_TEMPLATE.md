@@ -18,6 +18,8 @@ Requires Architecture Change: YES / NO / UNKNOWN
 
 ## Failure Categories (PROVISIONAL)
 
+*Note: `SCRIPT_QUALITY_CONTRACT/v0` (candidate, not frozen) organizes these categories into a parent/subtype hierarchy with a severity model. See `docs/contracts/SCRIPT_QUALITY_CONTRACT_V0.md` sections 13–14. All names below remain valid there. Earlier failure reports are not rewritten.*
+
 - FACTUAL_ERROR
 - TEMPORAL_ERROR
 - CHARACTER_STATE_ERROR

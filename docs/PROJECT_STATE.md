@@ -4,6 +4,8 @@
 
 M2 — Canonical Story Model capability: COMPLETE / FROZEN (Canonical Story Model v0: FROZEN / ACCEPTED, DEC-016).
 
+M1 research: CLOSED. M1 Formal Script Quality Contract: CANDIDATE PENDING ORCHESTRATOR REVIEW (`SCRIPT_QUALITY_CONTRACT/v0`; not frozen).
+
 Project transition to M3: PENDING closure of the outstanding M1 Formal Script Quality Contract, unless the roadmap dependency is explicitly amended by a future decision. M3 has not started.
 
 ## Milestone Lifecycle
@@ -11,7 +13,7 @@ Project transition to M3: PENDING closure of the outstanding M1 Formal Script Qu
 - M0 — Product Foundation: CLOSED.
 - M1 — Script Quality & Narrative Contract:
   - Empirical / research program: CLOSED for the current scope.
-  - Formal Script Quality Contract: still OPEN. The M1 capability gate is therefore not fully complete.
+  - Formal Script Quality Contract: CANDIDATE PENDING ORCHESTRATOR REVIEW (`SCRIPT_QUALITY_CONTRACT/v0`, not frozen). The M1 capability gate is therefore not yet complete.
 - M2 — Canonical Story Model: capability COMPLETE / FROZEN (DEC-016). The expected capability has been established as `canonical_story/v0` + `predicate_registry/v0.1`. M2 ran under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015).
 - M3: NOT STARTED. Transition is pending closure of the M1 Formal Script Quality Contract, unless a future decision amends that roadmap dependency. The roadmap is unchanged.
 
@@ -590,6 +592,26 @@ M2-08-FREEZE-CANONICAL-STORY-MODEL-V0 — COMPLETED — Status: M2_08_CANONICAL_
 - **Scope.** Validation covers one 30-chapter story in one genre with one primary annotator. The freeze is a V0 engineering contract, not universal ontology completeness.
 - This is the final M2 research record. The M1 Formal Script Quality Contract remains OPEN. M3 has not started and the roadmap is unchanged.
 
+M1-FORMAL-SCRIPT-QUALITY-CONTRACT-V0-CANDIDATE — COMPLETED — Status: M1_SCRIPT_QUALITY_V0_CANDIDATE_READY (PENDING ORCHESTRATOR REVIEW)
+
+- **Purpose.** Formalize what a high-quality, grounded storytelling script must satisfy. The task defines the standard. It ran no model, proved nothing about the current Writer or critics, and did not freeze the contract.
+- **Artifacts.**
+  - `docs/contracts/SCRIPT_QUALITY_CONTRACT_V0.md` (candidate, 22 sections).
+  - `benchmarks/m1_script_quality/SCRIPT_QUALITY_CONTRACT_V0_CANDIDATE.yaml` (`status: CANDIDATE_PENDING_ORCHESTRATOR_REVIEW`).
+  - `benchmarks/m1_script_quality/evaluations/HUMAN_REVIEW_TEMPLATE.md` upgraded from provisional to candidate.
+  - `tests/script_quality/` (25 deterministic consistency tests).
+- **Contract shape.**
+  - 17 hard invariants in 7 hard gates: factual grounding, epistemic integrity, temporal/state integrity, spoiler discipline, necessary coverage, output integrity, request compliance.
+  - One failure taxonomy (parent/subtype) that keeps every provisional category and places all 8 H6b residual families as subtypes.
+  - Four severity levels defined by narrative impact; "material" means HIGH or CRITICAL.
+  - 8 soft narrative dimensions judged for appropriateness under a Narrative Profile, never averaged with gates.
+  - Verdicts FAIL / REVIEW_REQUIRED / PASS / PASS_WITH_MINOR_EDITS, decided by gates first, then usability and edit cost.
+  - Length, style, tone and spoiler mode are Narrative Profile or request constraints, not universal standards.
+- **Validator evidence (history, not part of the standard).** H1, H2, H6: PARTIALLY_SUPPORTED. H6b: SUPPORTED as a narrow comparative claim, with 22 of 33 reference issues still missed. H7: Stage A development evidence only (RUN_0010 strict mechanical contract PASS); Stage B not executed; confirmatory verdict NOT_EVALUATED.
+- **Consequence recorded in the contract.** In v0 the semantic gates need a human audit; absence of automated findings is not a pass.
+- **Disclosed limitations.** One story and early controlled runs; Project Owner reviews still pending; the rubric has not yet been exercised by a human reviewer on a real script; no calibrated automatic thresholds; coverage is defined conceptually only.
+- **Recommendation.** READY_FOR_M1_CONTRACT_FREEZE_REVIEW. The contract is not frozen. `DECISIONS.md`, `ROADMAP.md` and all frozen M2 artifacts are unchanged. M3 has not started.
+
 ## Next Candidate
 
-Orchestrator action on the still-open M1 Formal Script Quality Contract. No M3 work before that, unless the roadmap dependency is explicitly amended by a future decision.
+Orchestrator review of the Script Quality Contract v0 candidate and a freeze decision. No M3 work before that, unless the roadmap dependency is explicitly amended by a future decision.
