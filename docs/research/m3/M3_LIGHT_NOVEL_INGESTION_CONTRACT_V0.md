@@ -1,13 +1,17 @@
 # M3 — Light Novel Ingestion Contract v0
 
-Status: RESEARCH BASELINE — TASK M3-01. Pending Orchestrator review. **Not frozen.** Not recorded in `DECISIONS.md`.
+Status: **FROZEN / ACCEPTED** (2026-10-01, Master Orchestrator / Project Owner authorization). Recorded in `DECISIONS.md` as DEC-018.
+
+Freeze record (exact frozen identity and hashes): `benchmarks/m3_ingestion/LIGHT_NOVEL_INGESTION_V0_FROZEN.yaml`
+
+History: baseline delivered in M3-01, validated on the private 30-document corpus in M3-02, frozen in M3-03. At freeze, only clarifications were added (the segment boundary rules in section 7, the evidence-role rule in section 13, and sections 19–20). The segmentation algorithm, locators, identifiers and fingerprint did not change.
 
 Contract identity: `LIGHT_NOVEL_INGESTION/v0`
 
 | Artifact | Role |
 |---|---|
 | `schemas/light_novel_ingestion/light_novel_source_manifest_v0.schema.json` | Input manifest contract (JSON Schema Draft 2020-12, as notation) |
-| `tools/story_ingestion/light_novel_adapter_v0.py` | Deterministic baseline adapter (`light_novel_adapter_v0/0.1.0`) |
+| `tools/story_ingestion/light_novel_adapter_v0.py` | Validated reference implementation (`light_novel_adapter_v0/0.1.0`); see section 19 |
 | `tests/story_ingestion/test_light_novel_adapter_v0.py` | Synthetic tests and one tracked-sample smoke test |
 | `benchmarks/m3_ingestion/M3_01_LIGHT_NOVEL_ADAPTER_BASELINE_RESULT.yaml` | Mechanical result of this task |
 
@@ -145,6 +149,26 @@ Blank characters (code points): `0009`, `000B`, `000C`, `0020`, `0085`, `00A0`, 
 
 A document with no non-blank text is rejected.
 
+### 7.1 SourceSegment semantic boundary
+
+A `SourceSegment` is a mechanical provenance unit: a deterministic container produced from source formatting. It is **not** guaranteed to correspond to one semantic paragraph, scene, speaker, evidence role or content class.
+
+Its boundary is determined by the `PARAGRAPH_SEGMENT_V0` source-format rules above, not by any understanding of the text.
+
+### 7.2 Mixed-content segments
+
+A segment may contain material that later receives different semantic roles, when the source places that material in the same non-blank run. Examples, by category:
+
+- heading + prose;
+- author note + prose;
+- narration + dialogue.
+
+This does not make the ingestion invalid. Interpreting the content belongs downstream. Such segments are accepted V0 behaviour; they are not claimed to be ideal.
+
+### 7.3 Granularity rule
+
+Segment granularity follows controlled source formatting and may legitimately differ between documents. One document may yield one segment per line, another one segment per block of lines.
+
 ## 8. DiscoursePosition Mapping
 
 ```text
@@ -256,6 +280,12 @@ materialize_evidence_ref(source_passage_ref, evidence_role, evidence_id)
 - The helper checks mechanics only: the record kind, that the role is one of the five, and the id rule. It never infers or changes a role.
 - The resulting record has the segment id, the segment's position, the span locator and the role, and validates against the frozen schema.
 
+**Evidence-role rule (normative).**
+
+- An `EvidenceRole` is assigned to the exact `EvidenceRef` span.
+- No downstream component may infer that all text inside one `SourceSegment` shares one `EvidenceRole` merely because it shares a `SourceSegment`. In particular, M4 must not assume one segment equals one role.
+- A `SOURCE_PASSAGE_REF_V0` sub-span may be used to materialize a role-specific `EvidenceRef`. Two spans of one segment may carry different roles.
+
 ## 14. Re-ingestion Behaviour
 
 | Situation | Document version | Corpus fingerprint | Segment ids |
@@ -334,15 +364,59 @@ The adapter fails closed. It raises one error type with a code and never repairs
 7. **A byte-order mark stays in the first segment.**
 8. **Whole documents are held in memory.**
 9. **No paratext detection.** Front or back matter inside a document is segmented like any other text; deciding it is paratext is an evidence-role decision for M4.
-10. **Narrow validation.** Synthetic input and five tracked sample documents of one story. In that sample no paragraph exceeds 107 characters, so the long-paragraph rule was exercised only synthetically. The private 30-document corpus was not used in M3-01.
+10. **Narrow validation.** Synthetic input, five tracked sample documents, and the private 30-document corpus of one story, one source and one language. The longest real segment has 299 characters, so the no-split rule for long paragraphs was exercised only synthetically.
+11. **Mixed semantic material can share a segment** (sections 7.1–7.2). On the validated corpus, 16 of 1519 segments join a heading or an author note with adjacent story text.
+12. **Granularity differs between documents** (section 7.3).
 
-## 18. Next M3 Validation Step
+These limitations are accepted for V0. They do not invalidate it.
 
-Recommended M3-02:
+## 18. Validation Status
 
-1. Run the adapter privately on the full controlled corpus and record mechanical results only.
-2. Check traceability from the historical retrieval chunks to M3 segment spans (every historical chunk span should be covered by whole segments, apart from terminators).
-3. Review limitation 2 against real sources: is blank-line separation enough?
-4. Decide whether `LIGHT_NOVEL_INGESTION/v0` is ready for a freeze review.
+- **M3-01:** 50 synthetic adapter tests and a smoke test over five tracked sample documents. Result: `benchmarks/m3_ingestion/M3_01_LIGHT_NOVEL_ADAPTER_BASELINE_RESULT.yaml`.
+- **M3-02:** private validation on the 30-document controlled corpus: 1519 segments, exact round-trip, byte-identical independent reruns, canonical conformance, and all 97 historical retrieval chunks traced to segments with none untraceable. Result: `benchmarks/m3_ingestion/M3_02_PRIVATE_CORPUS_VALIDATION_RESULT.yaml` and `M3_PRIVATE_CORPUS_INGESTION_VALIDATION.md`.
 
-M3 is not complete. M4 has not started.
+## 19. Normative Artifacts and Reference Implementation
+
+**Normative contract artifacts.** These define `LIGHT_NOVEL_INGESTION/v0`:
+
+- this document;
+- `schemas/light_novel_ingestion/light_novel_source_manifest_v0.schema.json`.
+
+**Validated reference implementation.** `tools/story_ingestion/light_novel_adapter_v0.py`, identity `light_novel_adapter_v0/0.1.0`.
+
+- It is a validated, executable reference for the frozen contract.
+- It is not the contract, and it is not the only implementation that may conform to V0.
+- A later implementation may replace or refactor it if it preserves the frozen externally observable semantics and passes conformance evidence.
+
+Canonical dependency: `canonical_story/v0` with `predicate_registry/v0.1` (DEC-016).
+
+## 20. Evolution Rules
+
+**Implementation patch.** Allowed without changing `LIGHT_NOVEL_INGESTION/v0` when all of these hold:
+
+- contract outputs and identity semantics do not change;
+- manifest acceptance semantics do not change;
+- segmentation output for the same valid input does not change;
+- the corpus fingerprint does not change;
+- locator meaning does not change;
+- passage-reference semantics do not change;
+- regression and conformance tests pass.
+
+A patch gets a new adapter implementation version and a validation record.
+
+**Contract-breaking change.** A new ingestion contract version is required for any change to:
+
+- manifest semantics;
+- `SourceDocument` version semantics;
+- the corpus fingerprint;
+- `PARAGRAPH_SEGMENT` semantics;
+- segment identity semantics;
+- the `DiscoursePosition` mapping;
+- the meaning of `TEXT_RANGE`;
+- the meaning of `SOURCE_PASSAGE_REF`;
+- source-preservation guarantees;
+- the M3/M4 evidence-role boundary.
+
+There is no silent change to V0. Frozen artifacts are not modified in place.
+
+M3 is frozen. M4 has not started.

@@ -551,6 +551,61 @@ RELATED: DEC-001, DEC-004, DEC-006, DEC-009, DEC-012, DEC-013, DEC-014, DEC-016
 
 ---
 
+## DEC-018 — Light Novel Ingestion Contract v0 Freeze
+
+STATUS: ACCEPTED (Master Orchestrator / Project Owner authorization, 2026-10-01, TASK M3-03)
+
+DECISION:
+`LIGHT_NOVEL_INGESTION/v0` is the project's initial contract for ingesting controlled Light Novel text.
+
+1. The contract is `docs/research/m3/M3_LIGHT_NOVEL_INGESTION_CONTRACT_V0.md` with the source manifest schema.
+2. Exact source bytes are authoritative for provenance.
+3. Source text is never normalized before provenance is established.
+4. `SourceDocument` identity and version are distinct. The version is the SHA-256 of the exact bytes.
+5. The corpus fingerprint is deterministic and independent of filesystem location.
+6. `PARAGRAPH_SEGMENT_V0` is a provenance segmentation strategy. It is not retrieval chunking.
+7. `SourceSegment` boundaries follow source formatting and do not guarantee semantic homogeneity. A segment may hold story prose together with a heading, an author note or dialogue when the source does not separate them.
+8. Exact character and byte locators (`TEXT_RANGE_V0`) are normative.
+9. `SOURCE_PASSAGE_REF_V0` supports role-neutral references to exact sub-spans.
+10. `EvidenceRole` is downstream semantic interpretation. It is assigned per `EvidenceRef` span, never inferred for a whole segment.
+11. Retrieval chunks remain independent of segments but must trace to source provenance.
+12. The reference adapter `light_novel_adapter_v0/0.1.0` is empirically validated. It is not the only implementation that may conform.
+13. The known limitations below are accepted for V0.
+14. The exact frozen identity is defined by `benchmarks/m3_ingestion/LIGHT_NOVEL_INGESTION_V0_FROZEN.yaml` and the hashes it binds. That record, not this text, defines what is frozen.
+
+EMPIRICAL BASIS:
+- Synthetic and public: 50 adapter tests; 20 historical story-ingestion tests preserved; a smoke test over five tracked sample documents.
+- Private real source: 30 documents, 1519 segments; all 97 historical retrieval chunks traceable, none untraceable.
+- Determinism: two independent runs byte-identical.
+- Canonical compatibility: structural and semantic conformance to `canonical_story/v0`.
+
+ACCEPTED ISSUE I-01:
+16 mixed-content segments (a heading or author note joined with adjacent story text because the source has no blank separator). Classified KNOWN_LIMITATION / NON_BLOCKING and accepted for V0. A segment is provenance, not a semantically homogeneous unit; exact sub-span references remain available; roles belong to evidence spans. Mixed segments are accepted behaviour, not claimed to be ideal.
+
+SCOPE OF THE CLAIM:
+Validation covers one story, one source and one language. The freeze is a stable V0 ingestion contract for controlled plain text. It is not a claim about other formats or sources.
+
+ACCEPTED KNOWN LIMITATIONS:
+- Controlled plain-text UTF-8 only; no EPUB, HTML, ruby or furigana adapter.
+- Segmentation depends on blank-line source formatting; granularity can differ between documents; mixed semantic material can share a segment.
+- No automatic migration or alignment between versions of a document.
+- A sub-span shares its segment's `DiscoursePosition`; one discourse stream per manifest.
+- Whole documents are held in memory; a byte-order mark is preserved as source content.
+- No paratext or evidence-role inference in M3.
+- The real corpus has no paragraph over 1200 characters, so the no-split rule is stress-tested only synthetically.
+
+IMMUTABILITY:
+Frozen V0 artifacts are not modified in place. An implementation patch that preserves all externally observable semantics gets a new adapter version and a validation record. Any change to manifest, version, fingerprint, segmentation, segment identity, position mapping, locator or passage-reference meaning, source-preservation guarantees, or the M3/M4 evidence-role boundary requires a new contract version (contract section 20).
+
+BOUNDARIES:
+- This decision does NOT select a database, embedding model, extraction model or retrieval design.
+- This decision does NOT start M4 and does NOT amend the roadmap.
+- This decision does NOT change `PARAGRAPH_PACK_V1`, which remains historical benchmark infrastructure.
+
+RELATED: DEC-002, DEC-003, DEC-007, DEC-008, DEC-010, DEC-016
+
+---
+
 ## Proposed Research Protocol Decisions
 
 ### PROPOSED_PROTOCOL_REVISION_MULTI_GOLD_SCOPE

@@ -1,0 +1,149 @@
+# Light Novel Ingestion Contract v0 — FREEZE RECORD (sanitized; no source content)
+#
+# Freezes a stable V0 ingestion contract for controlled plain-text Light Novel sources.
+# It is not a claim about other formats or sources. Decision: docs/DECISIONS.md, DEC-018.
+task: M3-03-FREEZE-LIGHT-NOVEL-INGESTION-V0
+freeze_status: FROZEN
+contract_version: LIGHT_NOVEL_INGESTION/v0
+
+segmentation_version: PARAGRAPH_SEGMENT_V0
+locator_kind: TEXT_RANGE_V0
+passage_ref_kind: SOURCE_PASSAGE_REF_V0
+
+canonical_dependency:
+  schema: canonical_story/v0
+  registry: predicate_registry/v0.1
+  decision: DEC-016
+
+authorized_validation_commit: 11e66b40fe1e1d5c88898e13826801b87ed3269e
+
+approval:
+  role: Master Orchestrator / Project Owner authorization
+  date: 2026-10-01
+  basis: "Explicit authorization in task M3-03 (M3-01 and M3-02 accepted; I-01 classified KNOWN_LIMITATION / NON_BLOCKING; freeze authorized)"
+  recorded_by: "AI agent acting as release / architecture record maintainer; the agent transcribed the authorization and did not originate it"
+decision_record: docs/DECISIONS.md#DEC-018
+
+# SHA-256 of the committed (LF) blob content.
+normative_contract_artifacts:        # these define LIGHT_NOVEL_INGESTION/v0
+  artifacts:
+    ingestion_contract:
+      path: docs/research/m3/M3_LIGHT_NOVEL_INGESTION_CONTRACT_V0.md
+      sha256: b36f50ae5c763c3ecd4e7b9255a72bc7b0b7d4644c3caf0d151c030a6c75c31c
+    source_manifest_schema:
+      path: schemas/light_novel_ingestion/light_novel_source_manifest_v0.schema.json
+      sha256: 0954262399899af0f0d92a322b36f8bfbed379a980c86bc2ff8b2513c897623d
+
+validated_reference_implementation:  # executable reference; NOT normative contract semantics by itself
+  identity: light_novel_adapter_v0/0.1.0
+  role: "validated executable reference for the frozen contract; not the only implementation that may conform"
+  byte_identical_to_validated_version: true
+  artifacts:
+    light_novel_adapter:
+      path: tools/story_ingestion/light_novel_adapter_v0.py
+      sha256: a1f57330993e7eaa7ac56793cfaa6dca42e508fe925127cd7241e46bc9042709
+
+public_validation_evidence:          # kept unchanged; not normative
+  artifacts:
+    m3_01_baseline_result:
+      path: benchmarks/m3_ingestion/M3_01_LIGHT_NOVEL_ADAPTER_BASELINE_RESULT.yaml
+      sha256: 353f2b24fe75b36eca581ff88f4935505e4c0f81f7118c431e0920372dff1738
+    m3_02_private_corpus_validation_result:
+      path: benchmarks/m3_ingestion/M3_02_PRIVATE_CORPUS_VALIDATION_RESULT.yaml
+      sha256: 0a55e5e48d2335711ea989e9151aa42c24e6844b755e4fa586749e80181cf13d
+    m3_02_validation_document:
+      path: docs/research/m3/M3_PRIVATE_CORPUS_INGESTION_VALIDATION.md
+      sha256: b9cb42eca00d2dd3cbbff94a70c867ddcb6ebc7b4fe8a162f3f8858d1cde58b0
+    adapter_tests:
+      path: tests/story_ingestion/test_light_novel_adapter_v0.py
+      sha256: e8e48b5c926c1f0e677e2a9714d2da3e6a77facd95a750ff2e3a3fb9fce9271d
+    tracked_sample_manifest:
+      path: data/sample/otonari_no_tenshi/wn_jp/LIGHT_NOVEL_SOURCE_MANIFEST_SAMPLE_V0.yaml
+      sha256: 227efa70dc6931d120e926bd98d20662bbe0906896492109f28e46edf55753a1
+
+private_validation_evidence:         # local only, never committed
+  package: M3_02_PRIVATE_VALIDATION_V1.zip
+  package_sha256: 1f3b45f1019bbc91cef9e77b129530e25a7e5905b98b22013b3eb095cbdd9bd9
+  package_files: 19
+  validation_summary_sha256: e77e54317e7201f733bbba09c93cd37a033e264bee43b521d482544601be4088
+  legacy_chunk_trace_sha256: dee41ec050bcfd853d95e88477a67e4e3e2e6a1aba8781e4d04fc5e8ac6f6839
+  private_manifest_sha256: c6da51b5642496d233149dfb2537df5c648eb4a63ce248f8ac50ea4a7c2d62cd
+  reverified_at_freeze: true
+
+changes_at_freeze:
+  ingestion_contract: "status; clarifications (segment semantic boundary, mixed-content segments, granularity, evidence-role rule); normative/reference distinction; evolution rules"
+  source_manifest_schema: none
+  reference_adapter: none
+  segmentation_locator_identity_or_fingerprint_semantics: none
+
+empirical_basis:
+  synthetic_and_public:
+    new_adapter_tests: 50
+    historical_story_ingestion_tests_preserved: 20
+    tracked_smoke_corpus_documents: 5
+  private_real_source:
+    source_documents: 30
+    source_segments: 1519
+    m3_corpus_fingerprint_sha256: ce0f493329ecc68bbb7b7c1e7d4c81de4d654d3c73505dd91e0a9d061c3ce370
+    exact_byte_and_char_round_trip: PASS
+    text_normalization: NONE
+    historical_retrieval_chunks: 97
+    chunks_exact_source_match: {passed: 97, total: 97}
+    chunks_nonblank_coverage: {passed: 97, total: 97}
+    chunks_traceable: {passed: 97, total: 97}
+    untraceable: 0
+  determinism: "two independent runs byte-identical"
+  canonical_compatibility:
+    canonical_story_v0_structural: PASS
+    canonical_story_v0_semantic: PASS
+  freeze_gate_tests:
+    requires_model_api_or_network: false
+    story_ingestion: {passed: 70, total: 70}
+    canonical_story: {passed: 99, total: 99}
+    script_quality: {passed: 64, total: 64}
+    story_benchmark: {passed: 298, total: 298}
+    m1_frozen_hash_mismatches: 0
+    m2_frozen_hash_mismatches: 0
+
+frozen_interpretation:
+  source_segment: "A SourceSegment is a deterministic provenance container produced from source formatting. It is not guaranteed to be semantically homogeneous."
+  evidence_role: "Evidence roles apply to exact evidence spans, not automatically to an entire SourceSegment."
+  m4_must_not_assume: "one SourceSegment == one EvidenceRole"
+  granularity: "Segment granularity follows controlled source formatting and may legitimately differ between documents."
+  retrieval: "SourceSegment != RetrievalChunk; retrieval units must trace to source provenance."
+
+accepted_issues:
+  - id: I-01
+    finding: "16 mixed-content SourceSegments (a heading or author note with adjacent story prose; the source has no blank separator)"
+    classification: KNOWN_LIMITATION / NON_BLOCKING
+    orchestrator_decision: ACCEPTED FOR V0
+    segmentation_verdict: PARAGRAPH_SEGMENT_V0_ACCEPTABLE_WITH_LIMITATION
+    rationale:
+      - "SourceSegment is provenance, not semantic homogeneity."
+      - "Exact sub-span references remain available."
+      - "EvidenceRole belongs to EvidenceRef spans."
+    note: "Accepted V0 behaviour. Not claimed to be ideal."
+
+known_limitations:                   # accepted for V0; they do not invalidate it
+  - "Controlled plain-text UTF-8 only"
+  - "No EPUB, HTML, ruby or furigana adapter"
+  - "Segmentation depends on blank-line source formatting"
+  - "Segment granularity can differ between documents"
+  - "Mixed semantic material can share a segment"
+  - "No automatic source-version migration or alignment"
+  - "A sub-span shares its segment's DiscoursePosition"
+  - "One discourse stream per manifest"
+  - "Full documents are held in memory"
+  - "A byte-order mark is preserved as source content"
+  - "No paratext or evidence-role inference in M3"
+  - "Validation covers one story, one source and one language"
+  - "The real corpus has no paragraph over 1200 characters, so the no-split stress case is synthetic"
+  - "The segment audit was done by an AI reviewer; most segments were not read individually"
+
+evolution:
+  implementation_patch: "Allowed under V0 only if outputs, identities, manifest acceptance, segmentation output, fingerprint, locator meaning and passage-reference semantics are unchanged and tests pass; new adapter version and validation record."
+  contract_breaking_change: "New ingestion contract version (contract section 20)."
+  silent_change_to_v0: false
+
+historical_paragraph_pack_v1: "unchanged; historical retrieval-benchmark infrastructure, not part of this contract"
+m4_started: false

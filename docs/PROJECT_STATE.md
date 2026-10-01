@@ -2,7 +2,9 @@
 
 ## Current Milestone
 
-M3 — Light Novel Ingestion: IN PROGRESS — ingestion contract real-source validated, pending freeze review (M3-01 accepted; M3-02 complete). M3 is not frozen and not complete. M4 has not started.
+Next milestone: M4 — Story Extraction. Status: READY TO START. M4 has not started; no M4 work exists yet.
+
+M3 — Light Novel Ingestion: COMPLETE / FROZEN (`LIGHT_NOVEL_INGESTION/v0`, DEC-018).
 
 M1 — Script Quality & Narrative Contract: COMPLETE / FROZEN (`SCRIPT_QUALITY_CONTRACT/v0`, DEC-017).
 
@@ -16,8 +18,8 @@ M2 — Canonical Story Model capability: COMPLETE / FROZEN (Canonical Story Mode
   - Formal Script Quality Contract: FROZEN / ACCEPTED — `SCRIPT_QUALITY_CONTRACT/v0`, DEC-017, freeze record `benchmarks/m1_script_quality/SCRIPT_QUALITY_CONTRACT_V0_FREEZE_RECORD.yaml`.
   - The contract defines the standard. It does not show that any current Writer or critic meets it. The M9 Script Quality Gate is not evaluated.
 - M2 — Canonical Story Model: capability COMPLETE / FROZEN (DEC-016). The expected capability has been established as `canonical_story/v0` + `predicate_registry/v0.1`. M2 ran under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015).
-- M3 — Light Novel Ingestion: IN PROGRESS — ingestion contract real-source validated, pending freeze review. Nothing frozen. Not complete. The roadmap is unchanged.
-- M4: NOT STARTED.
+- M3 — Light Novel Ingestion: COMPLETE / FROZEN — `LIGHT_NOVEL_INGESTION/v0`, DEC-018, freeze record `benchmarks/m3_ingestion/LIGHT_NOVEL_INGESTION_V0_FROZEN.yaml`. The roadmap is unchanged.
+- M4 — Story Extraction: READY TO START. Not started.
 
 *Correction (M2-02): an earlier version of this section labelled M1 "COMPLETED / CLOSED FOR CURRENT RESEARCH SCOPE". That overstated completion while the formal Script Quality Contract remains open. The M1 research program is closed; the contract is not.*
 
@@ -92,11 +94,15 @@ Foundation closure commit: dabc3f94e4e5dd028ef2f54d2ffe3a7d3f568f4d
 
 ## Implementation Status
 
-Application implementation has not started.
+*Current state (updated at the M3 freeze, 2026-10-01). This supersedes the earlier wording "Application implementation has not started", which is kept in the history sections as written at the time.*
+
+Implemented and frozen:
+- Canonical Story Model v0: schema, predicate registry, conformance validator and reference as-of projection (DEC-016).
+- Light Novel ingestion: the M3 reference ingestion adapter is implemented and frozen as the validated reference implementation for `LIGHT_NOVEL_INGESTION/v0` (DEC-018).
+
+Downstream Story Extraction and later application pipeline stages remain unimplemented.
 
 Not yet implemented:
-- Canonical Story Model
-- Light Novel ingestion
 - Story Extraction
 - Persistent Story Memory implementation
 - Retrieval implementation
@@ -697,6 +703,20 @@ M3-02-PRIVATE-CORPUS-INGESTION-AND-LEGACY-PROVENANCE-VALIDATION — COMPLETED �
 - **Artifacts.** `benchmarks/m3_ingestion/M3_02_PRIVATE_CORPUS_VALIDATION_RESULT.yaml`; `docs/research/m3/M3_PRIVATE_CORPUS_INGESTION_VALIDATION.md`. Private package SHA-256 `1f3b45f1019bbc91cef9e77b129530e25a7e5905b98b22013b3eb095cbdd9bd9`; not committed.
 - **Recommendation.** READY_FOR_M3_INGESTION_CONTRACT_FREEZE_REVIEW, with two contract clarifications proposed for the freeze. M3 is not frozen. `DECISIONS.md` is unchanged. M4 has not started.
 
+M3-03-FREEZE-LIGHT-NOVEL-INGESTION-V0 — COMPLETED — Status: M3_INGESTION_V0_FROZEN_M3_CLOSED
+
+- **Authorization.** The Master Orchestrator accepted M3-01 and M3-02, classified issue I-01 as KNOWN_LIMITATION / NON_BLOCKING, and authorized the freeze. The agent transcribed that authorization and did not originate it.
+- **Light Novel Ingestion Contract v0: FROZEN / ACCEPTED** (`DECISIONS.md` DEC-018).
+  - Contract `LIGHT_NOVEL_INGESTION/v0`; segmentation `PARAGRAPH_SEGMENT_V0`; locator `TEXT_RANGE_V0`; passage reference `SOURCE_PASSAGE_REF_V0`; canonical dependency `canonical_story/v0` + `predicate_registry/v0.1`.
+  - Freeze record: `benchmarks/m3_ingestion/LIGHT_NOVEL_INGESTION_V0_FROZEN.yaml`, SHA-256 `3839a5a94170c4619f65257ae4d0f1f468e979fd5c991afce315e81bd2fd032d`.
+  - Authorized validation commit `11e66b40fe1e1d5c88898e13826801b87ed3269e`.
+- **Normative versus reference.** The contract document and the manifest schema are normative. `light_novel_adapter_v0/0.1.0` is the validated reference implementation, not the only possible conforming one.
+- **Clarifications frozen with the contract.** A SourceSegment is a mechanical provenance unit and is not guaranteed to be semantically homogeneous. Evidence roles are assigned to exact evidence spans, never inferred for a whole segment. Segment granularity follows source formatting.
+- **I-01 accepted for V0.** 16 mixed-content segments. Accepted behaviour, not claimed to be ideal.
+- **No semantic change.** The adapter, the manifest schema and all validation evidence are byte-identical to the validation commit. Only the contract document changed (status and clarifications).
+- **Freeze gate (before any edit).** Private package SHA-256 and internal manifest verified (19 files); core M3-02 results re-read from public and private evidence; tests story_ingestion 70/70, canonical_story 99/99, script_quality 64/64, story_benchmark 298/298; M1 and M2 frozen hashes exact.
+- M1 COMPLETE / FROZEN (DEC-017). M2 COMPLETE / FROZEN (DEC-016). M3 COMPLETE / FROZEN (DEC-018). M4 is READY TO START and has not been started. `ROADMAP.md` is unchanged.
+
 ## Next Candidate
 
-Orchestrator review of M3-02: confirm or reject the non-blocking judgement on the 16 mixed segments, then decide on an M3 ingestion contract freeze review. Not started.
+M4 — Story Extraction: READY TO START, awaiting an Orchestrator task. No M4 work has been done.
