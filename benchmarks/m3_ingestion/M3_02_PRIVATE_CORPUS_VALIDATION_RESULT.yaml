@@ -1,0 +1,174 @@
+# M3-02 — private corpus ingestion and legacy provenance validation (sanitized; no source content)
+task: M3-02-PRIVATE-CORPUS-INGESTION-AND-LEGACY-PROVENANCE-VALIDATION
+status: M3_02_PRIVATE_VALIDATION_READY_FOR_FREEZE_REVIEW
+base_commit: fc83c623950290f7499bb53be1232f7d781f8719
+frozen: false                      # validation only; M3 is not frozen and DECISIONS.md is unchanged
+
+baseline_under_test:
+  contract_version: LIGHT_NOVEL_INGESTION/v0
+  adapter_version: light_novel_adapter_v0/0.1.0
+  adapter_sha256: a1f57330993e7eaa7ac56793cfaa6dca42e508fe925127cd7241e46bc9042709
+  adapter_or_contract_modified_in_this_task: false
+  segmentation_version: PARAGRAPH_SEGMENT_V0
+  locator_kind: TEXT_RANGE_V0
+  passage_ref_kind: SOURCE_PASSAGE_REF_V0
+  model_api_network_used: false
+
+corpus_identity:
+  document_count: 30
+  all_source_sha256_match_historical_manifest: true
+  historical_corpus_fingerprint_recomputed: 7f9bb8106d6d50acd2b3760738c0b8040f36ab547c2d2f7eade1ca0b9a827ff8
+  historical_chunks_sha256: 10ef5681ad1b2db0882c150efa24804cd0fca56bb38e0ffb772d22494e1e40fb
+  historical_chunk_count: 97
+  identity_check: PASS
+  private_manifest: "30 documents, one story id, one stream id, opaque document ids generated once and persisted"
+
+full_ingestion:
+  document_count: 30
+  segment_count: 1519
+  round_trip_verified: true
+  text_normalization_applied: false
+  unique_segment_ids: true
+  nonblank_characters_outside_segments: 0
+  m3_corpus_fingerprint_sha256: ce0f493329ecc68bbb7b7c1e7d4c81de4d654d3c73505dd91e0a9d061c3ce370
+  equals_historical_fingerprint: false       # expected: different identity contracts
+  canonical_structural_conformance: PASS
+  canonical_semantic_conformance: PASS
+
+determinism:
+  independent_process_runs: 2
+  canonical_source_layer_byte_identical: true
+  ingestion_report_byte_identical: true
+  same_document_versions: true
+  same_corpus_fingerprint: true
+  same_segment_ids: true
+  same_locators: true
+  same_discourse_positions: true
+  canonical_source_layer_sha256: 9ffb175131a5b16da4e43b29889a0da464f4b36cc1a0d57f63c3209eebe8c294
+  ingestion_report_sha256: 3b0d9fba413eaeee8d675ba920b04f1ab29119f5a63faa364bfca4eb49b2be89
+
+segmentation_profile:
+  segments_per_document: {min: 25, p50: 48, p90: 67, p95: 82, p99: 103, max: 103, mean: 50.63}
+  char_length: {min: 3, p50: 52, p90: 111, p95: 128, p99: 191, max: 299, mean: 60.08}
+  byte_length: {min: 9, p50: 156, p90: 326, p95: 377, p99: 553, max: 873, mean: 177.38}
+  single_line_segments: 938
+  multi_line_segments: 581
+  lines_per_segment_histogram: {1: 938, 2: 371, 3: 87, 4: 54, 5: 36, 6: 20, 7: 11, 8: 1, 9: 1}
+  documents_with_bom: 0
+  line_endings: {LF: 1187, CRLF: 3365, CR: 0}
+  documents_by_line_ending: {LF_only: 5, CRLF_only: 25, mixed_within_document: 0}
+  documents_with_leading_blank_region: 0
+  documents_with_trailing_blank_region: 1
+  blank_lines_between_consecutive_segments: {1: 1232, 2: 9, 3: 240, 4: 1, 5: 2, 7: 4, 11: 1}
+  diagnostic_length_buckets: {over_1200_chars: 0, over_2000_chars: 0, over_4000_chars: 0, over_8000_chars: 0}
+  note: "Diagnostics only. No maximum segment length is introduced."
+
+suspicious_segment_audit:
+  reviewer: AI agent reading the private text (not an independent human review)
+  inspected:
+    longest_segments: 12
+    stratified_random_segments: 18
+    marker_mixed_or_large_gap_scan_hits: 39
+    first_two_and_last_two_segments_of_every_document: 120
+    documents_with_fewest_segments: 3
+    segments_over_4000_chars: 0
+  not_individually_read: "about 1340 of 1519 segments"
+  classification_of_anomalies:
+    SOURCE_FORMATTING_ARTIFACT: 16
+    SEGMENTATION_DEFECT: 0
+    AMBIGUOUS: 0
+  source_formatting_artifact:
+    description: "The source has no blank line between a heading or an author note and the adjacent story line, so one segment contains both."
+    segments: 16
+    share_of_segments: 0.0105
+    documents_affected: 16
+    kinds: {heading_plus_story: 2, author_note_before_story: 3, story_plus_author_note: 11}
+    provenance_effect: "none: every line is addressable by an exact sub-span SourcePassageRef"
+    downstream_requirement: "M4 must assign evidence roles per span, never per segment"
+  multi_line_blocks: "In 25 documents a segment is a block of 1-9 consecutive lines (a run of dialogue lines or a run of narration lines). 10 blocks mix narration and dialogue. The grouping is the source's own."
+
+segmentation_fitness_verdict: PARAGRAPH_SEGMENT_V0_ACCEPTABLE_WITH_LIMITATION
+segmentation_verdict_note: "Under a strict reading (any mechanical joining of unrelated material is a defect) the 16 artifact segments would argue for NEEDS_REPAIR. They were judged non-blocking because no source text is lost, every line is exactly addressable, and evidence roles attach to spans, not segments. This judgement is put to the Orchestrator."
+
+legacy_chunk_trace:
+  historical_chunks_regenerated: false       # the exact historical artifact was used
+  chunk_count: 97
+  mapping_class_counts:
+    EXACT_SINGLE_SEGMENT: 2
+    MULTI_SEGMENT_SOURCE_RANGE: 95
+    SUBSEGMENT_OF_SOURCE_SEGMENT: 0
+    OTHER_VALID_COMPOSITION: 0
+    UNTRACEABLE: 0
+  exact_source_match: {passed: 97, total: 97}
+  nonblank_coverage_complete: {passed: 97, total: 97}
+  cross_boundary_issues: 0
+  segments_per_chunk: {min: 1, p50: 16, p90: 22, max: 36, mean: 15.66}
+  m3_segments_covered_exactly_once: 1519
+  m3_segments_covered_more_than_once: 0
+  m3_segments_not_covered: 0
+  mapping_rule: "A chunk maps to the ordered M3 segments that lie wholly inside its character range. Text in the range outside those segments must be only blank characters and line terminators. A chunk and its last segment may differ by one trailing line terminator."
+
+oversized_paragraph_cases:
+  historical_hard_split_chunks_in_real_corpus: 0
+  reason: "no paragraph in this corpus exceeds the historical 1200-character limit (longest segment: 299 characters)"
+  synthetic_demonstration:
+    oversized_paragraph_chars: 3100
+    m3_segments: 1
+    historical_hard_split_chunks: 3
+    exact_char_range: {passed: 3, total: 3}
+    exact_byte_range: {passed: 3, total: 3}
+    span_text_hash: {passed: 3, total: 3}
+    mapping_class: SUBSEGMENT_OF_SOURCE_SEGMENT
+
+source_passage_ref_validation:
+  whole_segment_refs_built_and_verified: {passed: 1519, total: 1519}
+  representative_samples: [single-segment chunk, multi-segment chunk, real multi-byte sub-span, synthetic oversized-paragraph sub-spans]
+  evidence_role_supplied_for_real_passages: false
+  mechanical_evidence_ref_smoke: {input: synthetic text only, role_supplied_explicitly: true, canonical_conformance: PASS, semantic_claim: false}
+
+issues:
+  - {id: I-01, class: KNOWN_LIMITATION, severity: NON_BLOCKING, finding: "16 segments join a heading or author note with adjacent story text"}
+  - {id: I-02, class: SOURCE_FORMAT_VARIATION, severity: NON_BLOCKING, finding: "Two formatting styles in one corpus; segment granularity is line-level in 5 documents and block-level in 25"}
+  - {id: I-03, class: NO_ISSUE, severity: NON_BLOCKING, finding: "LF and CRLF documents coexist; both preserved exactly"}
+  - {id: I-04, class: LEGACY_TRACEABILITY_ONLY, severity: NON_BLOCKING, finding: "No real hard-split chunk exists; sub-segment mapping shown on synthetic input only"}
+  - {id: I-05, class: LEGACY_TRACEABILITY_ONLY, severity: NON_BLOCKING, finding: "A historical chunk ends after the last line terminator; an M3 segment ends before it"}
+blocking_issue_count: 0
+adapter_implementation_bugs: 0
+contract_defects: 0
+
+freeze_readiness_criteria:
+  1_all_30_documents_ingest: true
+  2_exact_byte_and_char_round_trip: true
+  3_canonical_l1_skeleton_conforms_to_frozen_m2: true
+  4_deterministic_rerun: true
+  5_no_nonblank_source_text_lost: true
+  6_no_unexpected_duplicate_evidence_span: true
+  7_untraceable_zero_for_all_97_chunks: true
+  8_oversized_hard_split_maps_to_exact_passage_refs: "true on synthetic input; no real case exists"
+  9_no_blocking_segmentation_defect: "true, subject to Orchestrator confirmation of issue I-01"
+  10_no_m1_m2_frozen_artifact_changed: true
+recommendation: READY_FOR_M3_INGESTION_CONTRACT_FREEZE_REVIEW
+recommended_contract_clarifications_at_freeze:   # not applied in this task
+  - "State that a segment may contain both story text and paratext when the source does not separate them, and that roles are assigned per span."
+  - "State that segment granularity follows source formatting and can differ between documents."
+
+tests:
+  story_ingestion: {passed: 70, total: 70}
+  canonical_story: {passed: 99, total: 99}
+  script_quality: {passed: 64, total: 64}
+  story_benchmark: {passed: 298, total: 298}
+  m1_m2_frozen_hashes_unchanged: true
+
+private_evidence:                  # local only, never committed
+  package: M3_02_PRIVATE_VALIDATION_V1.zip (local private validation package)
+  package_sha256: 1f3b45f1019bbc91cef9e77b129530e25a7e5905b98b22013b3eb095cbdd9bd9
+  files: 19
+  validation_summary_sha256: e77e54317e7201f733bbba09c93cd37a033e264bee43b521d482544601be4088
+  legacy_chunk_trace_sha256: dee41ec050bcfd853d95e88477a67e4e3e2e6a1aba8781e4d04fc5e8ac6f6839
+  private_manifest_sha256: c6da51b5642496d233149dfb2537df5c648eb4a63ce248f8ac50ea4a7c2d62cd
+
+limits_of_this_validation:
+  - "One story, one source, one language."
+  - "The audit was done by the AI agent; most segments were not individually read."
+  - "No paragraph long enough to exercise the no-split rule on real text."
+  - "No M4 extraction was attempted, so the cost of the per-span role requirement is not measured."

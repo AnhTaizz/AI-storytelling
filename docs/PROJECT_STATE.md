@@ -2,7 +2,7 @@
 
 ## Current Milestone
 
-M3 — Light Novel Ingestion: IN PROGRESS. Current task: M3-01 Light Novel Ingestion Contract & Adapter Baseline (complete, pending Orchestrator review). M3 is not complete. M4 has not started.
+M3 — Light Novel Ingestion: IN PROGRESS — ingestion contract real-source validated, pending freeze review (M3-01 accepted; M3-02 complete). M3 is not frozen and not complete. M4 has not started.
 
 M1 — Script Quality & Narrative Contract: COMPLETE / FROZEN (`SCRIPT_QUALITY_CONTRACT/v0`, DEC-017).
 
@@ -16,7 +16,7 @@ M2 — Canonical Story Model capability: COMPLETE / FROZEN (Canonical Story Mode
   - Formal Script Quality Contract: FROZEN / ACCEPTED — `SCRIPT_QUALITY_CONTRACT/v0`, DEC-017, freeze record `benchmarks/m1_script_quality/SCRIPT_QUALITY_CONTRACT_V0_FREEZE_RECORD.yaml`.
   - The contract defines the standard. It does not show that any current Writer or critic meets it. The M9 Script Quality Gate is not evaluated.
 - M2 — Canonical Story Model: capability COMPLETE / FROZEN (DEC-016). The expected capability has been established as `canonical_story/v0` + `predicate_registry/v0.1`. M2 ran under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015).
-- M3 — Light Novel Ingestion: IN PROGRESS (M3-01 baseline delivered; nothing frozen). Not complete. The roadmap is unchanged.
+- M3 — Light Novel Ingestion: IN PROGRESS — ingestion contract real-source validated, pending freeze review. Nothing frozen. Not complete. The roadmap is unchanged.
 - M4: NOT STARTED.
 
 *Correction (M2-02): an earlier version of this section labelled M1 "COMPLETED / CLOSED FOR CURRENT RESEARCH SCOPE". That overstated completion while the formal Script Quality Contract remains open. The M1 research program is closed; the contract is not.*
@@ -682,6 +682,21 @@ M3-01-LIGHT-NOVEL-INGESTION-CONTRACT-AND-ADAPTER-BASELINE — COMPLETED — Stat
 - **Result.** `benchmarks/m3_ingestion/M3_01_LIGHT_NOVEL_ADAPTER_BASELINE_RESULT.yaml`.
 - M3 is IN PROGRESS, not complete. M3-02 and M4 have not started.
 
+M3-02-PRIVATE-CORPUS-INGESTION-AND-LEGACY-PROVENANCE-VALIDATION — COMPLETED — Status: M3_02_PRIVATE_VALIDATION_READY_FOR_FREEZE_REVIEW
+
+- **Context.** M3-01 was accepted. This task validated the unchanged baseline on the private 30-document controlled corpus. The adapter, schema and contract were not modified.
+- **Identity.** 30 documents and the 97 historical chunks match their recorded hashes and the historical fingerprint.
+- **Full ingestion.** 30 documents, 1519 segments; every character and byte round-trip verified; no normalization; no non-blank text outside segments; canonical structural and semantic conformance PASS. M3 corpus fingerprint `ce0f493329ecc68bbb7b7c1e7d4c81de4d654d3c73505dd91e0a9d061c3ce370`.
+- **Determinism.** Two independent process runs are byte-identical.
+- **Segmentation profile.** Segment length p50 52, p99 191, max 299 characters; no segment over 1200. 938 single-line and 581 multi-line segments. 5 LF documents and 25 CRLF documents, no byte-order mark.
+- **Audit (AI reviewer, private).** Two source formatting styles. 16 segments in 16 documents join a heading or author note with adjacent story text because the source has no blank line there. No segmentation defect and no adapter bug.
+- **Segmentation verdict.** PARAGRAPH_SEGMENT_V0_ACCEPTABLE_WITH_LIMITATION. The 16 mixed segments were judged non-blocking (no text lost; every line addressable by an exact sub-span; roles attach to spans). This judgement is put to the Orchestrator; a strict reading would call for repair.
+- **Legacy traceability.** All 97 historical chunks trace to M3 segments: 2 single-segment, 95 multi-segment, 0 untraceable. All 1519 segments are claimed exactly once. No real hard-split chunk exists; the sub-segment case was shown on synthetic text.
+- **Passage references.** 1519 whole-segment references built and verified. No evidence role was assigned to real text.
+- **Tests.** story_ingestion 70/70; canonical_story 99/99; script_quality 64/64; story_benchmark 298/298. M1 and M2 frozen hashes unchanged.
+- **Artifacts.** `benchmarks/m3_ingestion/M3_02_PRIVATE_CORPUS_VALIDATION_RESULT.yaml`; `docs/research/m3/M3_PRIVATE_CORPUS_INGESTION_VALIDATION.md`. Private package SHA-256 `1f3b45f1019bbc91cef9e77b129530e25a7e5905b98b22013b3eb095cbdd9bd9`; not committed.
+- **Recommendation.** READY_FOR_M3_INGESTION_CONTRACT_FREEZE_REVIEW, with two contract clarifications proposed for the freeze. M3 is not frozen. `DECISIONS.md` is unchanged. M4 has not started.
+
 ## Next Candidate
 
-Orchestrator review of M3-01. Recommended M3-02: private validation on the full controlled corpus and traceability from historical chunks to M3 segments. Not started.
+Orchestrator review of M3-02: confirm or reject the non-blocking judgement on the 16 mixed segments, then decide on an M3 ingestion contract freeze review. Not started.
