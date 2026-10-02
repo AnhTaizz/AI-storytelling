@@ -1,0 +1,36 @@
+task: M4-04B2R-VALIDATOR-ROBUSTNESS-CORRECTION-AND-BENCHMARK-RESUME
+status: DEVELOPMENT_PREDICTIONS_LOCKED_BEFORE_GOLD_ACCESS
+original_protocol_sha256: 5232e334be6612db13056d14448740d34c830595324e118bbe56655b4dcda922
+continuation_protocol_sha256: 54c1cc2c2b492731ca257c3b02c95ee557258088a406c80f4ab825886b65dd7b
+snapshot_v2_sha256: 8dddbd0b9f3ea51af593c1fab0631b088b6f4e6b8c16833a1f11b8448088eee9
+commit_a2: 1b3f8d31b9343798b26cbb5e38d1cb747e9a9eca
+private_prediction_manifest_sha256: 82933125174bfac64ac95f8c5656dda4fc44e15ca982da5b62aa0526ea1e5208
+prediction_sets:
+  P0:
+    sha256: 59a0a207ad9d99bc6e8a08456fbe9495480a841f3d8062d971ac6a288bc95440
+    terminal_states: 14
+    structural_valid: 0
+    structural_failure: 14
+    repairs: 14
+  P1:
+    sha256: 81f07b8bf957487957981086d4613dc8e14ad9a96e949bc9fc80ccbed551cb5d
+    terminal_states: 14
+    structural_valid: 6
+    structural_failure: 8
+    repairs: 12
+transport:
+  primary_provider_operations: 28
+  repair_provider_operations: 26
+  global_pacing_invariant: PASS
+  max_rolling_provider_operations_observed: 6
+historical_p0_m4dev_01:
+  primary_response_sha256: 9dd429a0cb9ce88c22956b80b22f4f8a68f18c1b0f564ebbdc0e4366fd5564bf
+  repair_response_sha256: 5d8c7d502f05ab4efe712829d925e7e91bdc428200d3b6c46ddfe15666a7f2f5
+  provider_rerun_count_after_commit_a2: 0
+  final_state: STRUCTURAL_FAILURE
+barriers:
+  dev_gold_opened: false
+  holdout_input_opened: false
+  holdout_gold_opened: false
+  historical_no_rerun: true
+  predictions_locked: true
