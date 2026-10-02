@@ -1,0 +1,81 @@
+task: M4-04B2-DEVELOPMENT-EXTRACTION-BENCHMARK-AND-EXTRACTOR-LOCK
+base_commit: aeb26d363694c337bb2b30170629be0d94ed090c
+protocol_id: M4_04B2_DEV_BENCHMARK_PROTOCOL_V1
+protocol_schema_version: M4_04B2_DEV_BENCHMARK_PROTOCOL_SCHEMA_V1
+protocol_sha256: 5232e334be6612db13056d14448740d34c830595324e118bbe56655b4dcda922
+dev_package_sha256: a991921d0ca0afb5643948346acc407a84e17206bd6d0692c362d86de47da809
+
+tooling:
+  protocol_validator_sha256: a5793e3287e8a005f694759ecc67a70ecbf548e025e2b67f47b879bd5135b670
+  prediction_runner_sha256: 0aaa275fe96bb8bcf0f10e2e0ca7b9e789f643e3d2a154ceeef532c4155a744d
+  durable_executor_sha256: cc9bd7a863ff906dea8fcd2f753c552881acd33f97a72b4af4e4e84eb1bfbe66
+  private_access_manifest_sha256: a7a7849eda5775636fdb6ec201473318d8082f1af0edd9445fe2a8d9414a766f
+
+execution_profile:
+  identity: M4_DURABLE_RESEARCH_EXECUTION_PROFILE_V1
+  sha256: c6c789f0f06d3fdabc2333c29b389252de853ffef0add536d4f06fb6b94e143e
+  runtime: GEMINI_TRANSPORT_RESILIENCE_V1_1
+  durable_executor: DURABLE_RESEARCH_EXECUTOR_V1
+
+model: gemini-3.5-flash-lite
+credential_slot: gemini_slot_3
+credential_topology: UNKNOWN
+case_count: 14
+candidate_count: 2
+candidate_order: [P0, P1]
+case_order: [M4DEV_01, M4DEV_02, M4DEV_03, M4DEV_04, M4DEV_05, M4DEV_06, M4DEV_07, M4DEV_08, M4DEV_09, M4DEV_10, M4DEV_11, M4DEV_12, M4DEV_13, M4DEV_14]
+
+prompt_hashes:
+  p0_system_sha256: 3637ca324bed841fc54395b8749eea9c03d433a116705d005d0533bcb2227fcd
+  p0_user_template_sha256: bb99bb56c6defe7a48bff7cf5af9a265331da11b4c458535a3572963faab218a
+  p0_prompt_sha256: 20746a5a9120cd8d04fa9eef9cd9cc40589014949f82c18e601d916ae9ee947c
+  p1_system_sha256: 2e42caf5a0916d909923c53dab1f5d3a44f4ae2d42df6f50325b235271bbea8d
+  p1_user_template_sha256: bb99bb56c6defe7a48bff7cf5af9a265331da11b4c458535a3572963faab218a
+  p1_fewshot_sha256: b091abe5f5d20cf4c494d599916308dc378b75b4be8a3b51f7a5ccfbbbbddbf9
+  p1_prompt_sha256: 0af310fdd4d92c8145287fa33664d25db8c8c5bbc444f73885b86f1894a894c1
+  repair_system_sha256: 8f81bfdec8e58948a7e02e3ef99dbfe1743310081bcbb1efd1138df4da228004
+  repair_template_sha256: c3446b6a7918b3aa6a97387ddf8759adfcf968d055241697fdd561ec46e58ad6
+
+generation_settings:
+  temperature: 0
+  max_output_tokens: 16384
+  provider_json_mode: true
+  seed: NOT_SUPPORTED_NOT_USED
+  concurrency: 1
+
+durable_limits:
+  maximum_windows_per_job: 3
+  maximum_provider_attempts_per_window: 3
+  maximum_provider_attempts_per_job: 9
+  maximum_semantic_jobs: 56
+  maximum_provider_attempts: 504
+  global_pacing: 6_PROVIDER_OPERATIONS_PER_ROLLING_60_SECONDS
+  first_success: IMMUTABLE_LOCK
+  output_aware_transport_retry: FORBIDDEN
+
+structural_repair:
+  maximum_per_case_candidate: 1
+  separate_semantic_job: true
+  deterministic_conformance_only: true
+  quality_signal: FORBIDDEN
+
+evaluation_snapshot:
+  identity: M4_EVALUATION_PROTOCOL_SNAPSHOT_V1
+  sha256: a9ac816fe8e20d6ed0d2a4e078c37a89a63dc10660b11d9c754b8038d71c29a6
+  evaluator: evaluate_extraction_v0/0.2.0
+
+protocol_validation:
+  parse: PASS
+  schema: PASS
+  semantic_consistency: PASS
+  prompt_hashes: PASS
+  case_list: PASS
+  execution_profile_binding: PASS
+  evaluator_snapshot_binding: PASS
+  holdout_prohibition: PASS
+  secret_scan: PASS
+
+dev_gold_opened: false
+holdout_input_opened: false
+holdout_gold_opened: false
+live_predictions_started: false
