@@ -1,0 +1,41 @@
+# M4-03 — public record of the private holdout selection lock (no locators, no source text)
+# Committed BEFORE any holdout gold annotation was written.
+task: M4-03-FRESH-HOLDOUT-SELECTION-ANNOTATION-AND-SEALING
+record: SELECTION_LOCK_PUBLIC_RECORD
+selection_protocol_id: M4_FRESH_HOLDOUT_SELECTION_V1
+selection_date: 2026-10-02
+base_commit: 9d8b27d35c4cebec357cf06c7b2484ebb0ca5954
+corpus_fingerprint_sha256: ce0f493329ecc68bbb7b7c1e7d4c81de4d654d3c73505dd91e0a9d061c3ce370
+
+private_hashes:
+  selection_lock_sha256: e8e87681d0767807879f270054fa06d8e61956af4c9ca3ab81dc225c32e051ff
+  selection_protocol_sha256: a3bdd342ed9643a703751b95b14c115a87a1249a2993fad32af11ead7685988e
+  semantic_exposure_registry_sha256: 07fd7a0ebd3fd393f2ac073d74412f80939ffef1abbaca0466db66dfe2788095
+  ordered_anchor_list_sha256: 5ddf77622b3cdb31bf50d36e31135775dc57748aac0bf3a290b25bc520cd8dfa
+  annotation_guideline_sha256: 0340da09234df43940d340b9c8c40c27521327a08da53d96530e8c4d7db714b0
+
+population:
+  source_segments_total: 1519
+  semantically_exposed: 1251
+  exposure_halo_only: 88
+  not_excluded: 180
+  eligible_anchors: 146
+  documents_with_eligible_anchors: 13
+
+selection:
+  target_cases: 12
+  selected_cases: 12
+  documents_represented: 12
+  all_selected_in_first_pass: true
+  window_sizes: [7, 5, 6, 7, 5, 7, 5, 7, 5, 7, 6, 6]
+  window_segments_total: 73
+  usability_check: {candidates_inspected: 12, rejected: 0, replacements: 0}
+
+order_of_events:
+  1: "exposure registry, selection protocol, ordered anchor list and annotation guideline written and hashed; no candidate text read"
+  2: "the 12 candidate windows read only against the preregistered rejection criteria"
+  3: "private selection lock written and hashed"
+  4: "this record committed"
+  5: "gold annotation starts only after this commit"
+gold_annotation_started_at_this_commit: false
+extractor_or_model_selected: false
