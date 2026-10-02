@@ -330,11 +330,15 @@ class TestRepositorySecurity(unittest.TestCase):
         self.assertEqual(ignored.returncode, 0)
         self.assertNotEqual(example.returncode, 0)
 
-    def test_env_example_has_blank_placeholders_only(self):
+    def test_env_example_has_blank_key_placeholders_and_public_model(self):
         content = (REPO / ".env.example").read_text(encoding="utf-8")
         assignments = [line for line in content.splitlines() if line and not line.startswith("#")]
         self.assertTrue(assignments)
-        self.assertTrue(all(line.endswith("=") for line in assignments))
+        key_assignments = [line for line in assignments if line.startswith("GEMINI_API_KEY_")]
+        self.assertEqual(len(key_assignments), 3)
+        self.assertTrue(all(line.endswith("=") for line in key_assignments))
+        self.assertIn("GEMINI_MODEL=gemini-3.7-flash", assignments)
+        self.assertNotIn("GEMINI_PROJECT_LABEL_", content)
         self.assertNotIn("AIza", content)
         self.assertNotIn(FAKE_SECRET, content)
 

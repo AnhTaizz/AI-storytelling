@@ -4,11 +4,19 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime, timezone
-from email.utils import parsedate_to_datetime
 import json
 from pathlib import Path
 import time
 from typing import Any, Callable, Mapping, Optional
+
+try:
+    from tools.story_extraction.gemini_errors_v1 import (
+        classify_error,
+        retry_after_seconds,
+        status_code,
+    )
+except ModuleNotFoundError:
+    from gemini_errors_v1 import classify_error, retry_after_seconds, status_code  # type: ignore
 
 try:
     from tools.story_extraction.gemini_key_pool_v1 import (
@@ -71,60 +79,16 @@ def official_client_factory(api_key: str) -> _OfficialGeminiClient:
 
 
 def _status_code(error: BaseException) -> Optional[int]:
-    candidates = [
-        getattr(error, "status_code", None),
-        getattr(error, "code", None),
-        getattr(getattr(error, "response", None), "status_code", None),
-    ]
-    for candidate in candidates:
-        if isinstance(candidate, int):
-            return candidate
-        if isinstance(candidate, str) and candidate.isdigit():
-            return int(candidate)
-    return None
+    return status_code(error)
 
 
 def _classify_error(error: BaseException) -> str:
-    status = _status_code(error)
-    if status in (401, 403):
-        return "AUTH_FAILURE"
-    if status == 400:
-        # The SDK/provider commonly reports an invalid key as HTTP 400. Inspect
-        # only to classify in memory; the provider text is never propagated.
-        structured = getattr(error, "response_json", None)
-        diagnostic = f"{getattr(error, 'status', '')} {structured!r} {error}"
-        auth_markers = ("API_KEY_INVALID", "API KEY NOT VALID", "UNAUTHENTICATED")
-        if any(marker in diagnostic.upper() for marker in auth_markers):
-            return "AUTH_FAILURE"
-    if status == 429:
-        return "RATE_LIMIT"
-    if status is not None and 500 <= status <= 599:
-        return "SERVER_FAILURE"
-    if isinstance(error, (TimeoutError, ConnectionError, OSError)):
-        return "TRANSPORT_FAILURE"
-    return "PROVIDER_FAILURE"
+    category = classify_error(error).value
+    return "TRANSPORT_FAILURE" if category in ("TIMEOUT", "NETWORK_FAILURE") else category
 
 
 def _retry_after_seconds(error: BaseException, now: float) -> Optional[float]:
-    direct = getattr(error, "retry_after", None)
-    if isinstance(direct, (int, float)):
-        return max(0.0, float(direct))
-    response = getattr(error, "response", None)
-    headers = getattr(response, "headers", None)
-    if headers:
-        value = headers.get("Retry-After") or headers.get("retry-after")
-        if value is not None:
-            try:
-                return max(0.0, float(value))
-            except (TypeError, ValueError):
-                try:
-                    retry_at = parsedate_to_datetime(str(value))
-                    if retry_at.tzinfo is None:
-                        retry_at = retry_at.replace(tzinfo=timezone.utc)
-                    return max(0.0, retry_at.timestamp() - now)
-                except (TypeError, ValueError, OverflowError):
-                    return None
-    return None
+    return retry_after_seconds(error, now)
 
 
 def _utc_iso(timestamp: float) -> str:

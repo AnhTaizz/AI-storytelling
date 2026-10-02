@@ -768,13 +768,22 @@ M4-02-REAL-SOURCE-DEV-GOLD-AND-EVALUATION-CALIBRATION — COMPLETED — Status: 
 
 - **Protocol change.** The local Qwen/Ollama exploration was stopped for runtime and thermal cost and classified `ABORTED_EXPLORATORY_PRESELECTION`. It occurred before extractor lock, holdout input access, predictions, or gold access and is ineligible for baseline selection.
 - **Runtime prepared.** `GEMINI_TRANSPORT_V1` isolates the official `google-genai` SDK. `GEMINI_KEY_POOL_V1` provides deterministic project-aware scheduling, whole-project 429 cooldown, per-slot auth disable, bounded 5xx/network retry, and fail-closed behavior. No local or alternate-model fallback exists.
-- **Security.** `.env` variants are ignored and `.env.example` contains blank placeholders only. Secrets remain private in memory and are excluded from public metadata, results, exceptions, and representations. A safe config check reports counts only.
+- **Security.** `.env` variants are ignored and `.env.example` contains blank credential placeholders only. Secrets remain private in memory and are excluded from public metadata, results, exceptions, and representations. A safe config check reports counts only.
 - **Prompt and validation.** A contract-driven base prompt was prepared without holdout content. Provider JSON mode does not replace local `STORY_EXTRACTION_BATCH/v0` and `canonical_story/v0` validation. Transport retry does not perform structural repair.
 - **No execution.** Live Gemini calls: 0. Model discovery: not run. Exact model: NOT SELECTED. Extractor: NOT LOCKED. Holdout input: NOT OPENED. Holdout gold: SEALED / NOT OPENED. Holdout predictions: NOT RUN.
 - **Integrity.** The frozen M4 evaluation snapshot and all frozen M1/M2/M3 artifacts are unchanged. M5 is NOT STARTED.
 
 M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02 are ACCEPTED. M4-03 is `FRESH HOLDOUT V1 SEALED`. M4-04A is `GEMINI API RUNTIME PREPARED / WAITING FOR USER CREDENTIALS`.
 
+## M4-04B1-GEMINI-TRANSPORT-RESILIENCE-AND-LOAD-SAFETY-GATE — EXECUTED — Status: GEMINI_TRANSPORT_RESILIENCE_V1_LIVE_GATE_FAIL
+
+- **Offline resilience.** 35 deterministic fault-injection tests and a 500-request concurrent scheduler simulation passed. Concurrency, bounded queueing, project RPM/TPM accounting, separated retry/failover counters, hard cap of 3 provider attempts, project circuit breaker, secret sanitation, and fail-closed behavior are implemented.
+- **Credential safety.** Seven unlabeled slots were detected. Live execution used one unknown slot conservatively and did not claim independent quota or fan out across keys.
+- **Preregistered live smoke.** Twelve tiny synthetic requests, concurrency 2, output cap 128, configured `gemini-3.7-flash` used only as the transport smoke model. All requests terminated; 18 provider attempts; 7 successes and 5 clean failures. The required threshold was 11/12. One circuit-open event blocked further provider calls as designed.
+- **Not selected.** Extraction model: NOT SELECTED. Extractor: NOT LOCKED. Extraction quality benchmark: NOT STARTED. M4-04B2: NOT STARTED.
+- **Blindness.** Holdout input: NOT OPENED. Gold: SEALED / NOT OPENED. Holdout predictions: NOT RUN. Contamination state: CLEAN. M5: NOT STARTED.
+- **Integrity.** The M4 evaluation snapshot and frozen M1/M2/M3 artifacts remain unchanged. `DECISIONS.md` and `ROADMAP.md` remain unchanged.
+
 ## Next Candidate
 
-M4-04B after the Project Owner creates or replaces `.env` locally with newly rotated Gemini credentials. M4-04B will perform model discovery, exact model candidate selection, preregistration, and extractor lock before holdout input access. The sealed gold must remain unopened until a prediction package is locked and hashed.
+Orchestrator review of M4-04B1 live gate failure. Offline resilience infrastructure passed, but the preregistered live smoke achieved 7/12 successes against a required 11/12. Provider-attempt observations included 429 and 5xx responses. Do not begin M4-04B2 or extraction quality work until this gate is reviewed and remediated.

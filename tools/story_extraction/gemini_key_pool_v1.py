@@ -10,8 +10,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 import os
 import re
+import threading
 import time
-from typing import Callable, Mapping, Optional
+from typing import Callable, Collection, Mapping, Optional
 
 
 POOL_VERSION = "GEMINI_KEY_POOL_V1"
@@ -180,80 +181,123 @@ class GeminiKeyPool:
             grouped[credential.group_id].append(_SlotState(credential))
         self._groups = [_GroupState(group_id, grouped[group_id]) for group_id in group_order]
         self._group_cursor = 0
+        self._lock = threading.RLock()
 
-    def acquire(self, now: Optional[float] = None) -> CredentialLease:
+    def acquire(
+        self,
+        now: Optional[float] = None,
+        *,
+        excluded_group_ids: Collection[str] = (),
+        excluded_slot_ids: Collection[str] = (),
+    ) -> CredentialLease:
         current = self._clock() if now is None else now
-        for offset in range(len(self._groups)):
-            group_index = (self._group_cursor + offset) % len(self._groups)
-            group = self._groups[group_index]
-            if group.cooldown_until > current:
-                continue
-            for slot_offset in range(len(group.slots)):
-                slot_index = (group.cursor + slot_offset) % len(group.slots)
-                slot = group.slots[slot_index]
-                if not slot.enabled:
+        excluded_groups = set(excluded_group_ids)
+        excluded_slots = set(excluded_slot_ids)
+        with self._lock:
+            for offset in range(len(self._groups)):
+                group_index = (self._group_cursor + offset) % len(self._groups)
+                group = self._groups[group_index]
+                if group.group_id in excluded_groups or group.cooldown_until > current:
                     continue
-                group.cursor = (slot_index + 1) % len(group.slots)
-                self._group_cursor = (group_index + 1) % len(self._groups)
-                config = slot.config
-                return CredentialLease(
-                    config.slot_id,
-                    config.project_label,
-                    config.group_id,
-                    config._api_key,
-                )
+                for slot_offset in range(len(group.slots)):
+                    slot_index = (group.cursor + slot_offset) % len(group.slots)
+                    slot = group.slots[slot_index]
+                    if not slot.enabled or slot.config.slot_id in excluded_slots:
+                        continue
+                    group.cursor = (slot_index + 1) % len(group.slots)
+                    self._group_cursor = (group_index + 1) % len(self._groups)
+                    config = slot.config
+                    return CredentialLease(
+                        config.slot_id,
+                        config.project_label,
+                        config.group_id,
+                        config._api_key,
+                    )
         raise GeminiPoolExhausted("No eligible Gemini credential slot")
 
     def cool_project_group(self, slot_id: str, seconds: float, now: Optional[float] = None) -> None:
         current = self._clock() if now is None else now
-        group = self._group_for_slot(slot_id)
-        group.cooldown_until = max(group.cooldown_until, current + max(0.0, seconds))
+        with self._lock:
+            group = self._group_for_slot(slot_id)
+            group.cooldown_until = max(group.cooldown_until, current + max(0.0, seconds))
 
     def disable_slot(self, slot_id: str) -> None:
-        for group in self._groups:
-            for slot in group.slots:
-                if slot.config.slot_id == slot_id:
-                    slot.enabled = False
-                    return
+        with self._lock:
+            for group in self._groups:
+                for slot in group.slots:
+                    if slot.config.slot_id == slot_id:
+                        slot.enabled = False
+                        return
         raise GeminiConfigError("Unknown Gemini credential slot")
 
     def has_available(self, now: Optional[float] = None) -> bool:
         current = self._clock() if now is None else now
-        return any(
-            group.cooldown_until <= current and any(slot.enabled for slot in group.slots)
-            for group in self._groups
-        )
+        with self._lock:
+            return any(
+                group.cooldown_until <= current and any(slot.enabled for slot in group.slots)
+                for group in self._groups
+            )
 
     def seconds_until_available(self, now: Optional[float] = None) -> Optional[float]:
         current = self._clock() if now is None else now
-        waits = [
-            max(0.0, group.cooldown_until - current)
-            for group in self._groups
-            if any(slot.enabled for slot in group.slots)
-        ]
+        with self._lock:
+            waits = [
+                max(0.0, group.cooldown_until - current)
+                for group in self._groups
+                if any(slot.enabled for slot in group.slots)
+            ]
         return min(waits) if waits else None
 
     def public_metadata(self) -> dict[str, object]:
-        return {
-            "pool": POOL_VERSION,
-            "groups": [
-                {
-                    "project_label": group.slots[0].config.project_label,
-                    "slots": [slot.config.public_metadata() for slot in group.slots],
-                }
-                for group in self._groups
-            ],
-        }
+        with self._lock:
+            return {
+                "pool": POOL_VERSION,
+                "groups": [
+                    {
+                        "project_label": group.slots[0].config.project_label,
+                        "slots": [slot.config.public_metadata() for slot in group.slots],
+                    }
+                    for group in self._groups
+                ],
+            }
 
     def redact(self, value: str) -> str:
         redacted = value
-        for group in self._groups:
-            for slot in group.slots:
-                redacted = redacted.replace(slot.config._api_key, "[REDACTED]")
+        with self._lock:
+            for group in self._groups:
+                for slot in group.slots:
+                    redacted = redacted.replace(slot.config._api_key, "[REDACTED]")
         return redacted
+
+    def group_ids(self) -> tuple[str, ...]:
+        with self._lock:
+            return tuple(group.group_id for group in self._groups)
+
+    def project_label_for_group(self, group_id: str) -> str:
+        with self._lock:
+            return self._group_by_id(group_id).slots[0].config.project_label
+
+    def available_slot_count(self, group_id: str) -> int:
+        with self._lock:
+            return sum(slot.enabled for slot in self._group_by_id(group_id).slots)
+
+    def cooldown_remaining(self, group_id: str, now: Optional[float] = None) -> float:
+        current = self._clock() if now is None else now
+        with self._lock:
+            return max(0.0, self._group_by_id(group_id).cooldown_until - current)
+
+    def group_id_for_slot(self, slot_id: str) -> str:
+        with self._lock:
+            return self._group_for_slot(slot_id).group_id
 
     def _group_for_slot(self, slot_id: str) -> _GroupState:
         for group in self._groups:
             if any(slot.config.slot_id == slot_id for slot in group.slots):
                 return group
         raise GeminiConfigError("Unknown Gemini credential slot")
+
+    def _group_by_id(self, group_id: str) -> _GroupState:
+        for group in self._groups:
+            if group.group_id == group_id:
+                return group
+        raise GeminiConfigError("Unknown Gemini project group")
