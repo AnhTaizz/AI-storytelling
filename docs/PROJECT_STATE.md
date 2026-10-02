@@ -2,7 +2,7 @@
 
 ## Current Milestone
 
-M4 — Story Extraction: IN PROGRESS. M4-01: ACCEPTED. M4-02: REAL-SOURCE DEVELOPMENT CALIBRATION COMPLETE — PENDING ORCHESTRATOR REVIEW. Fresh holdout: NOT SELECTED. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. M5 has not started.
+M4 — Story Extraction: IN PROGRESS. M4-01: ACCEPTED. M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED. Extractor/model: NOT SELECTED. Holdout predictions: NOT RUN. Nothing in M4 is frozen. M5: NOT STARTED.
 
 M3 — Light Novel Ingestion: COMPLETE / FROZEN (`LIGHT_NOVEL_INGESTION/v0`, DEC-018).
 
@@ -19,7 +19,7 @@ M2 — Canonical Story Model capability: COMPLETE / FROZEN (Canonical Story Mode
   - The contract defines the standard. It does not show that any current Writer or critic meets it. The M9 Script Quality Gate is not evaluated.
 - M2 — Canonical Story Model: capability COMPLETE / FROZEN (DEC-016). The expected capability has been established as `canonical_story/v0` + `predicate_registry/v0.1`. M2 ran under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015).
 - M3 — Light Novel Ingestion: COMPLETE / FROZEN — `LIGHT_NOVEL_INGESTION/v0`, DEC-018, freeze record `benchmarks/m3_ingestion/LIGHT_NOVEL_INGESTION_V0_FROZEN.yaml`. The roadmap is unchanged.
-- M4 — Story Extraction: IN PROGRESS (M4-01 accepted; M4-02 real-source development calibration complete, pending review; no holdout, no model, nothing frozen).
+- M4 — Story Extraction: IN PROGRESS (M4-01 accepted; M4-02 accepted; M4-03 fresh holdout V1 sealed; no extractor/model selected, no holdout predictions run, nothing frozen).
 - M5: NOT STARTED.
 
 *Correction (M2-02): an earlier version of this section labelled M1 "COMPLETED / CLOSED FOR CURRENT RESEARCH SCOPE". That overstated completion while the formal Script Quality Contract remains open. The M1 research program is closed; the contract is not.*
@@ -752,6 +752,18 @@ M4-02-REAL-SOURCE-DEV-GOLD-AND-EVALUATION-CALIBRATION — COMPLETED — Status: 
 - **Artifacts.** `benchmarks/m4_extraction/M4_02_REAL_SOURCE_DEV_CALIBRATION_RESULT.yaml`; protocol document updated to REAL-SOURCE DEVELOPMENT CALIBRATED / NOT FROZEN. Private package SHA-256 `a991921d0ca0afb5643948346acc407a84e17206bd6d0692c362d86de47da809`; not committed.
 - **Recommendation.** READY_FOR_M4_FRESH_HOLDOUT_SELECTION. `DECISIONS.md` and `ROADMAP.md` are unchanged. M4-03 and M5 have not started.
 
+## M4-03-FRESH-HOLDOUT-SELECTION-ANNOTATION-AND-SEALING — EXECUTED — Status: M4_03_FRESH_HOLDOUT_V1_SEALED
+
+- **Scope.** Select, annotate and seal a fresh extraction holdout. No extractor, model, prompt, prediction or scoring. `STORY_EXTRACTION/v0` is not frozen.
+- **Claim boundary.** The holdout supports fresh source-span validation within the same story and corpus. It does not support new-story, new-genre or new-language generalization, or independent human annotation.
+- **Selection.** Protocol `M4_FRESH_HOLDOUT_SELECTION_V1`: 1519 segments, 1251 semantically exposed, 88 in the exposure halo, 180 free; 146 eligible anchors; 12 cases from 12 documents, 73 segments, all in the first pass. No candidate met a preregistered rejection criterion; no replacement.
+- **Two locks.** Selection lock hashes were committed (`2174a31`) before any gold was written. Gold and input packages were then built and hashed.
+- **Gold.** Agent draft, `AGENT_DRAFT_SEALED_GOLD` / `NOT_HUMAN_CONFIRMED`, every assertion `UNREVIEWED`. Profile `STORY_UNDERSTANDING_CORE_V0`. 12/12 `COMPLETE_FOR_PROFILE`; 83 required and 27 optional assertions; 85 evidence refs. All 12 cases pass 12 integrity checks, including frozen M2 conformance. Six protocol issues recorded where the registry could not express stated content.
+- **Packages.** Input and gold are separate private archives with separate hashes; the input package is checked to contain no gold field. A private blindness manifest forbids gold access before predictions are locked and hashed.
+- **Scorer.** `M4_EVALUATION_PROTOCOL_SNAPSHOT_V1` binds the evaluation protocol, evaluator, batch contract, tests and profile definition by hash; a test fails if any changes.
+- **Contamination rule.** Gold may not be used for prompt, few-shot, model, threshold, alignment or evaluation-rule tuning. Gold opened before prediction lock makes the holdout `CONTAMINATED`.
+- **Records.** `docs/research/m4/M4_FRESH_HOLDOUT_PROTOCOL_V1.md`, `benchmarks/m4_extraction/M4_03_FRESH_HOLDOUT_SEAL_RESULT.yaml`, `benchmarks/m4_extraction/M4_EVALUATION_PROTOCOL_SNAPSHOT_V1.yaml`. `DECISIONS.md` and `ROADMAP.md` are unchanged.
+
 ## Next Candidate
 
-Orchestrator review of the calibrated evaluation protocol. M4-03 (fresh holdout selection and sealing) starts only after that review. Not started.
+Orchestrator review of the sealed holdout. Extractor/model selection (M4-04) has not started and needs explicit authorization. The sealed gold must stay unopened until a prediction package is locked and hashed.

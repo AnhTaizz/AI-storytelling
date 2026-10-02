@@ -1,0 +1,23 @@
+# M4 — scorer identity bound to the fresh holdout. NOT a freeze of STORY_EXTRACTION/v0.
+# The holdout must be scored with exactly these files, after predictions are locked.
+# If a scorer defect is found later: do not edit this record. Report the defect and run a
+# versioned correction (SNAPSHOT_V2) with an impact analysis.
+snapshot_id: M4_EVALUATION_PROTOCOL_SNAPSHOT_V1
+snapshot_date: 2026-10-02
+evaluator_version: evaluate_extraction_v0/0.2.0
+hash_form: "SHA-256 of file bytes with LF line endings (the form stored in git)"
+snapshot_sha256: a9ac816fe8e20d6ed0d2a4e078c37a89a63dc10660b11d9c754b8038d71c29a6
+files:
+  docs/research/m4/M4_EXTRACTION_EVALUATION_PROTOCOL_V0.md: c67c9514f6648d314f4e7ccebaa49025b6498f4fdce0710433521ee76a672617
+  tools/story_extraction/evaluate_extraction_v0.py: f6294985820bea2d4232888e15323c321e7f7ff5bc12ec282ee3e096daa33f96
+  tools/story_extraction/extraction_contract_v0.py: 042e4ec1882d76c0730c6b059396d353ecb8b60c3f58456e4db7f5ab623bc56e
+  schemas/story_extraction/story_extraction_batch_v0.schema.json: a62306384e510e000b8ed77c7f6201870bc063007b18812bba485beb4059c9ea
+  tests/story_extraction/test_extraction_evaluation_calibration_v0.py: 2384cbca4df56267916b7b4517efe8e8e63859ff3af3eb4ff981d7a521862196
+  tests/story_extraction/test_story_extraction_contract_v0.py: 5749fca3302fca61068b9abd4b22ba5d00ef43964a00b0c7467d57ed5ac7595b
+  tests/story_extraction/fixture_builder.py: b61eace1529b8a86275c9e923048ea01d858f977eb7f50a14297c6fbc5457ddc
+profile:
+  id: STORY_UNDERSTANDING_CORE_V0
+  source: docs/research/m4/M4_EXTRACTION_EVALUATION_PROTOCOL_V0.md
+  heading: "## 4. Development Extraction Profile"
+  definition_sha256: 239177f8adad3b1e1b8fc1685a0ea239d7defa3cccfac0f99c4442f5d1aaa2f6
+story_extraction_v0_frozen: false

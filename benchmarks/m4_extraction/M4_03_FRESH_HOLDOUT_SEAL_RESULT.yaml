@@ -1,0 +1,136 @@
+# M4-03 — fresh extraction holdout V1: sanitized seal record.
+# Aggregates and hashes only. No source text, locators, document / segment / case ids, or per-case gold.
+task: M4-03-FRESH-HOLDOUT-SELECTION-ANNOTATION-AND-SEALING
+holdout: M4_FRESH_HOLDOUT_V1
+seal_date: 2026-10-02
+base_commit: 9d8b27d35c4cebec357cf06c7b2484ebb0ca5954
+selection_lock_commit: 2174a3181b1322046b71fc7f49f208055445a1f4
+status: M4_FRESH_HOLDOUT_V1_SEALED
+
+claim_boundary:
+  supports: "fresh source-span validation within the same story and corpus"
+  does_not_support: [new-story generalization, new-genre generalization, new-language generalization, independent human annotation]
+
+selection:
+  selection_protocol_id: M4_FRESH_HOLDOUT_SELECTION_V1
+  selection_lock_sha256: e8e87681d0767807879f270054fa06d8e61956af4c9ca3ab81dc225c32e051ff
+  semantic_exposure_registry_sha256: 07fd7a0ebd3fd393f2ac073d74412f80939ffef1abbaca0466db66dfe2788095
+  annotation_guideline_sha256: 0340da09234df43940d340b9c8c40c27521327a08da53d96530e8c4d7db714b0
+  eligible_population_count: 146
+  case_count: 12
+  documents_represented: 12
+  window_segments_total: 73
+  replacement_count_by_reason:
+    NO_STORY_CONTENT: 0
+    PURE_PARATEXT: 0
+    SOURCE_CORRUPTION: 0
+    WINDOW_HAS_NO_IN_PROFILE_ASSERTION: 0
+    WINDOW_DEPENDS_ON_EXCLUDED_CONTEXT_TO_BE_INTERPRETABLE: 0
+  selected_cases_changed_after_lock: false
+
+gold:
+  gold_status: [AGENT_DRAFT_SEALED_GOLD, NOT_HUMAN_CONFIRMED]
+  annotation_method: HUMAN_ANNOTATION     # contract method value; produced by an AI agent, not by a human
+  review_state: UNREVIEWED
+  extraction_profile: STORY_UNDERSTANDING_CORE_V0
+  gold_completeness: "12/12 COMPLETE_FOR_PROFILE"
+  completeness_basis: "per-segment coverage note for all 73 eligible segments"
+  prior_canonical_context: NONE
+  context_only_passages: 0
+  required_assertion_count: 83
+  optional_assertion_count: 27
+  required_per_case: {min: 1, max: 11}
+  evidence_ref_count: 85
+  mention_count: 41
+  event_count: 15
+  assertions_with_more_than_one_sufficient_set: 9
+  negated_assertions: 3
+  literal_variant_groups: 16
+  epistemic_status_distribution: {EXPLICIT: 103, ENTAILED: 2, SUGGESTED: 5}
+  evidence_role_distribution: {DEPICTION: 59, NARRATION_SUMMARY: 25, IN_WORLD_REPORT: 1}
+  predicate_family_distribution:     # propositions, whole holdout
+    RefersTo: 41
+    Occurred: 15
+    Participates: 15
+    EmotionToward: 12
+    Says: 10
+    AddressesAs: 6
+    Attitude: 5
+    Habitually: 5
+    LocatedAt: 3
+    Conceals: 2
+    OccursAt: 2
+    PhysicalCondition: 1
+    Regard: 1
+    TemporalRelation: 1
+    placeholder_content: 2
+  natural_category_distribution:     # cases; a case may carry several labels
+    ENTITY_RESOLUTION: 12
+    RELATIONSHIP_STATE: 7
+    SIMPLE_EVENT: 7
+    REPORTED_INFORMATION: 5
+    KNOWLEDGE_OR_BELIEF: 4
+    AMBIGUITY: 4
+    CONCEALMENT_OR_REVEAL: 2
+    TEMPORAL_RELATION: 1
+    LONG_RANGE_OR_MULTI_EVIDENCE: 1
+    STATE_CHANGE: 0
+    CAUSALITY: 0
+    MIXED_PARATEXT_PROSE: 0
+  holdout_protocol_issues_recorded: 6
+
+integrity:
+  checks_per_case: 12
+  cases_passing_all_checks: 12
+  checks: [complete_for_profile, batch_contract_pass, canonical_structural_pass, canonical_semantic_pass,
+           scope_is_locked_window, all_source_refs_valid_and_in_scope, no_evidence_after_as_of,
+           no_context_only_input, no_prior_context, no_duplicate_concrete_proposition, review_unreviewed,
+           gold_evaluable_against_itself]
+
+packages:
+  input_package: {name: M4_03_HOLDOUT_INPUT_V1.zip, sha256: 11388350b830d08c48010a7010c7c376ea7b613abf30b71592b0a190ff80eceb, contains_gold: false}
+  gold_package: {name: M4_03_HOLDOUT_GOLD_V1.zip, sha256: 7de8f597797dd24f493ce76f08284145c3245b0da8423fe8840411252aaa22cb}
+  blindness_manifest_sha256: 4621e4c742221cf5b38d54a694fd47ab66df364980a1cfaf2939cf8b5e875fc4
+  committed_to_repository: false
+
+evaluation_snapshot:
+  snapshot_id: M4_EVALUATION_PROTOCOL_SNAPSHOT_V1
+  record: benchmarks/m4_extraction/M4_EVALUATION_PROTOCOL_SNAPSHOT_V1.yaml
+  snapshot_sha256: a9ac816fe8e20d6ed0d2a4e078c37a89a63dc10660b11d9c754b8038d71c29a6
+
+blindness:
+  extractor_access_allowed: {input_package: true, gold_package: false}
+  gold_may_be_opened_after: {predictions_locked_and_hashed: true}
+  contamination_state: CLEAN
+  gold_must_not_be_used_for: [prompt tuning, few-shot example creation, model selection, threshold tuning, alignment tuning, evaluation-rule tuning]
+  if_gold_opened_before_prediction_lock: CONTAMINATED
+
+readiness_gate:
+  exact_semantic_exposure_registry_exists: true
+  selection_locked_before_annotation: true
+  selected_cases_remain_fixed: true
+  all_gold_cases_complete_for_profile: true
+  all_gold_batches_conform_to_frozen_m2: true
+  input_and_gold_packages_separate: true
+  gold_is_agent_draft_and_unreviewed: true
+  scorer_snapshot_bound: true
+  blindness_manifest_forbids_gold_before_prediction_lock: true
+  no_model_prompt_or_extractor_selected_or_run: true
+  result: M4_FRESH_HOLDOUT_V1_SEALED
+
+limitations:
+  - "Same story, same corpus, same language as the development data."
+  - "Gold was written by the same AI agent that built the contract and the evaluator; no human has reviewed it."
+  - "The annotator had prior exposure to the story as a whole, although not to these spans."
+  - "Only 180 of 1519 segments were outside the exposure registry and its halo, so cases come from short unexposed gaps: windows are 5-7 segments and long-range evidence is nearly absent."
+  - "No case shows state change, causality or mixed paratext; the distribution is whatever the hash order produced."
+  - "Required gold is small in some cases (minimum 1 required assertion): much of that text states things the registry cannot express."
+  - "Six protocol issues were recorded where the profile or registry could not express stated content (character traits, kinship, setting-limited relations, non-event causes, results)."
+  - "The selection lock is evidenced by a public commit made before annotation; it is not externally timestamped."
+
+not_done:
+  extractor_or_model_selected: false
+  holdout_predictions_run: false
+  holdout_scored: false
+  story_extraction_v0_frozen: false
+  m5_started: false
