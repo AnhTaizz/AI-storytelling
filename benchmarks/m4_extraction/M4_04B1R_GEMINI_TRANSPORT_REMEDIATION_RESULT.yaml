@@ -1,0 +1,242 @@
+task: M4-04B1R-GEMINI-TRANSPORT-FAILURE-DIAGNOSIS-REMEDIATION-AND-REGATE
+date: 2026-10-02
+base_commit: 1798008bce2e7ba40dc054c856e4b9c1ee79efe5
+status: M4_04B1R_RUNTIME_CORRECT_PROVIDER_GATE_UNHEALTHY
+
+historical_v1:
+  previous_gate: FAIL
+  previous_status: GEMINI_TRANSPORT_RESILIENCE_V1_LIVE_GATE_FAIL
+  previous_result_immutable: true
+  previous_result_path: benchmarks/m4_extraction/M4_04B1_GEMINI_TRANSPORT_RESILIENCE_RESULT.yaml
+  previous_result_sha256: b3861a4fc1daeec317f354c4b006650a2038924727c74b580de8516244edb56e
+
+runtime:
+  resilience_version: GEMINI_TRANSPORT_RESILIENCE_V1_1
+  circuit_breaker_version: GEMINI_PROJECT_MODEL_CIRCUIT_BREAKER_V1_1
+  key_pool_version: GEMINI_KEY_POOL_V1
+  transport_version: GEMINI_TRANSPORT_V1
+  sdk: google-genai/2.27.0
+
+root_cause_findings:
+  historical_429_cause: 429_CAUSE_NOT_EXPOSED
+  historical_5xx_http_code_breakdown: NOT_RETAINED
+  historical_per_attempt_timeline_complete: false
+  historical_evidence_limitation: V1 retained request summaries and aggregate counters but not per-attempt HTTP metadata or timestamps
+  v1_runtime_gaps:
+    - limiter_identity_was_project_group_only_not_project_group_and_model
+    - 429_non_health_path_reset_prior_5xx_streak
+    - 5xx_backoff_ignored_retry_after_and_had_no_jitter
+    - diagnostic_fingerprints_and_complete_attempt_timeline_were_absent
+  failure_attribution: provider 429/5xx was real; V1 evidence cannot establish a more specific historical provider quota or predominant 5xx code
+  diagnosis_artifact_sha256: 256cca66358e08f61126ec60948d3440750247891f8a6143cfecfc6aa01c34fa
+
+configuration_template_repair:
+  project_label_placeholders_restored: true
+  hard_coded_model_removed: true
+  arbitrary_positive_numbered_slots_supported: true
+  default_rpm_tpm_placeholders_added: true
+  real_credentials_or_project_identifiers_committed: false
+
+credentials:
+  configured_slot_count: 7
+  labeled_slot_count: 0
+  unlabeled_slot_count: 7
+  distinct_explicit_project_group_count: 0
+  effective_live_slot_count: 1
+  effective_live_project_group_count: 1
+  unknown_slot_policy: use_exactly_one_unknown_credential_conservatively
+  multi_project_failover: MULTI_PROJECT_FAILOVER_NOT_TESTABLE
+
+rate_limiter_v1_1:
+  identity: [project_group, model]
+  default_rpm: 10
+  default_tpm: 3000
+  default_semantic: conservative_research_default_not_provider_quota_claim
+  project_model_override_count: 0
+  fresh_rpm_reservation_per_real_provider_attempt: true
+  fresh_tpm_reservation_per_real_provider_attempt: true
+  post_success_usage_correction: true
+
+adaptive_429_v1_1:
+  retry_after_precedence: true
+  default_cooldown_seconds: 5
+  multiplicative_decrease_factor: 0.50
+  minimum_effective_factor: 0.25
+  recovery_step: 0.10
+  successes_per_recovery_step: 2
+  same_project_key_bypasses_limit: false
+  permanent_user_config_mutation: false
+
+backoff_v1_1:
+  supported_5xx_retry_after_precedence: true
+  bounded_exponential_base_seconds: 1
+  bounded_exponential_max_seconds: 30
+  bounded_uniform_jitter_ratio: 0.20
+  deterministic_test_rng_injection: true
+
+retry_and_failover:
+  max_total_provider_attempts: 3
+  max_transport_retries: 2
+  max_credential_failovers: 2
+  max_project_group_failovers: 2
+  global_attempt_cap_wins: true
+  independent_labeled_project_preferred_on_later_attempt: true
+  same_project_rotation_is_not_quota_failover: true
+  structural_repair_calls: 0
+
+circuit_semantic:
+  states: [CLOSED, OPEN, HALF_OPEN]
+  identity: [project_group, model]
+  failure_threshold: 3
+  open_cooldown_seconds: 30
+  half_open_probe_requests: 1
+  429_counts_as_transport_health_failure: false
+  429_in_closed_state_preserves_prior_5xx_history: true
+  429_in_half_open_reopens_as_inconclusive_without_incrementing_streak: true
+
+sanitized_failure_fingerprints:
+  enabled: true
+  raw_provider_message_recorded: false
+  credential_material_recorded: false
+  examples_observed: [SERVER_FAILURE:503, RATE_LIMIT:RESOURCE_EXHAUSTED]
+
+offline_verification:
+  historical_v1_resilience_tests: 35
+  v1_1_targeted_tests: 20
+  combined_resilience_tests: 55
+  story_extraction_tests: 207
+  story_ingestion_tests: 79
+  canonical_story_tests: 99
+  script_quality_tests: 64
+  story_benchmark_tests: 298
+  scheduler_simulation_semantic_requests: 500
+  scheduler_simulation_live_api_calls: 0
+  no_deadlock: PASS
+  bounded_queue: PASS
+  no_counter_corruption: PASS
+  secret_leak_tests: PASS
+  fake_independent_project_fairness: PASS_250_250
+  attempt_limits: PASS
+  model_aware_limiter_accounting: PASS
+
+transport_smoke_model:
+  discovery_rule: latest_accessible_non_preview_stable_flash_excluding_flash_lite
+  selected_model: gemini-3.8-flash
+  provider_reported_model: gemini-3.8-flash
+  extraction_baseline_selected: false
+  discovery_artifact_sha256: 3b50a01aa13d6a312c580b052edf879cfabf708a6df2558f239192ddd10f2aab
+
+precheck:
+  semantic_request_count: 4
+  concurrency: 1
+  bounded_terminal_state_count: 4
+  success_count: 4
+  failure_count: 0
+  provider_attempt_count: 8
+  rate_limit_event_count: 0
+  server_failure_count: 4
+  server_failure_breakdown:
+    SERVER_FAILURE:503: 4
+  provider_reason_breakdown:
+    UNAVAILABLE: 4
+  transport_retry_count: 4
+  credential_failover_count: 0
+  project_group_failover_count: 0
+  uncaught_exception_count: 0
+  rpm_reservation_count: 8
+  tpm_reservation_count: 8
+  latency_ms:
+    p50: 14747.914
+    p95: 36137.536
+  provider_latency_ms:
+    p50: 8261.580
+    p95: 14902.797
+  queue_wait_ms:
+    p50: 0.0
+    p95: 0.0
+  stop_rule_triggered: false
+  result: HEALTHY_BY_PREREGISTERED_STOP_RULE
+  private_result_sha256: 27d004b2fed5f8b411afbedbbf9a9f42898b283c43079dae18b0dff41bedbd89
+
+preregistration:
+  protocol: M4_04B1R_RESILIENCE_REGATE_PROTOCOL_V1
+  protocol_sha256: 2ea4d8d5c5df0692d261de3b21798a6e836ab99c4a51857c900935a1ab45bc33
+  locked_before_first_regate_request: true
+  edited_after_results: false
+
+regate:
+  semantic_request_count: 12
+  concurrency: 2
+  queue_capacity: 4
+  maximum_output_tokens_per_request: 128
+  maximum_provider_attempts_per_request: 3
+  maximum_observed_provider_attempts_per_request: 3
+  maximum_theoretical_provider_calls: 36
+  bounded_terminal_state_count: 12
+  success_count: 4
+  failure_count: 8
+  success_threshold: 11
+  success_gate: FAIL
+  provider_attempt_count: 14
+  rate_limit_event_count: 2
+  rate_limit_breakdown:
+    RATE_LIMIT:RESOURCE_EXHAUSTED: 2
+  rate_limit_cause: MODEL_SPECIFIC_QUOTA
+  rate_limit_retry_after_present_count: 0
+  server_failure_count: 8
+  server_failure_breakdown:
+    SERVER_FAILURE:503: 8
+  provider_reason_breakdown:
+    UNAVAILABLE: 8
+  transport_retry_count: 9
+  credential_failover_count: 0
+  project_group_failover_count: 0
+  circuit_open_count: 2
+  circuit_half_open_count: 0
+  circuit_recovery_count: 0
+  circuit_blocked_request_count: 5
+  local_rpm_wait_count: 4
+  local_tpm_wait_count: 0
+  adaptive_rate_limit_event_count: 2
+  adaptive_rate_wait_count: 1
+  rpm_reservation_count: 14
+  tpm_reservation_count: 14
+  max_active_calls: 2
+  max_queue_depth: 2
+  uncaught_exception_count: 0
+  attempt_cap_violation_count: 0
+  uncontrolled_retry_count: 0
+  silent_model_switch_count: 0
+  provider_fallback_count: 0
+  local_model_fallback_count: 0
+  latency_ms_all_terminal_requests:
+    p50: 18077.721
+    p95: 64163.940
+    max: 105567.706
+  provider_latency_ms:
+    p50: 5719.913
+    p95: 16493.314
+  queue_wait_ms_all_requests:
+    p50: 0.0
+    p95: 22746.019
+  runtime_invariants: PASS
+  provider_reliability_gate: FAIL
+  private_result_sha256: 6e767ddd2125eae6f0a5796d65541bdc56ed7bc47b8c48da9f78621093a33529
+
+secret_scan:
+  env_ignored: true
+  exact_configured_secret_matches_in_staged_and_public_artifacts: 0
+  secret_leak_count: 0
+
+holdout:
+  input_opened: false
+  gold_opened: false
+  predictions_run: false
+  contamination_state: CLEAN
+
+state:
+  extraction_model: NOT_SELECTED
+  extractor: NOT_LOCKED
+  m4_04b2: NOT_STARTED
+  m5: NOT_STARTED
+  next_action: ORCHESTRATOR_REVIEW_PROVIDER_GATE_UNHEALTHY

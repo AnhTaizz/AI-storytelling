@@ -784,6 +784,20 @@ M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02 are ACCEPTED. M4-03 is `FR
 - **Blindness.** Holdout input: NOT OPENED. Gold: SEALED / NOT OPENED. Holdout predictions: NOT RUN. Contamination state: CLEAN. M5: NOT STARTED.
 - **Integrity.** The M4 evaluation snapshot and frozen M1/M2/M3 artifacts remain unchanged. `DECISIONS.md` and `ROADMAP.md` remain unchanged.
 
+## M4-04B1R-GEMINI-TRANSPORT-FAILURE-DIAGNOSIS-REMEDIATION-AND-REGATE — EXECUTED — Status: M4_04B1R_RUNTIME_CORRECT_PROVIDER_GATE_UNHEALTHY
+
+- **History preserved.** The M4-04B1 V1 live failure remains immutable. Its incomplete per-attempt evidence supports only `429_CAUSE_NOT_EXPOSED` and an unknown 5xx-code breakdown; no missing provider detail was inferred.
+- **Configuration repaired.** `.env.example` again includes blank project-label pairs, has no hard-coded model, documents arbitrary numbered slots, and exposes optional blank local-limit settings. Same-project keys must share a local label; different known projects require different labels. Labels are aliases, not real project identifiers.
+- **V1.1 remediation.** `GEMINI_TRANSPORT_RESILIENCE_V1_1` uses `(project_group, model)` limiter/circuit identity, a fresh RPM/TPM reservation for every real attempt, bounded adaptive 429 cooldown/recovery, 5xx `Retry-After` plus bounded injectable jitter, independent-project preference, preserved 5xx history across 429, and sanitized fingerprints/timelines.
+- **Credential safety.** Seven configured slots remained unlabeled, so live work used exactly one unknown slot. `MULTI_PROJECT_FAILOVER_NOT_TESTABLE`; no independent quota was claimed.
+- **Offline verification.** All 35 V1 and 20 V1.1 resilience tests passed. The new 500-request simulation completed with 500 provider attempts/reservations, no deadlock or counter corruption, and fair 250/250 scheduling across two explicitly independent fake projects. Full suites: story extraction 207/207, ingestion 79/79, canonical story 99/99, script quality 64/64, story benchmark 298/298.
+- **Transport model.** Provider discovery selected accessible non-preview stable `gemini-3.8-flash` under the preregistered latest-stable-Flash rule. This is a transport-smoke model only; extraction model remains NOT SELECTED.
+- **Precheck.** Four sequential semantic requests all succeeded in eight provider attempts. Four `503 UNAVAILABLE` events recovered through bounded retry, so the stop rule was not triggered.
+- **Locked regate.** Protocol SHA-256 `2ea4d8d5c5df0692d261de3b21798a6e836ab99c4a51857c900935a1ab45bc33` was fixed before the first regate request. The one 12-request regate reached 12 bounded states but achieved 4 successes and 8 failures against the required 11/12. Fourteen provider attempts observed eight `503 UNAVAILABLE` and two `429 RESOURCE_EXHAUSTED` events; new structured metadata supported `MODEL_SPECIFIC_QUOTA` for those 429 events.
+- **Runtime/provider split.** Runtime invariants passed: maximum three attempts/request, 14 RPM and 14 TPM reservations for 14 provider attempts, concurrency at most two, zero uncaught exceptions, and no model/provider/local fallback. Provider reliability failed; the gate is honestly `RUNTIME_CORRECT_PROVIDER_GATE_UNHEALTHY`.
+- **Research state.** M4-04B2: NOT STARTED. Extraction model: NOT SELECTED. Extractor: NOT LOCKED. Holdout input: NOT OPENED. Gold: SEALED / NOT OPENED. Holdout predictions: NOT RUN. Contamination: CLEAN. M5: NOT STARTED.
+- **Integrity.** The M4 evaluation snapshot and frozen M1/M2/M3 artifacts remain unchanged. `DECISIONS.md` and `ROADMAP.md` remain unchanged.
+
 ## Next Candidate
 
-Orchestrator review of M4-04B1 live gate failure. Offline resilience infrastructure passed, but the preregistered live smoke achieved 7/12 successes against a required 11/12. Provider-attempt observations included 429 and 5xx responses. Do not begin M4-04B2 or extraction quality work until this gate is reviewed and remediated.
+Orchestrator review of M4-04B1R. V1.1 runtime invariants passed, but the provider regate achieved 4/12 successes against the required 11/12 after real `503 UNAVAILABLE` and model-specific `429 RESOURCE_EXHAUSTED` responses. Do not begin M4-04B2 or extraction quality work.
