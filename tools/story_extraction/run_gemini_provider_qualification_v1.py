@@ -18,6 +18,7 @@ from tools.story_extraction.gemini_resilience_v1_1 import (
     GeminiResilientTransportV11,
     ResiliencePolicyV11,
 )
+from tools.story_extraction.gemini_transport_v1 import official_client_factory
 
 
 RUNNER_VERSION = "M4_GEMINI_PROVIDER_QUALIFICATION_RUNNER_V1"
@@ -28,6 +29,7 @@ PROMPT_TEMPLATE_SHA256 = hashlib.sha256(
     (SYSTEM_INSTRUCTION + "\n" + USER_TEMPLATE).encode("utf-8")
 ).hexdigest()
 STAGE_SPECS = {
+    "credential_screen": {"requests": 3, "concurrency": 1},
     "stage_a": {"requests": 3, "concurrency": 1},
     "profile_s": {"requests": 12, "concurrency": 1},
     "profile_c2": {"requests": 12, "concurrency": 2},
@@ -88,6 +90,9 @@ def run_block(
     credential_slot: str,
     rpm: int,
     tpm: int,
+    report_task: str = "M4-04B1Q-GEMINI-PROVIDER-CAPACITY-QUALIFICATION",
+    request_prefix: str = "M4B1Q",
+    provider_attempt_pacer: Any = None,
 ) -> dict[str, Any]:
     if stage not in STAGE_SPECS:
         raise ValueError("Unknown qualification stage")
@@ -102,6 +107,18 @@ def run_block(
         raise RuntimeError("Locked Gemini credential slot is unavailable")
     credential = selected[0]
     pool = GeminiKeyPool((credential,))
+    global_wait_records: list[float] = []
+
+    def client_factory(api_key: str):
+        client = official_client_factory(api_key)
+        wait_seconds = 0.0
+        if provider_attempt_pacer is not None:
+            wait_seconds = float(provider_attempt_pacer.acquire())
+        global_wait_records.append(wait_seconds)
+        return client
+
+    if provider_attempt_pacer is not None and concurrency != 1:
+        raise ValueError("Task-level provider pacing requires sequential execution")
     policy = ResiliencePolicyV11(
         max_total_provider_attempts=3,
         max_transport_retries=2,
@@ -120,10 +137,10 @@ def run_block(
         circuit_open_cooldown_seconds=30,
         half_open_probe_requests=1,
     )
-    gate = GeminiResilientTransportV11(pool, policy=policy)
+    gate = GeminiResilientTransportV11(pool, client_factory=client_factory, policy=policy)
 
     def one(index: int) -> dict[str, Any]:
-        request_id = f"M4B1Q_{block_id}_{index:02d}"
+        request_id = f"{request_prefix}_{block_id}_{index:02d}"
         user_content = USER_TEMPLATE.replace("<SEQUENCE>", str(index))
         started = time.perf_counter()
         try:
@@ -178,6 +195,22 @@ def run_block(
                 ]
                 results.extend(future.result(timeout=360) for future in futures)
 
+    flattened_attempts = [
+        attempt
+        for request in results
+        for attempt in request.get("transport_attempts", [])
+    ]
+    if len(flattened_attempts) != len(global_wait_records):
+        raise RuntimeError("Global pacing accounting does not match provider attempts")
+    provider_latencies: list[float] = []
+    for attempt, wait_seconds in zip(flattened_attempts, global_wait_records):
+        runtime_elapsed = float(attempt.get("provider_latency_ms", 0.0))
+        adjusted = max(0.0, runtime_elapsed - (wait_seconds * 1000.0))
+        attempt["runtime_elapsed_including_global_pacing_ms"] = round(runtime_elapsed, 3)
+        attempt["global_safety_wait_seconds"] = round(wait_seconds, 6)
+        attempt["provider_latency_ms"] = round(adjusted, 3)
+        provider_latencies.append(adjusted)
+
     metrics = gate.metrics.snapshot()
     health = gate.health_snapshot()
     elapsed = [float(item["elapsed_ms"]) for item in results]
@@ -205,10 +238,10 @@ def run_block(
             model_switches == 0,
         )
     )
-    threshold = request_count if stage == "stage_a" else 11
+    threshold = request_count if stage in {"credential_screen", "stage_a"} else 11
     passed = success_count >= threshold and invariant_pass and metrics["auth_disable_event_count"] == 0
     report = {
-        "task": "M4-04B1Q-GEMINI-PROVIDER-CAPACITY-QUALIFICATION",
+        "task": report_task,
         "runner": RUNNER_VERSION,
         "stage": stage,
         "block_id": block_id,
@@ -226,6 +259,13 @@ def run_block(
         "maximum_output_tokens_per_request": OUTPUT_TOKEN_CAP,
         "maximum_provider_attempts_per_request": 3,
         "maximum_theoretical_provider_attempts": request_count * 3,
+        "cross_slot_failover_count": metrics["credential_failover_count"],
+        "global_safety_pacing": {
+            "enabled": provider_attempt_pacer is not None,
+            "wait_count": sum(value > 0 for value in global_wait_records),
+            "wait_seconds_total": round(sum(global_wait_records), 6),
+            "reservation_count": len(global_wait_records),
+        },
         "bounded_terminal_state_count": len(results),
         "success_count": success_count,
         "failure_count": request_count - success_count,
@@ -259,6 +299,10 @@ def run_block(
             "mean": round(statistics.mean(elapsed), 3) if elapsed else 0.0,
         },
         "provider_latency_ms": {
+            "p50": round(_percentile(provider_latencies, 0.50), 3),
+            "p95": round(_percentile(provider_latencies, 0.95), 3),
+        },
+        "runtime_elapsed_including_global_pacing_ms": {
             "p50": metrics["provider_latency_ms_p50"],
             "p95": metrics["provider_latency_ms_p95"],
         },
@@ -313,4 +357,3 @@ def main(argv: Optional[list[str]] = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

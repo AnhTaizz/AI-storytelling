@@ -810,6 +810,18 @@ M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02 are ACCEPTED. M4-03 is `FR
 - **Research state.** Extraction model: NOT SELECTED. Extractor: NOT LOCKED. Holdout input: NOT OPENED. Gold: SEALED / NOT OPENED. Holdout predictions: NOT RUN. Contamination: CLEAN. M5: NOT STARTED.
 - **Integrity.** The accepted V1.1 runtime was not redesigned. The M4 evaluation snapshot and frozen M1/M2/M3 artifacts remain unchanged. `DECISIONS.md` and `ROADMAP.md` remain unchanged.
 
+## M4-04B1K-GEMINI-CREDENTIAL-HEALTH-AND-PROVIDER-REQUALIFICATION â€” EXECUTED â€” Status: M4_04B1K_NO_STABLE_MODEL_ON_SELECTED_CREDENTIAL
+
+- **Topology boundary.** Seven configured slots were screened without project labels. Topology and independent-project count remain UNKNOWN; credential screening is not quota pooling. A task-level limiter enforced no more than six provider operations per rolling 60 seconds across every slot and model block.
+- **Credential health.** Slots 1, 2, 3, 4, 6 and 7 passed 3/3 on `gemini-3.5-flash-lite`. Slot 5 failed 0/3 after one sanitized `AUTH_FAILURE:403`; the remaining two requests ended safely without another provider call. Cross-slot failover was zero.
+- **Credential selection.** The preregistered deterministic rule selected `gemini_slot_3`: all passing slots had zero provider failures/retries, and slot 3 had the lowest provider-latency p95. This is a task-scoped credential choice, not evidence of quota independence.
+- **Model Stage A.** On the selected credential, all candidates were available but each achieved only 2/3: 3.8 Flash observed five 503 events; 3.7 Flash observed two 503 events plus one provider failure without a provider code; 3.5 Flash-Lite observed one provider failure without a provider code. All runtime invariants passed.
+- **Short circuit.** Zero models passed the required 3/3 Stage A rule. Profile S and C2 were not executed, no research execution profile was created, and no block was rerun.
+- **Verification.** Required suites passed: story extraction 220/220, ingestion 79/79, canonical story 99/99, script quality 64/64 and story benchmark 298/298.
+- **Decision.** `M4_04B2_ELIGIBLE = false`; M4-04B2 is BLOCKED / NOT STARTED. Extraction model is NOT SELECTED FOR QUALITY and extractor is NOT LOCKED.
+- **Blindness.** Holdout input: NOT OPENED. Gold: SEALED / NOT OPENED. Holdout predictions: NOT RUN. Contamination: CLEAN. M5: NOT STARTED.
+- **History/integrity.** M4-04B1, M4-04B1R and M4-04B1Q retain their accepted negative conclusions. The accepted V1.1 runtime, frozen M4 evaluation snapshot and frozen M1/M2/M3 artifacts are unchanged. `DECISIONS.md` and `ROADMAP.md` are unchanged.
+
 ## Next Candidate
 
-Master Orchestrator review of M4-04B1Q. No stable Gemini research execution profile qualified under the locked single-credential protocol. Do not begin M4-04B2 or extraction quality work.
+Master Orchestrator review of M4-04B1K. No stable Gemini model passed the selected-credential Stage A gate. Do not begin M4-04B2 or extraction quality work.
