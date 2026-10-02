@@ -1,5 +1,27 @@
 # M4 Durable Research Execution V1
 
+## M4-04B1D2 canonical confirmation
+
+The qualification defect was repaired prospectively, without editing or promoting the
+historical B1D protocol. A new canonical JSON protocol was generated programmatically,
+validated against an exact machine-readable schema and semantic contract, and locked in
+commit `b8dff09aaf8f659d83ec373833eaedabf637a0bb` before the first confirmation request.
+The protocol SHA-256 is
+`94361b24374bf5d64a9beb240237b1516486d4276fd97918b294a01d7bb9abc0`.
+
+The confirmation used only `gemini_slot_3`, `gemini-3.5-flash-lite`, concurrency one,
+synthetic requests, and the persistent six-operations-per-rolling-60-seconds pacer. All
+12 jobs reached `SUCCEEDED_LOCKED` in their first window, using 12 provider attempts. No
+503, 429, timeout, network failure, deferral, credential switch, model switch, fingerprint
+mutation, output-aware retry, duplicate success, or call after a success lock occurred.
+The pacing invariant passed with a maximum of six rolling reservations.
+
+This qualifies `M4_DURABLE_RESEARCH_EXECUTION_PROFILE_V1` pending Master Orchestrator
+review and makes M4-04B2 eligible, but M4-04B2 remains NOT STARTED. It does not select an
+extraction-quality model, lock an extractor, establish project-topology independence, or
+open development/holdout material. Holdout input and gold remain unopened, predictions
+remain not run, and contamination remains CLEAN.
+
 ## Scope and integrity result
 
 `DURABLE_RESEARCH_EXECUTOR_V1` is a research orchestration layer above the accepted

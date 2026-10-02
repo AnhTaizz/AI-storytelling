@@ -834,6 +834,16 @@ M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02 are ACCEPTED. M4-03 is `FR
 - **Verification.** Required suites passed: story extraction 242/242, ingestion 79/79, canonical story 99/99, script quality 64/64 and story benchmark 298/298. The frozen M4 evaluation snapshot and M1/M2/M3 artifacts remain unchanged.
 - **Research state.** `M4_04B2_ELIGIBLE = false`; M4-04B2 is BLOCKED / NOT STARTED. Holdout input: NOT OPENED. Gold: SEALED / NOT OPENED. Predictions: NOT RUN. Contamination: CLEAN. M5: NOT STARTED.
 
+## M4-04B1D2-DURABLE-EXECUTION-PROTOCOL-REPAIR-AND-CONFIRMATION — EXECUTED — Status: M4_04B1D2_DURABLE_PROFILE_QUALIFIED_PENDING_ORCHESTRATOR_REVIEW
+
+- **Historical integrity.** M4-04B1D remains `M4_04B1D_FIX_REQUIRED`; its invalid private YAML protocol remains byte-identical at SHA-256 `5eab4a7f2cf5934da3ec3c6c733368e38ce9376689dff11a8e29798d171c0e4a`, and its 6/6 Flash-Lite observation remains provisional only.
+- **Root-cause repair.** The B1D2 live runner requires valid UTF-8 JSON, exact schema and semantic values, fixed runtime/model/credential/limits, generated-job fingerprint equality, a matching public protocol hash, a matching private validation result, and byte identity throughout execution before provider work is eligible. Regression tests prove malformed, schema-invalid, mismatched, or mutated protocols stop before credential/client creation.
+- **External chronology.** Canonical protocol SHA-256 `94361b24374bf5d64a9beb240237b1516486d4276fd97918b294a01d7bb9abc0` was locked and pushed in commit `b8dff09aaf8f659d83ec373833eaedabf637a0bb` before the first live confirmation request.
+- **Fixed confirmation.** Exactly 12 synthetic jobs used only `gemini_slot_3`, topology UNKNOWN, `gemini-3.5-flash-lite`, concurrency one, maximum three windows/job and three provider attempts/window. All 12 reached `SUCCEEDED_LOCKED` in window one using 12 provider attempts; 503, 429, timeout, network failure, provider failure, deferral and resume counts were all zero.
+- **Invariants.** First-success locks: 12. Calls after success lock, duplicate successes, response comparison, best-of-N selection, output-aware retry, credential/model switch, request-fingerprint mutation, attempt-cap violation and uncaught exception counts: zero. Persistent global 6/60 pacing recorded 12 reservations, three waits totaling 48.926018 seconds, a maximum rolling count of six, and PASS.
+- **Decision.** `M4_DURABLE_RESEARCH_EXECUTION_PROFILE_V1` is QUALIFIED PENDING ORCHESTRATOR REVIEW. `M4_04B2_ELIGIBLE = true`, but M4-04B2 is ELIGIBLE / NOT STARTED. Extraction quality model remains NOT SELECTED and extractor remains NOT LOCKED.
+- **Blindness.** Development extraction data was not opened. Holdout input: NOT OPENED. Gold: SEALED / NOT OPENED. Predictions: NOT RUN. Contamination: CLEAN. M5: NOT STARTED.
+
 ## Next Candidate
 
-Master Orchestrator review of the M4-04B1D protocol-integrity defect and preserved provisional live evidence. Do not begin M4-04B2.
+Master Orchestrator review of the qualified M4-04B1D2 durable profile. Do not begin M4-04B2.

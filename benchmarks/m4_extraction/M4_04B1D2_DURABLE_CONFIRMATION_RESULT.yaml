@@ -1,0 +1,103 @@
+task_id: M4-04B1D2-DURABLE-EXECUTION-PROTOCOL-REPAIR-AND-CONFIRMATION
+date: 2026-10-02
+base_commit: ab1ce127378387d8afc05c3f36efd45a4fb7d215
+lock_commit: b8dff09aaf8f659d83ec373833eaedabf637a0bb
+status: M4_04B1D2_DURABLE_PROFILE_QUALIFIED_PENDING_ORCHESTRATOR_REVIEW
+
+historical_b1d:
+  status: M4_04B1D_FIX_REQUIRED
+  protocol_sha256: 5eab4a7f2cf5934da3ec3c6c733368e38ce9376689dff11a8e29798d171c0e4a
+  protocol_edited: false
+  provisional_evidence_preserved: true
+  qualification_promoted_retroactively: false
+
+protocol:
+  id: M4_04B1D2_DURABLE_CONFIRMATION_PROTOCOL_V1
+  format: CANONICAL_JSON
+  schema_version: M4_04B1D2_CONFIRMATION_PROTOCOL_SCHEMA_V1
+  sha256: 94361b24374bf5d64a9beb240237b1516486d4276fd97918b294a01d7bb9abc0
+  parse: PASS
+  schema: PASS
+  semantic_consistency: PASS
+  fingerprints: PASS
+  secret_scan: PASS
+  lock_chronology: PASS
+  lock_pushed_before_live_execution: true
+
+runtime:
+  identity: GEMINI_TRANSPORT_RESILIENCE_V1_1
+  durable_executor: DURABLE_RESEARCH_EXECUTOR_V1
+  credential_slot: gemini_slot_3
+  credential_topology: UNKNOWN
+  model: gemini-3.5-flash-lite
+  concurrency: 1
+  global_pacing: 6_PROVIDER_OPERATIONS_PER_ROLLING_60_SECONDS
+  max_windows_per_job: 3
+  max_provider_attempts_per_window: 3
+  max_provider_attempts_per_job: 9
+  output_aware_retry: FORBIDDEN
+  first_success: IMMUTABLE_LOCK
+
+confirmation:
+  jobs: 12
+  eventual_successes: 12
+  terminal_failures: 0
+  unfinished_jobs: 0
+  execution_windows: 12
+  provider_attempts: 12
+  server_failure_503: 0
+  rate_limit_429: 0
+  timeouts: 0
+  network_failures: 0
+  provider_failures: 0
+  deferred_count: 0
+  resumed_count: 0
+  success_locks: 12
+  provider_reported_versions:
+    - gemini-3.5-flash-lite
+
+first_success_audit:
+  calls_after_success_lock: 0
+  duplicate_success_calls: 0
+  response_comparison_count: 0
+  best_of_n_selection_count: 0
+  output_aware_retry_count: 0
+  credential_switch_count: 0
+  model_switch_count: 0
+  request_fingerprint_mutation_count: 0
+  attempt_cap_violation_count: 0
+  uncaught_exception_count: 0
+  runtime_invariants: PASS
+
+global_pacing:
+  identity: PERSISTENT_GLOBAL_UNKNOWN_TOPOLOGY_PACER_V1
+  reservation_count: 12
+  wait_count: 3
+  wait_seconds_total: 48.926018
+  maximum_rolling_reservations_observed: 6
+  maximum_provider_operations: 6
+  rolling_window_seconds: 60
+  restart_persistent: true
+  invariant: PASS
+
+private_artifact_bindings:
+  confirmation_result_sha256: fa92091ea9e52db6172d74d621e53353ae33cb28021fa92fb9aa9dbcc50e78e3
+  qualified_profile_sha256: c6c789f0f06d3fdabc2333c29b389252de853ffef0add536d4f06fb6b94e143e
+
+qualification:
+  durable_profile: M4_DURABLE_RESEARCH_EXECUTION_PROFILE_V1
+  qualification_status: QUALIFIED_PENDING_ORCHESTRATOR_REVIEW
+  m4_04b2_eligible: true
+  m4_04b2_state: ELIGIBLE_NOT_STARTED
+  extraction_quality_model: NOT_SELECTED
+  extractor: NOT_LOCKED
+
+holdout:
+  input_opened: false
+  gold_opened: false
+  predictions_run: false
+  contamination: CLEAN
+
+research_state:
+  m4_04b2: NOT_STARTED
+  m5: NOT_STARTED
