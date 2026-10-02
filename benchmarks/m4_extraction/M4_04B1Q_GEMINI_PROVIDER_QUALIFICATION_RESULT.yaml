@@ -1,0 +1,243 @@
+task: M4-04B1Q-GEMINI-PROVIDER-CAPACITY-QUALIFICATION
+date: 2026-10-02
+base_commit: 95f5851f55a43c5aa1734e3a322f7364bcc03468
+status: M4_04B1Q_NO_STABLE_GEMINI_MODEL_PROFILE
+
+historical_evidence:
+  m4_04b1_v1_live_fail_preserved: true
+  m4_04b1r_provider_gate_unhealthy_preserved: true
+
+credentials:
+  configured_slots: 7
+  configured_labels: 0
+  unlabeled_slots: 7
+  official_live_credentials_used: 1
+  locked_slot: gemini_slot_1
+  credential_topology: UNKNOWN
+  independent_project_count: UNKNOWN
+  multi_project_failover: DISABLED
+  quota_multiplication_claimed: false
+
+runtime:
+  resilience: GEMINI_TRANSPORT_RESILIENCE_V1_1
+  sdk: google-genai/2.27.0
+  runtime_redesigned: false
+  local_rpm: 6
+  local_tpm: 3000
+  local_limit_semantic: conservative_safety_setting_not_provider_quota_claim
+  max_total_provider_attempts: 3
+  max_transport_retries: 2
+  credential_failovers: 0
+  project_group_failovers: 0
+  quiet_interval_between_blocks_seconds: 30
+
+discovery:
+  accessible_model_count: 61
+  eligible_stable_text_model_count: 18
+  candidate_set_locked_before_qualification_outcomes: true
+  private_discovery_sha256: 10833f324a183def999333e03648655df5732fb5597a69fa1cadff6155786ed1
+  candidates:
+    - role: A_LATEST_STABLE_FLASH
+      model: gemini-3.8-flash
+      display_name: Gemini 3.8 Flash
+      provider_discovery_version: "3.0"
+      text_generation_capable: true
+      stable_filter: true
+    - role: B_PREVIOUS_STABLE_FLASH_GENERATION
+      model: gemini-3.7-flash
+      display_name: Gemini 3.7 Flash
+      provider_discovery_version: 3.7-flash-08-2026
+      text_generation_capable: true
+      stable_filter: true
+    - role: C_STABLE_FLASH_LITE
+      model: gemini-3.5-flash-lite
+      display_name: Gemini 3.5 Flash Lite
+      provider_discovery_version: 3.5-flash-lite-07-2026
+      text_generation_capable: true
+      stable_filter: true
+
+preregistration:
+  protocol: M4_04B1Q_PROVIDER_QUALIFICATION_PROTOCOL_V1
+  protocol_sha256: e9a448fcb4629d69e76a9c721d1599afe58a3ce67867e401adb2e20bb0c8183a
+  locked_before_first_official_candidate_request: true
+  edited_after_live_results: false
+  prompt_template_sha256: caa453f25225089a1a4d3b50d851a607eb7bb8abaf25daa582028ed7a292d4f1
+  maximum_semantic_request_budget: 81
+  maximum_theoretical_provider_attempt_budget: 243
+
+stage_a:
+  semantic_requests_per_candidate: 3
+  concurrency: 1
+  pass_rule: 3_of_3_success_and_all_invariants
+  results:
+    - model: gemini-3.8-flash
+      result: FAIL
+      semantic_requests: 3
+      success: 0
+      failure: 3
+      provider_attempts: 3
+      attempts_per_request_mean: 1.0
+      maximum_attempts_per_request: 3
+      server_failure_503: 3
+      other_5xx: 0
+      rate_limit_429: 0
+      timeout: 0
+      network_failure: 0
+      transport_retries: 2
+      circuit_open_events: 1
+      circuit_blocked_requests: 2
+      local_rpm_waits: 0
+      local_tpm_waits: 0
+      failure_fingerprints:
+        SERVER_FAILURE:503: 3
+      latency_ms: {min: 0.331, p50: 0.677, p95: 43242.767, max: 48047.444}
+      provider_latency_ms: {p50: 5149.408, p95: 31317.444}
+      queue_wait_ms: {p50: 0.0, p95: 0.0}
+      runtime_invariants: PASS
+      private_result_sha256: 2313a2b01af3e345234997ff60ba70b2417afb92bced1fe1d1e607ffa2685b90
+    - model: gemini-3.7-flash
+      result: FAIL
+      semantic_requests: 3
+      success: 0
+      failure: 3
+      provider_attempts: 3
+      attempts_per_request_mean: 1.0
+      maximum_attempts_per_request: 3
+      server_failure_503: 3
+      other_5xx: 0
+      rate_limit_429: 0
+      timeout: 0
+      network_failure: 0
+      transport_retries: 2
+      circuit_open_events: 1
+      circuit_blocked_requests: 2
+      local_rpm_waits: 0
+      local_tpm_waits: 0
+      failure_fingerprints:
+        SERVER_FAILURE:503: 3
+      latency_ms: {min: 0.327, p50: 0.617, p95: 170271.159, max: 189190.108}
+      provider_latency_ms: {p50: 76992.908, p95: 100780.643}
+      queue_wait_ms: {p50: 0.0, p95: 0.0}
+      runtime_invariants: PASS
+      private_result_sha256: cffacd3bdc812b4f4a041a3186d2498ae6e43e765bdedfd8639cee66fdf7cc90
+    - model: gemini-3.5-flash-lite
+      result: PASS
+      semantic_requests: 3
+      success: 3
+      failure: 0
+      provider_attempts: 3
+      attempts_per_request_mean: 1.0
+      maximum_attempts_per_request: 1
+      server_failure_503: 0
+      other_5xx: 0
+      rate_limit_429: 0
+      timeout: 0
+      network_failure: 0
+      transport_retries: 0
+      circuit_open_events: 0
+      circuit_blocked_requests: 0
+      local_rpm_waits: 0
+      local_tpm_waits: 0
+      failure_fingerprints: {}
+      latency_ms: {min: 7499.024, p50: 7927.670, p95: 9042.207, max: 9166.044}
+      provider_latency_ms: {p50: 7916.023, p95: 9032.880}
+      queue_wait_ms: {p50: 0.0, p95: 0.0}
+      provider_reported_model: gemini-3.5-flash-lite
+      runtime_invariants: PASS
+      private_result_sha256: ca97adae727fbb0749269ca369c3dc71746c7c18542cb607b221b79e1f0fb641
+
+models_advancing_to_stage_b: [gemini-3.5-flash-lite]
+
+profile_s:
+  semantic_requests_per_candidate: 12
+  concurrency: 1
+  pass_rule: at_least_11_of_12_success_and_all_invariants
+  results:
+    - model: gemini-3.8-flash
+      result: NOT_EXECUTED_STAGE_A_FAILED
+    - model: gemini-3.7-flash
+      result: NOT_EXECUTED_STAGE_A_FAILED
+    - model: gemini-3.5-flash-lite
+      result: FAIL
+      semantic_requests: 12
+      success: 9
+      failure: 3
+      provider_attempts: 14
+      attempts_per_request_mean: 1.166667
+      maximum_attempts_per_request: 3
+      server_failure_503: 5
+      other_5xx: 0
+      rate_limit_429: 0
+      timeout: 0
+      network_failure: 0
+      transport_retries: 4
+      circuit_open_events: 1
+      circuit_blocked_requests: 2
+      local_rpm_waits: 7
+      local_tpm_waits: 0
+      failure_fingerprints:
+        SERVER_FAILURE:503: 5
+      latency_ms: {min: 0.442, p50: 10410.966, p95: 28975.682, max: 32771.683}
+      provider_latency_ms: {p50: 6428.587, p95: 11362.044}
+      queue_wait_ms: {p50: 0.0, p95: 0.0}
+      provider_reported_model: gemini-3.5-flash-lite
+      runtime_invariants: PASS
+      private_result_sha256: 7d90e2d48db49bcaf424166f1b3fd204c5e6c20e5ba7901490a088c5e848d01c
+
+profile_c2:
+  executed_blocks: 0
+  results:
+    - model: gemini-3.8-flash
+      result: NOT_EXECUTED_STAGE_A_FAILED
+    - model: gemini-3.7-flash
+      result: NOT_EXECUTED_STAGE_A_FAILED
+    - model: gemini-3.5-flash-lite
+      result: NOT_EXECUTED_PROFILE_S_FAILED
+
+task_totals:
+  semantic_requests: 21
+  success: 12
+  failure: 9
+  provider_attempts: 23
+  server_failure_503: 11
+  other_5xx: 0
+  rate_limit_429: 0
+  timeout: 0
+  network_failure: 0
+  transport_retries: 8
+  circuit_open_events: 3
+  circuit_blocked_requests: 6
+  local_rpm_waits: 7
+  local_tpm_waits: 0
+  runtime_invariant_failures: 0
+  manual_retry_count: 0
+
+selection:
+  transport_qualified_models: []
+  selected_research_execution_profile: null
+  research_execution_profile_artifact_created: false
+  selection_reason: NO_PROFILE_S_PASS
+  qualification_status: NO_STABLE_PROVIDER_PROFILE
+  m4_04b2_eligible: false
+  m4_04b2_state: BLOCKED_NOT_STARTED
+  private_qualification_result_sha256: f76e215a2158718e657449cda22b06dadbeffbb114d7702d879d2a7315b0bdac
+
+tests:
+  qualification_orchestration_and_resilience_tests: 61
+  story_extraction_tests: 213
+  story_ingestion_tests: 79
+  canonical_story_tests: 99
+  script_quality_tests: 64
+  story_benchmark_tests: 298
+
+holdout:
+  input_opened: false
+  gold_opened: false
+  predictions_run: false
+  contamination_state: CLEAN
+
+research_state:
+  extraction_model: NOT_SELECTED
+  extractor: NOT_LOCKED
+  m4_04b2: BLOCKED_NOT_STARTED
+  m5: NOT_STARTED

@@ -798,6 +798,18 @@ M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02 are ACCEPTED. M4-03 is `FR
 - **Research state.** M4-04B2: NOT STARTED. Extraction model: NOT SELECTED. Extractor: NOT LOCKED. Holdout input: NOT OPENED. Gold: SEALED / NOT OPENED. Holdout predictions: NOT RUN. Contamination: CLEAN. M5: NOT STARTED.
 - **Integrity.** The M4 evaluation snapshot and frozen M1/M2/M3 artifacts remain unchanged. `DECISIONS.md` and `ROADMAP.md` remain unchanged.
 
+## M4-04B1Q-GEMINI-PROVIDER-CAPACITY-QUALIFICATION — EXECUTED — Status: M4_04B1Q_NO_STABLE_GEMINI_MODEL_PROFILE
+
+- **Single-credential boundary.** Seven slots remained unlabeled. Project topology and independent quota count are UNKNOWN. Exactly one credential, `gemini_slot_1`, was locked and used; the remaining six were unused, credential rotation was disabled, and no multi-project quota claim was made.
+- **Candidate set.** Provider discovery locked three stable text-generation candidates before outcomes: `gemini-3.8-flash`, `gemini-3.7-flash`, and `gemini-3.5-flash-lite`. This was transport selection only, not extraction-quality selection.
+- **Stage A.** The 3.8 and 3.7 Flash candidates each achieved 0/3 after three `SERVER_FAILURE:503` attempts and two circuit-blocked requests. Flash-Lite achieved 3/3 cleanly and alone advanced.
+- **Profile S.** Flash-Lite at concurrency one, RPM 6 and TPM 3000 achieved 9/12 against the required 11/12. Fourteen provider attempts observed five `SERVER_FAILURE:503` events, four transport retries, one circuit open, two circuit-blocked requests and seven safe local RPM waits. Runtime invariants passed.
+- **Short circuit.** C2 was not executed because Profile S failed. No model/profile was rerun, no additional model was tried, and no other credential was used.
+- **Decision.** No model is `TRANSPORT_QUALIFIED_FOR_M4_RESEARCH`; `M4_RESEARCH_EXECUTION_PROFILE_V1` was not created. `M4_04B2_ELIGIBLE = false`; M4-04B2 is BLOCKED / NOT STARTED.
+- **Preserved history.** M4-04B1 remains OFFLINE PASS / LIVE FAIL. M4-04B1R remains RUNTIME CORRECT / PROVIDER GATE UNHEALTHY. Neither result was rewritten.
+- **Research state.** Extraction model: NOT SELECTED. Extractor: NOT LOCKED. Holdout input: NOT OPENED. Gold: SEALED / NOT OPENED. Holdout predictions: NOT RUN. Contamination: CLEAN. M5: NOT STARTED.
+- **Integrity.** The accepted V1.1 runtime was not redesigned. The M4 evaluation snapshot and frozen M1/M2/M3 artifacts remain unchanged. `DECISIONS.md` and `ROADMAP.md` remain unchanged.
+
 ## Next Candidate
 
-Orchestrator review of M4-04B1R. V1.1 runtime invariants passed, but the provider regate achieved 4/12 successes against the required 11/12 after real `503 UNAVAILABLE` and model-specific `429 RESOURCE_EXHAUSTED` responses. Do not begin M4-04B2 or extraction quality work.
+Master Orchestrator review of M4-04B1Q. No stable Gemini research execution profile qualified under the locked single-credential protocol. Do not begin M4-04B2 or extraction quality work.
