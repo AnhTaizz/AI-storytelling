@@ -1,0 +1,40 @@
+task: M4-04B2R-VALIDATOR-ROBUSTNESS-CORRECTION-AND-BENCHMARK-RESUME
+status: CONTINUATION_PROTOCOL_LOCKED_BEFORE_RESUME
+original_b2:
+  protocol_sha256: 5232e334be6612db13056d14448740d34c830595324e118bbe56655b4dcda922
+  commit_a: 23e2f8c5ebb02680671d360069f6b86d19f2399d
+  interruption_status: M4_04B2_RUNTIME_DEFECT_FOUND
+continuation:
+  protocol_id: M4_04B2R_DEV_BENCHMARK_CONTINUATION_PROTOCOL_V2
+  protocol_sha256: 54c1cc2c2b492731ca257c3b02c95ee557258088a406c80f4ab825886b65dd7b
+snapshot_v2:
+  identity: M4_EVALUATION_PROTOCOL_SNAPSHOT_V2
+  sha256: 8dddbd0b9f3ea51af593c1fab0631b088b6f4e6b8c16833a1f11b8448088eee9
+  parent: M4_EVALUATION_PROTOCOL_SNAPSHOT_V1
+  robustness_only: true
+guard:
+  identity: M4_EXTRACTION_VALIDATION_GUARD_V1
+  sha256: 85c6c7c81df3d0e144ba308a76430503aa9a643596f28e233a08a0e0ba9eebe0
+  monotonicity: FAIL_CLOSED_ONLY
+impact_analysis:
+  path: benchmarks/m4_extraction/M4_EVALUATION_SNAPSHOT_V1_TO_V2_IMPACT.yaml
+  sha256: f3f14d4bdb0a7644a9240c4c3cfe780dfea89f8b7a95585027797a09902f529a
+  status: PASS
+resume_tooling:
+  sha256: afddc09f186a137783bd8fcba49700a56c8322b6899541cd4f372a73d1b29793
+prompt_identity:
+  p0_unchanged: true
+  p1_unchanged: true
+  fewshot_unchanged: true
+  repair_template_unchanged: true
+generation_settings_unchanged: true
+historical_p0_m4dev_01:
+  primary_response_sha256: 9dd429a0cb9ce88c22956b80b22f4f8a68f18c1b0f564ebbdc0e4366fd5564bf
+  repair_response_sha256: 5d8c7d502f05ab4efe712829d925e7e91bdc428200d3b6c46ddfe15666a7f2f5
+  repair_already_consumed: true
+  provider_rerun_allowed: false
+barriers:
+  dev_gold_opened: false
+  holdout_input_opened: false
+  holdout_gold_opened: false
+  resume_started: false

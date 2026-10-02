@@ -1,0 +1,29 @@
+# Versioned fail-closed correction. Snapshot V1 remains immutable historical evidence.
+snapshot_id: M4_EVALUATION_PROTOCOL_SNAPSHOT_V2
+parent_snapshot: M4_EVALUATION_PROTOCOL_SNAPSHOT_V1
+snapshot_date: 2026-10-02
+correction_type: ROBUSTNESS_ONLY
+semantic_change: NONE_INTENDED
+monotonicity: FAIL_CLOSED_ONLY
+dev_gold_used_to_design_correction: false
+holdout_used: false
+hash_form: SHA-256 of canonical JSON over the identity fields named by the V2 validator
+snapshot_sha256: 8dddbd0b9f3ea51af593c1fab0631b088b6f4e6b8c16833a1f11b8448088eee9
+files:
+  docs/research/m4/M4_EXTRACTION_EVALUATION_PROTOCOL_V0.md: c67c9514f6648d314f4e7ccebaa49025b6498f4fdce0710433521ee76a672617
+  tools/story_extraction/evaluate_extraction_v0.py: f6294985820bea2d4232888e15323c321e7f7ff5bc12ec282ee3e096daa33f96
+  tools/story_extraction/extraction_contract_v0.py: 042e4ec1882d76c0730c6b059396d353ecb8b60c3f58456e4db7f5ab623bc56e
+  schemas/story_extraction/story_extraction_batch_v0.schema.json: a62306384e510e000b8ed77c7f6201870bc063007b18812bba485beb4059c9ea
+  tests/story_extraction/test_extraction_evaluation_calibration_v0.py: 2384cbca4df56267916b7b4517efe8e8e63859ff3af3eb4ff981d7a521862196
+  tests/story_extraction/test_story_extraction_contract_v0.py: 5749fca3302fca61068b9abd4b22ba5d00ef43964a00b0c7467d57ed5ac7595b
+  tests/story_extraction/fixture_builder.py: b61eace1529b8a86275c9e923048ea01d858f977eb7f50a14297c6fbc5457ddc
+  tools/story_extraction/extraction_contract_guard_v1.py: 85c6c7c81df3d0e144ba308a76430503aa9a643596f28e233a08a0e0ba9eebe0
+  tools/story_extraction/evaluate_extraction_guarded_v1.py: 399347558c562d5438c94239ecd9aaea9f21fb79311d2c249cd311a5eed7a15d
+  tests/story_extraction/test_extraction_contract_guard_v1.py: c36eb32b758a4acb216316a85b103ce27ab9ed60a9050083c07c13226d618e27
+guard:
+  identity: M4_EXTRACTION_VALIDATION_GUARD_V1
+  behavior: MALFORMED_TO_EXPLICIT_STRUCTURAL_FAILURE_ELSE_DELEGATE_UNCHANGED_TO_V1
+  normalizes_output: false
+  autofills_output: false
+  rescues_v1_invalid_output: false
+evaluator_entrypoint: tools/story_extraction/evaluate_extraction_guarded_v1.py

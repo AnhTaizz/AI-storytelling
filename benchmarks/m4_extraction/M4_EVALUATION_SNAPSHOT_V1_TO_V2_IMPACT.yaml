@@ -1,0 +1,33 @@
+task: M4-04B2R-VALIDATOR-ROBUSTNESS-CORRECTION-AND-BENCHMARK-RESUME
+analysis_id: M4_EVALUATION_SNAPSHOT_V1_TO_V2_IMPACT
+snapshot_v1_sha256: a9ac816fe8e20d6ed0d2a4e078c37a89a63dc10660b11d9c754b8038d71c29a6
+snapshot_v2_sha256: 8dddbd0b9f3ea51af593c1fab0631b088b6f4e6b8c16833a1f11b8448088eee9
+inputs:
+  synthetic_fixtures_only: true
+  public_frozen_calibration_tests: true
+  dev_gold_used: false
+  holdout_used: false
+checks:
+  valid_perfect_synthetic_predictions:
+    cases: 26
+    result: IDENTICAL
+  valid_human_and_automated_contract_results:
+    comparisons: 52
+    result: IDENTICAL
+  existing_synthetic_negative_variants:
+    result: IDENTICAL
+  existing_canonical_acceptance_rejection:
+    result: IDENTICAL
+  metric_relevant_accepted_data:
+    cases: 26
+    result: IDENTICAL
+  malformed_passage_input_regressions:
+    v1: RAISES_KNOWN_KEY_ERROR
+    v2: DETERMINISTIC_STRUCTURAL_FAILURE
+    result: EXPECTED_FAIL_CLOSED_DELTA_ONLY
+conclusion:
+  semantic_change: NONE_INTENDED
+  monotonicity: FAIL_CLOSED_ONLY
+  v1_valid_becomes_v2_invalid_count: 0
+  v1_invalid_becomes_v2_valid_count: 0
+status: PASS
