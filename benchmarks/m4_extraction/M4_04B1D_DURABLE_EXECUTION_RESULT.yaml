@@ -1,0 +1,252 @@
+task: M4-04B1D-DURABLE-DEFERRED-EXECUTION-AND-CHECKPOINT-GATE
+date: 2026-10-02
+base_commit: 866677897d6d11885b3a175d0c8787a3544ee40d
+status: M4_04B1D_FIX_REQUIRED
+
+historical_results_preserved:
+  m4_04b1_offline_pass_live_fail: true
+  m4_04b1r_runtime_correct_provider_gate_unhealthy: true
+  m4_04b1q_no_stable_gemini_model_profile: true
+  m4_04b1k_no_stable_model_on_selected_credential: true
+
+preregistration:
+  protocol: M4_04B1D_DURABLE_EXECUTION_PROTOCOL_V1
+  protocol_sha256: 5eab4a7f2cf5934da3ec3c6c733368e38ce9376689dff11a8e29798d171c0e4a
+  locked_before_first_live_request: true
+  edited_after_live_results: false
+  prompt_family_sha256: 2f4d1c8ab918088370327d62c9db490dec0c0eb00821b1232761ca2445152641
+  all_request_fingerprints_locked_before_execution: true
+  yaml_parse_result: FAIL
+  defect: job_states_sibling_key_indentation
+  protocol_edited_after_live_results: false
+
+post_execution_integrity_finding:
+  finding: M4_04B1D_POST_EXECUTION_INTEGRITY_FINDING_V1
+  private_finding_sha256: a8313cd2738aa8008fbcb3c61099d75fcdc9aaef377d0943a0364908ac52de3e
+  locked_protocol_invalidated_for_qualification: true
+  live_evidence_preserved: true
+  live_rerun_performed: false
+  consequence: PROVISIONAL_LIVE_PASS_NOT_QUALIFIED
+
+architecture:
+  durable_executor: DURABLE_RESEARCH_EXECUTOR_V1
+  accepted_transport: GEMINI_TRANSPORT_RESILIENCE_V1_1
+  accepted_transport_redesigned: false
+  checkpoint_format: DURABLE_RESEARCH_CHECKPOINT_V1
+  checkpoint_atomic_replace: true
+  checkpoint_integrity_hash: true
+  process_restart_resume: true
+  first_success_lock: IMMUTABLE
+  output_aware_retry: FORBIDDEN
+
+credential:
+  fixed_slot: gemini_slot_3
+  topology: UNKNOWN
+  independent_project_count: UNKNOWN
+  quota_independence_claimed: false
+  credential_switch_count: 0
+
+hard_limits:
+  concurrency: 1
+  jobs_per_candidate: 6
+  maximum_execution_windows_per_job: 3
+  maximum_provider_attempts_per_window: 3
+  maximum_provider_attempts_per_job: 9
+  deferred_window_minimum_cooldown_seconds: 60
+  model_transition_quiet_seconds: 60
+  local_rpm: 6
+  local_tpm: 3000
+
+global_pacing:
+  identity: PERSISTENT_GLOBAL_UNKNOWN_TOPOLOGY_PACER_V1
+  maximum_provider_operations: 6
+  rolling_window_seconds: 60
+  reservation_count: 54
+  wait_count: 8
+  wait_seconds_total: 77.704956
+  maximum_rolling_reservations_observed: 6
+  restart_persistent: true
+  invariant: PASS
+
+candidate_results:
+  - model: gemini-3.8-flash
+    result: FAIL
+    jobs: 6
+    eventual_successes: 5
+    terminal_failures: 1
+    unfinished_jobs: 0
+    windows_used: 11
+    provider_attempts: 26
+    server_failure_503: 11
+    other_5xx: 0
+    rate_limit_429: 10
+    timeout: 0
+    network_failure: 0
+    provider_failure: 0
+    auth_failure: 0
+    deferred_count: 5
+    resumed_count: 5
+    success_locks: 5
+    duplicate_success_call_count: 0
+    output_aware_retry_count: 0
+    request_fingerprint_mutation_count: 0
+    credential_switch_count: 0
+    model_switch_count: 0
+    attempt_cap_violation_count: 0
+    uncaught_exception_count: 0
+    failure_fingerprints:
+      RATE_LIMIT:RESOURCE_EXHAUSTED: 4
+      SERVER_FAILURE:503: 2
+    terminal_job:
+      job_id: M4B1D_gemini_3_8_flash_06
+      windows_used: 3
+      provider_attempts_per_window: [3, 3, 3]
+      provider_attempts: 9
+      rate_limit_429: 7
+      server_failure_503: 2
+    provider_reported_versions: [gemini-3.8-flash]
+    runtime_invariants: PASS
+  - model: gemini-3.7-flash
+    result: FAIL
+    jobs: 6
+    eventual_successes: 5
+    terminal_failures: 1
+    unfinished_jobs: 0
+    windows_used: 10
+    provider_attempts: 22
+    server_failure_503: 14
+    other_5xx: 0
+    rate_limit_429: 3
+    timeout: 0
+    network_failure: 0
+    provider_failure: 0
+    auth_failure: 0
+    deferred_count: 4
+    resumed_count: 4
+    success_locks: 5
+    duplicate_success_call_count: 0
+    output_aware_retry_count: 0
+    request_fingerprint_mutation_count: 0
+    credential_switch_count: 0
+    model_switch_count: 0
+    attempt_cap_violation_count: 0
+    uncaught_exception_count: 0
+    failure_fingerprints:
+      RATE_LIMIT:RESOURCE_EXHAUSTED: 1
+      SERVER_FAILURE:503: 4
+    terminal_job:
+      job_id: M4B1D_gemini_3_7_flash_02
+      windows_used: 3
+      provider_attempts_per_window: [3, 3, 3]
+      provider_attempts: 9
+      rate_limit_429: 3
+      server_failure_503: 6
+    provider_reported_versions: [gemini-3.7-flash]
+    runtime_invariants: PASS
+  - model: gemini-3.5-flash-lite
+    result: PASS
+    jobs: 6
+    eventual_successes: 6
+    terminal_failures: 0
+    unfinished_jobs: 0
+    windows_used: 6
+    provider_attempts: 6
+    server_failure_503: 0
+    other_5xx: 0
+    rate_limit_429: 0
+    timeout: 0
+    network_failure: 0
+    provider_failure: 0
+    auth_failure: 0
+    deferred_count: 0
+    resumed_count: 0
+    success_locks: 6
+    duplicate_success_call_count: 0
+    output_aware_retry_count: 0
+    request_fingerprint_mutation_count: 0
+    credential_switch_count: 0
+    model_switch_count: 0
+    attempt_cap_violation_count: 0
+    uncaught_exception_count: 0
+    failure_fingerprints: {}
+    provider_reported_versions: [gemini-3.5-flash-lite]
+    runtime_invariants: PASS
+
+task_totals:
+  candidate_models_executed: 3
+  jobs_created: 18
+  eventual_successes: 16
+  terminal_failures: 2
+  execution_windows: 27
+  provider_attempts: 54
+  server_failure_503: 25
+  rate_limit_429: 13
+  timeout: 0
+  network_failure: 0
+  provider_failure: 0
+  auth_failure: 0
+  deferred_count: 9
+  resumed_count: 9
+  success_locks: 16
+  duplicate_success_call_count: 0
+  output_aware_retry_count: 0
+  manual_rerun_count: 0
+
+first_success_lock_audit:
+  locked_successes: 16
+  provider_calls_after_success_lock: 0
+  response_comparisons: 0
+  best_of_n_selection: 0
+  output_aware_retries: 0
+  result: PASS
+
+provisional_durable_profile:
+  artifact: M4_DURABLE_RESEARCH_EXECUTION_PROFILE_V1
+  provider: Google Gemini API
+  credential_slot: gemini_slot_3
+  credential_topology: UNKNOWN
+  model: gemini-3.5-flash-lite
+  provider_reported_version: gemini-3.5-flash-lite
+  runtime: GEMINI_TRANSPORT_RESILIENCE_V1_1
+  durable_executor: DURABLE_RESEARCH_EXECUTOR_V1
+  concurrency: 1
+  global_pacing: 6_PROVIDER_OPERATIONS_PER_ROLLING_60_SECONDS
+  maximum_execution_windows_per_job: 3
+  maximum_provider_attempts_per_window: 3
+  first_success_response: IMMUTABLE_LOCK
+  transport_only_deferred_policy: ENABLED
+  output_aware_retry: FORBIDDEN
+  private_profile_sha256: aaf7c2bd5b4ba81cf2324ead8e1834a8f025f322c26bad69d19c86cb114becdb
+  qualification_valid: false
+  accepted_for_research_execution: false
+
+selection:
+  rule: first_candidate_in_fixed_order_that_passes
+  observed_first_passing_candidate: gemini-3.5-flash-lite
+  qualified_durable_profile: null
+  selected_model_is_transport_profile_not_quality_selection: true
+  private_result_sha256: 5545ea4b906491a8dbee5d2736b2d1da3426aa8a7f9381e90c354d3acd9c9728
+  qualification_blocker: LOCKED_PROTOCOL_YAML_PARSE_FAILURE
+  m4_04b2_eligible: false
+  m4_04b2_state: BLOCKED_NOT_STARTED
+
+tests:
+  durable_fault_and_restart_tests: 22
+  story_extraction_tests: 242
+  story_ingestion_tests: 79
+  canonical_story_tests: 99
+  script_quality_tests: 64
+  story_benchmark_tests: 298
+  all_required_suites_passed: true
+
+holdout:
+  input_opened: false
+  gold_opened: false
+  predictions_run: false
+  contamination_state: CLEAN
+
+research_state:
+  extraction_quality_model: NOT_SELECTED
+  extractor: NOT_LOCKED
+  m4_04b2: BLOCKED_NOT_STARTED
+  m5: NOT_STARTED

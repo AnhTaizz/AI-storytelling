@@ -810,7 +810,7 @@ M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02 are ACCEPTED. M4-03 is `FR
 - **Research state.** Extraction model: NOT SELECTED. Extractor: NOT LOCKED. Holdout input: NOT OPENED. Gold: SEALED / NOT OPENED. Holdout predictions: NOT RUN. Contamination: CLEAN. M5: NOT STARTED.
 - **Integrity.** The accepted V1.1 runtime was not redesigned. The M4 evaluation snapshot and frozen M1/M2/M3 artifacts remain unchanged. `DECISIONS.md` and `ROADMAP.md` remain unchanged.
 
-## M4-04B1K-GEMINI-CREDENTIAL-HEALTH-AND-PROVIDER-REQUALIFICATION â€” EXECUTED â€” Status: M4_04B1K_NO_STABLE_MODEL_ON_SELECTED_CREDENTIAL
+## M4-04B1K-GEMINI-CREDENTIAL-HEALTH-AND-PROVIDER-REQUALIFICATION — EXECUTED — Status: M4_04B1K_NO_STABLE_MODEL_ON_SELECTED_CREDENTIAL
 
 - **Topology boundary.** Seven configured slots were screened without project labels. Topology and independent-project count remain UNKNOWN; credential screening is not quota pooling. A task-level limiter enforced no more than six provider operations per rolling 60 seconds across every slot and model block.
 - **Credential health.** Slots 1, 2, 3, 4, 6 and 7 passed 3/3 on `gemini-3.5-flash-lite`. Slot 5 failed 0/3 after one sanitized `AUTH_FAILURE:403`; the remaining two requests ended safely without another provider call. Cross-slot failover was zero.
@@ -822,6 +822,18 @@ M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02 are ACCEPTED. M4-03 is `FR
 - **Blindness.** Holdout input: NOT OPENED. Gold: SEALED / NOT OPENED. Holdout predictions: NOT RUN. Contamination: CLEAN. M5: NOT STARTED.
 - **History/integrity.** M4-04B1, M4-04B1R and M4-04B1Q retain their accepted negative conclusions. The accepted V1.1 runtime, frozen M4 evaluation snapshot and frozen M1/M2/M3 artifacts are unchanged. `DECISIONS.md` and `ROADMAP.md` are unchanged.
 
+## M4-04B1D-DURABLE-DEFERRED-EXECUTION-AND-CHECKPOINT-GATE — EXECUTED — Status: M4_04B1D_FIX_REQUIRED
+
+- **Historical chain preserved.** M4-04B1, B1R, B1Q and B1K retain their accepted negative conclusions. B1D tests whether bounded, checkpointed deferral can survive intermittent provider availability; it does not rewrite those earlier point-in-time gates.
+- **Durable executor.** `DURABLE_RESEARCH_EXECUTOR_V1` sits above unchanged `GEMINI_TRANSPORT_RESILIENCE_V1_1`. It persists integrity-checked per-job state and global pacing with atomic replacement, binds immutable request fingerprints, permits at most three windows and nine provider attempts per job, and fails closed on checkpoint/fingerprint identity mismatch.
+- **First-success rule.** The first successful provider response is atomically stored and locked. Invalid/schema-invalid/low-quality output cannot trigger transport deferral. Live audit: 16 success locks, zero calls after success lock, zero output-aware retries and zero best-of-N comparisons.
+- **Fixed credential and pacing.** All live work used only `gemini_slot_3`; topology remains UNKNOWN and no quota independence is claimed. Persistent global pacing enforced at most six provider operations per rolling 60 seconds across every model, job and window, including process restart state.
+- **Provider evidence.** 3.8 Flash reached 5/6 eventual successes using 11 windows and 26 attempts, but one job exhausted three windows; it observed eleven 503 and ten 429 events. 3.7 Flash reached 5/6 using 10 windows and 22 attempts, with fourteen 503 and three 429 events; one job exhausted three windows.
+- **Provisional live observation.** `gemini-3.5-flash-lite` reached 6/6 `SUCCEEDED_LOCKED` in six first windows and six provider attempts, with no failure or deferral. This is transport evidence only; extraction quality model remains NOT SELECTED and extractor remains NOT LOCKED.
+- **Integrity blocker.** Final verification found invalid YAML indentation in the already-locked private protocol. The protocol remains byte-for-byte unchanged at SHA-256 `5eab4a7f2cf5934da3ec3c6c733368e38ce9376689dff11a8e29798d171c0e4a`; no live rerun occurred. The provisional profile is not accepted and B1D requires a newly authorized preregistered task.
+- **Verification.** Required suites passed: story extraction 242/242, ingestion 79/79, canonical story 99/99, script quality 64/64 and story benchmark 298/298. The frozen M4 evaluation snapshot and M1/M2/M3 artifacts remain unchanged.
+- **Research state.** `M4_04B2_ELIGIBLE = false`; M4-04B2 is BLOCKED / NOT STARTED. Holdout input: NOT OPENED. Gold: SEALED / NOT OPENED. Predictions: NOT RUN. Contamination: CLEAN. M5: NOT STARTED.
+
 ## Next Candidate
 
-Master Orchestrator review of M4-04B1K. No stable Gemini model passed the selected-credential Stage A gate. Do not begin M4-04B2 or extraction quality work.
+Master Orchestrator review of the M4-04B1D protocol-integrity defect and preserved provisional live evidence. Do not begin M4-04B2.
