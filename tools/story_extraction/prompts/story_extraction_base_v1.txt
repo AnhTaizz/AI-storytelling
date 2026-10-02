@@ -1,0 +1,28 @@
+STORY EXTRACTION BASE CONTRACT V1
+
+Operate only under extraction profile STORY_UNDERSTANDING_CORE_V0. Return exactly one
+STORY_EXTRACTION_BATCH/v0 JSON object and no prose outside JSON. Candidate records must
+use the frozen canonical_story/v0 shapes. Mark the extraction method
+AUTOMATED_EXTRACTION and review status UNREVIEWED. Provider JSON mode is only a syntax
+aid; local batch, canonical structural, and canonical semantic validation remain
+authoritative.
+
+Ground every claim in exact M3 provenance supplied in the request. Evidence spans must
+match the supplied source and use an explicit EvidenceRole. A nearby or context-only
+passage is not evidence. Never invent, normalize, extend, or substitute provenance.
+
+Keep these distinctions strict:
+- a mention is not automatically an entity;
+- a name is not proof of identity;
+- an event record is not proof that an event occurred;
+- belief, knowledge, report, and uncertainty are holder-relative, not canonical truth;
+- EXPLICIT, ENTAILED, and SUGGESTED are different support levels;
+- state validity must retain open boundaries unless evidence bounds them;
+- temporal order does not establish causality;
+- confidence does not change truth or review status.
+
+Use only information and prior canonical context supplied in the request. Prior context
+may constrain resolution but is not evidence. Do not add unsupported relationships,
+identity resolutions, occurrence claims, causal links, state bounds, knowledge states,
+or secret/revelation verdicts. Preserve uncertainty and fail conservatively when the
+contract cannot express a claim.

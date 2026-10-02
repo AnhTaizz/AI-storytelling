@@ -1,0 +1,47 @@
+task: M4-04A-GEMINI-API-TRANSPORT-AND-KEY-POOL-PREP
+date: 2026-10-02
+base_commit: e36a5f041e15ba8fa71002f44d128b737457bff0
+status: M4_04A_GEMINI_RUNTIME_READY_FOR_USER_KEYS
+
+previous_local_attempt:
+  status: ABORTED_EXPLORATORY_PRESELECTION
+  reason: local_runtime_and_thermal_cost
+  eligible_for_baseline_selection: false
+
+holdout:
+  input_opened: false
+  gold_opened: false
+  predictions_run: false
+  contamination_state: CLEAN
+  input_sha256_public_record: 11388350b830d08c48010a7010c7c376ea7b613abf30b71592b0a190ff80eceb
+  gold_sha256_public_record: 7de8f597797dd24f493ce76f08284145c3245b0da8423fe8840411252aaa22cb
+
+evaluation_snapshot:
+  id: M4_EVALUATION_PROTOCOL_SNAPSHOT_V1
+  sha256_public_record: a9ac816fe8e20d6ed0d2a4e078c37a89a63dc10660b11d9c754b8038d71c29a6
+  modified: false
+
+new_runtime:
+  provider: Google Gemini API
+  sdk: google-genai
+  transport: GEMINI_TRANSPORT_V1
+  key_pool: GEMINI_KEY_POOL_V1
+  live_api_calls_in_this_task: 0
+  credentials_committed: false
+  model_selected: false
+  local_model_fallback: false
+  transport_retry_limit_provisional: 2
+  structural_repair_calls_implemented_by_transport: 0
+
+verification:
+  tests_are_mocked: true
+  network_required: false
+  test_counts:
+    story_extraction: 152
+    story_ingestion: 79
+    canonical_story: 99
+    script_quality: 64
+    story_benchmark: 298
+  config_check_status: WAITING_FOR_USER_CREDENTIALS
+
+next_gate: WAITING_FOR_USER_CREDENTIALS

@@ -764,6 +764,17 @@ M4-02-REAL-SOURCE-DEV-GOLD-AND-EVALUATION-CALIBRATION — COMPLETED — Status: 
 - **Contamination rule.** Gold may not be used for prompt, few-shot, model, threshold, alignment or evaluation-rule tuning. Gold opened before prediction lock makes the holdout `CONTAMINATED`.
 - **Records.** `docs/research/m4/M4_FRESH_HOLDOUT_PROTOCOL_V1.md`, `benchmarks/m4_extraction/M4_03_FRESH_HOLDOUT_SEAL_RESULT.yaml`, `benchmarks/m4_extraction/M4_EVALUATION_PROTOCOL_SNAPSHOT_V1.yaml`. `DECISIONS.md` and `ROADMAP.md` are unchanged.
 
+## M4-04A-GEMINI-API-TRANSPORT-AND-KEY-POOL-PREP — COMPLETED — Status: M4_04A_GEMINI_RUNTIME_READY_FOR_USER_KEYS
+
+- **Protocol change.** The local Qwen/Ollama exploration was stopped for runtime and thermal cost and classified `ABORTED_EXPLORATORY_PRESELECTION`. It occurred before extractor lock, holdout input access, predictions, or gold access and is ineligible for baseline selection.
+- **Runtime prepared.** `GEMINI_TRANSPORT_V1` isolates the official `google-genai` SDK. `GEMINI_KEY_POOL_V1` provides deterministic project-aware scheduling, whole-project 429 cooldown, per-slot auth disable, bounded 5xx/network retry, and fail-closed behavior. No local or alternate-model fallback exists.
+- **Security.** `.env` variants are ignored and `.env.example` contains blank placeholders only. Secrets remain private in memory and are excluded from public metadata, results, exceptions, and representations. A safe config check reports counts only.
+- **Prompt and validation.** A contract-driven base prompt was prepared without holdout content. Provider JSON mode does not replace local `STORY_EXTRACTION_BATCH/v0` and `canonical_story/v0` validation. Transport retry does not perform structural repair.
+- **No execution.** Live Gemini calls: 0. Model discovery: not run. Exact model: NOT SELECTED. Extractor: NOT LOCKED. Holdout input: NOT OPENED. Holdout gold: SEALED / NOT OPENED. Holdout predictions: NOT RUN.
+- **Integrity.** The frozen M4 evaluation snapshot and all frozen M1/M2/M3 artifacts are unchanged. M5 is NOT STARTED.
+
+M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02 are ACCEPTED. M4-03 is `FRESH HOLDOUT V1 SEALED`. M4-04A is `GEMINI API RUNTIME PREPARED / WAITING FOR USER CREDENTIALS`.
+
 ## Next Candidate
 
-Orchestrator review of the sealed holdout. Extractor/model selection (M4-04) has not started and needs explicit authorization. The sealed gold must stay unopened until a prediction package is locked and hashed.
+M4-04B after the Project Owner creates or replaces `.env` locally with newly rotated Gemini credentials. M4-04B will perform model discovery, exact model candidate selection, preregistration, and extractor lock before holdout input access. The sealed gold must remain unopened until a prediction package is locked and hashed.
