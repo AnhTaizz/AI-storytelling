@@ -844,6 +844,16 @@ M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02 are ACCEPTED. M4-03 is `FR
 - **Decision.** `M4_DURABLE_RESEARCH_EXECUTION_PROFILE_V1` is QUALIFIED PENDING ORCHESTRATOR REVIEW. `M4_04B2_ELIGIBLE = true`, but M4-04B2 is ELIGIBLE / NOT STARTED. Extraction quality model remains NOT SELECTED and extractor remains NOT LOCKED.
 - **Blindness.** Development extraction data was not opened. Holdout input: NOT OPENED. Gold: SEALED / NOT OPENED. Predictions: NOT RUN. Contamination: CLEAN. M5: NOT STARTED.
 
+## M4-04B2R-VALIDATOR-ROBUSTNESS-CORRECTION-AND-BENCHMARK-RESUME — COMPLETED — Status: M4_04B2_DEVELOPMENT_LEADER_NOT_LOCKABLE
+
+- **History preserved.** Original M4-04B2 Commit A and the accepted `M4_04B2_RUNTIME_DEFECT_FOUND` interruption remain historical evidence. The two locked `P0/M4DEV_01` responses were revalidated offline and never regenerated.
+- **Versioned correction.** Snapshot V1 is byte-identical. Snapshot V2 adds `M4_EXTRACTION_VALIDATION_GUARD_V1`, which converts the known unsafe passage-ref shape into a deterministic failure and otherwise delegates unchanged to V1. Synthetic/public impact analysis is PASS and used no DEV gold or holdout.
+- **Three-lock chronology.** Commit A2 `1b3f8d31b9343798b26cbb5e38d1cb747e9a9eca` preceded all resumed calls. Commit B `3e231cae20c0bd342ef75082c1dc36c667b88d42` locked 28 terminal predictions before DEV gold opening. Provider operations after gold opening: zero.
+- **Development results.** P0: 0/14 runtime-structural, 0/14 source-exact L0. P1: 6/14 runtime-structural, 2/14 source-exact L0. Full canonical case successes: 0 for both. Four materially relevant unmatched P1 assertions were adjudicated as equivalent representations; CRITICAL and HIGH unsupported counts are zero for both candidates.
+- **Selection and gate.** The original ordered rule selects P1. The extractor safety gate fails because all selected final predictions do not satisfy L0. No baseline or extractor lock was created.
+- **Research state.** M4-04B2 is COMPLETE / NO LOCKABLE EXTRACTOR. M4-04C: NOT STARTED. Holdout input: NOT OPENED. Holdout gold: SEALED / NOT OPENED. Holdout predictions: NOT RUN. Contamination: CLEAN. M5: NOT STARTED.
+- **Artifacts.** `M4_EVALUATION_PROTOCOL_SNAPSHOT_V2`, the V1-to-V2 impact record, continuation lock, prediction lock, final benchmark result and the versioned research note preserve the complete interruption/correction/resume chronology.
+
 ## Next Candidate
 
-Master Orchestrator review of the qualified M4-04B1D2 durable profile. Do not begin M4-04B2.
+Master Orchestrator review of the completed M4-04B2 development result. Do not begin M4-04C.

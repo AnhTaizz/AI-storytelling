@@ -1,0 +1,163 @@
+task: M4-04B2R-VALIDATOR-ROBUSTNESS-CORRECTION-AND-BENCHMARK-RESUME
+status: M4_04B2_DEVELOPMENT_LEADER_NOT_LOCKABLE
+base_history:
+  original_protocol_sha256: 5232e334be6612db13056d14448740d34c830595324e118bbe56655b4dcda922
+  original_commit_a: 23e2f8c5ebb02680671d360069f6b86d19f2399d
+  initial_interruption: M4_04B2_RUNTIME_DEFECT_FOUND
+  interruption_accepted: true
+validator_correction:
+  guard: M4_EXTRACTION_VALIDATION_GUARD_V1
+  snapshot_v1_sha256: a9ac816fe8e20d6ed0d2a4e078c37a89a63dc10660b11d9c754b8038d71c29a6
+  snapshot_v2_sha256: 8dddbd0b9f3ea51af593c1fab0631b088b6f4e6b8c16833a1f11b8448088eee9
+  correction_type: ROBUSTNESS_ONLY
+  monotonicity: FAIL_CLOSED_ONLY
+  impact_analysis: PASS
+  dev_gold_used_to_design_correction: false
+  holdout_used: false
+continuation:
+  protocol_sha256: 54c1cc2c2b492731ca257c3b02c95ee557258088a406c80f4ab825886b65dd7b
+  commit_a2: 1b3f8d31b9343798b26cbb5e38d1cb747e9a9eca
+  historical_primary_response_sha256: 9dd429a0cb9ce88c22956b80b22f4f8a68f18c1b0f564ebbdc0e4366fd5564bf
+  historical_repair_response_sha256: 5d8c7d502f05ab4efe712829d925e7e91bdc428200d3b6c46ddfe15666a7f2f5
+  historical_provider_rerun_count: 0
+prediction_lock:
+  commit_b: 3e231cae20c0bd342ef75082c1dc36c667b88d42
+  P0_prediction_set_sha256: 59a0a207ad9d99bc6e8a08456fbe9495480a841f3d8062d971ac6a288bc95440
+  P1_prediction_set_sha256: 81f07b8bf957487957981086d4613dc8e14ad9a96e949bc9fc80ccbed551cb5d
+  P0_terminal: 14
+  P1_terminal: 14
+  dev_gold_opened_before_lock: false
+gold_opening:
+  prediction_lock_verified_remote_at_utc: '2026-10-02T16:49:38.2519136Z'
+  dev_gold_opened_at_utc: '2026-10-02T16:53:22.400994Z'
+  chronology: PREDICTION_LOCK_REMOTE_THEN_DEV_GOLD_OPENED
+  post_gold_provider_operations: 0
+evaluation:
+  snapshot: M4_EVALUATION_PROTOCOL_SNAPSHOT_V2
+  private_result_sha256: 7c2bea221051671278e381219b41d5d1b2ef203c9a139ed9dbd9cbfc0b3a6747
+  split:
+    COMPLETE_FOR_PROFILE: 4
+    UNCERTAIN: 10
+  adjudications:
+    materially_relevant_unmatched: 4
+    equivalent_representation: 4
+    unsupported: 0
+    pending: 0
+    adjudicator_kind: AI_AGENT_READ_ONLY_EVALUATION
+    human_adjudication: NOT_PERFORMED
+    affected_case_count: 1
+    affects_selection_or_safety_gate: false
+candidates:
+  P0:
+    prediction_terminal_structural_valid: 0
+    prediction_terminal_structural_failure: 14
+    source_exact_L0_valid: 0
+    repairs: 14
+    repair_structural_successes: 0
+    unsupported:
+      CRITICAL: 0
+      HIGH: 0
+      lower_severity: 0
+    COMPLETE_FOR_PROFILE:
+      source_exact_L0_valid: 0
+      full_canonical_case_success: 0
+      grounding_recall: null
+      assertion_recall: null
+      epistemic_accuracy: null
+    UNCERTAIN:
+      source_exact_L0_valid: 0
+      full_canonical_case_success: 0
+      grounding_recall: null
+      assertion_recall: null
+      epistemic_accuracy: null
+    layers_all_cases:
+      L0: 0
+      L1: 0
+      L2: 0
+      L3: 0
+      L4: 0
+      L5: 0
+    transport:
+      provider_operations: 28
+      input_tokens: 907720
+      output_tokens: 176090
+      total_tokens: 1083810
+      provider_latency_seconds: 477.122465
+  P1:
+    prediction_terminal_structural_valid: 6
+    prediction_terminal_structural_failure: 8
+    source_exact_L0_valid: 2
+    repairs: 12
+    repair_structural_successes: 4
+    unsupported:
+      CRITICAL: 0
+      HIGH: 0
+      lower_severity: 0
+    COMPLETE_FOR_PROFILE:
+      source_exact_L0_valid: 1
+      full_canonical_case_success: 0
+      grounding_recall: 0.0
+      assertion_recall: 0.0
+      epistemic_accuracy: null
+    UNCERTAIN:
+      source_exact_L0_valid: 1
+      full_canonical_case_success: 0
+      grounding_recall: 0.0
+      assertion_recall: 0.0
+      epistemic_accuracy: null
+    layers_all_cases:
+      L0: 2
+      L1: 2
+      L2: 2
+      L3: 2
+      L4: 0
+      L5: 0
+    transport:
+      provider_operations: 26
+      input_tokens: 884399
+      output_tokens: 168186
+      total_tokens: 1052585
+      provider_latency_seconds: 444.787963
+selection:
+  leader: P1
+  rule: ORIGINAL_ORDERED_LEXICOGRAPHIC_RULE
+  deciding_criterion: HIGHER_COMPLETE_GROUNDING_RECALL
+  undefined_metric_handling: NOT_PREREGISTERED_APPLIED_AFTER_GOLD_OPENING
+  note: P0 has no L0-scored case, so its recall metrics are undefined; the evaluation ranked a defined zero above an undefined metric.
+  leader_if_undefined_metrics_treated_as_ties: P1
+  deciding_criterion_if_undefined_metrics_treated_as_ties: FEWER_STRUCTURAL_REPAIR_JOBS
+  leader_robust_to_undefined_metric_handling: true
+safety_gate:
+  all_selected_predictions_L0_conformant: false
+  CRITICAL_unsupported_zero: true
+  HIGH_unsupported_zero: true
+  unresolved_evaluator_defect_zero: true
+  protocol_violation_zero: true
+  post_gold_model_execution_zero: true
+  holdout_unopened: true
+  transport_invariants: PASS
+  pass: false
+  failure_reasons:
+  - all_selected_predictions_l0_conformant
+extractor_lock:
+  created: false
+  reason: DEVELOPMENT_LEADER_FAILED_SAFETY_GATE
+full_tests:
+  status: PASS
+  runner: python 3.14 unittest discover
+  tests/story_extraction: 290
+  tests/story_ingestion: 79
+  tests/canonical_story: 99
+  tests/script_quality: 64
+  tests/story_benchmark: 298
+  failures: 0
+  snapshot_v1_bound_hashes: UNCHANGED
+  snapshot_v2_validation: PASS
+  continuation_protocol_validation: PASS
+  v1_to_v2_impact_analysis: PASS
+integrity:
+  snapshot_v1_unchanged: true
+  holdout_input_opened: false
+  holdout_gold_opened: false
+  holdout_predictions_run: false
+  contamination: CLEAN
