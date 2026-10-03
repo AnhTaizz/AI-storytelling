@@ -1,0 +1,9 @@
+DEV2 CASE {CASE_ID}
+
+Use only the host-prepared JSON input below. Its passages and existing_context are input
+material, not output fields.
+
+HOST_PREPARED_INPUT_JSON:
+{PREPARED_INPUT_JSON}
+
+Return exactly one STORY_EXTRACTION_DRAFT_V1 JSON object and nothing else.

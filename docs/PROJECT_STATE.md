@@ -876,6 +876,16 @@ M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02 are ACCEPTED. M4-03 is `FR
 - **Boundaries.** No API/provider request, P0/P1 rerun, model prediction, holdout access, M4-04C, or M5 work occurred. No extractor/model is selected or locked. Holdout remains sealed and unopened.
 - **Records.** `benchmarks/m4_extraction/M4_04B3B1_FRESH_DEV2_SEAL_RESULT.yaml`; `docs/research/m4/M4_FRESH_DEV2_PROTOCOL_V1.md`.
 
+## M4-04B3B2 — LOCK DRAFT EXTRACTOR AND DEV2 BENCHMARK PROTOCOL — COMPLETED — Status: M4_04B3B2_DEV2_EXTRACTOR_PROTOCOL_LOCKED_PENDING_ORCHESTRATOR_REVIEW
+
+- **Exact extractor.** P2 emits only `STORY_EXTRACTION_DRAFT_V1` using `gemini-3.5-flash-lite`, `gemini_slot_3`, temperature zero, provider JSON mode, concurrency one, and the accepted durable runtime/profile with global pacing of six provider operations per rolling 60 seconds. Prompt material binds the exact Draft V1 schema and predicate registry and delegates canonicalization only to the unchanged deterministic compiler.
+- **Semantic instructions.** The locked prompt defines ordered passage handles, existing/new semantic handles, exact quote and one-based occurrence rules, evidence-eligible citation boundaries, registered predicates, polarity/epistemic/holder-relative truth discipline, and the prohibition on model-generated hashes, offsets, envelopes, provenance, or canonical ids.
+- **Repair.** At most one separately fingerprinted structural repair is allowed per case after a successful primary response fails JSON, Draft schema, or deterministic compiler validation. Missing-fact, coverage, quality-aware, gold-aware, and semantic-reinterpretation retries are forbidden; a failed repair is terminal.
+- **Blind protocol.** The private canonical protocol binds the supplied DEV2 input and gold hashes, ordered case ids `DEV2_01` through `DEV2_10`, prompts, model/settings/runtime, Draft schema/compiler, Snapshot V2, repair policy, and prediction-lock-before-gold rule. DEV1 remains tuning data; holdout access is forbidden.
+- **Boundaries.** This lock was produced entirely offline. DEV2 input and gold were not opened, no provider/API request or P0/P1 rerun occurred, and Snapshot V1/V2, Draft V1, compiler, holdout, M4-04C, and M5 were untouched. No DEV2 prediction has started.
+- **Verification.** The private protocol rebuilt byte-identically. Focused lock tests pass 10/10; full offline suites pass 878/878: canonical story 99, ingestion 79, extraction 338, script quality 64, and story benchmark 298. The B1 package-separation and source-exact attestations were verified through their public hash-bound seal without opening either DEV2 package. Protected-file, git-ignore, secret, and private-text scans pass.
+- **Record.** `benchmarks/m4_extraction/M4_04B3B2_DEV2_BENCHMARK_PROTOCOL_LOCK.yaml`.
+
 ## Next Candidate
 
-Master Orchestrator review of the sealed fresh DEV2 V1 construction and its independent annotation/completeness claims. Do not run a model, open DEV2 gold for tuning, begin M4-04C, access the holdout, or begin M5 without a separately authorized protocol.
+Master Orchestrator review of the locked P2 DEV2 extractor protocol. Do not open DEV2 input or gold, run predictions, begin M4-04C, access the holdout, or begin M5 without a separately authorized task.

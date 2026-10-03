@@ -1,0 +1,56 @@
+STORY EXTRACTION DRAFT P2 V1
+
+Return exactly one JSON object conforming to STORY_EXTRACTION_DRAFT_V1. Return no
+Markdown, prose, code fence, commentary, alternate answer, or canonical batch.
+The host will compile your draft deterministically. Do not reproduce trusted host
+metadata.
+
+INPUT HANDLES
+- Passages are P1, P2, ... in the supplied order. Read only supplied passages.
+- A passage marked EVIDENCE_ELIGIBLE may be cited. CONTEXT_ONLY may help interpretation
+  but must never be cited by evidence or mentions.
+- Existing prior records use handles such as E_EXISTING_1, EVT_EXISTING_1,
+  T_EXISTING_1, PROP_EXISTING_1, M_EXISTING_1, EV_EXISTING_1, and A_EXISTING_1.
+  Reuse the appropriate existing handle when it is the same referent or record. Do not
+  emit an existing record again. Prior context is never direct evidence for a new claim.
+- New records use local handles: EV1 for evidence, M1 for mentions, E_NEW_1 for new
+  entities, EVT1 for events, T1 for anchors, PROP1 for propositions, and A1 for
+  assertions. Handles carry no story meaning. Keep handle kinds type-correct.
+
+EXACT EVIDENCE AND MENTIONS
+- Every evidence and mention selects one passage_handle and an exact, byte-for-byte
+  quote found in that passage text. Preserve Unicode, punctuation, and whitespace.
+- If the exact quote appears more than once in that passage, provide its 1-based
+  occurrence. Omit occurrence only when the quote is unique.
+- Choose the explicit evidence role. A mention is only a located surface form; it does
+  not resolve itself. Express resolution with a RefersTo proposition and assertion.
+- An assertion may cite only new EV handles from EVIDENCE_ELIGIBLE passages. Existing
+  evidence and context-only text cannot support a new assertion.
+
+SEMANTIC DISCIPLINE
+- Emit all eight required top-level arrays, including empty arrays. Emit only keys the
+  exact Draft V1 schema permits.
+- Use only predicates, argument names, argument kinds, vocabularies, and derivation
+  rules in the exact predicate registry below. Never invent or approximate a predicate.
+- An event record does not establish occurrence. Add an Occurred proposition/assertion
+  only when supported. Discourse adjacency and temporal order do not establish Causes.
+- Preserve polarity exactly: AFFIRMED, NEGATED, or OPEN. Preserve the distinction among
+  EXPLICIT, ENTAILED, and SUGGESTED. Do not upgrade uncertainty or suggestion.
+- Says, Attitude, and Intends are holder-relative. Asserting them never asserts their
+  embedded content as world truth. A report or belief does not make an event occur.
+- Keep identities distinct unless evidence supports RefersTo or SameAs. Use placeholder
+  entities or propositions when the source requires unresolved content. Do not merge a
+  later-resolved placeholder away.
+- For stative assertions, keep start or end OPEN unless evidence supports a bound. Bound
+  support is explicit. PARTIAL and CORROBORATING sets do not replace a SUFFICIENT path.
+- Extract only story-relevant commitments under STORY_UNDERSTANDING_CORE_V0. Do not add
+  unsupported facts, missing-world guesses, or mechanically convenient relations.
+
+HOST-OWNED FIELDS — NEVER OUTPUT
+Do not output hashes, offsets, byte ranges, locators, source positions, source document
+or segment ids, a batch envelope, process metadata, provenance, review state, canonical
+ids, confidence, provider metadata, or the supplied passages/existing_context. The
+output root is the Draft V1 object only.
+
+The exact JSON schema and predicate registry appended below are authoritative. If this
+instruction conflicts with them, follow the schema and registry and fail conservatively.

@@ -1,0 +1,181 @@
+task: M4-04B3B2
+date: 2026-10-03
+status: M4_04B3B2_DEV2_EXTRACTOR_PROTOCOL_LOCKED_PENDING_ORCHESTRATOR_REVIEW
+scope: DEV2_DRAFT_EXTRACTOR_AND_BLIND_BENCHMARK_PROTOCOL_LOCK_ONLY
+base_commit: eb8fd511b878bb3ac899c88bfd8d05d3532ac139
+protocol_id: M4_04B3B2_DEV2_BENCHMARK_PROTOCOL_V1
+protocol_schema_version: M4_04B3B2_DEV2_BENCHMARK_PROTOCOL_SCHEMA_V1
+
+boundaries:
+  provider_calls: 0
+  Gemini_or_other_API_used: false
+  DEV2_input_opened: false
+  DEV2_gold_opened: false
+  holdout_input_opened: false
+  holdout_gold_opened: false
+  P0_P1_reruns: 0
+  DEV1_role: TUNING_DATA_ALLOWED
+  M4_04C_started: false
+  M5_started: false
+  snapshot_V1_modified: false
+  snapshot_V2_modified: false
+  draft_V1_modified: false
+  deterministic_compiler_modified: false
+
+private_canonical_protocol:
+  name: M4_04B3B2_DEV2_CANONICAL_PROTOCOL_V1.json
+  sha256: 9dea83083e082e80eb350b71cad9a552f620b67f2235056d89788c9b0a23a3a4
+  validation_name: M4_04B3B2_DEV2_PROTOCOL_VALIDATION_V1.json
+  validation_sha256: 9f34ed3fdadb7292212476f350892dabead4e7cd3b0dcf1ac39fe459c9008731
+  committed_to_repository: false
+
+dev2_bindings:
+  input_package:
+    name: M4_04B3_DEV2_INPUT_V1.zip
+    sha256: e63937252e69820ff6f4b097537f860524ea9937e1e0bbd7187f2ae52cd812d5
+    opened_during_protocol_lock: false
+  gold_package:
+    name: M4_04B3_DEV2_GOLD_V1.zip
+    sha256: 77b9655b92b09c5b2c0d0ce749432ae12da342bbf07d62a01b16b37b1fce9939
+    opened_during_protocol_lock: false
+  case_count: 10
+  case_order: [DEV2_01, DEV2_02, DEV2_03, DEV2_04, DEV2_05, DEV2_06, DEV2_07, DEV2_08, DEV2_09, DEV2_10]
+
+extractor:
+  identity: P2_STORY_EXTRACTION_DRAFT_V1_GEMINI_3_5_FLASH_LITE_V1
+  model_output_only: STORY_EXTRACTION_DRAFT_V1
+  model: gemini-3.5-flash-lite
+  credential_slot: gemini_slot_3
+  credential_topology: UNKNOWN
+  temperature: 0
+  max_output_tokens: 16384
+  provider_json_mode: true
+  response_mime_type: application/json
+  concurrency: 1
+  seed: NOT_SUPPORTED_NOT_USED
+  canonical_output_from_model: FORBIDDEN
+
+prompt_sources:
+  system_preamble:
+    path: tools/story_extraction/prompts/story_extraction_draft_p2_system_v1.txt
+    sha256: 9120a18db5ce91a288355d978148e43eb7c1fcfb6a1f4e22ac7a4991c86c7820
+  primary_user_template:
+    path: tools/story_extraction/prompts/story_extraction_draft_p2_user_v1.txt
+    sha256: 6b49b38101770dbf890849e3591f466e7752e392a2741575bf7c7333b011b7fa
+  repair_user_template:
+    path: tools/story_extraction/prompts/story_extraction_draft_p2_repair_user_v1.txt
+    sha256: e8d29437bdbc1b680e6aac291e611ae6b07174d0f849ed4719b53c028620f614
+
+materialized_prompt_hashes:
+  primary_system_sha256: dd2fb6c2ca9ef3eeffa8c4b42a5bf68e1c15916db84114c2542e3657dff80a0e
+  primary_user_template_sha256: 6b49b38101770dbf890849e3591f466e7752e392a2741575bf7c7333b011b7fa
+  primary_prompt_pair_sha256: b943266f15839dfce1f31f157b68d4f3b082d2a350cddbc8bb4fe100762814ca
+  repair_system_sha256: 350baebd5ea6b950020b053e4f0955e53fdc368219a87cd2b68b4a9d8a0c8db3
+  repair_user_template_sha256: e8d29437bdbc1b680e6aac291e611ae6b07174d0f849ed4719b53c028620f614
+  repair_prompt_pair_sha256: 02260f56b583fd2bf31baf05d783d9504ecf9ff78af796e24c01b3af76c5e4bb
+  materialization: SYSTEM_PREAMBLE_PLUS_EXACT_DRAFT_SCHEMA_PLUS_EXACT_PREDICATE_REGISTRY
+
+prompt_contract:
+  passage_handles: P1_P2_ORDERED
+  existing_and_new_entity_handles: REQUIRED
+  event_proposition_assertion_handles: REQUIRED
+  exact_quote_and_one_based_occurrence: REQUIRED
+  evidence_citation_scope: EVIDENCE_ELIGIBLE_ONLY
+  predicate_source: EXACT_BOUND_PREDICATE_REGISTRY_ONLY
+  polarity_epistemic_and_holder_relative_truth: PRESERVE
+  forbidden_model_fields: [hashes, offsets, envelopes, provenance, canonical_ids]
+
+compiler_binding:
+  draft_version: STORY_EXTRACTION_DRAFT_V1
+  draft_schema_sha256: 498edf8dba8d45b80380a180d1383787f5c0e4ecea5060254883cc27c7d83e80
+  compiler_entrypoint: tools.story_extraction.draft_compiler_v1.compile_story_extraction_draft_v1
+  compiler_sha256: bcd15328cefafe86dd8e686fb35a155b2cb2c261b20017486ed106e85371d836
+  predicate_registry_sha256: 44f3eafc6982f84bcc74ccb91abe7cd467a453352ee96be147095f27559c5350
+  compiler_semantic_inference: false
+
+durable_execution:
+  profile_id: M4_DURABLE_RESEARCH_EXECUTION_PROFILE_V1
+  profile_sha256: c6c789f0f06d3fdabc2333c29b389252de853ffef0add536d4f06fb6b94e143e
+  runtime: GEMINI_TRANSPORT_RESILIENCE_V1_1
+  runtime_sha256: 8b84804f5c5b94e1b2ac2507d8b7bc39697b916bbdd889fc1f9040762bfc9213
+  durable_executor: DURABLE_RESEARCH_EXECUTOR_V1
+  durable_executor_sha256: cc9bd7a863ff906dea8fcd2f753c552881acd33f97a72b4af4e4e84eb1bfbe66
+  maximum_windows_per_job: 3
+  maximum_provider_attempts_per_window: 3
+  maximum_provider_attempts_per_job: 9
+  global_pacing: 6_PROVIDER_OPERATIONS_PER_ROLLING_60_SECONDS
+  concurrency: 1
+  first_success: IMMUTABLE_LOCK
+  output_aware_transport_retry: FORBIDDEN
+
+structural_repair:
+  maximum_per_case: 1
+  eligible_categories: [JSON_PARSE_FAILURE, DRAFT_SCHEMA_FAILURE, DRAFT_COMPILER_FAILURE]
+  only_after_successful_primary_response: true
+  deterministic_draft_or_compiler_conformance_only: true
+  semantic_reinterpretation: FORBIDDEN
+  missing_fact_or_coverage_retry: FORBIDDEN
+  quality_signal: FORBIDDEN
+  gold_signal: FORBIDDEN
+  repair_failure: TERMINAL
+
+evaluation_snapshot:
+  identity: M4_EVALUATION_PROTOCOL_SNAPSHOT_V2
+  identity_sha256: 8dddbd0b9f3ea51af593c1fab0631b088b6f4e6b8c16833a1f11b8448088eee9
+  file_sha256: eef2db2ff2ba61f22a96d3a52ab64e07c6c9e9dbc9e9741e061f2893ba6283a8
+
+prediction_lock_before_gold:
+  required: true
+  raw_primary_and_repair_outputs_hashed: REQUIRED
+  compiled_or_terminal_structural_failure_hashed: REQUIRED
+  predictions_committed_and_pushed_before_gold_open: REQUIRED
+  model_or_repair_calls_after_gold_open: 0
+  protocol_change_after_lock: NEW_TASK_REQUIRED
+
+tooling:
+  protocol_and_request_builder:
+    path: tools/story_extraction/m4_04b3b2_dev2_protocol_v1.py
+    sha256: b9982288fd104a9795e5a1db97c3614d6cae41bdb09692e7291099ba1275db8b
+  private_protocol_preparer:
+    path: tools/story_extraction/prepare_m4_04b3b2_dev2_protocol_v1.py
+    sha256: 357833b4c633642ac9b8adb9cc291d9dd9b037eab5f2f55310d0fbb8f5edd5c5
+  offline_protocol_tests:
+    path: tests/story_extraction/test_m4_04b3b2_dev2_protocol_v1.py
+    sha256: 8fd2f2fbd9d747ca973604146cbc9dd7251d9a2d3fb972b835a1d002224c5c56
+
+offline_protocol_validation:
+  parse: PASS
+  schema: PASS
+  semantic_consistency: PASS
+  prompt_hashes: PASS
+  case_list_and_order: PASS
+  dev2_hash_bindings: PASS
+  execution_profile_binding: PASS
+  draft_compiler_binding: PASS
+  snapshot_v2_binding: PASS
+  repair_policy: PASS
+  prediction_lock_before_gold: PASS
+  holdout_prohibition: PASS
+
+verification:
+  private_protocol_deterministic_rerun: PASS
+  focused_protocol_tests: "10/10 PASS"
+  full_test_suites:
+    canonical_story: "99/99 PASS"
+    story_ingestion: "79/79 PASS"
+    story_extraction: "338/338 PASS"
+    script_quality: "64/64 PASS"
+    story_benchmark: "298/298 PASS (offline mode)"
+    total: "878/878 PASS"
+  package_separation: PASS_VIA_HASH_BOUND_B1_SEAL_ATTESTATION_WITHOUT_PACKAGE_OPEN
+  source_exact_checks: PASS_VIA_HASH_BOUND_B1_SEAL_ATTESTATION_AND_FULL_OFFLINE_SUITES
+  protected_artifact_byte_diff: PASS
+  private_artifacts_gitignored: PASS
+  secret_private_scan: PASS
+
+decision:
+  exact_P2_extractor: LOCKED_PENDING_ORCHESTRATOR_REVIEW
+  live_predictions_started: false
+  DEV2_gold_access_authorized: false
+  holdout_access_authorized: false
+  next_allowed_action: ORCHESTRATOR_REVIEW_ONLY

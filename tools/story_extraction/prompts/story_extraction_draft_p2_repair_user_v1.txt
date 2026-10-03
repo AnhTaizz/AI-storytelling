@@ -1,0 +1,18 @@
+DEV2 STRUCTURAL REPAIR FOR {CASE_ID}
+
+This is the sole preregistered repair and is allowed only because the primary successful
+response failed deterministic JSON, Draft V1 schema, or compiler validation. Correct
+only the listed structural/compiler failure while preserving the intended extraction.
+Do not add facts because they appear missing. Do not use quality judgment, scores, gold,
+or expected answers. Return exactly one STORY_EXTRACTION_DRAFT_V1 JSON object.
+
+HOST_PREPARED_INPUT_JSON:
+{PREPARED_INPUT_JSON}
+
+PRIMARY_SUCCESSFUL_RESPONSE:
+{PRIMARY_RESPONSE}
+
+SANITIZED_DETERMINISTIC_FAILURE_JSON:
+{FAILURE_JSON}
+
+Return the corrected Draft V1 JSON object and nothing else.
