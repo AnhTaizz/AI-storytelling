@@ -1,0 +1,376 @@
+task: M4-04B3C-R
+date: 2026-10-03
+status: M4_04B3CR_STRUCTURAL_FORENSICS_COMPLETE
+scope: OFFLINE_STRUCTURAL_FAILURE_FORENSICS_ONLY
+base_commit: c07e336e23933ace39198bc9b998efc56f3cc200
+
+boundaries:
+  provider_or_api_calls: 0
+  prediction_reruns: 0
+  dev2_input_opened_during_forensics: false
+  dev2_gold_opened: false
+  holdout_opened: false
+  scoring_performed: false
+  prompt_changed: false
+  schema_changed: false
+  compiler_changed: false
+  runtime_changed: false
+  source_text_published: false
+  raw_model_output_published: false
+  private_quote_published: false
+
+locked_evidence:
+  protocol_identity_sha256: 9dea83083e082e80eb350b71cad9a552f620b67f2235056d89788c9b0a23a3a4
+  prediction_set_sha256: e7dbbcb86906de203d0336cc911ae665d7fd1682a89d50ce635001b3a99b54bc
+  prediction_result_sha256: d9671332d85c8e3b18321fabbe88a23b7e271b852523d45c89cf3f3a39b52edb
+  prediction_manifest_sha256: 59d2e36c27a05536f0c07c7d5f9c90e13e3331274b367aa21a3c3de7c7664b1a
+  inventory:
+    raw_responses: 20
+    parsed_drafts: 20
+    compiler_failure_records: 8
+    per_case_results: 10
+  artifact_hash_validation: PASS
+
+method:
+  kind: STATIC_OFFLINE_ARTIFACT_COMPARISON
+  inputs:
+    - LOCKED_RAW_RESPONSE_HASHES
+    - LOCKED_PARSED_DRAFTS
+    - LOCKED_COMPILER_FAILURE_RECORDS
+    - LOCKED_PER_CASE_RESULTS
+  compiler_executed: false
+  evaluator_executed: false
+  raw_response_content_emitted: false
+  quote_content_emitted: false
+  notes:
+    - Raw responses were accessed only to validate their locked hashes; diagnosis used parsed structural fields and recorded failures.
+    - Failure families describe the validation surface, not extraction quality.
+    - Machine/compiler defect evidence means evidence of incorrect deterministic behavior; none was found.
+    - Semantic model output problem means the model-produced structure violated an explicit or inferred interface invariant; it is not a gold-based semantic-quality judgment.
+
+aggregate:
+  primary:
+    attempted: 10
+    valid: 0
+    category_counts:
+      DRAFT_COMPILER_FAILURE: 10
+    code_counts:
+      MENTION_EVIDENCE_MISMATCH: 9
+      AMBIGUOUS_QUOTE: 1
+    family_counts:
+      HANDLE: 9
+      QUOTE: 1
+  repair:
+    attempted: 10
+    valid: 2
+    category_counts:
+      DRAFT_COMPILER_FAILURE: 8
+      PASS: 2
+    code_counts:
+      MENTION_EVIDENCE_MISMATCH: 8
+      PASS: 2
+    family_counts:
+      HANDLE: 8
+      PASS: 2
+    effect_counts:
+      FULL_STRUCTURAL_CORRECTION: 2
+      INITIAL_TRIGGER_CORRECTED_NEXT_TRIGGER_EXPOSED: 4
+      CHANGED_DRAFT_BUT_TRIGGER_PERSISTED: 3
+      NO_CHANGE: 1
+  terminal:
+    STRUCTURAL_VALID: 2
+    STRUCTURAL_FAILURE: 8
+  stage_failure_counts:
+    HANDLE: 17
+    QUOTE: 1
+    JSON: 0
+    DRAFT_SCHEMA: 0
+    PREDICATE: 0
+    CANONICAL_COMPILER: 0
+    OTHER: 0
+  machine_or_compiler_defect_evidence_count: 0
+
+cases:
+  - case_id: DEV2_01
+    terminal_status: STRUCTURAL_FAILURE
+    primary:
+      category: DRAFT_COMPILER_FAILURE
+      code: MENTION_EVIDENCE_MISMATCH
+      family: HANDLE
+      root_cause: MENTION_EVIDENCE_HANDLE_TARGETED_A_BROADER_NONIDENTICAL_QUOTE_LOCATOR
+    repair:
+      category: DRAFT_COMPILER_FAILURE
+      code: MENTION_EVIDENCE_MISMATCH
+      family: HANDLE
+      root_cause: OCCURRENCE_FIELDS_CHANGED_BUT_THE_NONIDENTICAL_QUOTE_LINK_REMAINED
+    repair_effect: CHANGED_DRAFT_BUT_TRIGGER_PERSISTED
+    repair_corrected_anything: false
+    attribution:
+      machine_or_compiler_problem: false
+      interface_problem: true
+      semantic_model_output_problem: true
+
+  - case_id: DEV2_02
+    terminal_status: STRUCTURAL_VALID
+    primary:
+      category: DRAFT_COMPILER_FAILURE
+      code: MENTION_EVIDENCE_MISMATCH
+      family: HANDLE
+      root_cause: MENTION_EVIDENCE_HANDLE_TARGETED_A_BROADER_NONIDENTICAL_QUOTE_LOCATOR
+    repair:
+      category: null
+      code: null
+      family: PASS
+      root_cause: NONE_STRUCTURAL_PASS
+    repair_effect: FULL_STRUCTURAL_CORRECTION
+    repair_corrected_anything: true
+    attribution:
+      machine_or_compiler_problem: false
+      interface_problem: true
+      semantic_model_output_problem: true
+
+  - case_id: DEV2_03
+    terminal_status: STRUCTURAL_FAILURE
+    primary:
+      category: DRAFT_COMPILER_FAILURE
+      code: MENTION_EVIDENCE_MISMATCH
+      family: HANDLE
+      root_cause: MENTION_EVIDENCE_HANDLE_TARGETED_A_BROADER_NONIDENTICAL_QUOTE_LOCATOR
+    repair:
+      category: DRAFT_COMPILER_FAILURE
+      code: MENTION_EVIDENCE_MISMATCH
+      family: HANDLE
+      root_cause: FIRST_LINK_WAS_CORRECTED_BUT_A_LATER_NONIDENTICAL_LINK_REMAINED
+    repair_effect: INITIAL_TRIGGER_CORRECTED_NEXT_TRIGGER_EXPOSED
+    repair_corrected_anything: true
+    attribution:
+      machine_or_compiler_problem: false
+      interface_problem: true
+      semantic_model_output_problem: true
+
+  - case_id: DEV2_04
+    terminal_status: STRUCTURAL_FAILURE
+    primary:
+      category: DRAFT_COMPILER_FAILURE
+      code: AMBIGUOUS_QUOTE
+      family: QUOTE
+      root_cause: REPEATED_QUOTE_LOCATOR_OMITTED_REQUIRED_OCCURRENCE
+    repair:
+      category: DRAFT_COMPILER_FAILURE
+      code: MENTION_EVIDENCE_MISMATCH
+      family: HANDLE
+      root_cause: OCCURRENCE_WAS_CORRECTED_BUT_A_NONIDENTICAL_MENTION_EVIDENCE_LINK_WAS_EXPOSED
+    repair_effect: INITIAL_TRIGGER_CORRECTED_NEXT_TRIGGER_EXPOSED
+    repair_corrected_anything: true
+    attribution:
+      machine_or_compiler_problem: false
+      interface_problem: true
+      semantic_model_output_problem: true
+
+  - case_id: DEV2_05
+    terminal_status: STRUCTURAL_FAILURE
+    primary:
+      category: DRAFT_COMPILER_FAILURE
+      code: MENTION_EVIDENCE_MISMATCH
+      family: HANDLE
+      root_cause: MENTION_EVIDENCE_HANDLE_TARGETED_A_BROADER_NONIDENTICAL_QUOTE_LOCATOR
+    repair:
+      category: DRAFT_COMPILER_FAILURE
+      code: MENTION_EVIDENCE_MISMATCH
+      family: HANDLE
+      root_cause: UNRELATED_OCCURRENCE_FIELDS_CHANGED_WHILE_THE_FIRST_INVALID_LINK_REMAINED
+    repair_effect: CHANGED_DRAFT_BUT_TRIGGER_PERSISTED
+    repair_corrected_anything: false
+    attribution:
+      machine_or_compiler_problem: false
+      interface_problem: true
+      semantic_model_output_problem: true
+
+  - case_id: DEV2_06
+    terminal_status: STRUCTURAL_VALID
+    primary:
+      category: DRAFT_COMPILER_FAILURE
+      code: MENTION_EVIDENCE_MISMATCH
+      family: HANDLE
+      root_cause: MENTION_EVIDENCE_HANDLE_TARGETED_A_BROADER_NONIDENTICAL_QUOTE_LOCATOR
+    repair:
+      category: null
+      code: null
+      family: PASS
+      root_cause: NONE_STRUCTURAL_PASS
+    repair_effect: FULL_STRUCTURAL_CORRECTION
+    repair_corrected_anything: true
+    attribution:
+      machine_or_compiler_problem: false
+      interface_problem: true
+      semantic_model_output_problem: true
+
+  - case_id: DEV2_07
+    terminal_status: STRUCTURAL_FAILURE
+    primary:
+      category: DRAFT_COMPILER_FAILURE
+      code: MENTION_EVIDENCE_MISMATCH
+      family: HANDLE
+      root_cause: MENTION_EVIDENCE_HANDLE_TARGETED_A_BROADER_NONIDENTICAL_QUOTE_LOCATOR
+    repair:
+      category: DRAFT_COMPILER_FAILURE
+      code: MENTION_EVIDENCE_MISMATCH
+      family: HANDLE
+      root_cause: FIRST_LINK_WAS_CORRECTED_BUT_A_LATER_NONIDENTICAL_LINK_REMAINED
+    repair_effect: INITIAL_TRIGGER_CORRECTED_NEXT_TRIGGER_EXPOSED
+    repair_corrected_anything: true
+    attribution:
+      machine_or_compiler_problem: false
+      interface_problem: true
+      semantic_model_output_problem: true
+
+  - case_id: DEV2_08
+    terminal_status: STRUCTURAL_FAILURE
+    primary:
+      category: DRAFT_COMPILER_FAILURE
+      code: MENTION_EVIDENCE_MISMATCH
+      family: HANDLE
+      root_cause: MENTION_EVIDENCE_HANDLE_TARGETED_A_BROADER_NONIDENTICAL_QUOTE_LOCATOR
+    repair:
+      category: DRAFT_COMPILER_FAILURE
+      code: MENTION_EVIDENCE_MISMATCH
+      family: HANDLE
+      root_cause: REPAIR_DRAFT_WAS_SEMANTICALLY_BYTE_IDENTICAL_TO_PRIMARY
+    repair_effect: NO_CHANGE
+    repair_corrected_anything: false
+    attribution:
+      machine_or_compiler_problem: false
+      interface_problem: true
+      semantic_model_output_problem: true
+
+  - case_id: DEV2_09
+    terminal_status: STRUCTURAL_FAILURE
+    primary:
+      category: DRAFT_COMPILER_FAILURE
+      code: MENTION_EVIDENCE_MISMATCH
+      family: HANDLE
+      root_cause: MENTION_EVIDENCE_HANDLE_TARGETED_A_BROADER_NONIDENTICAL_QUOTE_LOCATOR
+    repair:
+      category: DRAFT_COMPILER_FAILURE
+      code: MENTION_EVIDENCE_MISMATCH
+      family: HANDLE
+      root_cause: TARGET_HANDLE_CHANGED_BUT_STILL_IDENTIFIED_A_NONIDENTICAL_QUOTE_LOCATOR
+    repair_effect: CHANGED_DRAFT_BUT_TRIGGER_PERSISTED
+    repair_corrected_anything: false
+    attribution:
+      machine_or_compiler_problem: false
+      interface_problem: true
+      semantic_model_output_problem: true
+
+  - case_id: DEV2_10
+    terminal_status: STRUCTURAL_FAILURE
+    primary:
+      category: DRAFT_COMPILER_FAILURE
+      code: MENTION_EVIDENCE_MISMATCH
+      family: HANDLE
+      root_cause: MENTION_EVIDENCE_HANDLE_TARGETED_A_BROADER_NONIDENTICAL_QUOTE_LOCATOR
+    repair:
+      category: DRAFT_COMPILER_FAILURE
+      code: MENTION_EVIDENCE_MISMATCH
+      family: HANDLE
+      root_cause: FIRST_LINK_WAS_CORRECTED_BUT_A_LATER_NONIDENTICAL_LINK_REMAINED
+    repair_effect: INITIAL_TRIGGER_CORRECTED_NEXT_TRIGGER_EXPOSED
+    repair_corrected_anything: true
+    attribution:
+      machine_or_compiler_problem: false
+      interface_problem: true
+      semantic_model_output_problem: true
+
+per_stage_attribution:
+  DEV2_01:
+    primary: INTERFACE_INSTRUCTION_GAP_AND_SEMANTIC_MODEL_OUTPUT
+    repair: INTERFACE_INSTRUCTION_GAP_AND_SEMANTIC_MODEL_OUTPUT
+  DEV2_02:
+    primary: INTERFACE_INSTRUCTION_GAP_AND_SEMANTIC_MODEL_OUTPUT
+    repair: NO_STRUCTURAL_FAILURE
+  DEV2_03:
+    primary: INTERFACE_INSTRUCTION_GAP_AND_SEMANTIC_MODEL_OUTPUT
+    repair: INTERFACE_INSTRUCTION_GAP_AND_SEMANTIC_MODEL_OUTPUT
+  DEV2_04:
+    primary: SEMANTIC_MODEL_OUTPUT
+    repair: INTERFACE_INSTRUCTION_GAP_AND_SEMANTIC_MODEL_OUTPUT
+  DEV2_05:
+    primary: INTERFACE_INSTRUCTION_GAP_AND_SEMANTIC_MODEL_OUTPUT
+    repair: INTERFACE_INSTRUCTION_GAP_AND_SEMANTIC_MODEL_OUTPUT
+  DEV2_06:
+    primary: INTERFACE_INSTRUCTION_GAP_AND_SEMANTIC_MODEL_OUTPUT
+    repair: NO_STRUCTURAL_FAILURE
+  DEV2_07:
+    primary: INTERFACE_INSTRUCTION_GAP_AND_SEMANTIC_MODEL_OUTPUT
+    repair: INTERFACE_INSTRUCTION_GAP_AND_SEMANTIC_MODEL_OUTPUT
+  DEV2_08:
+    primary: INTERFACE_INSTRUCTION_GAP_AND_SEMANTIC_MODEL_OUTPUT
+    repair: INTERFACE_INSTRUCTION_GAP_AND_SEMANTIC_MODEL_OUTPUT
+  DEV2_09:
+    primary: INTERFACE_INSTRUCTION_GAP_AND_SEMANTIC_MODEL_OUTPUT
+    repair: INTERFACE_INSTRUCTION_GAP_AND_SEMANTIC_MODEL_OUTPUT
+  DEV2_10:
+    primary: INTERFACE_INSTRUCTION_GAP_AND_SEMANTIC_MODEL_OUTPUT
+    repair: INTERFACE_INSTRUCTION_GAP_AND_SEMANTIC_MODEL_OUTPUT
+  machine_or_compiler_problem_any_stage: false
+
+top_3_root_causes:
+  - rank: 1
+    cause: MENTION_EVIDENCE_EXACT_ALIAS_INVARIANT_WAS_NOT_FOLLOWED
+    evidence:
+      primary_cases: 9
+      repair_failures: 8
+      terminal_failures: 8
+      stage_failures: 17
+      common_shape: MENTION_QUOTE_STRICTLY_WITHIN_EVIDENCE_QUOTE
+    interpretation: The model treated optional mention evidence_handle as a broad supporting-evidence link, while the deterministic compiler requires the linked mention and evidence locator and role to be identical.
+    ownership: INTERFACE_INSTRUCTION_GAP_AND_MODEL_STRUCTURAL_CONFORMANCE
+    compiler_defect_evidence: false
+
+  - rank: 2
+    cause: ONE_ERROR_FAIL_FAST_DIAGNOSTIC_EXPOSED_ONLY_THE_NEXT_INVALID_LINK
+    evidence:
+      repairs_correcting_initial_trigger_but_exposing_next: 4
+      cases: [DEV2_03, DEV2_04, DEV2_07, DEV2_10]
+      fully_successful_repairs: 2
+    interpretation: A one-repair budget combined with fail-fast diagnostics left later same-class defects undisclosed until the sole repair had been consumed.
+    ownership: REPAIR_INTERFACE_OBSERVABILITY_LIMITATION
+    compiler_defect_evidence: false
+
+  - rank: 3
+    cause: STRUCTURAL_REPAIR_DID_NOT_ADDRESS_THE_REPORTED_BLOCKER
+    evidence:
+      changed_draft_but_trigger_persisted: 3
+      no_change: 1
+      cases: [DEV2_01, DEV2_05, DEV2_08, DEV2_09]
+    interpretation: Three repairs changed other fields while preserving the same failing locator, and one repair returned an unchanged semantic draft.
+    ownership: SEMANTIC_MODEL_REPAIR_BEHAVIOR
+    compiler_defect_evidence: false
+
+secondary_findings:
+  - finding: One primary response omitted occurrence for a repeated quote; its repair corrected that trigger before exposing a mention-link mismatch.
+  - finding: No JSON, Draft-schema, predicate-registry, canonical-conformance, transport, or deterministic-machine failure was observed.
+  - finding: Some repairs changed fields outside the reported failing locator; no gold-based judgment of those semantic changes was made.
+
+tooling:
+  analyzer:
+    path: tools/story_extraction/analyze_m4_04b3cr_structural_failures_v1.py
+    sha256: 26d412609ed9a692e0bf2286a227ba188c2c35c5db805e14fb3a93f2f0f84469
+  synthetic_tests:
+    path: tests/story_extraction/test_analyze_m4_04b3cr_structural_failures_v1.py
+    sha256: d8d74db9cb9fc1eb53451cc4363c787d7936e2293681727fb90b40b4f2f9d208
+
+verification:
+  locked_artifact_analyzer_run: PASS
+  yaml_parse_and_locked_count_consistency: PASS
+  focused_offline_tests: "13/13 PASS"
+  public_secret_scan: PASS
+  private_text_publication_scan: PASS
+  private_artifact_gitignore_check: PASS
+  protected_prompt_schema_compiler_runtime_diff: PASS
+
+conclusion:
+  why_only_2_of_10_structurally_valid: Nine primaries shared a systematic misunderstanding of the exact mention-to-evidence alias invariant. Only two repairs removed all such invalid links; four repaired the first visible trigger but exposed another, three changed the draft without clearing the reported trigger, and one made no semantic change.
+  structural_quality_only: true
+  extraction_quality_assessed: false
+  recommended_next_action: ORCHESTRATOR_REVIEW_ONLY

@@ -895,6 +895,13 @@ M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02 are ACCEPTED. M4-03 is `FR
 - **Verification.** Full offline suites pass 886/886: canonical story 99, ingestion 79, extraction 346, script quality 64, and story benchmark 298. Protected prompt/schema/compiler/runtime/snapshot diff, private artifact hash and git-ignore checks, public/private lock consistency, credential-value scan, and secret/private publication scan all pass.
 - **Record.** `benchmarks/m4_extraction/M4_04B3C_DEV2_PREDICTION_LOCK.yaml`.
 
+## M4-04B3C-R — DEV2 STRUCTURAL FAILURE FORENSICS — COMPLETED — Status: M4_04B3CR_STRUCTURAL_FORENSICS_COMPLETE
+
+- **Offline scope.** Static analysis used only the locked B3C raw-response hashes, parsed drafts, compiler-failure records, and per-case results. No API call, prediction rerun, DEV2 input/gold access, holdout access, scoring, or prompt/schema/compiler/runtime change occurred.
+- **Primary cause.** Nine of ten primaries used `mention.evidence_handle` as a broad supporting-evidence link although the deterministic compiler requires an exact locator/role alias; this produced 17 stage-level `MENTION_EVIDENCE_MISMATCH` failures and all eight terminal failures. No machine/compiler defect evidence was found.
+- **Repair outcome.** Two repairs fully corrected structure, four corrected the first fail-fast trigger but exposed a later invalid link, three changed the draft without clearing the same trigger, and one made no semantic change. One separate repeated-quote occurrence omission was corrected by repair.
+- **Record.** `benchmarks/m4_extraction/M4_04B3CR_STRUCTURAL_FAILURE_FORENSICS.yaml` contains the public-safe case matrix, aggregate counts, attribution, and top-three root causes without source text, raw output, gold, or private quotes.
+
 ## Next Candidate
 
-Master Orchestrator review of the locked blind DEV2 predictions. Do not open DEV2 gold, score or tune against DEV2, make additional model calls, begin M4-04C, access the holdout, or begin M5 without a separately authorized task.
+Master Orchestrator review of the locked structural forensics. Do not open DEV2 gold, score or tune against DEV2, rerun predictions, change the locked extractor stack, begin M4-04C, access the holdout, or begin M5 without a separately authorized task.
