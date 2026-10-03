@@ -886,6 +886,15 @@ M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02 are ACCEPTED. M4-03 is `FR
 - **Verification.** The private protocol rebuilt byte-identically. Focused lock tests pass 10/10; full offline suites pass 878/878: canonical story 99, ingestion 79, extraction 338, script quality 64, and story benchmark 298. The B1 package-separation and source-exact attestations were verified through their public hash-bound seal without opening either DEV2 package. Protected-file, git-ignore, secret, and private-text scans pass.
 - **Record.** `benchmarks/m4_extraction/M4_04B3B2_DEV2_BENCHMARK_PROTOCOL_LOCK.yaml`.
 
+## M4-04B3C — BLIND DEV2 PREDICTION AND LOCK — COMPLETED — Status: M4_04B3C_DEV2_PREDICTIONS_LOCKED_PENDING_ORCHESTRATOR_REVIEW
+
+- **Blind execution.** The exact B3B2 protocol SHA-256 `9dea83083e082e80eb350b71cad9a552f620b67f2235056d89788c9b0a23a3a4` ran on the sole authorized DEV2 input archive SHA-256 `e63937252e69820ff6f4b097537f860524ea9937e1e0bbd7187f2ae52cd812d5`. DEV2 gold and holdout input/gold remained unopened; no evaluator or scoring path was available to the runner.
+- **Fixed execution.** Cases ran in order `DEV2_01` through `DEV2_10` using only `gemini-3.5-flash-lite`, `gemini_slot_3`, temperature zero, provider JSON mode, concurrency one, the accepted durable profile, and global 6/60 pacing. There were 20 provider operations: ten immutable primary first successes and one preregistered structural repair for each case; no model/key switch, transport failure, output-aware retry, quality retry, or coverage retry occurred.
+- **Terminal lock.** All ten cases reached terminal states before the lock: DEV2_02 and DEV2_06 are structurally valid; the other eight are terminal structural failures after their sole repair. This is structural conformance only and is not an extraction-quality result. No further retry was made.
+- **Prediction identity.** Prediction-set SHA-256 is `e7dbbcb86906de203d0336cc911ae665d7fd1682a89d50ce635001b3a99b54bc`. Private storage preserves 20 raw responses, 20 parsed drafts, two compiled batches, eight compiler-failure records, ten per-case results, transport telemetry, and 20 durable job checkpoints; all referenced hashes validate.
+- **Verification.** Full offline suites pass 886/886: canonical story 99, ingestion 79, extraction 346, script quality 64, and story benchmark 298. Protected prompt/schema/compiler/runtime/snapshot diff, private artifact hash and git-ignore checks, public/private lock consistency, credential-value scan, and secret/private publication scan all pass.
+- **Record.** `benchmarks/m4_extraction/M4_04B3C_DEV2_PREDICTION_LOCK.yaml`.
+
 ## Next Candidate
 
-Master Orchestrator review of the locked P2 DEV2 extractor protocol. Do not open DEV2 input or gold, run predictions, begin M4-04C, access the holdout, or begin M5 without a separately authorized task.
+Master Orchestrator review of the locked blind DEV2 predictions. Do not open DEV2 gold, score or tune against DEV2, make additional model calls, begin M4-04C, access the holdout, or begin M5 without a separately authorized task.
