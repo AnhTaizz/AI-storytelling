@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-storytelling:story-extraction:draft:v1.1",
+  "title": "STORY_EXTRACTION_DRAFT_V1_1",
+  "description": "Versioned semantic-only model output. Mention locators never carry evidence_handle. All non-Mention definitions remain bound to STORY_EXTRACTION_DRAFT_V1.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "draft_version",
+    "evidence",
+    "mentions",
+    "entities",
+    "events",
+    "anchors",
+    "propositions",
+    "assertions"
+  ],
+  "properties": {
+    "draft_version": {"const": "STORY_EXTRACTION_DRAFT_V1_1"},
+    "evidence": {
+      "type": "array",
+      "items": {"$ref": "urn:ai-storytelling:story-extraction:draft:v1#/$defs/Evidence"}
+    },
+    "mentions": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/Mention"}
+    },
+    "entities": {
+      "type": "array",
+      "items": {"$ref": "urn:ai-storytelling:story-extraction:draft:v1#/$defs/Entity"}
+    },
+    "events": {
+      "type": "array",
+      "items": {"$ref": "urn:ai-storytelling:story-extraction:draft:v1#/$defs/Event"}
+    },
+    "anchors": {
+      "type": "array",
+      "items": {"$ref": "urn:ai-storytelling:story-extraction:draft:v1#/$defs/TemporalAnchor"}
+    },
+    "propositions": {
+      "type": "array",
+      "items": {"$ref": "urn:ai-storytelling:story-extraction:draft:v1#/$defs/Proposition"}
+    },
+    "assertions": {
+      "type": "array",
+      "items": {"$ref": "urn:ai-storytelling:story-extraction:draft:v1#/$defs/Assertion"}
+    }
+  },
+  "$defs": {
+    "Mention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["handle", "passage_handle", "quote", "role"],
+      "properties": {
+        "handle": {"type": "string", "pattern": "^M[1-9][0-9]*$"},
+        "passage_handle": {"type": "string", "pattern": "^P[1-9][0-9]*$"},
+        "quote": {"type": "string", "minLength": 1},
+        "occurrence": {"type": "integer", "minimum": 1},
+        "role": {"$ref": "urn:ai-storytelling:story-extraction:draft:v1#/$defs/EvidenceRole"},
+        "surface_form": {"type": "string", "minLength": 1, "maxLength": 200}
+      }
+    }
+  }
+}
