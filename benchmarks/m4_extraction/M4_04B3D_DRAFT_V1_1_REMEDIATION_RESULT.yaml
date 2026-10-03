@@ -1,0 +1,254 @@
+task: M4-04B3D
+date: 2026-10-03
+status: M4_04B3D_DRAFT_V1_1_READY_FOR_FRESH_VALIDATION
+scope: OFFLINE_DRAFT_INTERFACE_STRUCTURAL_REMEDIATION
+base_commit: 2a95b0fe2e690fd33407e455c46ad9873a89c6d9
+
+boundaries:
+  provider_or_api_calls: 0
+  prediction_reruns: 0
+  dev2_gold_opened: false
+  holdout_opened: false
+  quality_scoring: false
+  semantic_repair: false
+  old_draft_v1_mutated: false
+  old_compiler_v1_mutated: false
+  snapshot_v1_or_v2_mutated: false
+
+interface:
+  identity: STORY_EXTRACTION_DRAFT_V1_1
+  change_kind: ADDITIVE_VERSIONED_INTERFACE
+  mention_allowed_fields:
+    required: [handle, passage_handle, quote, role]
+    optional: [occurrence, surface_form]
+  model_facing_mention_evidence_handle: REMOVED_AND_SCHEMA_FORBIDDEN
+  assertion_evidence_surface: evidence[]
+  assertion_support_implicitly_receives_mention_evidence: false
+  semantic_inference_added: false
+
+deterministic_mention_binding:
+  identity_rule: EXACT_RESOLVED_PASSAGE_SPAN_AND_ROLE
+  reuse_model_evidence_only_on_exact_identity: true
+  reuse_prior_mention_evidence_only_on_exact_identity: true
+  broad_containing_assertion_evidence_reused: false
+  otherwise: CREATE_DETERMINISTIC_EXACT_MENTION_EVIDENCE_REF
+  canonical_compilation_backend: UNCHANGED_DRAFT_COMPILER_V1
+
+structural_diagnostics:
+  ordered_aggregate_blockers: true
+  source_text_or_quote_echoed: false
+  independently_collectible_families:
+    - SCHEMA
+    - QUOTE
+    - HANDLE
+    - ASSERTION_EVIDENCE
+    - DERIVATION_REFERENCE
+    - TEMPORAL_REFERENCE
+    - TEXTUAL_AMBIGUITY_REFERENCE
+  canonical_validation: FAIL_CLOSED
+  semantic_inference: false
+
+frozen_history_bindings:
+  draft_v1_schema_sha256: 498edf8dba8d45b80380a180d1383787f5c0e4ecea5060254883cc27c7d83e80
+  draft_compiler_v1_sha256: bcd15328cefafe86dd8e686fb35a155b2cb2c261b20017486ed106e85371d836
+  bytes_unchanged: true
+
+locked_diagnostic_inputs:
+  dev2_input_sha256: e63937252e69820ff6f4b097537f860524ea9937e1e0bbd7187f2ae52cd812d5
+  prediction_set_sha256: e7dbbcb86906de203d0336cc911ae665d7fd1682a89d50ce635001b3a99b54bc
+  prediction_result_sha256: d9671332d85c8e3b18321fabbe88a23b7e271b852523d45c89cf3f3a39b52edb
+  prediction_manifest_sha256: 59d2e36c27a05536f0c07c7d5f9c90e13e3331274b367aa21a3c3de7c7664b1a
+  parsed_drafts: 20
+  parsed_draft_hashes_verified: 20
+  raw_responses_opened: false
+  gold_or_evaluator_path_available: false
+
+mechanical_migration:
+  source_version: STORY_EXTRACTION_DRAFT_V1
+  target_version: STORY_EXTRACTION_DRAFT_V1_1
+  operations:
+    - CHANGE_DRAFT_VERSION_TAG
+    - REMOVE_MENTION_EVIDENCE_HANDLE
+  mention_evidence_handles_removed: 78
+  non_interface_field_changes: 0
+  source_drafts_mutated: false
+
+old_terminal_result:
+  structural_valid: 2
+  structural_failure: 8
+  total: 10
+
+migrated_v1_1_result:
+  structural_valid: 6
+  structural_failure: 4
+  total: 10
+  primary_attempts:
+    structural_valid: 6
+    structural_failure: 4
+    remaining_failed_attempt_codes:
+      AMBIGUOUS_QUOTE: 2
+      CANONICAL_CONFORMANCE_FAILURE: 2
+    blocker_count: 7
+  repair_attempts:
+    structural_valid: 6
+    structural_failure: 4
+    remaining_failed_attempt_codes:
+      AMBIGUOUS_QUOTE: 1
+      CANONICAL_CONFORMANCE_FAILURE: 3
+    blocker_count: 5
+  all_attempts:
+    failed_attempt_code_counts:
+      AMBIGUOUS_QUOTE: 3
+      CANONICAL_CONFORMANCE_FAILURE: 5
+    AMBIGUOUS_QUOTE_blocker_count: 7
+    CANONICAL_CONFORMANCE_FAILURE_blocker_count: 5
+    MENTION_EVIDENCE_MISMATCH_blocker_count: 0
+  mention_mismatch_eliminated: true
+
+exact_mention_evidence_binding:
+  attempts_reaching_binding: 17
+  mention_count: 75
+  created_exact_mention_evidence: 74
+  reused_exact_model_evidence: 1
+  reused_exact_prior_mention_evidence: 0
+  broad_evidence_reuse: 0
+
+cases:
+  - case_id: DEV2_01
+    old_terminal: STRUCTURAL_FAILURE
+    migrated_primary: STRUCTURAL_VALID
+    migrated_repair: STRUCTURAL_VALID
+    migrated_terminal: STRUCTURAL_VALID
+    removed_mention_evidence_handles: {primary: 4, repair: 4}
+    remaining_terminal_failure: null
+  - case_id: DEV2_02
+    old_terminal: STRUCTURAL_VALID
+    migrated_primary: STRUCTURAL_VALID
+    migrated_repair: STRUCTURAL_VALID
+    migrated_terminal: STRUCTURAL_VALID
+    removed_mention_evidence_handles: {primary: 4, repair: 0}
+    remaining_terminal_failure: null
+  - case_id: DEV2_03
+    old_terminal: STRUCTURAL_FAILURE
+    migrated_primary: STRUCTURAL_FAILURE
+    migrated_repair: STRUCTURAL_FAILURE
+    migrated_terminal: STRUCTURAL_FAILURE
+    removed_mention_evidence_handles: {primary: 5, repair: 3}
+    remaining_terminal_failure:
+      code: CANONICAL_CONFORMANCE_FAILURE
+      blocker_count: 1
+  - case_id: DEV2_04
+    old_terminal: STRUCTURAL_FAILURE
+    migrated_primary: STRUCTURAL_FAILURE
+    migrated_repair: STRUCTURAL_FAILURE
+    migrated_terminal: STRUCTURAL_FAILURE
+    removed_mention_evidence_handles: {primary: 3, repair: 3}
+    primary_remaining_failure:
+      code: AMBIGUOUS_QUOTE
+      blocker_count: 1
+    remaining_terminal_failure:
+      code: CANONICAL_CONFORMANCE_FAILURE
+      blocker_count: 1
+  - case_id: DEV2_05
+    old_terminal: STRUCTURAL_FAILURE
+    migrated_primary: STRUCTURAL_FAILURE
+    migrated_repair: STRUCTURAL_FAILURE
+    migrated_terminal: STRUCTURAL_FAILURE
+    removed_mention_evidence_handles: {primary: 6, repair: 6}
+    primary_remaining_failure:
+      code: AMBIGUOUS_QUOTE
+      blocker_count: 4
+    remaining_terminal_failure:
+      code: AMBIGUOUS_QUOTE
+      blocker_count: 2
+  - case_id: DEV2_06
+    old_terminal: STRUCTURAL_VALID
+    migrated_primary: STRUCTURAL_VALID
+    migrated_repair: STRUCTURAL_VALID
+    migrated_terminal: STRUCTURAL_VALID
+    removed_mention_evidence_handles: {primary: 5, repair: 0}
+    remaining_terminal_failure: null
+  - case_id: DEV2_07
+    old_terminal: STRUCTURAL_FAILURE
+    migrated_primary: STRUCTURAL_FAILURE
+    migrated_repair: STRUCTURAL_FAILURE
+    migrated_terminal: STRUCTURAL_FAILURE
+    removed_mention_evidence_handles: {primary: 6, repair: 6}
+    remaining_terminal_failure:
+      code: CANONICAL_CONFORMANCE_FAILURE
+      blocker_count: 1
+  - case_id: DEV2_08
+    old_terminal: STRUCTURAL_FAILURE
+    migrated_primary: STRUCTURAL_VALID
+    migrated_repair: STRUCTURAL_VALID
+    migrated_terminal: STRUCTURAL_VALID
+    removed_mention_evidence_handles: {primary: 9, repair: 9}
+    remaining_terminal_failure: null
+  - case_id: DEV2_09
+    old_terminal: STRUCTURAL_FAILURE
+    migrated_primary: STRUCTURAL_VALID
+    migrated_repair: STRUCTURAL_VALID
+    migrated_terminal: STRUCTURAL_VALID
+    removed_mention_evidence_handles: {primary: 1, repair: 1}
+    remaining_terminal_failure: null
+  - case_id: DEV2_10
+    old_terminal: STRUCTURAL_FAILURE
+    migrated_primary: STRUCTURAL_VALID
+    migrated_repair: STRUCTURAL_VALID
+    migrated_terminal: STRUCTURAL_VALID
+    removed_mention_evidence_handles: {primary: 2, repair: 1}
+    remaining_terminal_failure: null
+
+interpretation:
+  systematic_interface_ambiguity_fixed: true
+  migrated_result_is_model_quality_score: false
+  remaining_failures_patched: false
+  remaining_failures_meaning: LATENT_INDEPENDENT_STRUCTURAL_BLOCKERS_PREVIOUSLY_CENSORED_BY_FAIL_FAST
+  readiness_basis: VERSIONED_INTERFACE_AND_COMPILER_BEHAVIOR_PASS_SYNTHETIC_SOURCE_EXACT_TESTS_AND_ELIMINATE_THE_TARGET_FAILURE_CLASS
+
+data_status:
+  DEV2: TUNING_DATA_AFTER_INTERFACE_REDESIGN
+  eligible_as_fresh_v1_1_validation: false
+  next_required_dataset: NEW_INDEPENDENTLY_SEALED_FRESH_VALIDATION_SET
+
+artifacts:
+  schema:
+    path: schemas/story_extraction/story_extraction_draft_v1_1.schema.json
+    sha256: 6b5267319e2b6be42734254ad8efdb8fe6ab6843c5ba945ae4e8b524f11f78c0
+  compiler:
+    path: tools/story_extraction/draft_compiler_v1_1.py
+    sha256: c41730be4e661914faaf00dbf77b77f2dc46924543ee577de1e362b325e04166
+  migration_diagnostic:
+    path: tools/story_extraction/analyze_m4_04b3d_draft_v1_1.py
+    sha256: 098b9a27c895901f5228cac6badd0989cdba7d3d45cdd78c776fd12e3a5c37fc
+  compiler_tests:
+    path: tests/story_extraction/test_draft_compiler_v1_1.py
+    sha256: 31df7dc9428cb09e98411b99590c8c6e310d57683fd7c4d6973ee9667948b802
+  diagnostic_tests:
+    path: tests/story_extraction/test_analyze_m4_04b3d_draft_v1_1.py
+    sha256: 1e22eb54d39c2f511d799586e6ee3627420fcfa6f64124a084fbeddf465faf5b
+  design_note:
+    path: docs/research/m4/M4_DRAFT_INTERFACE_V1_1.md
+    sha256: 440f593252f57fbcd0b9d61f7a74fd28e80be95057c573767185cdf3612628d8
+
+verification:
+  focused_tests: "11/11 PASS"
+  synthetic_graph_source_exact: "26/26 PASS"
+  locked_dev2_offline_migration: PASS
+  yaml_and_diagnostic_consistency: PASS
+  full_test_suites:
+    canonical_story: "99/99 PASS"
+    story_ingestion: "79/79 PASS"
+    story_extraction: "362/362 PASS"
+    script_quality: "64/64 PASS"
+    story_benchmark: "298/298 PASS (strict offline mode)"
+    total: "902/902 PASS"
+  protected_v1_history_scan: PASS
+  secret_private_scan: PASS
+
+decision:
+  draft_v1_1: READY_FOR_FRESH_VALIDATION
+  dev2: TUNING_ONLY
+  dev2_gold: SEALED_NOT_OPENED
+  holdout: SEALED_NOT_OPENED
+  next_action: AUTHOR_AND_LOCK_A_NEW_FRESH_VALIDATION_SET_UNDER_SEPARATE_AUTHORIZATION

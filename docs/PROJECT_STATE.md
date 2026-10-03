@@ -902,6 +902,15 @@ M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02 are ACCEPTED. M4-03 is `FR
 - **Repair outcome.** Two repairs fully corrected structure, four corrected the first fail-fast trigger but exposed a later invalid link, three changed the draft without clearing the same trigger, and one made no semantic change. One separate repeated-quote occurrence omission was corrected by repair.
 - **Record.** `benchmarks/m4_extraction/M4_04B3CR_STRUCTURAL_FAILURE_FORENSICS.yaml` contains the public-safe case matrix, aggregate counts, attribution, and top-three root causes without source text, raw output, gold, or private quotes.
 
+## M4-04B3D — DRAFT INTERFACE V1.1 STRUCTURAL REMEDIATION — COMPLETED — Status: M4_04B3D_DRAFT_V1_1_READY_FOR_FRESH_VALIDATION
+
+- **Versioned interface.** `STORY_EXTRACTION_DRAFT_V1_1` removes model-facing `mention.evidence_handle`. A mention now supplies only its local handle, passage handle, exact quote, optional occurrence, evidence role, and optional surface form. Draft V1 and its compiler remain byte-identical.
+- **Deterministic ownership.** The V1.1 compiler creates or reuses a mention EvidenceRef only for identical resolved span and role. Broad assertion evidence is never an implicit mention locator, assertion support is unchanged, and no semantic inference was added. Structural diagnostics now collect all independently feasible blockers rather than only the first same-class error.
+- **Offline tuning diagnostic.** Mechanical migration of all 20 locked B3C drafts removed 78 mention evidence links with zero other field changes. Terminal structure improved from 2/10 to 6/10 and `MENTION_EVIDENCE_MISMATCH` fell to zero. Four cases retain independent quote or canonical-conformance failures; none was patched.
+- **Data status.** DEV2 is now `TUNING_DATA_AFTER_INTERFACE_REDESIGN` and is not eligible as fresh V1.1 validation. DEV2 gold and holdout remain sealed and unopened; no model/API call, prediction rerun, evaluator, or quality scoring occurred.
+- **Verification.** Full offline suites pass 902/902: canonical story 99, ingestion 79, extraction 362, script quality 64, and story benchmark 298 in strict offline mode. Protected V1 history, source-text, secret, and private-artifact scans pass.
+- **Records.** `benchmarks/m4_extraction/M4_04B3D_DRAFT_V1_1_REMEDIATION_RESULT.yaml` and `docs/research/m4/M4_DRAFT_INTERFACE_V1_1.md`.
+
 ## Next Candidate
 
-Master Orchestrator review of the locked structural forensics. Do not open DEV2 gold, score or tune against DEV2, rerun predictions, change the locked extractor stack, begin M4-04C, access the holdout, or begin M5 without a separately authorized task.
+Author and seal a new independent fresh validation set for Draft V1.1 under separate authorization. Do not reuse DEV2 as fresh validation, open DEV2 gold, rerun predictions, access the holdout, begin M4-04C, or begin M5 without a separately authorized task.
