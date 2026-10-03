@@ -4,6 +4,8 @@
 
 M4 — Story Extraction: IN PROGRESS. M4-01: ACCEPTED. M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED. Extractor/model: NOT SELECTED. Holdout predictions: NOT RUN. Nothing in M4 is frozen. M5: NOT STARTED.
 
+M4-04B3A: `M4_04B3A_DRAFT_COMPILER_READY_FOR_FRESH_DEV_VALIDATION`. Offline failure forensics and an additive semantic-draft compiler prototype are complete. The B2 conclusion remains `M4_04B2_DEVELOPMENT_LEADER_NOT_LOCKABLE`. DEV1 is now TUNING DATA, not fresh validation. DEV2 is proposed, not selected or executed; M4-04C remains NOT STARTED.
+
 M3 — Light Novel Ingestion: COMPLETE / FROZEN (`LIGHT_NOVEL_INGESTION/v0`, DEC-018).
 
 M1 — Script Quality & Narrative Contract: COMPLETE / FROZEN (`SCRIPT_QUALITY_CONTRACT/v0`, DEC-017).
@@ -101,10 +103,10 @@ Implemented and frozen:
 - Canonical Story Model v0: schema, predicate registry, conformance validator and reference as-of projection (DEC-016).
 - Light Novel ingestion: the M3 reference ingestion adapter is implemented and frozen as the validated reference implementation for `LIGHT_NOVEL_INGESTION/v0` (DEC-018).
 
-Downstream Story Extraction and later application pipeline stages remain unimplemented.
+Story Extraction now has research-only validation/runtime tooling and the additive `STORY_EXTRACTION_DRAFT_V1` deterministic compiler prototype (M4-04B3A). No extraction model or end-to-end extractor is selected, locked, or production-qualified. Later application pipeline stages remain unimplemented.
 
 Not yet implemented:
-- Story Extraction
+- Selected/validated end-to-end Story Extraction
 - Persistent Story Memory implementation
 - Retrieval implementation
 - Story Brief generation
@@ -854,6 +856,16 @@ M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02 are ACCEPTED. M4-03 is `FR
 - **Research state.** M4-04B2 is COMPLETE / NO LOCKABLE EXTRACTOR. M4-04C: NOT STARTED. Holdout input: NOT OPENED. Holdout gold: SEALED / NOT OPENED. Holdout predictions: NOT RUN. Contamination: CLEAN. M5: NOT STARTED.
 - **Artifacts.** `M4_EVALUATION_PROTOCOL_SNAPSHOT_V2`, the V1-to-V2 impact record, continuation lock, prediction lock, final benchmark result and the versioned research note preserve the complete interruption/correction/resume chronology.
 
+## M4-04B3A — FAILURE FORENSICS AND EXTRACTION INTERFACE REDESIGN — COMPLETED — Status: M4_04B3A_DRAFT_COMPILER_READY_FOR_FRESH_DEV_VALIDATION
+
+- **Base and history.** Verified base `15b8af0357415f9edc9bf7661f0317b50bdcc04e`, 28 locked P0/P1 terminal outcomes, 54 raw responses, six final JSON artifacts, and 40 frozen M1/M2/M3/Snapshot V1/V2 bindings. B2 remains `M4_04B2_DEVELOPMENT_LEADER_NOT_LOCKABLE`; no historical result, frozen evaluator, schema, or predicate registry was changed.
+- **Forensics.** Envelope copy failures affect 25/28 outcomes; passage/span/source-exact failures affect 26/28. Additional independent diagnostics separate machine-owned canonical shape, ID/reference, provenance/review and typed-argument wiring from model-owned evidence choice, semantic predicate/argument choice, coverage and unsupported claims. Counts overlap; 26 outcomes are semantically censored by L0 failure, so zero observed unsupported claims is not a safety pass.
+- **Interface.** The LLM supplies only local semantic handles and exact quote locators. Deterministic code owns the batch envelope, passage/source hashes and offsets, canonical IDs/reference expansion, process provenance and UNREVIEWED status. The compiler is fail-closed and does not infer truth, predicates, entity identity, event occurrence or relations. Existing evaluator semantics are unchanged.
+- **Offline representational coverage.** DEV1 gold → draft-like → compiler → canonical passes 14/14 cases with exact evidence spans and alpha-equivalent semantic/support graphs. This is oracle-assisted representation testing, not model quality or fresh validation. DEV1 is permanently TUNING DATA for this redesign.
+- **Next development proposal.** Ten independently authored DEV2 cases in a new source namespace/family are proposed, with independent non-overlap attestation against sealed holdout inventory and a preregistered lock-before-gold protocol. No DEV2 input/gold or predictions were created or run in this task.
+- **Verification.** Full offline suites: story extraction 328, ingestion 79, canonical story 99, script quality 64, story benchmark 298. Secret/private-data publication scan is recorded in the result artifact. No Gemini/API calls, P0/P1 reruns, holdout opening, M4-04C or M5 work occurred.
+- **Records.** `benchmarks/m4_extraction/M4_04B3A_EXTRACTION_FAILURE_FORENSICS_RESULT.yaml`; `docs/research/m4/M4_EXTRACTION_INTERFACE_REDESIGN_V1.md`; additive draft schema, compiler, offline coverage projection, forensics analyzer and synthetic tests.
+
 ## Next Candidate
 
-Master Orchestrator review of the completed M4-04B2 development result. Do not begin M4-04C.
+Review M4-04B3A and approve a fresh DEV2 construction/validation protocol before any future model execution. No extractor lock is justified by offline gold round-trips. Do not begin M4-04C or M5; holdout input/gold remain unopened.

@@ -1,0 +1,1097 @@
+"task": "M4-04B3A"
+"date": "2026-10-03"
+"status": "M4_04B3A_DRAFT_COMPILER_READY_FOR_FRESH_DEV_VALIDATION"
+"scope": "OFFLINE_FAILURE_FORENSICS_AND_INTERFACE_PROTOTYPE_ONLY"
+"base_head": "15b8af0357415f9edc9bf7661f0317b50bdcc04e"
+"historical_B2_status": "M4_04B2_DEVELOPMENT_LEADER_NOT_LOCKABLE"
+"extractor_locked": false
+"extraction_model_selected_for_quality": false
+"boundaries":
+  "M4_04C_started": false
+  "M5_started": false
+  "P0_P1_reruns": 0
+  "holdout_gold_opened": false
+  "holdout_input_opened": false
+  "provider_calls": 0
+  "snapshot_semantics_changed": false
+"base_and_frozen_verification":
+  "base_head_verified": true
+  "remote_main_verified_at_required_base_before_commit": true
+  "isolated_clean_base_checkout": true
+  "original_dirty_worktree_modified": false
+  "bound_file_count": 40
+  "bound_files":
+    "benchmarks/m1_script_quality/SCRIPT_QUALITY_CONTRACT_V0.yaml": "c65f06d88e9fde79c6cbc485fcad69bfbed1133d1cf0661cfc4a47841885edc5"
+    "benchmarks/m1_script_quality/SCRIPT_QUALITY_CONTRACT_V0_CANDIDATE.yaml": "599ee4b2390aea498503de1ba4effdd54801cac60c427e16582787796af702c2"
+    "benchmarks/m1_script_quality/evaluations/CONTRACT_V0_DRY_RUN/DRY_RUN_CROSS_CHECK_AND_FINDINGS.md": "bdc9f31979eac3557b955a073b711581e01db6fc1b17b9af8ae64692a0850e8d"
+    "benchmarks/m1_script_quality/evaluations/CONTRACT_V0_DRY_RUN/DRY_RUN_SUMMARY.yaml": "2404094e05ea99c1017dca3b6d28db6aa0e30bd5478f246e1c58852808a4f2bd"
+    "benchmarks/m1_script_quality/evaluations/CONTRACT_V0_DRY_RUN/POST_REPAIR_NOTE.md": "d0dcac8d8b91103c62c3db50f465660e49af13b56ea88c896727f5f311cccac9"
+    "benchmarks/m1_script_quality/evaluations/CONTRACT_V0_DRY_RUN/POST_REPAIR_REEVALUATION.yaml": "76b8e4c2efb1b22f6de34f39f860542988702a6bf4ccfad00a54894ef2f35c7b"
+    "benchmarks/m1_script_quality/evaluations/CONTRACT_V0_DRY_RUN/RUN_0003_REVIEW.md": "c707dbed0f67c46035e1d8df5a45968ca3195a38d2ded7bbd37a89e6b66cd139"
+    "benchmarks/m1_script_quality/evaluations/CONTRACT_V0_DRY_RUN/RUN_0004_REVIEW.md": "75d5eea18ce10e35d926a3c3d6a23151be06c643d0a3fc59520c0c47ef58f22e"
+    "benchmarks/m1_script_quality/evaluations/HUMAN_REVIEW_TEMPLATE.md": "8523b1d2767bfe3366029084bfc2e3b4e8c0f38d519abb7a8ddb1477dfe26358"
+    "benchmarks/m2_canonical_model/CANONICAL_STORY_V0_FREEZE_CANDIDATE.yaml": "921905f2798274077aa1739d3f26e6da55d42f6d04550221ef39229cd09846bb"
+    "benchmarks/m2_canonical_model/REAL_SOURCE_MAPPING_SPIKE_V1_RESULT.yaml": "1138f231e20c50b168cdbb775f61152e85a5283efd7a5d0b8224201c91e93afa"
+    "benchmarks/m3_ingestion/M3_01_LIGHT_NOVEL_ADAPTER_BASELINE_RESULT.yaml": "353f2b24fe75b36eca581ff88f4935505e4c0f81f7118c431e0920372dff1738"
+    "benchmarks/m3_ingestion/M3_02_PRIVATE_CORPUS_VALIDATION_RESULT.yaml": "0a55e5e48d2335711ea989e9151aa42c24e6844b755e4fa586749e80181cf13d"
+    "data/sample/otonari_no_tenshi/wn_jp/LIGHT_NOVEL_SOURCE_MANIFEST_SAMPLE_V0.yaml": "227efa70dc6931d120e926bd98d20662bbe0906896492109f28e46edf55753a1"
+    "docs/contracts/SCRIPT_QUALITY_CONTRACT_V0.md": "a945de86d29f23173a35dfc102bc612a74bc6dfd86e97138f3458776f0a37244"
+    "docs/research/m2/M2_AS_OF_PROJECTION_V0.md": "da73585d737d1541095cdba6905633fdf5683032147de3cd219928124d17b56a"
+    "docs/research/m2/M2_CANONICAL_SCHEMA_V0.md": "b145b7b757e386936694a002b7adc30433b1a123ab7c525ca27f05c043864909"
+    "docs/research/m2/M2_CANONICAL_STORY_MODEL_REQUIREMENTS.md": "a8b5d5bef02398fe52a5a3aeb27811beecbc5b2305da008e1dee3e23c15f0cfc"
+    "docs/research/m2/M2_CORE_CONCEPTS_AND_BOUNDARIES.md": "bb298f1c6f8c5ebbc1de12e83e658084730fa70d0de886c629e1aad5bf42501a"
+    "docs/research/m2/M2_PRE_FREEZE_REVIEW.md": "f9666efd4f3f1c68c21bbc234213e12137f44f85cea28b24dcfe3b9eea2f60b4"
+    "docs/research/m3/M3_LIGHT_NOVEL_INGESTION_CONTRACT_V0.md": "b36f50ae5c763c3ecd4e7b9255a72bc7b0b7d4644c3caf0d151c030a6c75c31c"
+    "docs/research/m3/M3_PRIVATE_CORPUS_INGESTION_VALIDATION.md": "b9cb42eca00d2dd3cbbff94a70c867ddcb6ebc7b4fe8a162f3f8858d1cde58b0"
+    "docs/research/m4/M4_EXTRACTION_EVALUATION_PROTOCOL_V0.md": "c67c9514f6648d314f4e7ccebaa49025b6498f4fdce0710433521ee76a672617"
+    "requirements-canonical-story.txt": "4d962c3c1fbe7adee2d18606ce514131fbee5fc89fbc7f7298c9f0f9a9018c9c"
+    "schemas/canonical_story/canonical_story_v0.schema.json": "f67410fcb1a95253abe5877b1619f0e9057430ec7cba4afa66431e964142d5e9"
+    "schemas/canonical_story/predicate_registry_v0.yaml": "44f3eafc6982f84bcc74ccb91abe7cd467a453352ee96be147095f27559c5350"
+    "schemas/light_novel_ingestion/light_novel_source_manifest_v0.schema.json": "0954262399899af0f0d92a322b36f8bfbed379a980c86bc2ff8b2513c897623d"
+    "schemas/story_extraction/story_extraction_batch_v0.schema.json": "a62306384e510e000b8ed77c7f6201870bc063007b18812bba485beb4059c9ea"
+    "tests/story_extraction/fixture_builder.py": "b61eace1529b8a86275c9e923048ea01d858f977eb7f50a14297c6fbc5457ddc"
+    "tests/story_extraction/test_extraction_contract_guard_v1.py": "c36eb32b758a4acb216316a85b103ce27ab9ed60a9050083c07c13226d618e27"
+    "tests/story_extraction/test_extraction_evaluation_calibration_v0.py": "2384cbca4df56267916b7b4517efe8e8e63859ff3af3eb4ff981d7a521862196"
+    "tests/story_extraction/test_story_extraction_contract_v0.py": "5749fca3302fca61068b9abd4b22ba5d00ef43964a00b0c7467d57ed5ac7595b"
+    "tests/story_ingestion/test_light_novel_adapter_v0.py": "e8e48b5c926c1f0e677e2a9714d2da3e6a77facd95a750ff2e3a3fb9fce9271d"
+    "tools/canonical_story/conformance_v0.py": "6a016f9c614eb10cd32e993ce0d902bd3eeba14b25a71eb5496449147f8d0599"
+    "tools/canonical_story/view_v0.py": "2fa78ae881a92fce4a8b65f3f51fbaa4e084d6512b6a284e55ff74d5fdada04d"
+    "tools/story_extraction/evaluate_extraction_guarded_v1.py": "399347558c562d5438c94239ecd9aaea9f21fb79311d2c249cd311a5eed7a15d"
+    "tools/story_extraction/evaluate_extraction_v0.py": "f6294985820bea2d4232888e15323c321e7f7ff5bc12ec282ee3e096daa33f96"
+    "tools/story_extraction/extraction_contract_guard_v1.py": "85c6c7c81df3d0e144ba308a76430503aa9a643596f28e233a08a0e0ba9eebe0"
+    "tools/story_extraction/extraction_contract_v0.py": "042e4ec1882d76c0730c6b059396d353ecb8b60c3f58456e4db7f5ab623bc56e"
+    "tools/story_ingestion/light_novel_adapter_v0.py": "a1f57330993e7eaa7ac56793cfaa6dca42e508fe925127cd7241e46bc9042709"
+  "status": "PASS"
+  "snapshot_V1_sha256": "a9ac816fe8e20d6ed0d2a4e078c37a89a63dc10660b11d9c754b8038d71c29a6"
+  "snapshot_V2_sha256": "8dddbd0b9f3ea51af593c1fab0631b088b6f4e6b8c16833a1f11b8448088eee9"
+  "evaluator_schema_registry_adapter_semantics_changed": false
+"locked_artifact_verification":
+  "final_evaluation_sha256": "7c2bea221051671278e381219b41d5d1b2ef203c9a139ed9dbd9cbfc0b3a6747"
+  "manifest_sha256": "82933125174bfac64ac95f8c5656dda4fc44e15ca982da5b62aa0526ea1e5208"
+  "prediction_set_hashes":
+    "P0": "59a0a207ad9d99bc6e8a08456fbe9495480a841f3d8062d971ac6a288bc95440"
+    "P1": "81f07b8bf957487957981086d4613dc8e14ad9a96e949bc9fc80ccbed551cb5d"
+  "read_artifacts_unchanged": true
+  "verified_final_predictions": 6
+  "verified_raw_responses": 54
+  "verified_terminal_predictions": 28
+"historical_outcome":
+  "P0":
+    "runtime_structural_valid": 0
+    "source_exact_L0_valid": 0
+    "cases": 14
+    "full_canonical_success": 0
+  "P1":
+    "runtime_structural_valid": 6
+    "source_exact_L0_valid": 2
+    "cases": 14
+    "full_canonical_success": 0
+  "conclusion_preserved": "M4_04B2_DEVELOPMENT_LEADER_NOT_LOCKABLE"
+  "interpretation": "Zero observed unsupported claims does not establish safety for 26 L0-censored outcomes."
+"forensics":
+  "category_case_counts":
+    "canonical_schema": 2
+    "entity_event": 0
+    "envelope_copy": 25
+    "evidence": 2
+    "id_reference": 4
+    "passage_span_source_exact": 26
+    "predicate_argument": 4
+    "provenance_review": 1
+    "semantic_coverage": 2
+    "unsupported": 0
+  "copy_burden":
+    "passage_input_count":
+      "maximum": 30
+      "minimum": 1
+      "total": 428
+    "required_envelope_utf8_bytes":
+      "maximum": 32945
+      "minimum": 1985
+      "total": 482184
+    "terminal_response_utf8_bytes":
+      "maximum": 29251
+      "minimum": 3015
+      "total": 439042
+  "counts_are_nonexclusive": true
+  "diagnostic_occurrence_counts":
+    "canonical_schema/MACHINE_OWNED/SCHEMA_ONEOF": 2
+    "canonical_schema/MACHINE_OWNED/SCHEMA_PATTERN": 1
+    "envelope_copy/MACHINE_OWNED/COPY_MISMATCH_SCOPE": 25
+    "evidence/SEMANTIC_MODEL_OWNED/EPISTEMIC_INTEGRITY": 2
+    "evidence/SEMANTIC_MODEL_OWNED/EVIDENCE_SET_INTEGRITY": 2
+    "evidence/SEMANTIC_MODEL_OWNED/SUPPORT_PATH_INTEGRITY": 2
+    "id_reference/MACHINE_OWNED/LOCKED_SOURCE_EXACT_DIAGNOSTIC": 2
+    "id_reference/MACHINE_OWNED/LOCKED_VALIDATION": 2
+    "id_reference/MACHINE_OWNED/REFERENCE_INTEGRITY": 5
+    "passage_span_source_exact/MACHINE_OWNED/EVIDENCE_SOURCE_EXACT_MISMATCH": 21
+    "passage_span_source_exact/MACHINE_OWNED/EVIDENCE_UNRESOLVABLE": 63
+    "passage_span_source_exact/MACHINE_OWNED/LOCKED_SOURCE_EXACT_DIAGNOSTIC": 206
+    "passage_span_source_exact/MACHINE_OWNED/LOCKED_VALIDATION": 817
+    "predicate_argument/MACHINE_OWNED/LOCKED_SOURCE_EXACT_DIAGNOSTIC": 1
+    "predicate_argument/MACHINE_OWNED/LOCKED_VALIDATION": 1
+    "predicate_argument/MACHINE_OWNED/PREDICATE_INTEGRITY": 1
+    "predicate_argument/SEMANTIC_MODEL_OWNED/DERIVATION_INTEGRITY": 2
+    "predicate_argument/SEMANTIC_MODEL_OWNED/PREDICATE_INTEGRITY": 3
+    "predicate_argument/SEMANTIC_MODEL_OWNED/TEMPORAL_BOUND_INTEGRITY": 2
+    "provenance_review/MACHINE_OWNED/SELF_CERTIFICATION": 5
+    "semantic_coverage/SEMANTIC_MODEL_OWNED/MISSED_REQUIRED_ASSERTION": 11
+  "locked_primary_issue_counts":
+    "<root>": 1
+    "MALFORMED_PASSAGE_INPUT": 792
+    "invalid JSON": 1
+  "locked_terminal_issue_counts":
+    "ID_COLLISION": 1
+    "MALFORMED_PASSAGE_INPUT": 814
+    "SPAN_OUTSIDE_SEGMENT": 3
+    "predicate_integrity": 1
+    "reference_integrity": 1
+  "method": "LOCKED_REPORTS_PLUS_INDEPENDENT_READ_ONLY_SHAPE_SOURCE_GRAPH_DIAGNOSTICS"
+  "rows":
+    -
+      "candidate": "P0"
+      "candidate_record_counts":
+        "assertions": 13
+        "entities": 1
+        "events": 2
+        "evidence_refs": 3
+        "mentions": 3
+        "propositions": 13
+        "temporal_anchors": 2
+      "case_id": "M4DEV_01"
+      "observed_failure_ownership":
+        "envelope_copy":
+          - "MACHINE_OWNED"
+        "passage_span_source_exact":
+          - "MACHINE_OWNED"
+      "semantic_quality_observability": "CENSORED_BY_L0"
+      "source_exact_L0_valid": false
+      "terminal_shape": "OBJECT"
+      "terminal_structural_valid": false
+    -
+      "candidate": "P0"
+      "candidate_record_counts":
+        "assertions": 3
+        "entities": 2
+        "events": 1
+        "evidence_refs": 5
+        "mentions": 3
+        "propositions": 4
+        "temporal_anchors": 1
+      "case_id": "M4DEV_02"
+      "observed_failure_ownership":
+        "envelope_copy":
+          - "MACHINE_OWNED"
+        "passage_span_source_exact":
+          - "MACHINE_OWNED"
+      "semantic_quality_observability": "CENSORED_BY_L0"
+      "source_exact_L0_valid": false
+      "terminal_shape": "OBJECT"
+      "terminal_structural_valid": false
+    -
+      "candidate": "P0"
+      "candidate_record_counts":
+        "assertions": 6
+        "entities": 1
+        "events": 2
+        "evidence_refs": 2
+        "mentions": 2
+        "propositions": 6
+        "temporal_anchors": 2
+      "case_id": "M4DEV_03"
+      "observed_failure_ownership":
+        "envelope_copy":
+          - "MACHINE_OWNED"
+        "passage_span_source_exact":
+          - "MACHINE_OWNED"
+      "semantic_quality_observability": "CENSORED_BY_L0"
+      "source_exact_L0_valid": false
+      "terminal_shape": "OBJECT"
+      "terminal_structural_valid": false
+    -
+      "candidate": "P0"
+      "candidate_record_counts":
+        "assertions": 12
+        "entities": 1
+        "events": 2
+        "evidence_refs": 4
+        "mentions": 4
+        "propositions": 12
+        "temporal_anchors": 2
+      "case_id": "M4DEV_04"
+      "observed_failure_ownership":
+        "envelope_copy":
+          - "MACHINE_OWNED"
+        "passage_span_source_exact":
+          - "MACHINE_OWNED"
+      "semantic_quality_observability": "CENSORED_BY_L0"
+      "source_exact_L0_valid": false
+      "terminal_shape": "OBJECT"
+      "terminal_structural_valid": false
+    -
+      "candidate": "P0"
+      "candidate_record_counts":
+        "assertions": 9
+        "entities": 2
+        "events": 1
+        "evidence_refs": 7
+        "mentions": 5
+        "propositions": 11
+        "temporal_anchors": 1
+      "case_id": "M4DEV_05"
+      "observed_failure_ownership":
+        "envelope_copy":
+          - "MACHINE_OWNED"
+        "passage_span_source_exact":
+          - "MACHINE_OWNED"
+      "semantic_quality_observability": "CENSORED_BY_L0"
+      "source_exact_L0_valid": false
+      "terminal_shape": "OBJECT"
+      "terminal_structural_valid": false
+    -
+      "candidate": "P0"
+      "candidate_record_counts":
+        "assertions": 4
+        "entities": 3
+        "events": 1
+        "evidence_refs": 4
+        "mentions": 2
+        "propositions": 4
+        "temporal_anchors": 1
+      "case_id": "M4DEV_06"
+      "observed_failure_ownership":
+        "envelope_copy":
+          - "MACHINE_OWNED"
+        "passage_span_source_exact":
+          - "MACHINE_OWNED"
+      "semantic_quality_observability": "CENSORED_BY_L0"
+      "source_exact_L0_valid": false
+      "terminal_shape": "OBJECT"
+      "terminal_structural_valid": false
+    -
+      "candidate": "P0"
+      "candidate_record_counts":
+        "assertions": 6
+        "entities": 2
+        "events": 1
+        "evidence_refs": 2
+        "mentions": 2
+        "propositions": 7
+        "temporal_anchors": 1
+      "case_id": "M4DEV_07"
+      "observed_failure_ownership":
+        "envelope_copy":
+          - "MACHINE_OWNED"
+        "passage_span_source_exact":
+          - "MACHINE_OWNED"
+        "predicate_argument":
+          - "SEMANTIC_MODEL_OWNED"
+      "semantic_quality_observability": "CENSORED_BY_L0"
+      "source_exact_L0_valid": false
+      "terminal_shape": "OBJECT"
+      "terminal_structural_valid": false
+    -
+      "candidate": "P0"
+      "candidate_record_counts":
+        "assertions": 2
+        "entities": 1
+        "events": 1
+        "evidence_refs": 3
+        "mentions": 6
+        "propositions": 2
+        "temporal_anchors": 1
+      "case_id": "M4DEV_08"
+      "observed_failure_ownership":
+        "envelope_copy":
+          - "MACHINE_OWNED"
+        "passage_span_source_exact":
+          - "MACHINE_OWNED"
+      "semantic_quality_observability": "CENSORED_BY_L0"
+      "source_exact_L0_valid": false
+      "terminal_shape": "OBJECT"
+      "terminal_structural_valid": false
+    -
+      "candidate": "P0"
+      "candidate_record_counts":
+        "assertions": 2
+        "entities": 2
+        "events": 2
+        "evidence_refs": 4
+        "mentions": 3
+        "propositions": 3
+        "temporal_anchors": 2
+      "case_id": "M4DEV_09"
+      "observed_failure_ownership":
+        "canonical_schema":
+          - "MACHINE_OWNED"
+        "envelope_copy":
+          - "MACHINE_OWNED"
+        "evidence":
+          - "SEMANTIC_MODEL_OWNED"
+        "id_reference":
+          - "MACHINE_OWNED"
+        "passage_span_source_exact":
+          - "MACHINE_OWNED"
+        "predicate_argument":
+          - "SEMANTIC_MODEL_OWNED"
+      "semantic_quality_observability": "CENSORED_BY_L0"
+      "source_exact_L0_valid": false
+      "terminal_shape": "OBJECT"
+      "terminal_structural_valid": false
+    -
+      "candidate": "P0"
+      "candidate_record_counts":
+        "assertions": 10
+        "entities": 3
+        "events": 2
+        "evidence_refs": 3
+        "mentions": 5
+        "propositions": 10
+        "temporal_anchors": 2
+      "case_id": "M4DEV_10"
+      "observed_failure_ownership":
+        "envelope_copy":
+          - "MACHINE_OWNED"
+        "id_reference":
+          - "MACHINE_OWNED"
+        "passage_span_source_exact":
+          - "MACHINE_OWNED"
+      "semantic_quality_observability": "CENSORED_BY_L0"
+      "source_exact_L0_valid": false
+      "terminal_shape": "OBJECT"
+      "terminal_structural_valid": false
+    -
+      "candidate": "P0"
+      "candidate_record_counts":
+        "assertions": 5
+        "entities": 3
+        "events": 4
+        "evidence_refs": 4
+        "mentions": 5
+        "propositions": 5
+        "temporal_anchors": 4
+      "case_id": "M4DEV_11"
+      "observed_failure_ownership":
+        "envelope_copy":
+          - "MACHINE_OWNED"
+        "passage_span_source_exact":
+          - "MACHINE_OWNED"
+        "provenance_review":
+          - "MACHINE_OWNED"
+      "semantic_quality_observability": "CENSORED_BY_L0"
+      "source_exact_L0_valid": false
+      "terminal_shape": "OBJECT"
+      "terminal_structural_valid": false
+    -
+      "candidate": "P0"
+      "candidate_record_counts":
+        "assertions": 1
+        "entities": 0
+        "events": 1
+        "evidence_refs": 1
+        "mentions": 1
+        "propositions": 1
+        "temporal_anchors": 1
+      "case_id": "M4DEV_12"
+      "observed_failure_ownership":
+        "envelope_copy":
+          - "MACHINE_OWNED"
+        "passage_span_source_exact":
+          - "MACHINE_OWNED"
+      "semantic_quality_observability": "CENSORED_BY_L0"
+      "source_exact_L0_valid": false
+      "terminal_shape": "OBJECT"
+      "terminal_structural_valid": false
+    -
+      "candidate": "P0"
+      "candidate_record_counts":
+        "assertions": 1
+        "entities": 1
+        "events": 0
+        "evidence_refs": 2
+        "mentions": 1
+        "propositions": 1
+        "temporal_anchors": 0
+      "case_id": "M4DEV_13"
+      "observed_failure_ownership":
+        "envelope_copy":
+          - "MACHINE_OWNED"
+        "passage_span_source_exact":
+          - "MACHINE_OWNED"
+      "semantic_quality_observability": "CENSORED_BY_L0"
+      "source_exact_L0_valid": false
+      "terminal_shape": "OBJECT"
+      "terminal_structural_valid": false
+    -
+      "candidate": "P0"
+      "candidate_record_counts":
+        "assertions": 6
+        "entities": 2
+        "events": 2
+        "evidence_refs": 2
+        "mentions": 2
+        "propositions": 6
+        "temporal_anchors": 2
+      "case_id": "M4DEV_14"
+      "observed_failure_ownership":
+        "envelope_copy":
+          - "MACHINE_OWNED"
+        "passage_span_source_exact":
+          - "MACHINE_OWNED"
+      "semantic_quality_observability": "CENSORED_BY_L0"
+      "source_exact_L0_valid": false
+      "terminal_shape": "OBJECT"
+      "terminal_structural_valid": false
+    -
+      "candidate": "P1"
+      "candidate_record_counts":
+        "assertions": 10
+        "entities": 3
+        "events": 2
+        "evidence_refs": 3
+        "mentions": 2
+        "propositions": 10
+        "temporal_anchors": 2
+      "case_id": "M4DEV_01"
+      "observed_failure_ownership":
+        "envelope_copy":
+          - "MACHINE_OWNED"
+        "passage_span_source_exact":
+          - "MACHINE_OWNED"
+      "semantic_quality_observability": "CENSORED_BY_L0"
+      "source_exact_L0_valid": false
+      "terminal_shape": "OBJECT"
+      "terminal_structural_valid": false
+    -
+      "candidate": "P1"
+      "candidate_record_counts":
+        "assertions": 8
+        "entities": 2
+        "events": 4
+        "evidence_refs": 4
+        "mentions": 3
+        "propositions": 8
+        "temporal_anchors": 4
+      "case_id": "M4DEV_02"
+      "observed_failure_ownership":
+        "canonical_schema":
+          - "MACHINE_OWNED"
+        "envelope_copy":
+          - "MACHINE_OWNED"
+        "evidence":
+          - "SEMANTIC_MODEL_OWNED"
+        "id_reference":
+          - "MACHINE_OWNED"
+        "passage_span_source_exact":
+          - "MACHINE_OWNED"
+        "predicate_argument":
+          - "SEMANTIC_MODEL_OWNED"
+      "semantic_quality_observability": "CENSORED_BY_L0"
+      "source_exact_L0_valid": false
+      "terminal_shape": "OBJECT"
+      "terminal_structural_valid": false
+    -
+      "candidate": "P1"
+      "candidate_record_counts":
+        "assertions": 3
+        "entities": 1
+        "events": 2
+        "evidence_refs": 2
+        "mentions": 2
+        "propositions": 3
+        "temporal_anchors": 2
+      "case_id": "M4DEV_03"
+      "observed_failure_ownership":
+        "envelope_copy":
+          - "MACHINE_OWNED"
+        "passage_span_source_exact":
+          - "MACHINE_OWNED"
+      "semantic_quality_observability": "CENSORED_BY_L0"
+      "source_exact_L0_valid": false
+      "terminal_shape": "OBJECT"
+      "terminal_structural_valid": true
+    -
+      "candidate": "P1"
+      "candidate_record_counts":
+        "assertions": 12
+        "entities": 1
+        "events": 3
+        "evidence_refs": 4
+        "mentions": 3
+        "propositions": 12
+        "temporal_anchors": 3
+      "case_id": "M4DEV_04"
+      "observed_failure_ownership":
+        "passage_span_source_exact":
+          - "MACHINE_OWNED"
+      "semantic_quality_observability": "CENSORED_BY_L0"
+      "source_exact_L0_valid": false
+      "terminal_shape": "OBJECT"
+      "terminal_structural_valid": true
+    -
+      "candidate": "P1"
+      "candidate_record_counts":
+        "assertions": 3
+        "entities": 2
+        "events": 1
+        "evidence_refs": 4
+        "mentions": 3
+        "propositions": 3
+        "temporal_anchors": 1
+      "case_id": "M4DEV_05"
+      "observed_failure_ownership":
+        "envelope_copy":
+          - "MACHINE_OWNED"
+        "passage_span_source_exact":
+          - "MACHINE_OWNED"
+      "semantic_quality_observability": "CENSORED_BY_L0"
+      "source_exact_L0_valid": false
+      "terminal_shape": "OBJECT"
+      "terminal_structural_valid": false
+    -
+      "candidate": "P1"
+      "candidate_record_counts":
+        "assertions": 4
+        "entities": 1
+        "events": 1
+        "evidence_refs": 4
+        "mentions": 2
+        "propositions": 4
+        "temporal_anchors": 1
+      "case_id": "M4DEV_06"
+      "observed_failure_ownership":
+        "envelope_copy":
+          - "MACHINE_OWNED"
+        "passage_span_source_exact":
+          - "MACHINE_OWNED"
+      "semantic_quality_observability": "CENSORED_BY_L0"
+      "source_exact_L0_valid": false
+      "terminal_shape": "OBJECT"
+      "terminal_structural_valid": false
+    -
+      "candidate": "P1"
+      "candidate_record_counts":
+        "assertions": 9
+        "entities": 2
+        "events": 2
+        "evidence_refs": 5
+        "mentions": 4
+        "propositions": 12
+        "temporal_anchors": 2
+      "case_id": "M4DEV_07"
+      "observed_failure_ownership":
+        "envelope_copy":
+          - "MACHINE_OWNED"
+        "passage_span_source_exact":
+          - "MACHINE_OWNED"
+      "semantic_quality_observability": "CENSORED_BY_L0"
+      "source_exact_L0_valid": false
+      "terminal_shape": "OBJECT"
+      "terminal_structural_valid": false
+    -
+      "candidate": "P1"
+      "candidate_record_counts":
+        "assertions": 7
+        "entities": 3
+        "events": 1
+        "evidence_refs": 3
+        "mentions": 3
+        "propositions": 7
+        "temporal_anchors": 1
+      "case_id": "M4DEV_08"
+      "observed_failure_ownership":
+        "envelope_copy":
+          - "MACHINE_OWNED"
+        "passage_span_source_exact":
+          - "MACHINE_OWNED"
+      "semantic_quality_observability": "CENSORED_BY_L0"
+      "source_exact_L0_valid": false
+      "terminal_shape": "OBJECT"
+      "terminal_structural_valid": false
+    -
+      "candidate": "P1"
+      "candidate_record_counts":
+        "assertions": 6
+        "entities": 1
+        "events": 2
+        "evidence_refs": 3
+        "mentions": 2
+        "propositions": 7
+        "temporal_anchors": 2
+      "case_id": "M4DEV_09"
+      "observed_failure_ownership":
+        "envelope_copy":
+          - "MACHINE_OWNED"
+        "id_reference":
+          - "MACHINE_OWNED"
+        "passage_span_source_exact":
+          - "MACHINE_OWNED"
+        "predicate_argument":
+          - "MACHINE_OWNED"
+      "semantic_quality_observability": "CENSORED_BY_L0"
+      "source_exact_L0_valid": false
+      "terminal_shape": "OBJECT"
+      "terminal_structural_valid": false
+    -
+      "candidate": "P1"
+      "candidate_record_counts":
+        "assertions": 4
+        "entities": 3
+        "events": 2
+        "evidence_refs": 2
+        "mentions": 0
+        "propositions": 4
+        "temporal_anchors": 2
+      "case_id": "M4DEV_10"
+      "observed_failure_ownership":
+        "semantic_coverage":
+          - "SEMANTIC_MODEL_OWNED"
+      "semantic_quality_observability": "LOCKED_EVALUATION"
+      "source_exact_L0_valid": true
+      "terminal_shape": "OBJECT"
+      "terminal_structural_valid": true
+    -
+      "candidate": "P1"
+      "candidate_record_counts":
+        "assertions": 4
+        "entities": 0
+        "events": 0
+        "evidence_refs": 4
+        "mentions": 4
+        "propositions": 4
+        "temporal_anchors": 0
+      "case_id": "M4DEV_11"
+      "observed_failure_ownership":
+        "envelope_copy":
+          - "MACHINE_OWNED"
+        "passage_span_source_exact":
+          - "MACHINE_OWNED"
+      "semantic_quality_observability": "CENSORED_BY_L0"
+      "source_exact_L0_valid": false
+      "terminal_shape": "OBJECT"
+      "terminal_structural_valid": false
+    -
+      "candidate": "P1"
+      "candidate_record_counts":
+        "assertions": 0
+        "entities": 0
+        "events": 0
+        "evidence_refs": 1
+        "mentions": 0
+        "propositions": 0
+        "temporal_anchors": 0
+      "case_id": "M4DEV_12"
+      "observed_failure_ownership":
+        "semantic_coverage":
+          - "SEMANTIC_MODEL_OWNED"
+      "semantic_quality_observability": "LOCKED_EVALUATION"
+      "source_exact_L0_valid": true
+      "terminal_shape": "OBJECT"
+      "terminal_structural_valid": true
+    -
+      "candidate": "P1"
+      "candidate_record_counts":
+        "assertions": 1
+        "entities": 0
+        "events": 1
+        "evidence_refs": 1
+        "mentions": 0
+        "propositions": 1
+        "temporal_anchors": 1
+      "case_id": "M4DEV_13"
+      "observed_failure_ownership":
+        "envelope_copy":
+          - "MACHINE_OWNED"
+        "passage_span_source_exact":
+          - "MACHINE_OWNED"
+      "semantic_quality_observability": "CENSORED_BY_L0"
+      "source_exact_L0_valid": false
+      "terminal_shape": "OBJECT"
+      "terminal_structural_valid": true
+    -
+      "candidate": "P1"
+      "candidate_record_counts":
+        "assertions": 0
+        "entities": 0
+        "events": 0
+        "evidence_refs": 1
+        "mentions": 0
+        "propositions": 0
+        "temporal_anchors": 0
+      "case_id": "M4DEV_14"
+      "observed_failure_ownership":
+        "envelope_copy":
+          - "MACHINE_OWNED"
+        "passage_span_source_exact":
+          - "MACHINE_OWNED"
+      "semantic_quality_observability": "CENSORED_BY_L0"
+      "source_exact_L0_valid": false
+      "terminal_shape": "OBJECT"
+      "terminal_structural_valid": true
+  "semantic_missing_assertions_in_L0_valid_cases": 11
+  "unsupported_not_assessable_for_L0_failed_cases": 26
+  "unsupported_observed_in_locked_evaluation": 0
+"interface_copy_hypothesis":
+  "status": "SUPPORTED_ENGINEERING_DIAGNOSIS_NOT_CAUSAL_MODEL_QUALITY_PROOF"
+  "evidence":
+    - "25/28 terminal scopes do not copy trusted envelope scope correctly."
+    - "26/28 outcomes have passage/span/source-exact diagnostics."
+    - "Required envelope serializations total 482184 UTF-8 bytes against 439042 terminal-response bytes."
+    - "Deterministic metadata already exists in host inputs and the frozen ingestion adapter."
+  "limitations":
+    - "No model/API call or P0/P1 regeneration."
+    - "No randomized interface comparison or token-cost measurement."
+    - "Semantic quality of 26 malformed outputs is censored, not assumed correct."
+    - "Two L0-valid outputs still miss eleven required assertions; compiler cannot supply those assertions."
+"ownership_policy":
+  "MACHINE_OWNED":
+    - "Envelope/scope/base identity/copy"
+    - "Exact source positions, hashes, spans and byte offsets"
+    - "Canonical identifier allocation, namespace/collision checks and typed reference expansion"
+    - "Canonical representation shape and declared invariant validation"
+    - "Process provenance and UNREVIEWED state"
+  "SEMANTIC_MODEL_OWNED":
+    - "Truth/polarity/epistemic status"
+    - "Predicate selection, semantic argument values and referent choice"
+    - "Entity identity/relations and event granularity/occurrence"
+    - "Evidence selection/role/sufficiency and derivation rule/premises"
+    - "Temporal meaning and bound selection"
+    - "Coverage and unsupported claims"
+  "distinction": "A mechanically valid reference does not establish that the selected referent is semantically right."
+"redesigned_interface":
+  "draft_version": "STORY_EXTRACTION_DRAFT_V1"
+  "canonical_target": "STORY_EXTRACTION_BATCH/v0"
+  "pipeline":
+    - "LLM semantic draft"
+    - "Deterministic source-exact compiler"
+    - "Unchanged Snapshot V2 validator/evaluator"
+  "model_handles":
+    - "P1"
+    - "P2"
+    - "E_NEW_1"
+    - "E_EXISTING_1"
+    - "EV1"
+    - "M1"
+    - "EVT1"
+    - "T1"
+    - "PROP1"
+    - "A1"
+  "model_forbidden_output":
+    - "Hashes"
+    - "Exact offsets/positions"
+    - "Process metadata"
+    - "Provenance"
+    - "Review status"
+    - "Canonical IDs"
+    - "Full canonical envelope"
+  "quote_locator":
+    "required":
+      - "passage_handle"
+      - "quote"
+    "optional": "occurrence"
+    "occurrence_base": 1
+    "matching": "EXACT_UNNORMALIZED_UNICODE_CODE_POINTS_IN_SELECTED_ELIGIBLE_PASSAGE"
+    "repeated_quote_without_occurrence": "FAIL_CLOSED"
+  "compiler_entrypoint": "tools.story_extraction.draft_compiler_v1.compile_story_extraction_draft_v1"
+  "input_preparer": "tools.story_extraction.draft_compiler_v1.prepare_story_extraction_draft_v1"
+  "validation": "UNMODIFIED_FROZEN_GUARDED_V0_WITH_SOURCE_INGESTION"
+  "semantics_inferred_by_compiler": false
+  "assertion_review_state": "UNREVIEWED"
+  "failure_behavior": "CODED_ERROR_NO_PARTIAL_BATCH_NO_SEMANTIC_REPAIR"
+  "limits":
+    - "Prototype, not a production extractor or cross-run identity resolver."
+    - "Trusted caller must supply authorized as-of-filtered prior context."
+    - "Canonical conformance is not story truth or semantic correctness."
+    - "Semantic duplicates fail existing validation rather than silently deduplicating."
+"DEV1_offline_representation":
+  "archive_sha256": "a991921d0ca0afb5643948346acc407a84e17206bd6d0692c362d86de47da809"
+  "cases":
+    -
+      "case_id": "M4DEV_01"
+      "compiled_source_exact_conformance": "PASS"
+      "draft_schema": "PASS"
+      "record_counts":
+        "assertions": 12
+        "entities": 1
+        "events": 2
+        "evidence_refs": 11
+        "mentions": 0
+        "propositions": 11
+        "temporal_anchors": 2
+      "semantic_graph_and_exact_evidence_round_trip": "PASS"
+    -
+      "case_id": "M4DEV_02"
+      "compiled_source_exact_conformance": "PASS"
+      "draft_schema": "PASS"
+      "record_counts":
+        "assertions": 7
+        "entities": 0
+        "events": 4
+        "evidence_refs": 15
+        "mentions": 0
+        "propositions": 9
+        "temporal_anchors": 4
+      "semantic_graph_and_exact_evidence_round_trip": "PASS"
+    -
+      "case_id": "M4DEV_03"
+      "compiled_source_exact_conformance": "PASS"
+      "draft_schema": "PASS"
+      "record_counts":
+        "assertions": 1
+        "entities": 0
+        "events": 1
+        "evidence_refs": 2
+        "mentions": 0
+        "propositions": 1
+        "temporal_anchors": 2
+      "semantic_graph_and_exact_evidence_round_trip": "PASS"
+    -
+      "case_id": "M4DEV_04"
+      "compiled_source_exact_conformance": "PASS"
+      "draft_schema": "PASS"
+      "record_counts":
+        "assertions": 10
+        "entities": 1
+        "events": 3
+        "evidence_refs": 6
+        "mentions": 0
+        "propositions": 10
+        "temporal_anchors": 3
+      "semantic_graph_and_exact_evidence_round_trip": "PASS"
+    -
+      "case_id": "M4DEV_05"
+      "compiled_source_exact_conformance": "PASS"
+      "draft_schema": "PASS"
+      "record_counts":
+        "assertions": 7
+        "entities": 0
+        "events": 1
+        "evidence_refs": 15
+        "mentions": 0
+        "propositions": 7
+        "temporal_anchors": 1
+      "semantic_graph_and_exact_evidence_round_trip": "PASS"
+    -
+      "case_id": "M4DEV_06"
+      "compiled_source_exact_conformance": "PASS"
+      "draft_schema": "PASS"
+      "record_counts":
+        "assertions": 6
+        "entities": 1
+        "events": 1
+        "evidence_refs": 12
+        "mentions": 0
+        "propositions": 6
+        "temporal_anchors": 1
+      "semantic_graph_and_exact_evidence_round_trip": "PASS"
+    -
+      "case_id": "M4DEV_07"
+      "compiled_source_exact_conformance": "PASS"
+      "draft_schema": "PASS"
+      "record_counts":
+        "assertions": 15
+        "entities": 2
+        "events": 2
+        "evidence_refs": 24
+        "mentions": 0
+        "propositions": 16
+        "temporal_anchors": 2
+      "semantic_graph_and_exact_evidence_round_trip": "PASS"
+    -
+      "case_id": "M4DEV_08"
+      "compiled_source_exact_conformance": "PASS"
+      "draft_schema": "PASS"
+      "record_counts":
+        "assertions": 16
+        "entities": 1
+        "events": 4
+        "evidence_refs": 11
+        "mentions": 0
+        "propositions": 18
+        "temporal_anchors": 4
+      "semantic_graph_and_exact_evidence_round_trip": "PASS"
+    -
+      "case_id": "M4DEV_09"
+      "compiled_source_exact_conformance": "PASS"
+      "draft_schema": "PASS"
+      "record_counts":
+        "assertions": 9
+        "entities": 2
+        "events": 2
+        "evidence_refs": 11
+        "mentions": 0
+        "propositions": 12
+        "temporal_anchors": 2
+      "semantic_graph_and_exact_evidence_round_trip": "PASS"
+    -
+      "case_id": "M4DEV_10"
+      "compiled_source_exact_conformance": "PASS"
+      "draft_schema": "PASS"
+      "record_counts":
+        "assertions": 10
+        "entities": 1
+        "events": 3
+        "evidence_refs": 4
+        "mentions": 0
+        "propositions": 10
+        "temporal_anchors": 3
+      "semantic_graph_and_exact_evidence_round_trip": "PASS"
+    -
+      "case_id": "M4DEV_11"
+      "compiled_source_exact_conformance": "PASS"
+      "draft_schema": "PASS"
+      "record_counts":
+        "assertions": 4
+        "entities": 0
+        "events": 0
+        "evidence_refs": 4
+        "mentions": 4
+        "propositions": 4
+        "temporal_anchors": 0
+      "semantic_graph_and_exact_evidence_round_trip": "PASS"
+    -
+      "case_id": "M4DEV_12"
+      "compiled_source_exact_conformance": "PASS"
+      "draft_schema": "PASS"
+      "record_counts":
+        "assertions": 1
+        "entities": 0
+        "events": 1
+        "evidence_refs": 2
+        "mentions": 0
+        "propositions": 1
+        "temporal_anchors": 1
+      "semantic_graph_and_exact_evidence_round_trip": "PASS"
+    -
+      "case_id": "M4DEV_13"
+      "compiled_source_exact_conformance": "PASS"
+      "draft_schema": "PASS"
+      "record_counts":
+        "assertions": 2
+        "entities": 0
+        "events": 0
+        "evidence_refs": 2
+        "mentions": 0
+        "propositions": 2
+        "temporal_anchors": 0
+      "semantic_graph_and_exact_evidence_round_trip": "PASS"
+    -
+      "case_id": "M4DEV_14"
+      "compiled_source_exact_conformance": "PASS"
+      "draft_schema": "PASS"
+      "record_counts":
+        "assertions": 2
+        "entities": 0
+        "events": 1
+        "evidence_refs": 2
+        "mentions": 0
+        "propositions": 2
+        "temporal_anchors": 1
+      "semantic_graph_and_exact_evidence_round_trip": "PASS"
+  "comparison": "GRAPH_ALPHA_EQUIVALENCE_PLUS_EXACT_SOURCE_SPANS_EXCLUDING_MACHINE_METADATA"
+  "data_role": "TUNING_DATA"
+  "fresh_validation": false
+  "model_quality_measured": false
+  "record_totals":
+    "assertions": 102
+    "entities": 9
+    "events": 25
+    "evidence_refs": 121
+    "mentions": 4
+    "propositions": 109
+    "temporal_anchors": 26
+  "status": "PASS"
+"DEV2_proposal":
+  "status": "PROPOSED_ONLY_NOT_SELECTED_NOT_EXECUTED"
+  "case_count": 10
+  "sources": "Independently authored original Japanese miniatures in a new source family/namespace; no windows from the original 30-chapter corpus."
+  "non_overlap": "Independent source-ownership and sealed-inventory non-overlap attestation required before any run; holdout not opened here."
+  "cases":
+    -
+      "case": "DEV2_01"
+      "focus": "Unicode names, aliases and two mentions of one referent"
+    -
+      "case": "DEV2_02"
+      "focus": "Similar names and unresolved placeholder without guessed merge"
+    -
+      "case": "DEV2_03"
+      "focus": "Later explicit SameAs versus earlier unresolved identity"
+    -
+      "case": "DEV2_04"
+      "focus": "Repeated quote occurrence and partial passage window"
+    -
+      "case": "DEV2_05"
+      "focus": "Report/belief, embedded negation and no world-truth leakage"
+    -
+      "case": "DEV2_06"
+      "focus": "Suggested internal state versus explicit narration/self-report"
+    -
+      "case": "DEV2_07"
+      "focus": "State boundaries, named time and later-learned bound evidence"
+    -
+      "case": "DEV2_08"
+      "focus": "Multi-evidence sufficient path versus partial/corroborating distractors"
+    -
+      "case": "DEV2_09"
+      "focus": "Explicit cause versus adjacency and event granularity/participants"
+    -
+      "case": "DEV2_10"
+      "focus": "Existing context, context-only distractor and after-as-of boundary"
+  "future_protocol":
+    - "Independent canonical gold sealed before predictions."
+    - "Preregister prompt/schema/compiler/runtime hashes, budgets and selection/safety rules."
+    - "Lock raw drafts and compiled batches before gold opening."
+    - "Evaluate with unchanged Snapshot V2; report compiler conformance separately from semantic quality."
+    - "Changes after gold access turn DEV2 into tuning data."
+  "authority_for_future_provider_or_holdout_run": false
+"verification":
+  "full_test_suites":
+    "story_extraction": 328
+    "story_ingestion": 79
+    "canonical_story": 99
+    "script_quality": 64
+    "story_benchmark": 298
+    "total": 868
+    "failures": 0
+    "errors": 0
+    "skipped": 0
+    "status": "PASS"
+  "new_synthetic_tests":
+    "draft_compiler_methods": 28
+    "forensics_methods": 10
+    "authored_golden_fixture_roundtrips": 26
+    "status": "PASS"
+  "test_runtime":
+    "python": "3.14.4"
+    "jsonschema": "4.26.0"
+    "numpy": "2.4.6"
+    "PyYAML": "6.0.3"
+    "provider_transport": "MOCKED_ONLY"
+    "legacy_M1_fixtures": "AUTHORIZED_LOCAL_ONLY_NOT_COMMITTED"
+  "publication_scan":
+    "status": "PASS"
+    "scope": "ALL_NEW_PUBLIC_FILES_AND_ADDED_PROJECT_STATE_LINES"
+    "publication_files": 9
+    "private_gold_graph_identifiers_checked": 543
+    "private_semantic_strings_checked": 109
+    "source_chapters_checked": 30
+    "exact_source_excerpt_min_characters": 24
+    "findings": 0
+    "reviewed_false_positive": "One generic adjective describing the clean checkout, not a source or gold story excerpt."
+    "checks":
+      - "Secret token/private-key patterns"
+      - "Private filesystem/credential references"
+      - "Exact source excerpts"
+      - "Private DEV1 gold graph identifiers and semantic text"
+    "private_source_or_gold_instances_committed": false
+  "diff_whitespace_check": "PASS"
+"artifacts":
+  "research_note": "docs/research/m4/M4_EXTRACTION_INTERFACE_REDESIGN_V1.md"
+  "draft_schema": "schemas/story_extraction/story_extraction_draft_v1.schema.json"
+  "compiler": "tools/story_extraction/draft_compiler_v1.py"
+  "offline_oracle_projection": "tools/story_extraction/draft_coverage_v1.py"
+  "offline_forensics_analyzer": "tools/story_extraction/analyze_m4_04b3a_v1.py"
+  "synthetic_tests":
+    - "tests/story_extraction/test_draft_compiler_v1.py"
+    - "tests/story_extraction/test_m4_04b3a_forensics_v1.py"
+  "state": "docs/PROJECT_STATE.md"
