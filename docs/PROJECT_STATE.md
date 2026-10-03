@@ -866,6 +866,16 @@ M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02 are ACCEPTED. M4-03 is `FR
 - **Verification.** Full offline suites: story extraction 328, ingestion 79, canonical story 99, script quality 64, story benchmark 298. Secret/private-data publication scan is recorded in the result artifact. No Gemini/API calls, P0/P1 reruns, holdout opening, M4-04C or M5 work occurred.
 - **Records.** `benchmarks/m4_extraction/M4_04B3A_EXTRACTION_FAILURE_FORENSICS_RESULT.yaml`; `docs/research/m4/M4_EXTRACTION_INTERFACE_REDESIGN_V1.md`; additive draft schema, compiler, offline coverage projection, forensics analyzer and synthetic tests.
 
+## M4-04B3B1 — FRESH DEV2 CONSTRUCTION AND SEAL — COMPLETED — Status: M4_04B3B1_FRESH_DEV2_V1_SEALED_PENDING_ORCHESTRATOR_REVIEW
+
+- **Fresh family.** Ten newly authored Japanese miniature story units were ingested independently under M3 as `ORIGINAL_JA_MINI_NARRATIVES_DEV2_V1`. No 30-chapter corpus text, DEV1 text, or sealed holdout text was used. The ten cases cover alias/mention, similar unresolved identities, later explicit `SameAs`, repeated quote occurrence, speech/belief negation, suggested versus explicit state, temporal/state bounds, sufficient/partial/corroborating evidence, causality versus adjacency, and prior/context-only/as-of boundaries.
+- **Gold discipline.** Canonical semantics were annotated before any draft projection. Status is `AGENT_DRAFT_GOLD` / `NOT_HUMAN_CONFIRMED`; method `HUMAN_ANNOTATION`; every assertion `UNREVIEWED`; human review false. All 10 cases are `COMPLETE_FOR_PROFILE`, with 119 required and zero optional assertions.
+- **Offline gate.** Gold → Draft V1-like oracle projection → unchanged deterministic compiler → canonical passes 10/10 frozen validation, 10/10 source-exact validation, and 10/10 semantic/support graph alpha-equivalence. No representational gap was found; Draft V1, compiler, schemas, registry, snapshots, and evaluator were not patched.
+- **Private seal.** `M4_04B3_DEV2_INPUT_V1.zip` SHA-256 `e63937252e69820ff6f4b097537f860524ea9937e1e0bbd7187f2ae52cd812d5`; `M4_04B3_DEV2_GOLD_V1.zip` SHA-256 `77b9655b92b09c5b2c0d0ce749432ae12da342bbf07d62a01b16b37b1fce9939`; blindness manifest SHA-256 `b040e960fbb1c9f663fa1565bba9058148c965905fc50df90058869af220998e`. Input contains zero gold and shares no member name with gold. Private text and gold remain untracked.
+- **Verification.** Deterministic private rebuild preserved all three hashes. Package separation, source-exact, protected-artifact, secret, and private-text publication scans pass. Full offline suites pass 868/868: canonical story 99, ingestion 79, extraction 328, script quality 64, and story benchmark 298.
+- **Boundaries.** No API/provider request, P0/P1 rerun, model prediction, holdout access, M4-04C, or M5 work occurred. No extractor/model is selected or locked. Holdout remains sealed and unopened.
+- **Records.** `benchmarks/m4_extraction/M4_04B3B1_FRESH_DEV2_SEAL_RESULT.yaml`; `docs/research/m4/M4_FRESH_DEV2_PROTOCOL_V1.md`.
+
 ## Next Candidate
 
-Review M4-04B3A and approve a fresh DEV2 construction/validation protocol before any future model execution. No extractor lock is justified by offline gold round-trips. Do not begin M4-04C or M5; holdout input/gold remain unopened.
+Master Orchestrator review of the sealed fresh DEV2 V1 construction and its independent annotation/completeness claims. Do not run a model, open DEV2 gold for tuning, begin M4-04C, access the holdout, or begin M5 without a separately authorized protocol.

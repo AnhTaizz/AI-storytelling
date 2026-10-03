@@ -1,0 +1,164 @@
+task: M4-04B3B1
+date: 2026-10-03
+status: M4_04B3B1_FRESH_DEV2_V1_SEALED_PENDING_ORCHESTRATOR_REVIEW
+scope: FRESH_DEV2_CONSTRUCTION_AND_OFFLINE_REPRESENTATIONAL_VALIDATION_ONLY
+base_head: 870823ba509e0a07e380bb92985cf0d6592e2b14
+
+boundaries:
+  provider_calls: 0
+  Gemini_or_other_API_used: false
+  P0_P1_reruns: 0
+  DEV1_text_accessed: false
+  corpus_30_chapter_text_accessed: false
+  holdout_input_opened: false
+  holdout_gold_opened: false
+  M4_04C_started: false
+  M5_started: false
+  snapshot_V1_modified: false
+  snapshot_V2_modified: false
+  draft_V1_modified: false
+  deterministic_compiler_modified: false
+
+freshness:
+  source_family: ORIGINAL_JA_MINI_NARRATIVES_DEV2_V1
+  source_language: ja
+  source_units: 10
+  cases: 10
+  authored_for_this_task: true
+  copied_narrative_text: false
+  excluded_source_families: [corpus_30_chapters, DEV1, sealed_holdout]
+  holdout_non_use_basis: "process isolation and no holdout access; no claim of byte comparison against sealed text"
+  claim_boundary: "fresh authored miniature-source representational validation, not model-quality validation"
+
+case_coverage:
+  DEV2_01: alias_and_multiple_mentions_one_referent
+  DEV2_02: similar_names_and_unresolved_identity_without_merge
+  DEV2_03: later_explicit_same_as_preserves_earlier_placeholder
+  DEV2_04: repeated_exact_quote_requires_occurrence
+  DEV2_05: speech_belief_and_negation_without_world_truth_leak
+  DEV2_06: suggested_state_and_later_explicit_state
+  DEV2_07: state_validity_bounds_and_named_time
+  DEV2_08: multi_evidence_sufficient_partial_and_corroborating
+  DEV2_09: explicit_causality_negated_causality_and_adjacency
+  DEV2_10: prior_context_context_only_and_as_of_boundary
+
+ingestion:
+  contract: LIGHT_NOVEL_INGESTION/v0
+  manifests: 10
+  source_documents: 10
+  source_language_metadata: ja
+  cases_ingested: "10/10"
+  deterministic_rerun: PASS
+  exact_source_available_to_compiler: true
+
+gold:
+  extraction_profile: STORY_UNDERSTANDING_CORE_V0
+  status: [AGENT_DRAFT_GOLD, NOT_HUMAN_CONFIRMED]
+  annotation_method: HUMAN_ANNOTATION
+  review_state: UNREVIEWED
+  human_review_performed: false
+  annotation_order: "canonical semantics first; draft-like projection and compiler round-trip second"
+  completeness: "10/10 COMPLETE_FOR_PROFILE"
+  required_assertions: 119
+  acceptable_optional_assertions: 0
+  record_counts:
+    evidence_refs: 78
+    mentions: 47
+    entities: 29
+    events: 17
+    temporal_anchors: 19
+    propositions: 120
+    extraction_provenance: 10
+    assertions: 119
+  predicate_counts:
+    AnchorDate: 2
+    Attitude: 1
+    Causes: 3
+    EmotionToward: 1
+    IdentityKnown: 1
+    NamedAs: 12
+    Occurred: 17
+    OccursAt: 2
+    Participates: 24
+    PhysicalCondition: 1
+    Possesses: 5
+    RefersTo: 47
+    SameAs: 1
+    Says: 2
+    TemporalRelation: 1
+  epistemic_status: {EXPLICIT: 115, ENTAILED: 3, SUGGESTED: 1}
+  assertion_polarity: {AFFIRMED: 117, NEGATED: 1, OPEN: 1}
+  evidence_roles: {DEPICTION: 76, IN_WORLD_REPORT: 1, NARRATION_SUMMARY: 1}
+  evidence_set_labels: {SUFFICIENT: 117, PARTIAL: 1, CORROBORATING: 1}
+  derivations: 3
+  assertions_with_validity: 20
+
+offline_representational_verification:
+  path: "canonical gold -> STORY_EXTRACTION_DRAFT_V1-like oracle projection -> deterministic compiler -> canonical batch"
+  gold_batches_passing_frozen_validation: "10/10"
+  draft_schema_and_compile_pass: "10/10"
+  compiled_batches_passing_source_exact_validation: "10/10"
+  canonical_semantic_support_graph_alpha_equivalence: "10/10"
+  representable: "10/10"
+  gap_detected: false
+  compiler_or_schema_patch_performed: false
+  interpretation: "representational coverage only; the oracle projection is not an extractor prediction"
+
+private_packages:
+  input:
+    name: M4_04B3_DEV2_INPUT_V1.zip
+    sha256: e63937252e69820ff6f4b097537f860524ea9937e1e0bbd7187f2ae52cd812d5
+    bytes: 30868
+    members: 51
+    contains_gold: false
+  gold:
+    name: M4_04B3_DEV2_GOLD_V1.zip
+    sha256: 77b9655b92b09c5b2c0d0ce749432ae12da342bbf07d62a01b16b37b1fce9939
+    bytes: 71017
+    members: 33
+  blindness_manifest:
+    name: M4_04B3_DEV2_BLINDNESS_MANIFEST_V1.json
+    sha256: b040e960fbb1c9f663fa1565bba9058148c965905fc50df90058869af220998e
+    bytes: 19985
+  committed_to_repository: false
+  input_and_gold_member_names_disjoint: true
+  input_forbidden_gold_marker_scan: PASS
+
+frozen_bindings:
+  draft_schema_sha256: 498edf8dba8d45b80380a180d1383787f5c0e4ecea5060254883cc27c7d83e80
+  deterministic_compiler_sha256: bcd15328cefafe86dd8e686fb35a155b2cb2c261b20017486ed106e85371d836
+  snapshot_V1_identity_sha256: a9ac816fe8e20d6ed0d2a4e078c37a89a63dc10660b11d9c754b8038d71c29a6
+  snapshot_V1_file_sha256: 0b7c6c38812ca718f2c4ab19ede2a868299885cc8ed0f8d73dfa3a69f151540b
+  snapshot_V2_identity_sha256: 8dddbd0b9f3ea51af593c1fab0631b088b6f4e6b8c16833a1f11b8448088eee9
+  snapshot_V2_file_sha256: eef2db2ff2ba61f22a96d3a52ab64e07c6c9e9dbc9e9741e061f2893ba6283a8
+  canonical_schema_sha256: f67410fcb1a95253abe5877b1619f0e9057430ec7cba4afa66431e964142d5e9
+  predicate_registry_sha256: 44f3eafc6982f84bcc74ccb91abe7cd467a453352ee96be147095f27559c5350
+
+verification:
+  private_builder_deterministic_rerun: PASS
+  package_separation: PASS
+  source_exact_checks: PASS
+  protected_artifact_byte_diff: PASS
+  full_test_suites:
+    canonical_story: "99/99 PASS"
+    story_ingestion: "79/79 PASS"
+    story_extraction: "328/328 PASS"
+    script_quality: "64/64 PASS"
+    story_benchmark: "298/298 PASS (offline mode)"
+    total: "868/868 PASS"
+  secret_scan: PASS
+  private_text_publication_scan: PASS
+
+decision:
+  DEV2_V1: SEALED_PENDING_ORCHESTRATOR_REVIEW
+  extractor_locked: false
+  extraction_model_selected_for_quality: false
+  holdout_eligible: false
+  next_allowed_action: ORCHESTRATOR_REVIEW_ONLY
+
+not_done:
+  model_predictions: false
+  prompt_selection_or_tuning: false
+  extractor_lock: false
+  M4_04C: false
+  M5: false
