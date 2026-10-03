@@ -1,0 +1,154 @@
+task: M4-04B3D3
+date: 2026-10-04
+status: M4_04B3D3_DEV2_MIGRATION_STRUCTURAL_FAIL_6_OF_10_QUEUE_STOPPED
+scope: OFFLINE_LOCKED_TERMINAL_DRAFT_MIGRATION_DIAGNOSTIC
+branch: research/m4-overnight-v1-1
+prerequisite_commit: e0c4b7e3004c444213f21e929c0f70161b505237
+
+boundaries:
+  provider_or_api_calls: 0
+  prediction_reruns: 0
+  dev2_gold_opened: false
+  holdout_opened: false
+  quality_scoring: false
+  semantic_repair: false
+  prompt_schema_compiler_runtime_changes_during_diagnostic: false
+
+locked_inputs:
+  dev2_input_sha256: e63937252e69820ff6f4b097537f860524ea9937e1e0bbd7187f2ae52cd812d5
+  prediction_set_sha256: e7dbbcb86906de203d0336cc911ae665d7fd1682a89d50ce635001b3a99b54bc
+  case_order:
+    - DEV2_01
+    - DEV2_02
+    - DEV2_03
+    - DEV2_04
+    - DEV2_05
+    - DEV2_06
+    - DEV2_07
+    - DEV2_08
+    - DEV2_09
+    - DEV2_10
+  terminal_parsed_drafts: 10
+  terminal_draft_hashes_verified: 10
+
+method:
+  source_version: STORY_EXTRACTION_DRAFT_V1
+  target_version: STORY_EXTRACTION_DRAFT_V1_1
+  operations:
+    - CHANGE_DRAFT_VERSION_TAG
+    - REMOVE_MENTION_EVIDENCE_HANDLE
+  other_field_changes: 0
+  source_drafts_mutated: false
+  compilation: DETERMINISTIC_V1_1_WITH_SOURCE_EXACT_GUARD
+
+historical_terminal_result:
+  structural_valid: 2
+  structural_failure: 8
+  total: 10
+
+migrated_terminal_result:
+  structural_valid: 6
+  structural_failure: 4
+  total: 10
+  mention_evidence_handles_removed: 33
+  remaining_failure_codes:
+    AMBIGUOUS_QUOTE: 2
+    CANONICAL_CONFORMANCE_FAILURE: 3
+  MENTION_EVIDENCE_MISMATCH: 0
+  mention_evidence_mismatch_eliminated: true
+  compiler_defect_observed: false
+
+cases:
+  - case_id: DEV2_01
+    old_terminal: STRUCTURAL_FAILURE
+    migrated_terminal: STRUCTURAL_VALID
+    removed_mention_evidence_handles: 4
+    remaining_failure_codes: []
+    remaining_blocker_count: 0
+  - case_id: DEV2_02
+    old_terminal: STRUCTURAL_VALID
+    migrated_terminal: STRUCTURAL_VALID
+    removed_mention_evidence_handles: 0
+    remaining_failure_codes: []
+    remaining_blocker_count: 0
+  - case_id: DEV2_03
+    old_terminal: STRUCTURAL_FAILURE
+    migrated_terminal: STRUCTURAL_FAILURE
+    removed_mention_evidence_handles: 3
+    remaining_failure_codes: [CANONICAL_CONFORMANCE_FAILURE]
+    remaining_blocker_count: 1
+  - case_id: DEV2_04
+    old_terminal: STRUCTURAL_FAILURE
+    migrated_terminal: STRUCTURAL_FAILURE
+    removed_mention_evidence_handles: 3
+    remaining_failure_codes: [CANONICAL_CONFORMANCE_FAILURE]
+    remaining_blocker_count: 1
+  - case_id: DEV2_05
+    old_terminal: STRUCTURAL_FAILURE
+    migrated_terminal: STRUCTURAL_FAILURE
+    removed_mention_evidence_handles: 6
+    remaining_failure_codes: [AMBIGUOUS_QUOTE]
+    remaining_blocker_count: 2
+  - case_id: DEV2_06
+    old_terminal: STRUCTURAL_VALID
+    migrated_terminal: STRUCTURAL_VALID
+    removed_mention_evidence_handles: 0
+    remaining_failure_codes: []
+    remaining_blocker_count: 0
+  - case_id: DEV2_07
+    old_terminal: STRUCTURAL_FAILURE
+    migrated_terminal: STRUCTURAL_FAILURE
+    removed_mention_evidence_handles: 6
+    remaining_failure_codes: [CANONICAL_CONFORMANCE_FAILURE]
+    remaining_blocker_count: 1
+  - case_id: DEV2_08
+    old_terminal: STRUCTURAL_FAILURE
+    migrated_terminal: STRUCTURAL_VALID
+    removed_mention_evidence_handles: 9
+    remaining_failure_codes: []
+    remaining_blocker_count: 0
+  - case_id: DEV2_09
+    old_terminal: STRUCTURAL_FAILURE
+    migrated_terminal: STRUCTURAL_VALID
+    removed_mention_evidence_handles: 1
+    remaining_failure_codes: []
+    remaining_blocker_count: 0
+  - case_id: DEV2_10
+    old_terminal: STRUCTURAL_FAILURE
+    migrated_terminal: STRUCTURAL_VALID
+    removed_mention_evidence_handles: 1
+    remaining_failure_codes: []
+    remaining_blocker_count: 0
+
+data_status:
+  DEV2: TUNING_DATA_AFTER_INTERFACE_REDESIGN
+  eligible_as_fresh_v1_1_validation: false
+
+success_gate:
+  required_structural_valid: 10
+  actual_structural_valid: 6
+  required_mention_evidence_mismatch: 0
+  actual_mention_evidence_mismatch: 0
+  pass: false
+  queue_action: STOP
+  tasks_04_through_07_authorized_to_run: false
+
+verification:
+  focused_tests: 12/12 PASS
+  locked_dev2_terminal_migration: FAIL_GATE_RECORDED_TRUTHFULLY
+  public_result_contains_source_text_raw_output_private_quotes_or_gold: false
+  full_test_suites:
+    canonical_story: 99/99 PASS
+    story_ingestion: 79/79 PASS
+    story_extraction: 371/371 PASS
+    script_quality: 64/64 PASS
+    story_benchmark: 298/298 PASS_STRICT_OFFLINE
+    total: 911/911 PASS
+  secret_private_scan: PASS
+
+decision:
+  target_interface_failure_class_eliminated: true
+  migration_gate: FAIL
+  queue: STOPPED_AFTER_TASK_03
+  compiler_or_schema_patch_in_this_task: false
+  next_action: ORCHESTRATOR_REVIEW_REQUIRED

@@ -902,6 +902,14 @@ M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02 are ACCEPTED. M4-03 is `FR
 - **Repair outcome.** Two repairs fully corrected structure, four corrected the first fail-fast trigger but exposed a later invalid link, three changed the draft without clearing the same trigger, and one made no semantic change. One separate repeated-quote occurrence omission was corrected by repair.
 - **Record.** `benchmarks/m4_extraction/M4_04B3CR_STRUCTURAL_FAILURE_FORENSICS.yaml` contains the public-safe case matrix, aggregate counts, attribution, and top-three root causes without source text, raw output, gold, or private quotes.
 
+## M4-04B3D1–D3 — DRAFT V1.1 INTERFACE AND LOCKED DEV2 MIGRATION — QUEUE STOPPED — Status: M4_04B3D3_DEV2_MIGRATION_STRUCTURAL_FAIL_6_OF_10_QUEUE_STOPPED
+
+- **Versioned interface.** `STORY_EXTRACTION_DRAFT_V1_1` removes model-facing `mention.evidence_handle`. The versioned deterministic compiler creates or reuses only exact span-and-role mention evidence, keeps broad assertion evidence separate, aggregates independently detectable structural blockers, and adds no semantic inference. Historical Draft V1 and compiler V1 remain unchanged.
+- **Locked terminal-draft diagnostic.** Ten hash-verified B3C terminal drafts were mechanically migrated by changing only the version tag and removing mention evidence handles, then compiled against the authorized DEV2 input. Historical 2/10 structural validity improved to 6/10. `MENTION_EVIDENCE_MISMATCH` was eliminated, but DEV2_03, DEV2_04 and DEV2_07 retain `CANONICAL_CONFORMANCE_FAILURE`; DEV2_05 retains two `AMBIGUOUS_QUOTE` blockers.
+- **Gate and data status.** The mandatory 10/10 gate failed, so the overnight queue stops after Task 03 and Tasks 04–07 are not run. No schema/compiler patch was made in the diagnostic. DEV2 is `TUNING_DATA_AFTER_INTERFACE_REDESIGN` and is not fresh V1.1 validation data.
+- **Boundaries.** No API/model call, prediction rerun, quality scoring, DEV2 gold access or holdout access occurred. Full offline suites pass 911/911 and the secret/private publication scan passes.
+- **Record.** `benchmarks/m4_extraction/M4_04B3D3_DEV2_V1_1_MIGRATION_RESULT.yaml`.
+
 ## Next Candidate
 
-Master Orchestrator review of the locked structural forensics. Do not open DEV2 gold, score or tune against DEV2, rerun predictions, change the locked extractor stack, begin M4-04C, access the holdout, or begin M5 without a separately authorized task.
+Master Orchestrator review of the failed 10/10 DEV2 V1.1 migration gate. Do not proceed to overnight Tasks 04–07, patch the schema/compiler against DEV2, open DEV2 gold, rerun predictions, access the holdout, begin M4-04C, or begin M5 without separate authorization.
