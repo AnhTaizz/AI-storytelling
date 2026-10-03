@@ -1,0 +1,129 @@
+task: M4-04B3D3R
+date: 2026-10-04
+status: M4_04B3D3R_V1_1_READY_FOR_FRESH_DEV3
+scope: OFFLINE_REMAINING_FAILURE_ATTRIBUTION
+base_commit: 2e322760d6c21bd3b28ccd3a1ca3a6082a16222e
+branch: research/m4-overnight-v1-1
+
+boundaries:
+  provider_or_api_calls: 0
+  dev2_gold_opened: false
+  holdout_opened: false
+  prediction_reruns: 0
+  repairs: 0
+  schema_changes: 0
+  compiler_changes: 0
+  prompt_changes: 0
+
+inputs:
+  dev2_input_sha256: e63937252e69820ff6f4b097537f860524ea9937e1e0bbd7187f2ae52cd812d5
+  prediction_set_sha256: e7dbbcb86906de203d0336cc911ae665d7fd1682a89d50ce635001b3a99b54bc
+  terminal_draft_hashes_verified: 4
+  case_order: [DEV2_03, DEV2_04, DEV2_05, DEV2_07]
+
+classification_legend:
+  A: INHERITED_DEFECT_ALREADY_PRESENT_IN_LOCKED_P2_SEMANTIC_DRAFT
+  B: INTRODUCED_BY_MECHANICAL_V1_TO_V1_1_MIGRATION
+  C: V1_1_COMPILER_DEFECT
+  D: UNCERTAIN
+
+method:
+  migration_invariant:
+    operations:
+      - CHANGE_DRAFT_VERSION_TAG
+      - REMOVE_MENTION_EVIDENCE_HANDLE
+    non_interface_field_changes: 0
+  causal_checks:
+    - REPRODUCE_QUOTE_FAILURE_WITH_UNCHANGED_V1_QUOTE_RESOLVER_ON_LOCKED_RECORD
+    - REPRODUCE_CANONICAL_FAILURE_WITH_UNCHANGED_V1_COMPILER_CONTROL_PATH
+    - VERIFY_RELEVANT_EVENT_ANCHOR_AND_PROPOSITION_SEMANTICS_UNCHANGED
+    - VERIFY_FAILURE_DOES_NOT_REQUIRE_V1_1_ONLY_BEHAVIOR
+  semantic_scoring: false
+
+aggregate:
+  blocker_count: 5
+  failure_code_counts:
+    CANONICAL_CONFORMANCE_FAILURE: 3
+    AMBIGUOUS_QUOTE: 2
+  classification_counts:
+    A: 5
+    B: 0
+    C: 0
+    D: 0
+
+cases:
+  - case_id: DEV2_03
+    blockers:
+      - failure_code: CANONICAL_CONFORMANCE_FAILURE
+        classification: A
+        root_cause: EVENT_REFERENCES_NON_EVENT_TIME_ANCHOR
+        locked_v1_defect_instances: 2
+        migration_changed_relevant_semantics: false
+        unchanged_v1_compiler_control_reproduced: true
+        v1_1_only_behavior_required_for_failure: false
+  - case_id: DEV2_04
+    blockers:
+      - failure_code: CANONICAL_CONFORMANCE_FAILURE
+        classification: A
+        root_cause: DUPLICATE_CONCRETE_PROPOSITION_CONTENT
+        locked_v1_defect_instances: 1
+        migration_changed_relevant_semantics: false
+        unchanged_v1_compiler_control_reproduced: true
+        v1_1_only_behavior_required_for_failure: false
+  - case_id: DEV2_05
+    blockers:
+      - failure_code: AMBIGUOUS_QUOTE
+        classification: A
+        root_cause: REPEATED_QUOTE_WITHOUT_OCCURRENCE
+        record_path: mentions/M2
+        locked_v1_quote_match_count: 2
+        locked_v1_occurrence_present: false
+        migration_changed_quote_locator: false
+        unchanged_v1_quote_resolver_reproduced: true
+        v1_1_only_behavior_required_for_failure: false
+      - failure_code: AMBIGUOUS_QUOTE
+        classification: A
+        root_cause: REPEATED_QUOTE_WITHOUT_OCCURRENCE
+        record_path: mentions/M3
+        locked_v1_quote_match_count: 3
+        locked_v1_occurrence_present: false
+        migration_changed_quote_locator: false
+        unchanged_v1_quote_resolver_reproduced: true
+        v1_1_only_behavior_required_for_failure: false
+  - case_id: DEV2_07
+    blockers:
+      - failure_code: CANONICAL_CONFORMANCE_FAILURE
+        classification: A
+        root_cause: EVENT_REFERENCES_NON_EVENT_TIME_ANCHOR
+        locked_v1_defect_instances: 2
+        migration_changed_relevant_semantics: false
+        unchanged_v1_compiler_control_reproduced: true
+        v1_1_only_behavior_required_for_failure: false
+
+attribution:
+  all_remaining_blockers_inherited_p2_model_defects: true
+  mechanical_migration_defect_observed: false
+  v1_1_compiler_defect_observed: false
+  uncertain_blocker_observed: false
+  interpretation: LATENT_P2_MODEL_STRUCTURAL_DEFECTS_EXPOSED_AFTER_TARGET_INTERFACE_FAILURE_WAS_REMOVED
+
+verification:
+  focused_tests: 17/17 PASS
+  locked_failure_attribution: PASS
+  public_result_contains_source_text_raw_output_private_quotes_or_gold: false
+  full_offline_suites:
+    canonical_story: 99/99 PASS
+    story_ingestion: 79/79 PASS
+    story_extraction: 376/376 PASS
+    script_quality: 64/64 PASS
+    story_benchmark: 298/298 PASS_STRICT_OFFLINE
+    total: 916/916 PASS
+  protected_interface_and_history_scan: PASS
+  secret_private_scan: PASS
+
+decision:
+  v1_1_interface: READY_FOR_FRESH_DEV3
+  authorize_fresh_dev3_construction: true
+  redesign_required: false
+  dev2_status: TUNING_DATA_AFTER_INTERFACE_REDESIGN
+  next_action: CONSTRUCT_AND_SEAL_FRESH_DEV3_UNDER_SEPARATE_TASK
