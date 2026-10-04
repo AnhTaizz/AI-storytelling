@@ -934,6 +934,15 @@ M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02 are ACCEPTED. M4-03 is `FR
 - **Verification.** Focused protocol tests pass 10/10. Full offline suites and secret/private scans pass; no protected interface artifact differs from the base.
 - **Record.** `benchmarks/m4_extraction/M4_04B3F_DEV3_P3_PROTOCOL_LOCK.yaml`.
 
+## M4-04B3G — P3 RUNNER OFFLINE READINESS — COMPLETED — Status: M4_04B3G_P3_RUNNER_OFFLINE_READY
+
+- **Offline runner.** A fail-closed P3 runner core now verifies locked protocol SHA-256 `f9cf1c25a21bb3bfc910b8e218c8dac9f032d67957f8d7cb58397134a0504bae` and the sealed DEV3 input SHA before any future provider operation. It rejects gold-like and traversal archive paths and exposes no gold or evaluator parameter.
+- **Execution discipline.** The runner fixes the P3 model, credential, temperature and JSON mode; locks the primary first success; parses, validates and compiles Draft V1.1; and permits at most one structural repair with the complete sanitized blocker set. Repair failure is terminal, while semantic, quality and coverage retries are impossible through the interface.
+- **Offline evidence.** Twelve focused tests use synthetic repository fixtures and an in-memory mock provider. They cover protocol/input gates, settings, valid V1.1 compilation, multi-blocker diagnostics, one-repair maximum, terminal failure, no quality retry, immutable first success, and zero actual provider operations.
+- **Boundaries.** No API/provider call, DEV3 input/gold access, holdout access, evaluation or prediction occurred. The locked P3 protocol/prompts, Draft V1.1/compiler and runtime are unchanged.
+- **Verification.** Focused tests pass 12/12; full offline suites and secret/private/protected-lock scans pass.
+- **Record.** `benchmarks/m4_extraction/M4_04B3G_P3_RUNNER_OFFLINE_READINESS.yaml`.
+
 ## Next Candidate
 
-Run blind DEV3 P3 predictions only under the exact locked protocol after orchestrator review. Do not open DEV3 gold before prediction lock, modify Draft V1.1/compiler to fit DEV3, access holdout, begin M4-04C, or begin M5 without separate authorization.
+Run blind DEV3 P3 predictions only under the exact locked protocol and the readiness-tested runner after separate authorization. Do not open DEV3 gold before prediction lock, modify Draft V1.1/compiler to fit DEV3, access holdout, begin M4-04C, or begin M5 without separate authorization.

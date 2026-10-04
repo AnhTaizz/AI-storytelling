@@ -1,0 +1,96 @@
+task: M4-04B3G
+date: 2026-10-04
+status: M4_04B3G_P3_RUNNER_OFFLINE_READY
+scope: P3_DEV3_BLIND_RUNNER_OFFLINE_READINESS_ONLY
+base_commit: 773aa31583a99321502ffa9397ad5063b90310c3
+branch: research/m4-overnight-v1-1
+
+boundaries:
+  provider_or_API_calls: 0
+  actual_provider_operations: 0
+  provider_mode: SYNTHETIC_IN_MEMORY_MOCK_ONLY
+  DEV3_input_opened: false
+  DEV3_gold_opened: false
+  holdout_accessed: false
+  prediction_started: false
+  scoring_or_evaluator_used: false
+  locked_P3_protocol_modified: false
+  locked_P3_prompts_modified: false
+  draft_V1_1_modified: false
+  compiler_V1_1_modified: false
+  runtime_modified: false
+
+locked_bindings:
+  protocol_sha256: f9cf1c25a21bb3bfc910b8e218c8dac9f032d67957f8d7cb58397134a0504bae
+  DEV3_input_sha256: 47ae7c743065f8ff001f4db6a398df2edf1db094383b1fe2d0c3a05ab40c55c7
+  case_order: [DEV3_01, DEV3_02, DEV3_03, DEV3_04, DEV3_05, DEV3_06, DEV3_07, DEV3_08, DEV3_09, DEV3_10]
+  model: gemini-3.5-flash-lite
+  credential_slot: gemini_slot_3
+  temperature: 0
+  json_mode: true
+  concurrency: 1
+  output_only: STORY_EXTRACTION_DRAFT_V1_1
+
+runner_contract:
+  pre_provider_gates:
+    - EXACT_PROTOCOL_SHA256
+    - EXACT_DEV3_INPUT_SHA256
+    - SAFE_NON_GOLD_ZIP_MEMBER_PATHS
+    - EXACT_CASE_ORDER
+  primary_first_success: IMMUTABLE
+  processing_sequence: [PARSE_JSON, VALIDATE_DRAFT_V1_1, COMPILE_V1_1]
+  repair:
+    maximum_per_case: 1
+    eligible_categories: [JSON_PARSE_FAILURE, DRAFT_SCHEMA_FAILURE, DRAFT_COMPILER_FAILURE]
+    diagnostic: SANITIZED_ALL_BLOCKERS_PHASE_CODE_PATH_ONLY
+    semantic_or_quality_retry: FORBIDDEN
+    missing_fact_or_coverage_retry: FORBIDDEN
+    repair_failure: TERMINAL_STRUCTURAL_FAILURE
+  forbidden_surfaces:
+    gold_parameter: ABSENT
+    evaluator_parameter: ABSENT
+    gold_reader: ABSENT
+    evaluator_import: ABSENT
+
+offline_test_evidence:
+  fixture_type: SYNTHETIC_REPOSITORY_FIXTURES_ONLY
+  provider: OfflineMockProvider
+  focused_tests: 12/12_PASS
+  assertions:
+    no_gold_or_evaluator_parameters: PASS
+    reject_gold_member_and_traversal: PASS
+    protocol_hash_mismatch_fail_closed: PASS
+    input_hash_checked_before_provider: PASS
+    fixed_model_credential_and_settings: PASS
+    valid_V1_1_compile: PASS
+    multi_blocker_repair_diagnostic: PASS
+    maximum_one_repair: PASS
+    no_semantic_quality_or_coverage_retry: PASS
+    immutable_first_success: PASS
+    actual_provider_operations_zero: PASS
+
+artifacts:
+  hash_mode: UTF8_LF_NORMALIZED_SHA256
+  runner:
+    path: tools/story_extraction/run_m4_04b3g_dev3_p3_predictions_v1.py
+    sha256: a07a26240c9d30d96bf455a4f88173a38a3b1538a8de2d32d3f09b7402be5087
+  focused_tests:
+    path: tests/story_extraction/test_run_m4_04b3g_dev3_p3_predictions_v1.py
+    sha256: 738c4e4d20cc01451d581a78fa8f2169acc0e0ca054a7c3edb892c049414a972
+
+verification:
+  focused_runner_tests: 12/12_PASS
+  full_offline_suites:
+    canonical_story: 99/99_PASS
+    story_ingestion: 79/79_PASS
+    story_extraction: 403/403_PASS
+    script_quality: 64/64_PASS
+    story_benchmark: 298/298_PASS_OFFLINE
+    total: 943/943_PASS
+  protected_lock_diff: PASS
+  secret_private_scan: PASS
+
+decision:
+  runner_readiness: READY
+  live_execution_authorized: false
+  next_action: ORCHESTRATOR_REVIEW_OR_SEPARATE_BLIND_EXECUTION_TASK
