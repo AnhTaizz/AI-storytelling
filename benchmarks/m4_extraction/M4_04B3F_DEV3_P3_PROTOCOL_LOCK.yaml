@@ -1,0 +1,180 @@
+task: M4-04B3F
+date: 2026-10-04
+status: M4_04B3F_P3_PROTOCOL_LOCKED_PENDING_ORCHESTRATOR_REVIEW
+scope: DEV3_P3_DRAFT_V1_1_EXTRACTOR_PROTOCOL_LOCK_ONLY
+base_commit: 2eb410fefb9766a89f4faddc5968209ab0fa0d25
+branch: research/m4-overnight-v1-1
+protocol_id: M4_04B3F_DEV3_P3_PROTOCOL_V1
+protocol_schema_version: M4_04B3F_DEV3_P3_PROTOCOL_SCHEMA_V1
+
+boundaries:
+  provider_calls: 0
+  Gemini_or_other_API_used: false
+  DEV3_input_opened: false
+  DEV3_gold_opened: false
+  holdout_accessed: false
+  prediction_started: false
+  draft_V1_1_modified: false
+  compiler_V1_1_modified: false
+  snapshot_V2_modified: false
+
+private_canonical_protocol:
+  name: M4_04B3F_DEV3_P3_CANONICAL_PROTOCOL_V1.json
+  sha256: f9cf1c25a21bb3bfc910b8e218c8dac9f032d67957f8d7cb58397134a0504bae
+  validation_name: M4_04B3F_DEV3_P3_PROTOCOL_VALIDATION_V1.json
+  validation_sha256: f388e6078411380aa54dff900ac5d8008492e21deccafb3afcbddc0802c93909
+  committed_to_repository: false
+
+dev3_bindings:
+  input_package:
+    name: M4_04B3_DEV3_INPUT_V1.zip
+    sha256: 47ae7c743065f8ff001f4db6a398df2edf1db094383b1fe2d0c3a05ab40c55c7
+    opened_during_protocol_lock: false
+  gold_package:
+    name: M4_04B3_DEV3_GOLD_V1.zip
+    sha256: b5b2258d46608015ff60de2c660fba521029ff4716c7c1cc3b3735c55dfd34a9
+    opened_during_protocol_lock: false
+  case_count: 10
+  case_order: [DEV3_01, DEV3_02, DEV3_03, DEV3_04, DEV3_05, DEV3_06, DEV3_07, DEV3_08, DEV3_09, DEV3_10]
+
+extractor:
+  identity: P3_STORY_EXTRACTION_DRAFT_V1_1_GEMINI_3_5_FLASH_LITE_V1
+  model_output_only: STORY_EXTRACTION_DRAFT_V1_1
+  model: gemini-3.5-flash-lite
+  credential_slot: gemini_slot_3
+  temperature: 0
+  max_output_tokens: 16384
+  provider_json_mode: true
+  response_mime_type: application/json
+  concurrency: 1
+  seed: NOT_SUPPORTED_NOT_USED
+  canonical_output_from_model: FORBIDDEN
+
+prompt_sources:
+  hash_mode: UTF8_LF_NORMALIZED_SHA256
+  system_preamble:
+    path: tools/story_extraction/prompts/story_extraction_draft_p3_v1_1_system.txt
+    sha256: 9eb4aa33c4dd20cb62e6014b215e85f063861856c8243385a8ae7d74dcc55670
+  primary_user_template:
+    path: tools/story_extraction/prompts/story_extraction_draft_p3_v1_1_user.txt
+    sha256: eeda5645bc5e319d1bfeb4c99a4276fd0a070103eb95409c357370b7255e96d1
+  repair_user_template:
+    path: tools/story_extraction/prompts/story_extraction_draft_p3_v1_1_repair_user.txt
+    sha256: bf0831479337f0212e779ee3e99fc9ad2872c1267fa6c7ac9e2f670a72e8233d
+
+materialized_prompt_hashes:
+  primary_system_sha256: 3038772889aac164318bf379c6f8ccb001800787d6cf3bf6f9633dbc5e02ce63
+  primary_user_template_sha256: eeda5645bc5e319d1bfeb4c99a4276fd0a070103eb95409c357370b7255e96d1
+  primary_prompt_pair_sha256: d88d21e120b5ff149e7aa6450cdd3891256f4e361c5953f5ffbfbfa44703e213
+  repair_system_sha256: a1540590cade6909dfe6b553514fc9004e49d4fa67bf60bcd411fe767846d678
+  repair_user_template_sha256: bf0831479337f0212e779ee3e99fc9ad2872c1267fa6c7ac9e2f670a72e8233d
+  repair_prompt_pair_sha256: 4f92c8de18e09ac20cccca6e97d22e5b5d6ed6a966cc48ec174add53438e5edc
+
+prompt_contract:
+  passage_and_local_handles: REQUIRED
+  existing_handles: REUSE_WITHOUT_REEMISSION
+  mention_evidence_handle: FORBIDDEN
+  mention_fields: [handle, passage_handle, quote, occurrence_optional, role, surface_form_optional]
+  exact_quote_and_one_based_occurrence: REQUIRED
+  evidence_citation_scope: EVIDENCE_ELIGIBLE_ONLY
+  predicate_source: EXACT_BOUND_PREDICATE_REGISTRY_ONLY
+  polarity_epistemic_and_holder_relative_truth: PRESERVE
+  forbidden_model_fields: [hashes, offsets, envelopes, provenance, canonical_ids]
+
+compiler_binding:
+  hash_mode: UTF8_LF_NORMALIZED_SHA256
+  draft_version: STORY_EXTRACTION_DRAFT_V1_1
+  draft_schema_sha256: e0d38b65f0f265dfb1a0ef2be4e85c9b3950550a46f47e8980fbd6a7cab068a3
+  compiler_entrypoint: tools.story_extraction.draft_compiler_v1_1.compile_story_extraction_draft_v1_1
+  compiler_sha256: f962e561a7801ddf48ef248416231673e1567b9eac9d04f2aaba1d1e16eed953
+  predicate_registry_sha256: 44f3eafc6982f84bcc74ccb91abe7cd467a453352ee96be147095f27559c5350
+  compiler_semantic_inference: false
+
+durable_execution:
+  profile_id: M4_DURABLE_RESEARCH_EXECUTION_PROFILE_V1
+  profile_sha256: c6c789f0f06d3fdabc2333c29b389252de853ffef0add536d4f06fb6b94e143e
+  runtime: GEMINI_TRANSPORT_RESILIENCE_V1_1
+  runtime_sha256: 8b84804f5c5b94e1b2ac2507d8b7bc39697b916bbdd889fc1f9040762bfc9213
+  durable_executor: DURABLE_RESEARCH_EXECUTOR_V1
+  durable_executor_sha256: cc9bd7a863ff906dea8fcd2f753c552881acd33f97a72b4af4e4e84eb1bfbe66
+  maximum_windows_per_job: 3
+  maximum_provider_attempts_per_window: 3
+  maximum_provider_attempts_per_job: 9
+  global_pacing: 6_PROVIDER_OPERATIONS_PER_ROLLING_60_SECONDS
+  concurrency: 1
+  first_success: IMMUTABLE_LOCK
+  output_aware_transport_retry: FORBIDDEN
+
+structural_repair:
+  maximum_per_case: 1
+  eligible_categories: [JSON_PARSE_FAILURE, DRAFT_SCHEMA_FAILURE, DRAFT_COMPILER_FAILURE]
+  only_after_successful_primary_response: true
+  diagnostic: SANITIZED_ALL_BLOCKERS_PHASE_CODE_PATH_ONLY
+  deterministic_structure_only: true
+  semantic_reinterpretation: FORBIDDEN
+  missing_fact_or_coverage_retry: FORBIDDEN
+  quality_signal: FORBIDDEN
+  gold_signal: FORBIDDEN
+  repair_failure: TERMINAL
+
+evaluation_snapshot:
+  identity: M4_EVALUATION_PROTOCOL_SNAPSHOT_V2
+  identity_sha256: 8dddbd0b9f3ea51af593c1fab0631b088b6f4e6b8c16833a1f11b8448088eee9
+  file_sha256: eef2db2ff2ba61f22a96d3a52ab64e07c6c9e9dbc9e9741e061f2893ba6283a8
+  hash_mode: UTF8_LF_NORMALIZED_SHA256
+
+prediction_lock_before_gold:
+  required: true
+  raw_primary_and_repair_outputs_hashed: REQUIRED
+  compiled_or_terminal_structural_failure_hashed: REQUIRED
+  predictions_committed_and_pushed_before_gold_open: REQUIRED
+  model_or_repair_calls_after_gold_open: 0
+  protocol_change_after_lock: NEW_TASK_REQUIRED
+
+tooling:
+  hash_mode: UTF8_LF_NORMALIZED_SHA256
+  protocol_and_request_builder:
+    path: tools/story_extraction/m4_04b3f_dev3_p3_protocol_v1.py
+    sha256: ff50740344b46a904cc32b0ffd6ad71509a466fc518be50da69b8c190712c2c0
+  private_protocol_preparer:
+    path: tools/story_extraction/prepare_m4_04b3f_dev3_p3_protocol_v1.py
+    sha256: 9ca1664f55e8ba1550cb5c8baaea4406f993394a9395e97f07fd818f79b71332
+  focused_tests:
+    path: tests/story_extraction/test_m4_04b3f_dev3_p3_protocol_v1.py
+    sha256: d16fb51d21e397db249b4a6b0f723027d49d7440d511de0c0939d042ae437ca0
+
+offline_protocol_validation:
+  parse: PASS
+  semantic_consistency: PASS
+  prompt_hashes: PASS
+  case_list_and_order: PASS
+  dev3_hash_bindings_without_package_access: PASS
+  runtime_and_pacing_binding: PASS
+  draft_v1_1_compiler_binding: PASS
+  snapshot_v2_binding: PASS
+  all_blocker_repair_policy: PASS
+  prediction_lock_before_gold: PASS
+  holdout_prohibition: PASS
+
+verification:
+  private_protocol_deterministic_rebuild: PASS
+  focused_protocol_tests: 10/10_PASS
+  full_offline_suites:
+    canonical_story: 99/99_PASS
+    story_ingestion: 79/79_PASS
+    story_extraction: 391/391_PASS
+    script_quality: 64/64_PASS
+    story_benchmark: 298/298_PASS_OFFLINE
+    total: 931/931_PASS
+  protected_artifact_byte_diff: PASS
+  DEV3_package_access: NOT_PERFORMED
+  private_protocol_gitignored: PASS
+  secret_private_scan: PASS
+
+decision:
+  P3_extractor_protocol: LOCKED_PENDING_ORCHESTRATOR_REVIEW
+  live_predictions_started: false
+  DEV3_input_access_authorized_for_this_task: false
+  DEV3_gold_access_authorized: false
+  holdout_access_authorized: false
+  next_allowed_action: ORCHESTRATOR_REVIEW_ONLY

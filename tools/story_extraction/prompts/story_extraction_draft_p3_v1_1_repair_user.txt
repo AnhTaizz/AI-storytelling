@@ -1,0 +1,18 @@
+DEV3 STRUCTURAL REPAIR FOR {CASE_ID}
+
+This is the sole preregistered repair. It is allowed only after the primary successful
+response fails deterministic JSON parsing, Draft V1.1 schema validation, or compiler
+validation. Correct every blocker in SANITIZED_ALL_BLOCKERS_JSON while preserving the
+primary extraction's semantic choices. Do not infer missing facts, improve coverage,
+optimize quality, use scores, consult gold, or reinterpret the narrative.
+
+HOST_PREPARED_INPUT_JSON:
+{PREPARED_INPUT_JSON}
+
+PRIMARY_SUCCESSFUL_RESPONSE:
+{PRIMARY_RESPONSE}
+
+SANITIZED_ALL_BLOCKERS_JSON:
+{ALL_BLOCKERS_JSON}
+
+Return exactly one corrected STORY_EXTRACTION_DRAFT_V1_1 JSON object and nothing else.

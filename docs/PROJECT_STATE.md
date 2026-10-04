@@ -925,6 +925,15 @@ M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02 are ACCEPTED. M4-03 is `FR
 - **Verification.** Full offline suites pass 921/921; package separation, member hashes, blindness binding, protected-interface, secret, private-text publication, and private-artifact ignore scans pass.
 - **Records.** `benchmarks/m4_extraction/M4_04B3E_FRESH_DEV3_SEAL_RESULT.yaml`; `docs/research/m4/M4_FRESH_DEV3_PROTOCOL_V1.md`.
 
+## M4-04B3F — P3 DEV3 PROTOCOL LOCK — COMPLETED — Status: M4_04B3F_P3_PROTOCOL_LOCKED_PENDING_ORCHESTRATOR_REVIEW
+
+- **Blind lock.** P3 is bound to DEV3 input SHA-256 `47ae7c743065f8ff001f4db6a398df2edf1db094383b1fe2d0c3a05ab40c55c7`, gold SHA-256 `b5b2258d46608015ff60de2c660fba521029ff4716c7c1cc3b3735c55dfd34a9`, and ordered cases `DEV3_01` through `DEV3_10`. Neither DEV3 package was opened; no holdout or provider access occurred.
+- **Exact extractor.** The lock fixes `gemini-3.5-flash-lite`, `gemini_slot_3`, temperature zero, JSON mode, concurrency one, the accepted durable runtime, global 6/60 pacing, and model output solely as `STORY_EXTRACTION_DRAFT_V1_1`. The prompt explicitly excludes model-facing `mention.evidence_handle` and binds exact locators, eligible evidence, the predicate registry, polarity, epistemic status, and holder-relative truth.
+- **Repair and prediction gate.** At most one repair is allowed only for JSON/schema/compiler structure using the sanitized complete blocker set (`phase`, `code`, `path`). Quality, coverage, semantic reinterpretation, and gold-aware retries are forbidden; a failed repair is terminal. Predictions must be hashed, committed, and pushed before gold may open.
+- **Protocol identity.** Canonical private protocol SHA-256 is `f9cf1c25a21bb3bfc910b8e218c8dac9f032d67957f8d7cb58397134a0504bae`. Draft V1.1, compiler V1.1, predicate registry, Snapshot V2, and runtime bindings are unchanged.
+- **Verification.** Focused protocol tests pass 10/10. Full offline suites and secret/private scans pass; no protected interface artifact differs from the base.
+- **Record.** `benchmarks/m4_extraction/M4_04B3F_DEV3_P3_PROTOCOL_LOCK.yaml`.
+
 ## Next Candidate
 
-Lock a DEV3 benchmark protocol against the exact sealed hashes before any prediction run or gold access. Do not modify Draft V1.1/compiler to fit DEV3, access the holdout, begin M4-04C, or begin M5 without separate authorization.
+Run blind DEV3 P3 predictions only under the exact locked protocol after orchestrator review. Do not open DEV3 gold before prediction lock, modify Draft V1.1/compiler to fit DEV3, access holdout, begin M4-04C, or begin M5 without separate authorization.
