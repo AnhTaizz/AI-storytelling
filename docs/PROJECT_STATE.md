@@ -910,6 +910,21 @@ M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02 are ACCEPTED. M4-03 is `FR
 - **Boundaries.** No API/model call, prediction rerun, quality scoring, DEV2 gold access or holdout access occurred. Full offline suites pass 911/911 and the secret/private publication scan passes.
 - **Record.** `benchmarks/m4_extraction/M4_04B3D3_DEV2_V1_1_MIGRATION_RESULT.yaml`.
 
+## M4-04B3D3R — REMAINING V1.1 FAILURE ATTRIBUTION — COMPLETED — Status: M4_04B3D3R_V1_1_READY_FOR_FRESH_DEV3
+
+- **Attribution.** All five residual blockers are inherited locked-P2 model defects: three canonical semantic violations and two repeated-quote locators without occurrence. The unchanged V1 compiler/resolver reproduces every failure, while the V1-to-V1.1 migration leaves the relevant fields unchanged. Counts are A=5, B=0, C=0, D=0; no V1.1 compiler defect was found.
+- **Decision.** Fresh DEV3 construction is authorized. DEV2 remains tuning data and is not eligible as fresh V1.1 validation.
+- **Record.** `benchmarks/m4_extraction/M4_04B3D3R_REMAINING_FAILURE_ATTRIBUTION.yaml`.
+
+## M4-04B3E — FRESH DEV3 CONSTRUCTION AND SEAL — COMPLETED — Status: M4_04B3E_FRESH_DEV3_V1_SEALED_PENDING_ORCHESTRATOR_REVIEW
+
+- **Fresh family.** Ten original Japanese miniature narratives were authored under `ORIGINAL_JA_STARLIT_ARCHIVE_MINI_NARRATIVES_DEV3_V1` and ingested with frozen M3. DEV2 source/gold/raw predictions and the sealed holdout were not used or opened.
+- **Gold-first discipline.** Canonical annotations were locked before Draft V1.1 projection. All cases are `AGENT_DRAFT_GOLD` / `NOT_HUMAN_CONFIRMED`, method `HUMAN_ANNOTATION`, assertion review `UNREVIEWED`, human review false, and `COMPLETE_FOR_PROFILE`; 76 assertions are required and none optional.
+- **Offline gate.** Gold → Draft V1.1 → unchanged compiler V1.1 → canonical passes 10/10 representability, 10/10 exact-source validation, and 10/10 semantic/support graph equivalence. No interface/compiler/schema/registry/snapshot patch occurred.
+- **Private seal.** Input SHA-256 `47ae7c743065f8ff001f4db6a398df2edf1db094383b1fe2d0c3a05ab40c55c7`; gold SHA-256 `b5b2258d46608015ff60de2c660fba521029ff4716c7c1cc3b3735c55dfd34a9`; blindness manifest SHA-256 `d63d2dd2a490add0cac6c0789e3a52f7da4c67ec72b88b37d8f5e2eb784651d4`. Input contains zero gold, package member overlap is zero, and deterministic rebuild preserved all hashes.
+- **Verification.** Full offline suites pass 921/921; package separation, member hashes, blindness binding, protected-interface, secret, private-text publication, and private-artifact ignore scans pass.
+- **Records.** `benchmarks/m4_extraction/M4_04B3E_FRESH_DEV3_SEAL_RESULT.yaml`; `docs/research/m4/M4_FRESH_DEV3_PROTOCOL_V1.md`.
+
 ## Next Candidate
 
-Master Orchestrator review of the failed 10/10 DEV2 V1.1 migration gate. Do not proceed to overnight Tasks 04–07, patch the schema/compiler against DEV2, open DEV2 gold, rerun predictions, access the holdout, begin M4-04C, or begin M5 without separate authorization.
+Lock a DEV3 benchmark protocol against the exact sealed hashes before any prediction run or gold access. Do not modify Draft V1.1/compiler to fit DEV3, access the holdout, begin M4-04C, or begin M5 without separate authorization.

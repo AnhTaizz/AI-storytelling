@@ -1,0 +1,127 @@
+task: M4-04B3E
+date: 2026-10-04
+status: M4_04B3E_FRESH_DEV3_V1_SEALED_PENDING_ORCHESTRATOR_REVIEW
+scope: FRESH_DEV3_CONSTRUCTION_AND_PRIVATE_SEAL_FOR_DRAFT_V1_1
+base_commit: 6570933344638eebe10f3f7f322a7db99932d43e
+branch: research/m4-overnight-v1-1
+
+freshness:
+  source_family: ORIGINAL_JA_STARLIT_ARCHIVE_MINI_NARRATIVES_DEV3_V1
+  source_language: ja
+  original_mini_narratives: 10
+  new_source_namespace: true
+  dev2_status: TUNING_DATA_AFTER_INTERFACE_REDESIGN
+  dev2_source_gold_or_raw_predictions_used_for_authoring: false
+  holdout_opened: false
+  provider_or_model_calls: 0
+
+case_order:
+  - DEV3_01
+  - DEV3_02
+  - DEV3_03
+  - DEV3_04
+  - DEV3_05
+  - DEV3_06
+  - DEV3_07
+  - DEV3_08
+  - DEV3_09
+  - DEV3_10
+
+coverage:
+  DEV3_01: ALIAS_AND_MULTIPLE_MENTIONS
+  DEV3_02: UNRESOLVED_IDENTITY
+  DEV3_03: LATER_EXPLICIT_SAME_AS
+  DEV3_04: REPEATED_QUOTE_AND_OCCURRENCE
+  DEV3_05: SPEECH_BELIEF_AND_NEGATION
+  DEV3_06: SUGGESTED_VERSUS_EXPLICIT_STATE
+  DEV3_07: TEMPORAL_STATE_VALIDITY
+  DEV3_08: SUFFICIENT_PARTIAL_AND_CORROBORATING_EVIDENCE
+  DEV3_09: EXPLICIT_CAUSALITY_VERSUS_ADJACENCY
+  DEV3_10: PRIOR_CONTEXT_CONTEXT_ONLY_AND_AS_OF
+
+ingestion:
+  contract: LIGHT_NOVEL_INGESTION/v0
+  adapter: light_novel_adapter_v0/0.1.0
+  cases_ingested: 10
+  exact_source_round_trip: 10/10 PASS
+  source_family_shared_with_earlier_dev_sets: false
+
+gold_authoring:
+  chronology: CANONICAL_GOLD_LOCKED_BEFORE_ANY_DRAFT_V1_1_PROJECTION
+  authoring_lock_sha256: c62049dd536dde3eb1fb2d49b98ee2540fbf43eeedf74986f577ffe428b37cae
+  status_labels: [AGENT_DRAFT_GOLD, NOT_HUMAN_CONFIRMED]
+  annotation_method: HUMAN_ANNOTATION
+  assertion_review_state: UNREVIEWED
+  human_reviewed: false
+  complete_for_profile: 10/10
+  required_assertions: 76
+  acceptable_optional_assertions: 0
+
+offline_v1_1_gate:
+  projection: CANONICAL_GOLD_TO_STORY_EXTRACTION_DRAFT_V1_1
+  compiler: DETERMINISTIC_DRAFT_COMPILER_V1_1
+  draft_schema_valid: 10/10 PASS
+  representable: 10/10 PASS
+  source_exact: 10/10 PASS
+  semantic_graph_and_support_round_trip: 10/10 PASS
+  draft_v1_1_patched: false
+  compiler_v1_1_patched: false
+  schema_registry_or_snapshot_patched: false
+  aggregate_candidate_records:
+    evidence_refs: 60
+    mentions: 30
+    entities: 17
+    events: 13
+    temporal_anchors: 13
+    propositions: 79
+    assertions: 76
+
+private_seal:
+  input_package:
+    filename: M4_04B3_DEV3_INPUT_V1.zip
+    sha256: 47ae7c743065f8ff001f4db6a398df2edf1db094383b1fe2d0c3a05ab40c55c7
+    members: 51
+    contains_gold: false
+  gold_package:
+    filename: M4_04B3_DEV3_GOLD_V1.zip
+    sha256: b5b2258d46608015ff60de2c660fba521029ff4716c7c1cc3b3735c55dfd34a9
+    members: 32
+  blindness_manifest:
+    filename: M4_04B3_DEV3_BLINDNESS_MANIFEST_V1.json
+    sha256: d63d2dd2a490add0cac6c0789e3a52f7da4c67ec72b88b37d8f5e2eb784651d4
+  shared_member_names: 0
+  input_zero_gold_scan: PASS
+  extractor_access: INPUT_ONLY
+  gold_access_before_prediction_lock: FORBIDDEN
+
+verification:
+  deterministic_private_rebuild: PASS
+  package_member_hashes: PASS
+  package_separation: PASS
+  deterministic_zip_metadata: PASS
+  blindness_hash_binding: PASS
+  focused_dev3_tests: 5/5 PASS
+  full_offline_suites:
+    canonical_story: 99/99 PASS
+    story_ingestion: 79/79 PASS
+    story_extraction: 381/381 PASS
+    script_quality: 64/64 PASS
+    story_benchmark: 298/298 PASS_STRICT_OFFLINE
+    total: 921/921 PASS
+  protected_v1_1_interface_scan: PASS
+  secret_scan: PASS
+  private_text_publication_scan: PASS
+  private_artifacts_untracked_and_ignored: PASS
+
+boundaries:
+  api_or_model_calls: 0
+  dev2_private_authoring_inputs_opened: false
+  holdout_opened: false
+  predictions_run: false
+  scoring_run: false
+  m4_04c_or_m5_started: false
+
+decision:
+  dev3: FRESH_SEALED_VALIDATION_SET
+  draft_v1_1: REPRESENTATION_GATE_PASS_NO_PATCH
+  next_action: LOCK_DEV3_BENCHMARK_PROTOCOL_BEFORE_ANY_PREDICTION_OR_GOLD_ACCESS
