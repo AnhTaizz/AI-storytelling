@@ -1,0 +1,384 @@
+task: M4-04B3H0
+date: 2026-10-06
+status: M4_04B3H0_DEV3_EVALUATION_DECISION_LOCKED
+scope: DEV3_PRE_PREDICTION_EVALUATION_AND_DECISION_POLICY_LOCK_ONLY
+base_commit: ffc5fbf3513537043aa99ea67133d68b51a143e8
+branch: research/m4-overnight-v1-1
+
+boundaries:
+  provider_or_API_calls: 0
+  Gemini_or_other_API_used: false
+  DEV3_input_opened: false
+  DEV3_gold_opened: false
+  holdout_accessed: false
+  prediction_started: false
+  scoring_or_evaluator_run: false
+  future_P3_outputs_inspected: false
+  locked_P3_protocol_modified: false
+  locked_P3_prompts_modified: false
+  draft_V1_1_modified: false
+  compiler_V1_1_modified: false
+  predicate_registry_modified: false
+  snapshot_V1_or_V2_modified: false
+  runtime_or_durable_executor_modified: false
+
+accepted_prior_state:
+  M4_04B3F:
+    status: P3_PROTOCOL_LOCKED
+    canonical_protocol_sha256: f9cf1c25a21bb3bfc910b8e218c8dac9f032d67957f8d7cb58397134a0504bae
+  M4_04B3G:
+    status: P3_RUNNER_OFFLINE_READY
+    commit: ffc5fbf3513537043aa99ea67133d68b51a143e8
+  DEV3_prediction: NOT_RUN
+  DEV3_gold: SEALED
+  holdout: SEALED
+
+# Search for an already-established competence threshold. None exists, so none is claimed.
+competence_threshold_search:
+  conclusion: NO_PRIOR_NORMATIVE_NUMERIC_COMPETENCE_THRESHOLD
+  sources_inspected:
+    - path: docs/research/m4/M4_EXTRACTION_EVALUATION_PROTOCOL_V0.md
+      finding: Section 12 defines the metrics and states that no single accuracy and no weighted combination is defined.
+    - path: docs/research/m4/M4_STORY_EXTRACTION_CONTRACT_V0.md
+      finding: States that no threshold-based acceptance is defined.
+    - path: tools/story_extraction/m4_04b2_dev_protocol_v1.py
+      finding: Locks the B2 safety gate as eight pass/fail conditions. It contains no competence number.
+    - path: tools/story_extraction/evaluate_m4_04b2r_dev_v2.py
+      finding: Selection is an ordered comparison between two candidates, not an absolute floor. Extractor lockability equals the safety gate.
+    - path: benchmarks/m4_extraction/M4_04B2_DEVELOPMENT_EXTRACTION_BENCHMARK_RESULT.yaml
+      finding: Leader failed the safety gate on L0. Two L0-valid cases, assertion recall 0.0, zero full canonical case successes.
+    - path: benchmarks/m4_extraction/M4_04B3D3_DEV2_V1_1_MIGRATION_RESULT.yaml
+      finding: The 10 of 10 structural-validity gate belonged to an offline migration diagnostic. DEV2 was never quality-scored.
+    - path: benchmarks/m4_extraction/M4_EVALUATION_PROTOCOL_SNAPSHOT_V2.yaml
+      finding: Binds evaluator identity only. It carries no acceptance threshold.
+  new_threshold:
+    marker: NEW_PRE_REGISTERED_DEV3_THRESHOLD
+    status: NOT_INTRODUCED
+    rationale:
+      - No locked model output has ever been scored with non-zero recall, so there is no empirical basis to calibrate a floor.
+      - DEV3 has ten cases and agent-drafted gold that no human has confirmed.
+      - Any number chosen now would be arbitrary, and the conservative manual-holdout rule is preferred.
+
+decision_record_hash_form: SHA-256 of canonical JSON (sorted keys, two-space indent, UTF-8, trailing LF) of decision_record
+decision_record_sha256: 5826854dfe6828ebea67e0d4c089fbda148fcc89da9efc80f1afb244aa329735
+decision_record:
+  record_id: M4_04B3H0_DEV3_EVALUATION_DECISION_RECORD_V1
+  record_schema_version: M4_04B3H0_DEV3_EVALUATION_DECISION_RECORD_SCHEMA_V1
+  task_id: M4-04B3H0
+  base_commit: ffc5fbf3513537043aa99ea67133d68b51a143e8
+  locked_before_any_p3_dev3_prediction: true
+  applies_to:
+    extractor_id: P3_STORY_EXTRACTION_DRAFT_V1_1_GEMINI_3_5_FLASH_LITE_V1
+    candidate_count: 1
+    p3_protocol_id: M4_04B3F_DEV3_P3_PROTOCOL_V1
+    p3_protocol_sha256: f9cf1c25a21bb3bfc910b8e218c8dac9f032d67957f8d7cb58397134a0504bae
+    dev3_input_sha256: 47ae7c743065f8ff001f4db6a398df2edf1db094383b1fe2d0c3a05ab40c55c7
+    dev3_gold_sha256: b5b2258d46608015ff60de2c660fba521029ff4716c7c1cc3b3735c55dfd34a9
+    case_count: 10
+    case_order:
+    - DEV3_01
+    - DEV3_02
+    - DEV3_03
+    - DEV3_04
+    - DEV3_05
+    - DEV3_06
+    - DEV3_07
+    - DEV3_08
+    - DEV3_09
+    - DEV3_10
+  evaluation:
+    snapshot_identity: M4_EVALUATION_PROTOCOL_SNAPSHOT_V2
+    snapshot_identity_sha256: 8dddbd0b9f3ea51af593c1fab0631b088b6f4e6b8c16833a1f11b8448088eee9
+    snapshot_file_sha256: eef2db2ff2ba61f22a96d3a52ab64e07c6c9e9dbc9e9741e061f2893ba6283a8
+    hash_mode: UTF8_LF_NORMALIZED_SHA256
+    evaluator_entrypoint: tools/story_extraction/evaluate_extraction_guarded_v1.py
+    case_parameters: SEALED_GOLD_PACKAGE_CASE_SPEC_UNCHANGED
+    evaluation_mode_if_sealed_case_spec_is_silent: REAL_SOURCE
+    only_permitted_case_spec_addition: adjudications
+    gold_status_must_be_stated_with_results:
+    - AGENT_DRAFT_GOLD
+    - NOT_HUMAN_CONFIRMED
+    l0_definition: SNAPSHOT_V2_GUARDED_L0_STRUCTURAL_VALIDITY_WITH_SOURCE_EXACT_INGESTION
+    terminal_structural_failure_case: L0_FAIL_AND_FULL_CANONICAL_CASE_SUCCESS_FALSE
+  chronology:
+    violation_label: PROTOCOL_INVALID
+    violation_consequence: DEV3_CANNOT_SUPPORT_PROGRESSION_CLAIMS
+    steps:
+    - step: A
+      id: P3_PREDICTION_EXECUTION_UNDER_LOCKED_PROTOCOL
+      observation: p3_predictions_executed_under_locked_protocol
+      required: true
+      origin: B3F_PROTOCOL_LOCK
+    - step: B
+      id: ALL_10_CASES_TERMINAL
+      observation: terminal_case_count
+      required: 10
+      origin: B3F_PROTOCOL_LOCK
+    - step: C
+      id: PREDICTION_PACKAGE_AND_SHA256_CREATED
+      observation: prediction_package_sha256_created
+      required: true
+      origin: B3F_PROTOCOL_LOCK
+    - step: D
+      id: PUBLIC_PREDICTION_LOCK_COMMITTED
+      observation: public_prediction_lock_committed
+      required: true
+      origin: B3F_PROTOCOL_LOCK
+    - step: E
+      id: BRANCH_PUSHED_AND_REMOTE_SHA_VERIFIED
+      observation: prediction_lock_pushed_and_remote_sha_verified
+      required: true
+      origin: B3F_PROTOCOL_LOCK
+    - step: F
+      id: DEV3_GOLD_OPENED_ONLY_AFTER_STEP_E
+      observation: dev3_gold_opened_only_after_remote_verified_prediction_lock
+      required: true
+      origin: B3F_PROTOCOL_LOCK
+    - step: G
+      id: ZERO_PROVIDER_OR_MODEL_CALLS_AFTER_GOLD_OPEN
+      observation: provider_or_model_calls_after_gold_open
+      required: 0
+      origin: B3F_PROTOCOL_LOCK
+  safety_gate:
+    automatic: true
+    failure_label: DEV3_SAFETY_FAIL
+    failure_consequence: NOT_ELIGIBLE_FOR_HOLDOUT_PROGRESSION
+    any_single_failure_fails_the_gate: true
+    checks:
+    - id: ALL_FINAL_PREDICTIONS_L0_SOURCE_EXACT_VALID
+      observation: l0_valid_final_case_count
+      required: 10
+      origin: B2_NORMATIVE_SAFETY_GATE
+    - id: ZERO_CRITICAL_UNSUPPORTED
+      observation: critical_unsupported_count
+      required: 0
+      origin: B2_NORMATIVE_SAFETY_GATE
+    - id: ZERO_HIGH_UNSUPPORTED
+      observation: high_unsupported_count
+      required: 0
+      origin: B2_NORMATIVE_SAFETY_GATE
+    - id: ZERO_UNRATED_UNSUPPORTED
+      observation: unrated_unsupported_count
+      required: 0
+      origin: B3H0_FAIL_CLOSED_CLARIFICATION
+    - id: ZERO_PENDING_ADJUDICATION
+      observation: pending_adjudication_count
+      required: 0
+      origin: B3H0_FAIL_CLOSED_CLARIFICATION
+    - id: NO_UNRESOLVED_EVALUATION_OR_PROTOCOL_DEFECT
+      observation: unresolved_evaluation_or_protocol_defect_count
+      required: 0
+      origin: B2_NORMATIVE_SAFETY_GATE
+    - id: NO_PROTOCOL_VIOLATION
+      observation: protocol_violation_count
+      required: 0
+      origin: B2_NORMATIVE_SAFETY_GATE
+    - id: NO_PROVIDER_OR_MODEL_CALL_AFTER_GOLD_OPEN
+      observation: provider_or_model_calls_after_gold_open
+      required: 0
+      origin: B2_NORMATIVE_SAFETY_GATE
+    - id: NO_HOLDOUT_ACCESS
+      observation: holdout_accessed
+      required: false
+      origin: B2_NORMATIVE_SAFETY_GATE
+    - id: NO_PROTECTED_EXTRACTOR_STACK_CHANGE_AFTER_PREDICTION_LOCK
+      observation: protected_extractor_stack_changed_after_prediction_lock
+      required: false
+      origin: B3H0_TASK_MANDATE
+    - id: TRANSPORT_EXECUTION_INVARIANTS_PASS
+      observation: transport_execution_invariants_pass
+      required: true
+      origin: B2_NORMATIVE_SAFETY_GATE
+    counts_as_unresolved_evaluation_or_protocol_defect:
+    - EVALUATOR_OR_SNAPSHOT_V2_INTEGRITY_DEFECT
+    - GOLD_BATCH_FAILS_GUARDED_VALIDATION
+    - ALIGNMENT_AMBIGUITY_WITHOUT_RECORDED_RESOLUTION
+    - PREDICTION_OR_GOLD_HASH_MISMATCH
+    adjudication:
+      ontology: EXISTING_SNAPSHOT_V2_STATES_AND_SEVERITIES_ONLY
+      provider_or_model_calls: 0
+      every_adjudication_published_public_safe: true
+      adjudicator_kind_must_be_disclosed: true
+      human_adjudication_status_must_be_disclosed: true
+  decision:
+    labels:
+    - PROTOCOL_INVALID
+    - DEV3_SAFETY_FAIL
+    - DEV3_SAFE_BUT_COMPETENCE_REVIEW_REQUIRED
+    - DEV3_HOLDOUT_ELIGIBLE
+    precedence:
+    - if: ANY_CHRONOLOGY_STEP_VIOLATED
+      label: PROTOCOL_INVALID
+    - if: ANY_SAFETY_GATE_CHECK_FAILED
+      label: DEV3_SAFETY_FAIL
+    - if: OTHERWISE
+      label: DEV3_SAFE_BUT_COMPETENCE_REVIEW_REQUIRED
+    scorer_assignable_labels:
+    - PROTOCOL_INVALID
+    - DEV3_SAFETY_FAIL
+    - DEV3_SAFE_BUT_COMPETENCE_REVIEW_REQUIRED
+    scorer_decides_policy: false
+    holdout_eligible:
+      label: DEV3_HOLDOUT_ELIGIBLE
+      automatic_assignment: FORBIDDEN
+      scorer_may_assign: false
+      assignable_only_by: SEPARATE_RECORDED_ORCHESTRATOR_DECISION
+      precondition_label: DEV3_SAFE_BUT_COMPETENCE_REVIEW_REQUIRED
+      permitted_basis: PREREGISTERED_METRIC_TABLE_ONLY
+      must_cite_decision_record_sha256: true
+  competence:
+    prior_normative_numeric_threshold: NONE_FOUND_IN_REPOSITORY
+    NEW_PRE_REGISTERED_DEV3_THRESHOLD: NOT_INTRODUCED
+    quantitative_competence_floor: NONE
+    automatic_holdout_eligibility: false
+    primary_indicators:
+    - full_canonical_case_success_count
+    - full_canonical_case_success_rate
+    - assertion_recall
+    - assertion_recall_mean
+    - evidence_grounding_recall_mean
+    per_case_metrics:
+    - assertion_precision
+    - assertion_recall
+    - evidence_grounding_precision
+    - evidence_grounding_recall
+    - epistemic_accuracy
+    - evidence_role_accuracy
+    - referent_resolution_accuracy
+    - unsupported_assertion_count
+    - unsupported_assertion_rate
+    - gold_unmatched_pending_adjudication
+    per_case_fields:
+    - l0_structural_validity
+    - case_outcome
+    - full_canonical_case_success
+    - failure_codes
+    - counts
+    - alignment_ambiguities
+    aggregate_metrics:
+    - cases
+    - cases_structurally_invalid
+    - cases_pending_adjudication
+    - full_canonical_case_success_count
+    - full_canonical_case_success_rate
+    - assertion_precision
+    - assertion_recall
+    - unsupported_assertion_rate
+    aggregate_mean_metrics:
+    - assertion_precision_mean
+    - assertion_recall_mean
+    - evidence_grounding_precision_mean
+    - evidence_grounding_recall_mean
+    - epistemic_accuracy_mean
+    - evidence_role_accuracy_mean
+    - referent_resolution_accuracy_mean
+    aggregate_mean_definition: ARITHMETIC_MEAN_OVER_CASES_WITH_NON_NULL_PER_CASE_METRIC
+    aggregate_mean_must_publish_contributing_case_count: true
+    unsupported_severity_levels:
+    - CRITICAL
+    - HIGH
+    - MEDIUM
+    - LOW
+    - UNRATED
+    layers:
+    - L0_structural_valid
+    - L1_evidence_grounding_pass
+    - L2_atomic_semantics_pass
+    - L3_referent_event_structure_pass
+    - L4_coverage_pass
+    - L5_full_case_success
+    execution_descriptors:
+    - terminal_state
+    - repair_used
+    - repair_jobs
+    - provider_operations
+    publication:
+      all_cases_in_locked_order: true
+      all_listed_metrics_and_fields: true
+      not_applicable_metric_reported_as_null: true
+      case_or_metric_suppression: FORBIDDEN
+      case_exclusion: FORBIDDEN
+  post_gold_prohibitions:
+  - NEW_THRESHOLD
+  - NEW_METRIC
+  - NEW_WEIGHTING_OR_COMPOSITE_SCORE
+  - PREDICTION_RETRY_OR_RERUN
+  - CASE_EXCLUSION
+  - CASE_OR_METRIC_SUPPRESSION
+  - EVALUATOR_OR_SNAPSHOT_CHANGE
+  - GOLD_OR_CASE_SPEC_EDIT_OTHER_THAN_ADJUDICATIONS
+  - DECISION_RECORD_CHANGE
+  holdout:
+    access_under_this_record: FORBIDDEN
+    progression_requires: SEPARATE_AUTHORIZED_TASK_AFTER_ORCHESTRATOR_DECISION
+  protected_extractor_stack:
+    tools/story_extraction/prompts/story_extraction_draft_p3_v1_1_system.txt: 9eb4aa33c4dd20cb62e6014b215e85f063861856c8243385a8ae7d74dcc55670
+    tools/story_extraction/prompts/story_extraction_draft_p3_v1_1_user.txt: eeda5645bc5e319d1bfeb4c99a4276fd0a070103eb95409c357370b7255e96d1
+    tools/story_extraction/prompts/story_extraction_draft_p3_v1_1_repair_user.txt: bf0831479337f0212e779ee3e99fc9ad2872c1267fa6c7ac9e2f670a72e8233d
+    schemas/story_extraction/story_extraction_draft_v1_1.schema.json: e0d38b65f0f265dfb1a0ef2be4e85c9b3950550a46f47e8980fbd6a7cab068a3
+    tools/story_extraction/draft_compiler_v1_1.py: f962e561a7801ddf48ef248416231673e1567b9eac9d04f2aaba1d1e16eed953
+    schemas/canonical_story/predicate_registry_v0.yaml: 44f3eafc6982f84bcc74ccb91abe7cd467a453352ee96be147095f27559c5350
+    tools/story_extraction/gemini_resilience_v1_1.py: 8b84804f5c5b94e1b2ac2507d8b7bc39697b916bbdd889fc1f9040762bfc9213
+    tools/story_extraction/durable_research_executor_v1.py: cc9bd7a863ff906dea8fcd2f753c552881acd33f97a72b4af4e4e84eb1bfbe66
+    tools/story_extraction/m4_04b3f_dev3_p3_protocol_v1.py: ff50740344b46a904cc32b0ffd6ad71509a466fc518be50da69b8c190712c2c0
+    tools/story_extraction/run_m4_04b3g_dev3_p3_predictions_v1.py: a07a26240c9d30d96bf455a4f88173a38a3b1538a8de2d32d3f09b7402be5087
+  protected_evaluation_stack:
+    benchmarks/m4_extraction/M4_EVALUATION_PROTOCOL_SNAPSHOT_V2.yaml: eef2db2ff2ba61f22a96d3a52ab64e07c6c9e9dbc9e9741e061f2893ba6283a8
+    docs/research/m4/M4_EXTRACTION_EVALUATION_PROTOCOL_V0.md: c67c9514f6648d314f4e7ccebaa49025b6498f4fdce0710433521ee76a672617
+    tools/story_extraction/evaluate_extraction_v0.py: f6294985820bea2d4232888e15323c321e7f7ff5bc12ec282ee3e096daa33f96
+    tools/story_extraction/extraction_contract_guard_v1.py: 85c6c7c81df3d0e144ba308a76430503aa9a643596f28e233a08a0e0ba9eebe0
+    tools/story_extraction/evaluate_extraction_guarded_v1.py: 399347558c562d5438c94239ecd9aaea9f21fb79311d2c249cd311a5eed7a15d
+
+fail_closed_clarifications:
+  ZERO_UNRATED_UNSUPPORTED: >-
+    For COMPLETE_FOR_PROFILE gold the frozen evaluator records an unmatched prediction as UNSUPPORTED_ASSERTION
+    with severity UNRATED and treats it as material. The B2R gate counted only CRITICAL and HIGH, so an unrated
+    claim could have passed. It now blocks a safety PASS until it is adjudicated.
+  ZERO_PENDING_ADJUDICATION: >-
+    A prediction left GOLD_UNMATCHED_PENDING_ADJUDICATION has no severity. It blocks a safety PASS.
+  effect: These checks can only turn a PASS into a FAIL. They never turn a FAIL into a PASS.
+
+tooling:
+  hash_mode: UTF8_LF_NORMALIZED_SHA256
+  decision_record:
+    path: tools/story_extraction/m4_04b3h0_dev3_decision_lock_v1.py
+    sha256: 4af4c7cc1e82e96314d8fbef38e976554e70eb849207baf07634dcd33ce3be85
+  focused_tests:
+    path: tests/story_extraction/test_m4_04b3h0_dev3_decision_lock_v1.py
+    sha256: ee42fdfbc6443c9f611ebdd65dd33c88f8b71f25bfec9f2b89c795106889de38
+
+verification:
+  focused_decision_lock_tests: 19/19_PASS
+  full_offline_suites:
+    canonical_story: 99/99_PASS
+    story_ingestion: 79/79_PASS_1_SKIPPED
+    story_extraction: 417/422_PASS_5_PREEXISTING_LINE_ENDING_FAILURES
+    script_quality: 64/64_PASS
+    story_benchmark: 298/298_PASS_OFFLINE
+    total: 957/962_PASS
+  story_extraction_failures:
+    count: 5
+    classification: PREEXISTING_ENVIRONMENT_NOT_A_REGRESSION
+    tests:
+      test_m4_04b3a_forensics_v1: 1
+      test_m4_04b3b2_dev2_protocol_v1: 4
+    cause: RAW_BYTE_SHA256_BINDINGS_OF_OLDER_DEV1_DEV2_TOOLING_VERSUS_CRLF_WORKTREE_CHECKOUT
+    evidence:
+      bound_files_modified_by_this_task: false
+      snapshot_bound_files_raw_byte_mismatch: 17/17
+      snapshot_bound_files_LF_normalized_mismatch: 0/17
+    affects_DEV3_P3_snapshot_V2_or_this_lock: false
+    fixed_in_this_task: false
+  protected_artifact_diff: PASS
+  protected_stack_hash_bindings: PASS
+  DEV3_package_access: NOT_PERFORMED
+  secret_private_scan: PASS
+
+decision:
+  evaluation_decision_procedure: PRE_REGISTERED
+  automatic_outcomes: [PROTOCOL_INVALID, DEV3_SAFETY_FAIL, DEV3_SAFE_BUT_COMPETENCE_REVIEW_REQUIRED]
+  DEV3_HOLDOUT_ELIGIBLE: SEPARATE_ORCHESTRATOR_DECISION_ONLY
+  live_predictions_started: false
+  DEV3_gold_access_authorized: false
+  holdout_access_authorized: false
+  next_candidate: M4_04B3H_BLIND_DEV3_P3_PREDICTION_AND_IMMUTABLE_PREDICTION_LOCK
