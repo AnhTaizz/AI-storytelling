@@ -996,6 +996,24 @@ M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02 are ACCEPTED. M4-03 is `FR
 - **Verification.** Focused tests pass: adapter V1.1 19/19; adapter V1, runner core and decision lock 68/68. Full offline suites in the accepted environment pass 1018/1018: canonical story 99, ingestion 79, story extraction 478, script quality 64, story benchmark 298. Protected-stack verification, secret scan, private publication scan and the ignored/untracked private-artifact check pass.
 - **Record.** `benchmarks/m4_extraction/M4_04B3H2R_DEV3_LAYOUT_ADAPTER_PREFLIGHT_RESULT.yaml`.
 
+## M4-04B3H — BLIND LIVE DEV3 P3 PREDICTION AND IMMUTABLE PREDICTION LOCK — COMPLETED — Status: M4_04B3H_DEV3_P3_PREDICTIONS_LOCKED
+
+- **Blind execution completed.** The locked P3 extractor `P3_STORY_EXTRACTION_DRAFT_V1_1_GEMINI_3_5_FLASH_LITE_V1` ran once on the sealed DEV3 input, in the accepted execution checkout at base commit `693ca0a47bda8be80a265e0adbcc65a5f3911b2a`, under explicit Orchestrator authorization. A first launch attempt was blocked by a local permission classifier before execution began; it made no provider call and left no state.
+- **Exact adapter.** `tools/story_extraction/run_m4_04b3h_dev3_p3_live_v1_1.py`, V1.1 SHA-256 `2cd6f40178fa5390171b83c8e2401ff691bd8555fd6efa2bfbceb23bf4fe311b`, run mode with the required authorization token. Adapter V1 was not invoked.
+- **Bindings.** Protocol SHA-256 `f9cf1c25a21bb3bfc910b8e218c8dac9f032d67957f8d7cb58397134a0504bae`. Decision-record SHA-256 `5826854dfe6828ebea67e0d4c089fbda148fcc89da9efc80f1afb244aa329735`. DEV3 input SHA-256 `47ae7c743065f8ff001f4db6a398df2edf1db094383b1fe2d0c3a05ab40c55c7`.
+- **Pre-live gates.** Execution environment, protected stacks, protocol, H0 record and adapter hash passed. No prior live state existed. The pre-live preflight returned `PREFLIGHT_PASS` with zero provider operations. Credential slot `gemini_slot_3` resolved exactly once and was the only slot injected; its value was never printed or written to disk.
+- **Provider execution.** Model `gemini-3.5-flash-lite`, temperature 0, JSON mode, concurrency 1. Actual provider operations: 20 (ten primary, ten structural repair), equal to the durable operation count. Every job succeeded in its first window: 20 first-success locks, no deferral, no transport retry, no model or credential switch. Run window: 2026-10-07T10:01:58Z to 2026-10-07T10:05:17Z.
+- **Pacing.** 20 reservations, 13 waits, maximum of 6 operations observed in any rolling 60 seconds; invariant PASS.
+- **Cases.** 10 terminal, each exactly once, in the locked order `DEV3_01` through `DEV3_10`.
+- **Counts.** `STRUCTURAL_VALID`: 0. `STRUCTURAL_FAILURE`: 10. `TRANSPORT_FAILURE`: 0. Terminal failure categories: `DRAFT_SCHEMA_FAILURE` 9, `JSON_PARSE_FAILURE` 1. These are structural-conformance outcomes only, not an extraction-quality result.
+- **Repairs.** 10, one per case, the locked maximum. No second repair; no quality-aware, coverage-aware or output-aware retry.
+- **Prediction-set SHA-256.** `06d555f53f6c113e3db7ab7eea55501a4b442e7e8daec3047bcc7cb3b55f38fd`, rebuilt offline from the per-case identities and equal in the private result, the private manifest and the public lock.
+- **Public prediction lock.** `benchmarks/m4_extraction/M4_04B3H_DEV3_P3_PREDICTION_LOCK.yaml`, file SHA-256 `850b6ea557027b7c8777c5960df0654d2d265e9e041487445dfeb9fdcf6d59f2`. It holds identities, counts and hashes only, passes the adapter's public-safety validator, and equals the lock rebuilt from the private result.
+- **Private artifact integrity.** PASS. Verified against their recorded hashes: 20 raw responses, 17 parsed drafts, 10 failure records, 10 case results, 20 telemetry records and 20 durable job checkpoints; no compiled batch exists. Request fingerprints match the checkpoints. No private artifact is committed.
+- **No inspection.** Raw model output was not read for quality, and no cause of the structural failures was investigated. Nothing was tuned, rerun or regenerated, and no code changed.
+- **Gold.** SEALED / NOT OPENED. **Holdout.** SEALED / NOT OPENED. **Scoring.** NOT RUN. The H0 decision procedure has not been applied. No provider or model call occurred after the terminal prediction set was produced.
+- **Record.** `benchmarks/m4_extraction/M4_04B3H_DEV3_P3_PREDICTION_LOCK.yaml`.
+
 ## Next Candidate
 
-M4-04B3H: blind live DEV3 P3 prediction and immutable prediction lock, using ONLY adapter V1.1 at SHA-256 `2cd6f40178fa5390171b83c8e2401ff691bd8555fd6efa2bfbceb23bf4fe311b`, in the accepted execution checkout, after separate authorization. Adapter V1 is not live-eligible. Do not open DEV3 gold before the prediction lock is pushed and verified, modify Draft V1.1/compiler to fit DEV3, access holdout, begin M4-04C, or begin M5 without separate authorization.
+ORCHESTRATOR REVIEW OF IMMUTABLE PREDICTION LOCK BEFORE DEV3 GOLD ACCESS. The DEV3 P3 prediction set `06d555f53f6c113e3db7ab7eea55501a4b442e7e8daec3047bcc7cb3b55f38fd` is final: do not run P3 again, regenerate or repair any case, or call the provider. Do not open DEV3 gold, score, access holdout, begin M4-04C, or begin M5 without separate authorization.
