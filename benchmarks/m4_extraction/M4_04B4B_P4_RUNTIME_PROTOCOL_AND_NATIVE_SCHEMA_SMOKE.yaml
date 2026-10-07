@@ -1,0 +1,277 @@
+task: M4-04B4B
+date: '2026-10-07'
+status: M4_04B4B_NATIVE_SCHEMA_PROVIDER_REJECTED
+scope: P4_RUNTIME_PROTOCOL_LOCK_AND_ONE_SYNTHETIC_NATIVE_SCHEMA_LIVE_SMOKE
+base_commit: 0b57d63e0f72b645e4a2bb9b41f3b13b0ea36a49
+branch: research/m4-overnight-v1-1
+summary: The P4 protocol is locked and its runner passes every offline gate. The one live request, on an invented
+  one-sentence input, was rejected by the provider with HTTP 400 INVALID_ARGUMENT before any response existed. The
+  native schema was not weakened and the request was not retried. P4 is not ready for DEV3 tuning with this schema
+  as the native response schema.
+p4:
+  extractor_id: P4_STORY_EXTRACTION_DRAFT_V1_1_SELF_CONTAINED_V1
+  canonical_draft_contract: STORY_EXTRACTION_DRAFT_V1_1
+  model_schema_identity: STORY_EXTRACTION_DRAFT_V1_1_MODEL_SCHEMA_V1
+  model_schema_sha256: 5aa2ed6dde3791546ddd5e059648d8dac38df1571a6073b7abc31c89eb257f14
+  prompt_hashes:
+    primary_system_sha256: 00147760f65964246d8bece429a2fce1438e237ae6240ff9d10ba5ecc2915f49
+    primary_user_template_sha256: 86336a230640f0ee96c41abcd6f15a160b313f3fb1bc6612cdaf0abb27b59b3e
+    primary_prompt_pair_sha256: 378aaf653d2351ab4f1acc79788bd63e1aeebb1ec58464cde5c76257551c1322
+    repair_system_sha256: 394e812231b0fc183ef4d2df578d43556ba3b38c6e16d24ad940573fa5d81241
+    repair_user_template_sha256: 7681338344525f1722a4a2d9351177734404f18945e105a1848bd60f4707b55b
+    repair_prompt_pair_sha256: 79ee40ba7fef1e1547ae9fd75acf3f7c98467bad7460f7b38509057fe75fd0b6
+  prompt_files:
+    tools/story_extraction/prompts/story_extraction_draft_p4_v1_system.txt: ff6dcfd8b31a6e9d75d6134f6393c19c3d1de582b5f2155986c9df38be20e035
+    tools/story_extraction/prompts/story_extraction_draft_p4_v1_user.txt: 86336a230640f0ee96c41abcd6f15a160b313f3fb1bc6612cdaf0abb27b59b3e
+    tools/story_extraction/prompts/story_extraction_draft_p4_v1_repair_user.txt: 7681338344525f1722a4a2d9351177734404f18945e105a1848bd60f4707b55b
+  repair_diagnostic: M4_P4_STRUCTURAL_REPAIR_DIAGNOSTIC_V2
+  canonical_compiler:
+    path: tools/story_extraction/draft_compiler_v1_1.py
+    sha256: f962e561a7801ddf48ef248416231673e1567b9eac9d04f2aaba1d1e16eed953
+    validator: tools.story_extraction.draft_compiler_v1_1.validate_draft_v1_1
+    compiler: tools.story_extraction.draft_compiler_v1_1.compile_story_extraction_draft_v1_1
+    new_canonical_compiler: false
+    semantic_translation_layer: false
+  canonical_draft_v1_1_schema_sha256: e0d38b65f0f265dfb1a0ef2be4e85c9b3950550a46f47e8980fbd6a7cab068a3
+  predicate_registry_sha256: 44f3eafc6982f84bcc74ccb91abe7cd467a453352ee96be147095f27559c5350
+protocol:
+  identity: M4_P4_STRUCTURAL_TUNING_PROTOCOL_V1
+  canonical_protocol_sha256: e0c74be45bcfd7cdca4111ff6029358e668b68f0a94fa94cf52718614f75279a
+  canonical_form: SHA256 of sorted-key compact UTF-8 JSON of build_protocol()
+  protocol_module:
+    path: tools/story_extraction/m4_04b4b_p4_protocol_v1.py
+    sha256: 513824f4c9c6f5208c73dd5d54c388f0d2577858570c8177551f6e0fda540a4b
+  runner:
+    id: M4_04B4B_P4_STRUCTURAL_RUNNER_V1
+    path: tools/story_extraction/run_m4_04b4b_p4_structural_v1.py
+    sha256: 4104b6be780eb4d8611951dfd412fed6b7f19c4b55f6170f7c790b1f19207106
+  model: gemini-3.5-flash-lite
+  credential_slot: gemini_slot_3
+  runtime: GEMINI_TRANSPORT_RESILIENCE_V1_1
+  durable_executor: DURABLE_RESEARCH_EXECUTOR_V1
+  transport: GeminiDevWindowTransport
+  temperature: 0
+  max_output_tokens: 16384
+  response_mime_type: application/json
+  generation_config_sha256: 56e67115c264097dce820397944ef2c77518cb453156e0aa20c738bf5fe28809
+  generation_config_keys:
+  - max_output_tokens
+  - response_json_schema
+  - temperature
+  native_schema_enabled: true
+  native_schema_parameter: response_json_schema
+  native_schema_sha256: 5aa2ed6dde3791546ddd5e059648d8dac38df1571a6073b7abc31c89eb257f14
+  schema_response_mode: PROVIDER_JSON_MIME_PLUS_NATIVE_RESPONSE_JSON_SCHEMA_V1
+  global_pacing:
+    max_operations: 6
+    rolling_window_seconds: 60.0
+  maximum_structural_repairs_per_case: 1
+  repair_eligible_categories:
+  - JSON_PARSE_FAILURE
+  - DRAFT_SCHEMA_FAILURE
+  - DRAFT_COMPILER_FAILURE
+  repair_receives:
+  - PREPARED_INPUT
+  - PRIMARY_RESPONSE
+  - STRUCTURAL_DIAGNOSTIC_V2
+  first_success: IMMUTABLE_LOCK
+  quality_or_coverage_retry: FORBIDDEN
+  model_switch: FORBIDDEN
+  credential_switch: FORBIDDEN
+  p3_job_spec_checker_used: false
+  bound_to_a_fresh_benchmark: false
+  DEV3_status: TUNING_DATA_AFTER_P3_FAILURE
+  bound_file_hash_mode: UTF8_LF_NORMALIZED_SHA256
+  bound_files:
+    schemas/story_extraction/story_extraction_draft_v1_1_model_schema_v1.schema.json: 5aa2ed6dde3791546ddd5e059648d8dac38df1571a6073b7abc31c89eb257f14
+    schemas/story_extraction/story_extraction_draft_v1_1.schema.json: e0d38b65f0f265dfb1a0ef2be4e85c9b3950550a46f47e8980fbd6a7cab068a3
+    schemas/story_extraction/story_extraction_draft_v1.schema.json: 7993db7bdce15e461a0483ec3e4bf5cf7596b49393fab477d9d25d61bd1f0f15
+    schemas/canonical_story/predicate_registry_v0.yaml: 44f3eafc6982f84bcc74ccb91abe7cd467a453352ee96be147095f27559c5350
+    tools/story_extraction/draft_compiler_v1_1.py: f962e561a7801ddf48ef248416231673e1567b9eac9d04f2aaba1d1e16eed953
+    tools/story_extraction/draft_compiler_v1.py: 281a2dfb5e99e67cc82b71798c09c93c04ab9682e8385a9cf6dfaf8393d69800
+    tools/story_extraction/materialize_draft_v1_1_model_schema_v1.py: 4eba6f3c9907e9dca53586b8933587de6069ce248043d632e920dc47af1325dc
+    tools/story_extraction/m4_04b4a_p4_output_contract_v1.py: dba892456fdfd57211e8becedf1cd7296cb2b77c68885df9e5cf828379dcceec
+    tools/story_extraction/prompts/story_extraction_draft_p4_v1_system.txt: ff6dcfd8b31a6e9d75d6134f6393c19c3d1de582b5f2155986c9df38be20e035
+    tools/story_extraction/prompts/story_extraction_draft_p4_v1_user.txt: 86336a230640f0ee96c41abcd6f15a160b313f3fb1bc6612cdaf0abb27b59b3e
+    tools/story_extraction/prompts/story_extraction_draft_p4_v1_repair_user.txt: 7681338344525f1722a4a2d9351177734404f18945e105a1848bd60f4707b55b
+    tools/story_extraction/gemini_resilience_v1_1.py: 8b84804f5c5b94e1b2ac2507d8b7bc39697b916bbdd889fc1f9040762bfc9213
+    tools/story_extraction/durable_research_executor_v1.py: cc9bd7a863ff906dea8fcd2f753c552881acd33f97a72b4af4e4e84eb1bfbe66
+    tools/story_extraction/gemini_transport_v1.py: 0828c50bfb0b4b4b0ca6845aa1937af509637bc17c765f8bc1ab451255a307b5
+    tools/story_extraction/gemini_errors_v1.py: ee5dd06238233dce8a269a474d28c40ee2ed5171f1269fd6b96ed138645927d7
+    tools/story_extraction/gemini_key_pool_v1.py: 77ab9238e322e493ebfdab223098052e74a73d7d0125c6a314b24e096bc690d0
+    tools/story_extraction/run_m4_04b2_dev_predictions_v1.py: 0aaa275fe96bb8bcf0f10e2e0ca7b9e789f643e3d2a154ceeef532c4155a744d
+offline:
+  focused_tests:
+    file: tests/story_extraction/test_run_m4_04b4b_p4_structural_v1.py
+    sha256: cd0685037bbff9fdaeff51370fa77051b438ead07e4a94737a1ffc4e6b427ac0
+    count: 64
+    result: PASS
+  single_source_gate:
+    prompt_schema_equals_native_schema: PASS
+    native_schema_equals_tracked_file: PASS
+    tracked_file_equals_materializer_output: PASS
+    model_schema_sha256: PASS
+    external_ref_count_zero: PASS
+    prompt_structural_coverage: PASS
+  synthetic_runner_behaviour_proven_with_mocks:
+  - VALID_PRIMARY_NEEDS_NO_REPAIR
+  - INVALID_JSON_MAKES_ONE_REPAIR_ELIGIBLE
+  - SCHEMA_FAILURE_GIVES_DIAGNOSTIC_V2
+  - COMPILER_FAILURE_GIVES_DIAGNOSTIC_V2
+  - VALID_REPAIR_IS_STRUCTURALLY_VALID
+  - INVALID_REPAIR_IS_TERMINAL
+  - SECOND_REPAIR_IMPOSSIBLE
+  - QUALITY_OR_COVERAGE_RETRY_IMPOSSIBLE
+  - FIRST_SUCCESS_IMMUTABLE
+  - EXACT_GENERATION_CONFIG_REQUIRED
+  - REMOVED_RESPONSE_JSON_SCHEMA_FAILS_CLOSED
+  - CHANGED_SCHEMA_FAILS_CLOSED
+  - CHANGED_PROMPT_FAILS_CLOSED
+  - MODEL_OR_KEY_SWITCH_FAILS_CLOSED
+  live_path_rehearsed_with_fake_sdk_client: true
+  full_offline_suites:
+    canonical_story: 99
+    story_ingestion: 79
+    story_extraction: 593
+    script_quality: 64
+    story_benchmark: 298
+    total: 1133
+    result: PASS
+  provider_operations_before_smoke: 0
+live_smoke:
+  synthetic_only: true
+  fixture:
+    case_id: SYNTHETIC_SMOKE_01
+    description: One invented English sentence defined in the runner source; one passage.
+    independent_of:
+    - DEV1
+    - DEV2
+    - DEV3
+    - HOLDOUT
+    - PRIVATE_CORPUS
+  executed_from_commit: 0b57d63e0f72b645e4a2bb9b41f3b13b0ea36a49
+  execution_environment: ISOLATED_CLONE_AUTOCRLF_FALSE_WITH_TWO_FILE_CRLF_ATTRIBUTE_EXCEPTION
+  executed_runner_sha256: 4104b6be780eb4d8611951dfd412fed6b7f19c4b55f6170f7c790b1f19207106
+  executed_protocol_module_sha256: 513824f4c9c6f5208c73dd5d54c388f0d2577858570c8177551f6e0fda540a4b
+  executed_protocol_sha256: e0c74be45bcfd7cdca4111ff6029358e668b68f0a94fa94cf52718614f75279a
+  transport: ACCEPTED_GEMINI_DEV_WINDOW_TRANSPORT
+  runtime_path:
+  - DurableResearchExecutor
+  - PersistentRollingOperationPacer
+  - GeminiDevWindowTransport
+  one_off_direct_sdk_call: false
+  request_fingerprint: dca88bac503efdefca7f90c0c51bcf6f7abbd3ce181f76a33b4136648feb95f2
+  started_utc: '2026-10-07T12:18:28Z'
+  finished_utc: '2026-10-07T12:18:32Z'
+  jobs: 1
+  execution_windows: 1
+  provider_operations: 1
+  provider_operations_authorized_maximum: 2
+  provider_schema_request_accepted: false
+  provider_rejection:
+    category: PROVIDER_FAILURE:400:INVALID_ARGUMENT
+    classified_result: PROVIDER_FAILURE
+    http_status: 400
+    provider_reason: INVALID_ARGUMENT
+    authentication_failure: false
+    attempts: 1
+    retried: false
+    provider_message_recorded: false
+    provider_message_note: The accepted transport keeps the class, HTTP status and structured reason of a failure
+      and discards its message by design. The message was not captured by any other route.
+  provider_response_received: false
+  json_parse: NOT_REACHED
+  local_schema_validation: NOT_REACHED
+  compiler: NOT_REACHED
+  repair_used: false
+  durable_job_state: DEFERRED_TRANSPORT
+  durable_job_resumed: false
+  pacing_invariant: PASS
+  credential:
+    slot: gemini_slot_3
+    resolved_exactly_once_before_provider_construction: true
+    other_slots_in_process_environment: 0
+    secret_value_in_any_artifact: false
+  private_artifacts: IGNORED_LOCAL_STORAGE_NOT_PUBLISHED
+interpretation:
+  established:
+  - 'The provider did not accept this request: HTTP 400 INVALID_ARGUMENT, classified as a provider failure and not
+    as an authentication failure.'
+  - The request carried the exact tracked model schema as response_json_schema, the locked model, the locked credential
+    slot and JSON MIME mode.
+  - Stages B to E (response, JSON parse, local schema validation, compiler) were not reached.
+  attribution_to_native_schema: INFERRED_NOT_ISOLATED
+  attribution_basis: The locked P3 run sent 20 requests with the same model, credential slot, transport, MIME mode,
+    temperature and output-token limit and received 20 responses. The P4 request differs in its prompt text and
+    in adding the native response schema. No request without the native schema was sent in this task, so the cause
+    was not isolated by experiment.
+  not_established:
+  - Which schema keyword or property of the schema the provider rejected.
+  - Whether a reduced schema would be accepted.
+  - Any model behaviour under P4. No response exists.
+  candidate_causes_from_offline_inspection_unconfirmed:
+    keywords_outside_sdk_documented_subset:
+    - $schema
+    - const
+    - else
+    - if
+    - maxLength
+    - minLength
+    - minProperties
+    - not
+    - pattern
+    - then
+    - uniqueItems
+    occurrences_in_model_schema:
+      $schema: 1
+      const: 7
+      else: 1
+      if: 1
+      maxLength: 3
+      minLength: 6
+      minProperties: 1
+      not: 1
+      pattern: 13
+      then: 1
+      uniqueItems: 3
+    schema_size:
+      utf8_bytes: 12313
+      definitions: 17
+      references: 30
+      oneOf_nodes: 3
+      enum_nodes: 8
+  schema_weakened_or_projected_in_this_task: false
+  second_authorized_operation_spent: false
+  second_operation_note: One authorized operation was left unspent. Repeating the identical request would not change
+    a deterministic request-validation failure, and sending a different schema is outside this task.
+boundaries:
+  DEV3_input_opened: false
+  DEV3_gold_opened: false
+  holdout_opened: false
+  P3_modified: false
+  P3_private_DEV3_responses_opened: false
+  P3_rerun: false
+  DEV3_tuning_started: false
+  DEV4_created: false
+  canonical_draft_schemas_modified: false
+  model_schema_modified: false
+  compiler_V1_1_modified: false
+  predicate_registry_modified: false
+  accepted_runtime_or_transport_modified: false
+  other_credential_slot_used: false
+  model_switched: false
+  secret_published: false
+  main_branch_touched: false
+decision:
+  runtime_ready_for_DEV3_tuning: false
+  protocol_and_runner_locked_and_offline_verified: true
+  blocking_issue: PROVIDER_REJECTS_REQUEST_WITH_FULL_MODEL_SCHEMA_AS_NATIVE_RESPONSE_SCHEMA
+  next_action: ORCHESTRATOR REVIEW OF PROVIDER-COMPATIBLE SCHEMA PROJECTION
+  open_questions_for_review:
+  - Whether a provider-facing projection of the model schema may omit keywords, given that the prompt copy and the
+    local validator would then be stricter than the native constraint.
+  - Whether the single-source rule (prompt schema equals native schema) is kept, relaxed to a verified projection,
+    or the native parameter is dropped for P4.
+  - Whether a small authorized probe may capture the provider's rejection message, which the accepted transport
+    discards.
+  any_change_requires: A_NEW_PROTOCOL_VERSION_AND_HASH
