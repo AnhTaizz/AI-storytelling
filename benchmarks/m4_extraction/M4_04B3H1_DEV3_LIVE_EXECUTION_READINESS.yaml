@@ -1,0 +1,237 @@
+task: M4-04B3H1
+date: 2026-10-07
+status: M4_04B3H1_DEV3_LIVE_EXECUTION_READY
+scope: EXECUTION_ENVIRONMENT_AND_LIVE_ADAPTER_READINESS_ONLY
+base_commit: dda342d8cc2953b87c67516da11d04730009f040
+branch: research/m4-overnight-v1-1
+
+boundaries:
+  provider_or_API_calls: 0
+  real_provider_operations: 0
+  provider_mode: MOCKED_TRANSPORT_AND_MOCKED_CLIENT_ONLY
+  DEV3_input_opened: false
+  DEV3_gold_opened: false
+  DEV3_package_members_inspected: false
+  holdout_accessed: false
+  prediction_started: false
+  scoring_or_evaluator_run: false
+  locked_P3_protocol_modified: false
+  locked_P3_prompts_modified: false
+  B3G_runner_modified: false
+  draft_V1_1_modified: false
+  compiler_V1_1_modified: false
+  predicate_registry_modified: false
+  snapshot_V1_or_V2_modified: false
+  runtime_or_durable_executor_modified: false
+  H0_decision_record_modified: false
+  DEV1_or_DEV2_tooling_patched: false
+
+accepted_prior_state:
+  M4_04B3F: P3_PROTOCOL_LOCKED
+  M4_04B3G: P3_RUNNER_OFFLINE_READY
+  M4_04B3H0: DEV3_EVALUATION_DECISION_LOCKED_ACCEPTED
+
+# Byte-exact execution checkout. Validated by validate_environment_record.
+execution_environment:
+  method: ISOLATED_CLONE_AUTOCRLF_FALSE_WITH_TWO_FILE_CRLF_ATTRIBUTE_EXCEPTION
+  location: IGNORED_PRIVATE_SCRATCH_CLONE_NOT_COMMITTED
+  mechanism:
+    clone_config: core.autocrlf=false
+    two_file_exception: LOCAL_UNTRACKED_GIT_INFO_ATTRIBUTES_TEXT_EOL_CRLF
+  source_commit: dda342d8cc2953b87c67516da11d04730009f040
+  core_autocrlf: 'false'
+  tracked_files: 404
+  byte_identical_to_blob: 402
+  crlf_exception_files:
+    schemas/story_extraction/story_extraction_draft_v1.schema.json: 498edf8dba8d45b80380a180d1383787f5c0e4ecea5060254883cc27c7d83e80
+    tools/story_extraction/draft_compiler_v1.py: bcd15328cefafe86dd8e686fb35a155b2cb2c261b20017486ed106e85371d836
+  text_files_with_CRLF_outside_exceptions: 0
+  violations: []
+  full_offline_suites_measured_on: TREE_OF_THE_COMMIT_THAT_ADDS_THIS_RECORD
+  full_offline_suites:
+    canonical_story:
+      tests: 99
+      failures: 0
+      errors: 0
+      result: PASS
+    story_ingestion:
+      tests: 79
+      failures: 0
+      errors: 0
+      result: PASS
+    story_extraction:
+      tests: 459
+      failures: 0
+      errors: 0
+      result: PASS
+    script_quality:
+      tests: 64
+      failures: 0
+      errors: 0
+      result: PASS
+    story_benchmark:
+      tests: 298
+      failures: 0
+      errors: 0
+      result: PASS
+
+baseline_gate_before_adapter:
+  commit: dda342d8cc2953b87c67516da11d04730009f040
+  canonical_story: 99/99_PASS
+  story_ingestion: 79/79_PASS
+  story_extraction: 422/422_PASS
+  script_quality: 64/64_PASS
+  story_benchmark: 298/298_PASS_OFFLINE
+  total: 962/962_PASS
+
+# Why a pure LF checkout cannot be fully green, and what was done instead.
+historical_line_ending_failures:
+  eliminated_in_execution_checkout: true
+  pure_LF_checkout_fully_green: false
+  CRLF_worktree_story_extraction: 417/422
+  CRLF_worktree_failing_tests:
+    test_m4_04b3a_forensics_v1: 1
+    test_m4_04b3b2_dev2_protocol_v1: 4
+  pure_LF_checkout_story_extraction: 417/422
+  pure_LF_checkout_failing_tests:
+    test_m4_04b3b2_dev2_protocol_v1: 4
+    test_draft_schema_v1_1: 1
+  cause: >-
+    The DEV2-era locks (B3B1, B3B2, B3C) pin raw-byte SHA-256 values of the CRLF working copies of
+    the Draft V1 schema and compiler V1, next to LF hashes of the predicate registry, runtime and
+    durable executor. Those two CRLF hashes never existed as repository content, so no uniform
+    checkout satisfies every lock.
+  resolution: >-
+    Every tracked file is byte-identical to its repository blob except exactly the two files listed
+    in crlf_exception_files, which are materialized with CRLF. Neither file is part of the P3
+    extractor stack or the Snapshot V2 evaluation stack.
+  historical_raw_byte_hash_semantics_changed: false
+  historical_tools_or_tests_patched: false
+  deviation_from_task_brief:
+    brief_requirement: LF_CLEAN_CHECKOUT_BYTE_IDENTICAL_TO_REPOSITORY_BLOBS
+    actual: TWO_FILE_CRLF_EXCEPTION
+    first_outcome_reported: M4_04B3H1_EXECUTION_ENVIRONMENT_NOT_CLEAN
+    authorization: USER_REPLIED_CONTINUE_AFTER_THIS_OPTION_WAS_RECOMMENDED
+    explicit_written_orchestrator_ruling: NOT_RECORDED
+
+live_adapter:
+  id: M4_04B3H_DEV3_P3_LIVE_EXECUTION_ADAPTER_V1
+  path: tools/story_extraction/run_m4_04b3h_dev3_p3_live_v1.py
+  hash_mode: UTF8_LF_NORMALIZED_SHA256
+  sha256: c4815a8e2c253e44da8ed0c08b0b7b1ac830905d5af9efe816e6154ba9c5f0c2
+  focused_tests: tests/story_extraction/test_run_m4_04b3h_dev3_p3_live_v1.py
+  focused_tests_sha256: 5e131646f88e781fb048353b7bee98558251ddfda749afc5091b6c99b0fe929f
+  responsibility: EXECUTION_MECHANICS_ONLY_NO_EXTRACTION_SEMANTICS
+  composes:
+    runner_core: tools/story_extraction/run_m4_04b3g_dev3_p3_predictions_v1.py
+    runner_core_sha256: a07a26240c9d30d96bf455a4f88173a38a3b1538a8de2d32d3f09b7402be5087
+    runner_core_modified: false
+    request_builder: tools/story_extraction/m4_04b3f_dev3_p3_protocol_v1.py
+    durable_executor: DurableResearchExecutor
+    global_pacer: PersistentRollingOperationPacer
+    transport: GeminiDevWindowTransport
+    credential_resolution: load_runtime_config_then_gemini_slot_3_only
+  reused_from_runner_core:
+    [compile_raw_response, execute_case, CaseInput, FirstSuccessLedger, ProviderFirstSuccess, preflight, member_name_validation]
+  not_reimplemented:
+    [DRAFT_V1_1_VALIDATION, STRUCTURAL_REPAIR_ELIGIBILITY, ALL_BLOCKER_SANITATION, MAXIMUM_REPAIR_LOGIC]
+  terminal_statuses: [STRUCTURAL_VALID, STRUCTURAL_FAILURE, TRANSPORT_FAILURE]
+  live_run_requires_explicit_authorization_token: true
+  sealed_input_and_mock_transport_mutually_exclusive: true
+
+bindings:
+  protocol_sha256: f9cf1c25a21bb3bfc910b8e218c8dac9f032d67957f8d7cb58397134a0504bae
+  decision_record_sha256: 5826854dfe6828ebea67e0d4c089fbda148fcc89da9efc80f1afb244aa329735
+  dev3_input_sha256: 47ae7c743065f8ff001f4db6a398df2edf1db094383b1fe2d0c3a05ab40c55c7
+  dev3_gold_sha256_rejected: b5b2258d46608015ff60de2c660fba521029ff4716c7c1cc3b3735c55dfd34a9
+  case_order: [DEV3_01, DEV3_02, DEV3_03, DEV3_04, DEV3_05, DEV3_06, DEV3_07, DEV3_08, DEV3_09, DEV3_10]
+  model: gemini-3.5-flash-lite
+  credential_slot: gemini_slot_3
+  temperature: 0
+  json_mode: true
+  concurrency: 1
+  global_pacing: 6_PROVIDER_OPERATIONS_PER_ROLLING_60_SECONDS
+  maximum_windows_per_job: 3
+  maximum_provider_attempts_per_window: 3
+  maximum_provider_attempts_per_job: 9
+  executor_checkpoint_identity: P3_PROTOCOL_ID_PLUS_PROTOCOL_SHA256_PLUS_DECISION_RECORD_SHA256
+  protected_extractor_stack: PASS
+  protected_evaluation_stack: PASS
+  protected_stack_source: benchmarks/m4_extraction/M4_04B3H0_DEV3_EVALUATION_DECISION_LOCK.yaml
+
+# Open limitation. The sealed package was not opened, so its internal layout is unverified.
+sealed_input_contract:
+  public_specification_exists: false
+  status: ASSUMED_FROM_ACCEPTED_DEV2_B3C_LAYOUT_NOT_VERIFIED_AGAINST_SEALED_DEV3_INPUT
+  assumed_manifest_member: M4_04B3_DEV3_INPUT_MANIFEST_V1.json
+  assumed_artifact: M4_04B3_DEV3_INPUT_V1
+  assumed_draft_interface: STORY_EXTRACTION_DRAFT_V1_1
+  assumed_member_count: 51
+  publicly_attested_facts: [ARTIFACT_NAME, MEMBER_COUNT_51, CASE_ORDER, ZERO_GOLD_MEMBERS]
+  verified_against_sealed_package: false
+  first_verification: FUTURE_AUTHORIZED_PREFLIGHT_MODE_WITH_ZERO_PROVIDER_OPERATIONS
+  if_assumption_is_wrong: FAIL_CLOSED_BEFORE_ANY_PROVIDER_OPERATION_AND_NEW_ADAPTER_TASK_REQUIRED
+
+private_artifact_contract:
+  root: .local/m4_04b3h_dev3_predictions
+  directories: [checkpoints, input, raw, drafts, compiled, failures, case_results, telemetry]
+  ignored_by_gitignore: true
+  write_once_immutable_artifacts: true
+  committed: false
+
+public_prediction_lock_builder:
+  future_path: benchmarks/m4_extraction/M4_04B3H_DEV3_P3_PREDICTION_LOCK.yaml
+  created_in_this_task: false
+  content: IDENTITIES_COUNTS_AND_SHA256_ONLY
+  public_safety_check: EVERY_KEY_AND_STRING_VALUE_MUST_MATCH_A_TOKEN_PATTERN
+  prediction_set_identity: SHA256_OF_CANONICAL_JSON_OF_PER_CASE_IDENTITIES
+
+mocked_integration_tests:
+  fixture_type: SYNTHETIC_STORY_FIXTURES_AND_SYNTHETIC_ARCHIVES_ONLY
+  focused_tests: 37/37_PASS
+  assertions:
+    execution_environment_record_validation: PASS
+    exact_protocol_binding: PASS
+    exact_decision_record_binding: PASS
+    protected_stack_binding: PASS
+    input_hash_before_open: PASS
+    gold_identity_rejection: PASS
+    safe_archive_extraction: PASS
+    case_order_validation: PASS
+    prepared_V1_1_reproduction: PASS
+    provider_adapter_exact_model_and_key: PASS
+    durable_resume_behavior: PASS
+    first_success_immutability: PASS
+    all_blocker_structural_repair: PASS
+    maximum_one_repair: PASS
+    no_quality_retry: PASS
+    changed_request_fingerprint_fails_closed: PASS
+    changed_protocol_identity_fails_closed: PASS
+    pacing_state_survives_restart: PASS
+    only_gemini_slot_3_selectable: PASS
+    private_artifact_layout: PASS
+    public_lock_contains_hashes_only: PASS
+    prediction_set_deterministic_hashing: PASS
+    zero_real_provider_operations: PASS
+
+verification:
+  final_regression_in_execution_checkout:
+    canonical_story: 99/99_PASS
+    story_ingestion: 79/79_PASS
+    story_extraction: 459/459_PASS
+    script_quality: 64/64_PASS
+    story_benchmark: 298/298_PASS_OFFLINE
+    total: 999/999_PASS
+  protected_stack_diff: PASS
+  secret_private_scan: PASS
+  private_scratch_untracked: PASS
+
+decision:
+  execution_environment: READY_WITH_RECORDED_TWO_FILE_EXCEPTION
+  live_adapter: READY_OFFLINE_TESTED
+  open_limitation: SEALED_INPUT_LAYOUT_UNVERIFIED_UNTIL_FUTURE_PREFLIGHT
+  live_execution_authorized: false
+  DEV3_input_access_authorized_for_this_task: false
+  DEV3_gold_access_authorized: false
+  holdout_access_authorized: false
+  next_candidate: M4_04B3H_BLIND_LIVE_DEV3_P3_PREDICTION_AND_IMMUTABLE_PREDICTION_LOCK
