@@ -1,0 +1,189 @@
+task: M4-04B3H2R
+date: 2026-10-07
+status: M4_04B3H2R_DEV3_LAYOUT_PREFLIGHT_PASS
+scope: LAYOUT_ONLY_LOADER_CORRECTION_AND_ZERO_PROVIDER_RE_PREFLIGHT
+base_commit: 291358989fcadc4f78bff210d22c02c8b1b1cea3
+branch: research/m4-overnight-v1-1
+
+orchestrator_ruling:
+  source: M4_04B3H2R_TASK_BRIEF
+  M4_04B3H2: ACCEPTED_AS_EXPECTED_FAIL_CLOSED_RESULT
+  layout_only_correction: AUTHORIZED
+  authorization_scope: DEV3_INPUT_LOADER_LAYOUT_ONLY
+  extraction_semantics_change_authorized: false
+  narrative_content_may_influence_code: false
+  canonical_execution_environment: ISOLATED_CLONE_AUTOCRLF_FALSE_WITH_TWO_FILE_CRLF_ATTRIBUTE_EXCEPTION
+
+historical_adapter:
+  version: V1
+  path: tools/story_extraction/run_m4_04b3h_dev3_p3_live_v1.py
+  sha256: c4815a8e2c253e44da8ed0c08b0b7b1ac830905d5af9efe816e6154ba9c5f0c2
+  preserved_unchanged: true
+  result: FAIL_CLOSED_LAYOUT_MISMATCH
+  live_eligible: false
+
+corrected_adapter:
+  version: V1_1
+  id: M4_04B3H_DEV3_P3_LIVE_EXECUTION_ADAPTER_V1_1
+  path: tools/story_extraction/run_m4_04b3h_dev3_p3_live_v1_1.py
+  hash_mode: UTF8_LF_NORMALIZED_SHA256
+  sha256: 2cd6f40178fa5390171b83c8e2401ff691bd8555fd6efa2bfbceb23bf4fe311b
+  change_scope: INPUT_LAYOUT_ONLY
+  focused_tests: tests/story_extraction/test_run_m4_04b3h_dev3_p3_live_v1_1.py
+  focused_tests_sha256: 7cc4f7ed1612c4edd13f4305d5833ed3eef1ff19475104c5ce36dc45e80231b8
+  only_adapter_eligible_for_future_live_execution: true
+  derivation: EXACT_COPY_OF_V1_WITH_FOUR_REPLACED_REGIONS
+
+# Mechanical comparison of V1 and V1.1: AST of every top-level statement, plus a line diff.
+layout_only_review:
+  method: AST_EQUALITY_OF_TOP_LEVEL_STATEMENTS_AND_LINE_DIFF_REGION_MAPPING
+  lines_inserted: 75
+  lines_deleted: 25
+  unified_diff_sha256: 62eefab8cb8e22710f339cc9ae1f103b4556646a0d9b98eb6c2b31bed352250e
+  changed_top_level_names: [ADAPTER_PATH, RUNNER_ID, SEALED_INPUT_CONTRACT, case_member_paths, load_case_inputs, validate_case_members]
+  added_top_level_names: [case_member_paths, validate_case_members]
+  removed_top_level_names: []
+  diff_regions: [ADAPTER_PATH, MODULE_DOCSTRING, RUNNER_ID, SEALED_INPUT_CONTRACT, case_member_paths, load_case_inputs, validate_case_members]
+  import_statements_identical: true
+  unchanged_top_level_statement_count: 46
+  differences_limited_to:
+    adapter_version_identity: [MODULE_DOCSTRING, RUNNER_ID, ADAPTER_PATH]
+    sealed_input_contract_metadata: [SEALED_INPUT_CONTRACT]
+    manifest_lookup_and_fixed_member_path_derivation: [case_member_paths, load_case_inputs]
+    members_list_validation_and_error_messages: [validate_case_members, load_case_inputs]
+  byte_identical_to_V1:
+    prompt_creation: true
+    durable_job_spec: true
+    model_settings: true
+    provider_execution: true
+    first_success_behavior: true
+    repair_eligibility: true
+    draft_V1_1_compile_behavior: true
+    terminal_state_semantics: true
+    prediction_identity: true
+    public_prediction_lock_semantics: true
+    pacing: true
+    checkpoint_behavior: true
+    execution_environment_check: true
+    archive_hash_gate_and_safe_inventory: true
+  inherited_from_unchanged_runner_core: [compile_raw_response, execute_case, CaseInput, FirstSuccessLedger, ProviderFirstSuccess, member_name_validation]
+
+loader_v1_1:
+  manifest_member: input_manifest.json
+  manifest_top_level_keys_required_exactly: [artifact, case_count, case_order, cases, draft_interface, extractor_surface, files, source_family]
+  case_row_keys_required_exactly: [as_of_position, case_id, members, passage_inputs, profile_id]
+  fixed_member_paths:
+    base_document: cases/{case_id}/base_document.json
+    ingestion_report: cases/{case_id}/ingestion_report.json
+    prepared_input: cases/{case_id}/prepared_draft_input.json
+    source_unit: cases/{case_id}/source/unit.txt
+    m3_manifest: cases/{case_id}/source_manifest.json
+  members_list_validation: [LIST_OF_STRINGS, NO_DUPLICATES, NO_FORBIDDEN_NAME, NO_OTHER_CASE, NO_MISSING_MEMBER, NO_EXTRA_MEMBER]
+  archive_inventory_must_equal_manifest_plus_fixed_paths: true
+  m3_manifest: FIXED_PATH_ONLY_THROUGH_UNCHANGED_FROZEN_M3_ADAPTER
+  fallback_manifest_discovery: NONE
+  layout_facts_source: M4_04B3H2_PUBLIC_RECORD_ONLY
+  new_semantic_exploration_of_input: false
+
+bindings:
+  protocol_sha256: f9cf1c25a21bb3bfc910b8e218c8dac9f032d67957f8d7cb58397134a0504bae
+  decision_record_sha256: 5826854dfe6828ebea67e0d4c089fbda148fcc89da9efc80f1afb244aa329735
+  runner_core_sha256: a07a26240c9d30d96bf455a4f88173a38a3b1538a8de2d32d3f09b7402be5087
+  dev3_input_sha256: 47ae7c743065f8ff001f4db6a398df2edf1db094383b1fe2d0c3a05ab40c55c7
+  dev3_gold_sha256_forbidden: b5b2258d46608015ff60de2c660fba521029ff4716c7c1cc3b3735c55dfd34a9
+  layout_descriptor_sha256: 188b252f566a7c68adad8779678f1c31a5f70c74e7dd43ad0c849c7d09c870a4
+  case_order: [DEV3_01, DEV3_02, DEV3_03, DEV3_04, DEV3_05, DEV3_06, DEV3_07, DEV3_08, DEV3_09, DEV3_10]
+
+real_preflight:
+  adapter_mode: PREFLIGHT_ONLY
+  result: PREFLIGHT_PASS
+  exit_status: 0
+  corrections_attempted: 1
+  execution_environment: PASS
+  protocol: PASS
+  decision_record: PASS
+  protected_stacks: PASS
+  archive_hash: PASS
+  archive_hashed_before_open: true
+  gold_hash_rejection: PASS
+  inventory: PASS
+  member_count: 51
+  zero_gold_scan: PASS
+  byte_extraction: PASS
+  manifest: PASS
+  case_count: PASS
+  case_order: PASS
+  members_exact_set: 10/10_PASS
+  M3_ingestion: 10/10_PASS
+  ingestion_binding: 10/10_PASS
+  draft_compiler_context_construction: 10/10_PASS
+  prepared_draft_v1_1_reproduction: 10/10_PASS
+  guard: PASS
+  source_manifest_hypothesis: CONFIRMED_BY_FROZEN_M3_INGESTION_AND_FINGERPRINT_BINDING
+  sealed_dev3_input_layout_compatibility: CONFIRMED
+
+execution:
+  provider_operations: 0
+  model_operations: 0
+  credential_loads: 0
+  provider_client_constructions: 0
+  transport_constructions: 0
+  durable_executor_or_pacer_constructions: 0
+  durable_checkpoints_created: 0
+  run_mode_used: false
+  live_authorization_token_used: false
+  predictions_run: false
+  repairs_run: false
+  scoring_run: false
+  evaluator_run: false
+
+blindness:
+  dev3_input_opened: true
+  dev3_input_opening_purpose: MECHANICAL_PREFLIGHT_ONLY
+  narrative_content_read_or_summarized: false
+  json_values_printed_or_published: false
+  dev3_gold_opened: false
+  holdout_opened: false
+  semantic_tuning: false
+
+protected_artifacts_unchanged:
+  adapter_V1: true
+  P3_protocol: true
+  P3_prompts: true
+  B3G_runner: true
+  draft_V1_1: true
+  compiler_V1_1: true
+  predicate_registry: true
+  runtime_and_durable_executor: true
+  snapshot_V1_and_V2: true
+  H0_decision_record: true
+  repair_policy: true
+  line_ending_exceptions: true
+
+private_data:
+  private_root: .local/m4_04b3h_dev3_predictions
+  extraction_preserved: true
+  extraction_gitignored: true
+  source_text_committed: false
+
+verification:
+  focused_tests:
+    adapter_V1_1: 19/19_PASS
+    adapter_V1_runner_core_and_decision_lock: 68/68_PASS
+  full_offline_suites_in_accepted_environment:
+    canonical_story: 99/99_PASS
+    story_ingestion: 79/79_PASS
+    story_extraction: 478/478_PASS
+    script_quality: 64/64_PASS
+    story_benchmark: 298/298_PASS_OFFLINE
+    total: 1018/1018_PASS
+  protected_stack_verification: PASS
+  secret_scan: PASS
+  private_publication_scan: PASS
+  private_artifacts_gitignored_and_untracked: PASS
+
+decision:
+  corrected_adapter_preflight: PASS
+  live_eligible_adapter_sha256: 2cd6f40178fa5390171b83c8e2401ff691bd8555fd6efa2bfbceb23bf4fe311b
+  live_execution_authorized: false
+  next_action: ORCHESTRATOR_REVIEW
