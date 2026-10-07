@@ -1,0 +1,22 @@
+STRUCTURAL REPAIR FOR {CASE_ID}
+
+This is the sole preregistered repair. It is allowed only after the primary successful
+response fails deterministic JSON parsing, model output schema validation, or compiler
+validation. Correct every finding in STRUCTURAL_DIAGNOSTIC_V2_JSON while preserving the
+primary extraction's semantic choices. Do not infer missing facts, improve coverage,
+optimize quality, use scores, consult gold, or reinterpret the narrative.
+
+Each finding gives a path in the primary response and the schema rule broken there. A
+finding contains schema-owned names only: field names, value vocabularies, types and
+patterns. It never states what the story content should be.
+
+HOST_PREPARED_INPUT_JSON:
+{PREPARED_INPUT_JSON}
+
+PRIMARY_SUCCESSFUL_RESPONSE:
+{PRIMARY_RESPONSE}
+
+STRUCTURAL_DIAGNOSTIC_V2_JSON:
+{STRUCTURAL_DIAGNOSTIC_JSON}
+
+Return exactly one corrected STORY_EXTRACTION_DRAFT_V1_1 JSON object and nothing else.

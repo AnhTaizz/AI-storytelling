@@ -1,0 +1,265 @@
+task: M4-04B4A
+date: 2026-10-07
+status: M4_04B4A_P4_OUTPUT_CONTRACT_READY
+scope: OFFLINE_P4_OUTPUT_CONTRACT_DESIGN_AND_READINESS_ONLY
+base_commit: e3dfd67c4e95e57eba2f6c096766d8097f751d49
+branch: research/m4-overnight-v1-1
+
+boundaries:
+  provider_operations: 0
+  model_operations: 0
+  provider_client_constructed: false
+  credential_loaded: false
+  DEV3_gold_opened: false
+  DEV3_input_accessed: false
+  DEV3_private_prediction_artifacts_accessed: false
+  holdout_opened: false
+  P3_rerun: false
+  P3_prompt_modified: false
+  P3_prediction_set_modified: false
+  historical_P3_records_modified: false
+  canonical_draft_schemas_modified: false
+  compiler_V1_1_modified: false
+  predicate_registry_modified: false
+  DEV4_created: false
+  M5_started: false
+  extraction_quality_improvement_claimed: false
+
+accepted_root_cause:
+  source: M4_04B3HR_ACCEPTED_STRUCTURAL_FORENSICS
+  primary: PROMPT_INTERFACE_SPECIFICATION_GAP
+  confidence: HIGH
+  description: >-
+    The locked P3 prompt appended the Draft V1.1 delta schema, which defines the root object and Mention
+    only and refers by $ref to Draft V1 definitions that were not supplied to the model.
+  secondary:
+    - JSON_MIME_MODE_ALONE_STILL_PRODUCED_MALFORMED_JSON_IN_3_OF_20_RESPONSES
+    - STRUCTURAL_REPAIR_DIAGNOSTIC_CARRIED_PHASE_CODE_AND_PATH_ONLY
+  not_supported_by_evidence: [VALIDATOR_DEFECT, COMPILER_DEFECT, EXECUTION_DEFECT, TRANSPORT_SERIALIZATION_DEFECT]
+
+P3_historical_status:
+  M4_04B3H: ACCEPTED_AS_NEGATIVE_BLIND_RESULT
+  M4_04B3HR: ACCEPTED_STRUCTURAL_FORENSICS
+  prediction_set_sha256: 06d555f53f6c113e3db7ab7eea55501a4b442e7e8daec3047bcc7cb3b55f38fd
+  structural_valid: 0/10
+  structural_failure: 10/10
+  cases_reaching_compiler: 0
+  extraction_quality: UNKNOWN_NOT_MEASURED
+  remains_historical_and_reproducible: true
+
+DEV3_STATUS_FOR_P4: TUNING_DATA_AFTER_P3_FAILURE
+DEV3_for_P4:
+  fresh_validation_data: false
+  permitted_in_later_tasks: [DEV3_INPUT, LOCKED_P3_PREDICTION_ARTIFACTS, STRUCTURAL_FORENSIC_FINDINGS]
+  forbidden: [DEV3_GOLD]
+  fresh_validation_requires: DEV4_LATER
+
+canonical_draft_contract:
+  identity: STORY_EXTRACTION_DRAFT_V1_1
+  semantics_changed: false
+  new_semantic_schema_version_created: false
+  schema_files:
+    draft_v1: {path: schemas/story_extraction/story_extraction_draft_v1.schema.json, sha256: 7993db7bdce15e461a0483ec3e4bf5cf7596b49393fab477d9d25d61bd1f0f15}
+    draft_v1_1: {path: schemas/story_extraction/story_extraction_draft_v1_1.schema.json, sha256: e0d38b65f0f265dfb1a0ef2be4e85c9b3950550a46f47e8980fbd6a7cab068a3}
+  compiler: {path: tools/story_extraction/draft_compiler_v1_1.py, sha256: f962e561a7801ddf48ef248416231673e1567b9eac9d04f2aaba1d1e16eed953, changed: false}
+  predicate_registry: {path: schemas/canonical_story/predicate_registry_v0.yaml, sha256: 44f3eafc6982f84bcc74ccb91abe7cd467a453352ee96be147095f27559c5350, changed: false}
+
+p4_identity:
+  extractor_id: P4_STORY_EXTRACTION_DRAFT_V1_1_SELF_CONTAINED_V1
+  design_principle: SAME_DRAFT_V1_1_SEMANTICS_WITH_A_SELF_CONTAINED_MODEL_FACING_REPRESENTATION
+  model_or_credential_or_runtime_bound: false
+  protocol_locked: false
+
+model_facing_schema:
+  identity: STORY_EXTRACTION_DRAFT_V1_1_MODEL_SCHEMA_V1
+  schema_id: urn:ai-storytelling:story-extraction:draft:v1.1:model-schema:v1
+  path: schemas/story_extraction/story_extraction_draft_v1_1_model_schema_v1.schema.json
+  hash_mode: UTF8_LF_NORMALIZED_SHA256
+  sha256: 5aa2ed6dde3791546ddd5e059648d8dac38df1571a6073b7abc31c89eb257f14
+  approach: COPY_REQUIRED_DRAFT_V1_DEFINITIONS_INTO_LOCAL_DEFS_AND_REWRITE_EXTERNAL_REFS
+  hand_maintained: false
+  tracked_file_must_equal_materializer_output: true
+  external_ref_count: 0
+  ref_count: 30
+  definition_count: 17
+  definitions_from_draft_v1_1: [Mention]
+  definitions_copied_from_draft_v1: [Handle, EvidenceRole, EntityKind, EditorialLabel, Argument, EvidenceSet, Derivation, Support, Bound, ValidityInterval, Entity, Event, TemporalAnchor, Proposition, Assertion, Evidence]
+  draft_v1_definitions_not_needed: [Mention]
+  mention_has_no_evidence_handle: true
+  dynamic_or_anchored_references: 0
+  unreferenced_definitions: 0
+
+equivalence:
+  by_construction:
+    root_equals_draft_v1_1_root: true
+    definition_set_is_exact: true
+    local_definitions_equal_draft_v1_1: true
+    copied_definitions_equal_draft_v1: true
+    mention_has_no_evidence_handle: true
+    draft_version_constant_unchanged: true
+    relaxed_schema_variants_rejected: 8
+  by_behaviour:
+    comparison: IDENTICAL_FINDINGS_INCLUDING_EVERY_ONEOF_VARIANT_RECURSIVELY
+    canonical_side: UNCHANGED_DRAFT_V1_1_VALIDATOR_WITH_CROSS_FILE_REFERENCES
+    model_side: MODEL_SCHEMA_VALIDATED_ALONE
+    valid_drafts_accepted_by_both: 27
+    enum_tokens_accepted_in_place_by_both: 31
+    targeted_rule_violations_rejected_by_both: 27
+    suite_mutation_sample:
+      selection: DETERMINISTIC_ONE_IN_THREE_AND_ONE_IN_FIVE_OF_TWO_BASE_DRAFTS
+      mismatches: 0
+    full_mutation_corpus_run_once:
+      base_drafts: 4
+      drafts: 13518
+      mismatches: 0
+      opt_in: M4_FULL_EQUIVALENCE_CORPUS=1
+    rule_kinds_exercised: [required, additionalProperties, enum, type, const, pattern, oneOf, minLength, maxLength, minimum, minItems, uniqueItems, minProperties, not]
+  result: EQUIVALENT
+
+prompt:
+  files_are_new_versions: true
+  schema_section_is_the_tracked_model_schema: true
+  primary_system_prompt_chars: 29738
+  preamble_change_from_P3: FOUR_PASSAGES_OF_INTERFACE_WORDING_ONLY
+  P3_semantic_instructions_retained: true
+  dataset_or_case_specific_text: NONE
+
+# For every structural rule the validator enforces: how does the model receive it?
+prompt_structural_coverage:
+  forbidden_result: REQUIRED_BY_VALIDATOR_BUT_UNAVAILABLE_TO_MODEL
+  gate_reads_the_schema_out_of_the_assembled_prompt: true
+  P4:
+    structural_requirements: 318
+    by_availability: {"MODEL_SCHEMA": 318}
+    unavailable: 0
+    prompt_schema_external_refs: 0
+    definitions_missing_from_prompt_schema: []
+    by_family:
+      ALLOWED_PROPERTY: 66
+      CONDITIONAL_RULE: 4
+      CONSTANT: 7
+      ENUM_TOKEN: 30
+      HANDLE_OR_TOKEN_PATTERN: 13
+      ONE_OF_VARIANT: 7
+      REFERENCE: 30
+      REQUIRED_FIELD: 55
+      TYPE_OR_COLLECTION_SHAPE: 95
+      VALUE_BOUND: 11
+  P3_same_gate:
+    structural_requirements: 318
+    by_availability: {"EXPLICIT_PROMPT_TEXT": 40, "MODEL_SCHEMA": 64, "REQUIRED_BY_VALIDATOR_BUT_UNAVAILABLE_TO_MODEL": 214}
+    unavailable: 214
+    prompt_schema_external_refs: 7
+    definitions_missing_from_prompt_schema: [Argument, Assertion, Bound, Derivation, EditorialLabel, Entity, EntityKind, Event, Evidence, EvidenceRole, EvidenceSet, Handle, Proposition, Support, TemporalAnchor, ValidityInterval]
+    gate_would_have_stopped_P3_before_any_request: true
+
+p3_failure_projection:
+  source: M4_04B3HR_PUBLIC_RECORD_ONLY
+  blocker_requirement_families: 16
+  definitions_involved:
+  - Assertion
+  - Entity
+  - EntityKind
+  - Event
+  - Evidence
+  - EvidenceRole
+  - Proposition
+  - TemporalAnchor
+  p3_structurally_unavailable_to_model: 16
+  p4_structurally_unavailable_to_model: 0
+  p4_unavailable: []
+  claim: AVAILABILITY_OF_RULES_ONLY_NOT_A_PREDICTION_OF_MODEL_OUTPUT
+
+structured_output:
+  investigated: OFFLINE_SDK_TYPES_AND_REPOSITORY_TRANSPORT_ONLY
+  sdk: google-genai
+  sdk_version: 2.27.0
+  config_type: GenerateContentConfig
+  native_schema_parameter: response_json_schema
+  native_schema_wire_name: responseJsonSchema
+  alternative_parameter_present: true
+  decision: NATIVE_SCHEMA_CONSTRAINT_SUPPORTED_OFFLINE
+  accepted_transport_passes_generation_settings_unchanged: true
+  runtime_change_required_to_carry_the_schema: false
+  binding: ONE_TRACKED_MODEL_SCHEMA_FOR_PROMPT_TEXT_AND_FOR_THE_NATIVE_PARAMETER
+  response_mime_type: application/json
+  temperature: 0
+  max_output_tokens: 16384
+  native_enforcement: PARTIAL
+  keywords_not_documented_as_natively_enforced: [$schema, const, else, if, maxLength, minLength, minProperties, not, pattern, then, uniqueItems]
+  ref_nodes_with_sibling_keywords: 0
+  cyclic_references: false
+  local_validator_remains_authoritative: true
+  not_verified_offline:
+    - PROVIDER_ACCEPTS_THIS_SCHEMA
+    - PROVIDER_TREATMENT_OF_KEYWORDS_OUTSIDE_THE_DOCUMENTED_SUBSET
+    - CHOSEN_MODEL_SUPPORTS_THE_PARAMETER
+
+repair_diagnostic:
+  identity: M4_P4_STRUCTURAL_REPAIR_DIAGNOSTIC_V2
+  replaces: P3_PHASE_CODE_PATH_ONLY
+  maximum_repairs_per_case: 1
+  repair_count_expanded: false
+  fields: [phase, code, path, schema_keyword, missing_required_fields, allowed_fields, unexpected_field_count, expected_type, allowed_enum_tokens, required_constant, required_pattern, limit, forbidden_fields, variants, json_error_class, line, column]
+  information_sources: [JSON_PARSER, MODEL_SCHEMA, VALIDATOR_FINDING]
+  json_error_classes: [EMPTY_RESPONSE, NON_JSON_PREFIX_SUFFIX, UNTERMINATED_JSON, INVALID_PROPERTY_NAME, INVALID_ESCAPE, EXTRA_DATA, TRAILING_COMMA, OTHER_JSON_SYNTAX]
+  unexpected_field_names: COUNTED_NOT_ECHOED
+  unrecognized_path_keys: REPLACED_BY_PLACEHOLDER
+  safety:
+    structural_only: true
+    every_string_is_schema_or_tool_owned: true
+    arbitrary_outputs_tested: 393
+    values_leaked: 0
+    never_contains: [GOLD, EXPECTED_SEMANTIC_FACTS, SOURCE_QUOTE, SOURCE_TEXT, MODEL_FIELD_VALUES, QUALITY_SCORE, SEMANTIC_CORRECTION]
+
+tooling:
+  hash_mode: UTF8_LF_NORMALIZED_SHA256
+  materializer:
+    path: tools/story_extraction/materialize_draft_v1_1_model_schema_v1.py
+    sha256: 4eba6f3c9907e9dca53586b8933587de6069ce248043d632e920dc47af1325dc
+  output_contract:
+    path: tools/story_extraction/m4_04b4a_p4_output_contract_v1.py
+    sha256: dba892456fdfd57211e8becedf1cd7296cb2b77c68885df9e5cf828379dcceec
+  focused_tests:
+    path: tests/story_extraction/test_m4_04b4a_p4_output_contract_v1.py
+    sha256: 26e076e5644d333fc797f672c45eeb8320bac7e4b2411de5f33048671f19eafd
+  system_preamble:
+    path: tools/story_extraction/prompts/story_extraction_draft_p4_v1_system.txt
+    sha256: ff6dcfd8b31a6e9d75d6134f6393c19c3d1de582b5f2155986c9df38be20e035
+  user_template:
+    path: tools/story_extraction/prompts/story_extraction_draft_p4_v1_user.txt
+    sha256: 86336a230640f0ee96c41abcd6f15a160b313f3fb1bc6612cdaf0abb27b59b3e
+  repair_user_template:
+    path: tools/story_extraction/prompts/story_extraction_draft_p4_v1_repair_user.txt
+    sha256: 7681338344525f1722a4a2d9351177734404f18945e105a1848bd60f4707b55b
+
+verification:
+  focused_tests: 34/34_PASS
+  full_offline_suites_in_accepted_environment:
+    canonical_story: 99/99_PASS
+    story_ingestion: 79/79_PASS
+    story_extraction: 529/529_PASS
+    script_quality: 64/64_PASS
+    story_benchmark: 298/298_PASS_OFFLINE
+    total: 1069/1069_PASS
+  protected_historical_P3_diff: PASS
+  secret_scan: PASS
+  private_publication_scan: PASS
+
+untested:
+  - ANY_MODEL_BEHAVIOUR_UNDER_P4
+  - PROVIDER_SIDE_BEHAVIOUR_OF_THE_NATIVE_SCHEMA_PARAMETER
+  - EFFECT_OF_REPAIR_DIAGNOSTIC_V2_ON_A_SECOND_ATTEMPT
+  - EXTRACTION_QUALITY
+  - P4_RUNTIME_BINDING_AND_PROTOCOL_LOCK
+
+decision:
+  p4_output_contract: READY_OFFLINE
+  schema_equivalence: PROVEN
+  structured_output: NATIVE_SCHEMA_CONSTRAINT_SUPPORTED_OFFLINE
+  live_execution_authorized: false
+  DEV3_gold: SEALED
+  holdout: SEALED
+  next_candidate: M4_04B4B_P4_STRUCTURAL_TUNING_RUN_ON_DEV3_INPUT
+  next_candidate_may_use: [DEV3_INPUT, LOCKED_PREDICTION_DIAGNOSTICS]
+  next_candidate_may_not_use: [DEV3_GOLD]
