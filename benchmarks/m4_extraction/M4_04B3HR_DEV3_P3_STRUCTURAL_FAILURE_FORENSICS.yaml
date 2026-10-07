@@ -1,0 +1,1087 @@
+task: M4-04B3HR
+date: 2026-10-07
+status: M4_04B3HR_STRUCTURAL_FORENSICS_COMPLETE
+scope: OFFLINE_STRUCTURAL_FORENSICS_OF_THE_LOCKED_DEV3_P3_PREDICTION_SET
+base_commit: e7b6cf40b18e6d79983eb3cc3dd282a25d57d9a5
+branch: research/m4-overnight-v1-1
+prediction_set_sha256: 06d555f53f6c113e3db7ab7eea55501a4b442e7e8daec3047bcc7cb3b55f38fd
+
+orchestrator_ruling:
+  source: M4_04B3HR_TASK_BRIEF
+  M4_04B3H: ACCEPTED_AS_NEGATIVE_BLIND_RESULT
+  prediction_set: IMMUTABLE
+  provider_or_model_calls_permitted_for_this_prediction_set: false
+
+boundaries:
+  provider_calls: 0
+  model_calls: 0
+  DEV3_gold_opened: false
+  holdout_opened: false
+  DEV3_input_used_for_forensics: false
+  DEV3_input_source_lines_read_by_publication_leak_scan: true
+  DEV3_input_leak_scan_note: >-
+    The forensic analysis used prediction artifacts only. Separately, the pre-commit publication scan read
+    the already-extracted DEV3 source lines into memory to confirm that none appears in the files being
+    committed. Nothing was displayed, analyzed or used to shape any finding. The task brief asked for a stop
+    and a justification before any input access; this scan did not do that and is disclosed here.
+  semantic_scoring: false
+  gold_comparison: false
+  predictions_rerun: false
+  repairs_rerun: false
+  prediction_artifacts_altered: false
+  P3_prompts_modified: false
+  draft_V1_1_schema_modified: false
+  compiler_V1_1_modified: false
+  predicate_registry_modified: false
+  adapters_or_runner_modified: false
+  runtime_or_durable_executor_modified: false
+  snapshots_or_H0_policy_modified: false
+  raw_response_or_story_content_published: false
+  model_generated_field_values_published: false
+
+locked_evidence:
+  public_prediction_lock_sha256: 850b6ea557027b7c8777c5960df0654d2d265e9e041487445dfeb9fdcf6d59f2
+  protocol_sha256: f9cf1c25a21bb3bfc910b8e218c8dac9f032d67957f8d7cb58397134a0504bae
+  decision_record_sha256: 5826854dfe6828ebea67e0d4c089fbda148fcc89da9efc80f1afb244aa329735
+  live_adapter_v1_1_sha256: 2cd6f40178fa5390171b83c8e2401ff691bd8555fd6efa2bfbceb23bf4fe311b
+  private_blocker_matrix_sha256: 15ac4e4c093c50dd60733c2b88b4db5544b7383370f9d7b678d329caca67ccf0
+  private_blocker_matrix_content: FULL_BLOCKER_PATHS_AND_SCHEMA_KEYWORDS_NO_FIELD_VALUES
+
+method:
+  kind: OFFLINE_REPLAY_OF_THE_UNCHANGED_VALIDATOR_OVER_LOCKED_RAW_RESPONSES
+  inputs: [LOCKED_RAW_RESPONSES, LOCKED_PARSED_DRAFTS, LOCKED_FAILURE_RECORDS, LOCKED_CASE_RESULTS, LOCKED_TELEMETRY, PUBLIC_TRACKED_FILES]
+  published: [COUNTS, BLOCKER_CODES, PATH_PATTERNS, SCHEMA_KEYWORDS, FIELD_NAMES, VALUE_CLASSES, BOOLEANS]
+  never_published: [RAW_RESPONSES, QUOTES, STORY_TEXT, FIELD_VALUES]
+  unexpected_field_names_published_only_when_identifier_like: true
+  notes:
+    - A blocker is one distinct failing path. A schema error is one validator finding; several can share a path.
+    - Counts describe structural conformance only. They are not an extraction-quality measurement.
+
+reproduction:
+  attempts_replayed: 20
+  inventory:
+    case_results: 10
+    failure_records: 10
+    parsed_drafts: 17
+    raw_responses: 20
+    request_fingerprints: 20
+  locked_artifact_hashes: PASS
+  recorded_blocker_sets_equal_replay: 20
+  terminal_categories_reproduced: 10/10
+  validator: UNCHANGED_DRAFT_V1_1_VALIDATOR
+  compiler_replay: NOT_REQUIRED_NO_ATTEMPT_PASSED_THE_SCHEMA
+  replay_deterministic: true
+
+aggregate:
+  primary:
+    attempts: 10
+    valid_json: 8
+    schema_pass: 0
+    compiler_reached: 0
+    failure_categories:
+      DRAFT_SCHEMA_FAILURE: 8
+      JSON_PARSE_FAILURE: 2
+    blocker_codes:
+      DRAFT_SCHEMA_FAILURE: 228
+      JSON_PARSE_FAILURE: 2
+    blocker_phases:
+      SCHEMA: 228
+      JSON: 2
+    blocker_path_patterns:
+      assertions/*: 99
+      mentions/*/role: 49
+      entities/*: 27
+      events/*: 17
+      propositions/*: 13
+      evidence/*/role: 10
+      evidence/*: 6
+      anchors/*: 5
+      $: 2
+      entities/*/kind: 2
+    schema_keywords:
+      required: 258
+      additionalProperties: 151
+      enum: 61
+      oneOf: 13
+    schema_errors_by_definition_owner:
+      V1_REFERENCED_DEFINITION_ABSENT_FROM_PROMPT: 483
+    required_fields_missing:
+      assertions/*:proposition_handle: 99
+      assertions/*:support: 99
+      entities/*:kind: 21
+      events/*:anchor_handle: 17
+      events/*:event_kind: 12
+      anchors/*:anchor_kind: 5
+      anchors/*:event_handle: 5
+    unexpected_fields:
+      assertions/*:predicate: 86
+      assertions/*:arguments: 73
+      assertions/*:evidence: 71
+      assertions/*:evidence_handles: 18
+      entities/*:category: 17
+      assertions/*:args: 13
+      assertions/*:proposition: 13
+      entities/*:canonical_name: 13
+      assertions/*:evidence_refs: 10
+      events/*:kind: 9
+      entities/*:name: 8
+      evidence/*:epistemic_status: 6
+      events/*:description: 5
+      entities/*:entity_type: 4
+      anchors/*:anchor_type: 3
+      anchors/*:description: 3
+      events/*:event_type: 3
+      evidence/*:supporting_passages: 3
+      anchors/*:text: 2
+      assertions/*:validity_interval: 1
+    enum_value_classes:
+      mentions/*/role:TOKEN_ABSENT_FROM_PROMPT: 35
+      mentions/*/role:TOKEN_OF_ANOTHER_VOCABULARY_IN_THE_REGISTRY: 14
+      evidence/*/role:TOKEN_OF_ANOTHER_VOCABULARY_IN_THE_REGISTRY: 10
+      entities/*/kind:TOKEN_ABSENT_FROM_PROMPT: 1
+      entities/*/kind:TOKEN_OF_ANOTHER_VOCABULARY_IN_THE_REGISTRY: 1
+    cases_affected_by_recurring_requirement:
+      enum:mentions/*/role: 8
+      required:events/*:anchor_handle: 8
+      required:assertions/*:proposition_handle: 7
+      required:assertions/*:support: 7
+      additionalProperties:assertions/*:predicate: 6
+      oneOf:propositions/*: 6
+      required:entities/*:kind: 6
+      additionalProperties:assertions/*:arguments: 5
+      additionalProperties:assertions/*:evidence: 5
+      additionalProperties:entities/*:category: 5
+      required:events/*:event_kind: 5
+      additionalProperties:events/*:kind: 4
+      enum:evidence/*/role: 4
+      additionalProperties:entities/*:canonical_name: 3
+      additionalProperties:entities/*:name: 2
+      additionalProperties:events/*:description: 2
+      additionalProperties:evidence/*:epistemic_status: 2
+      enum:entities/*/kind: 2
+      required:anchors/*:anchor_kind: 2
+      required:anchors/*:event_handle: 2
+  repair:
+    attempts: 10
+    valid_json: 9
+    schema_pass: 0
+    compiler_reached: 0
+    failure_categories:
+      DRAFT_SCHEMA_FAILURE: 9
+      JSON_PARSE_FAILURE: 1
+    blocker_codes:
+      DRAFT_SCHEMA_FAILURE: 240
+      JSON_PARSE_FAILURE: 1
+    blocker_phases:
+      SCHEMA: 240
+      JSON: 1
+    blocker_path_patterns:
+      assertions/*: 112
+      mentions/*/role: 54
+      entities/*: 32
+      events/*: 18
+      propositions/*: 12
+      evidence/*/role: 6
+      anchors/*: 5
+      $: 1
+      entities/*/kind: 1
+    schema_keywords:
+      required: 312
+      additionalProperties: 160
+      enum: 61
+      oneOf: 12
+    schema_errors_by_definition_owner:
+      V1_REFERENCED_DEFINITION_ABSENT_FROM_PROMPT: 545
+    required_fields_missing:
+      assertions/*:proposition_handle: 112
+      assertions/*:support: 112
+      assertions/*:epistemic_status: 28
+      entities/*:kind: 21
+      events/*:anchor_handle: 18
+      events/*:event_kind: 11
+      anchors/*:anchor_kind: 5
+      anchors/*:event_handle: 5
+    unexpected_fields:
+      assertions/*:predicate: 99
+      assertions/*:evidence: 89
+      assertions/*:arguments: 83
+      assertions/*:status: 28
+      entities/*:name: 18
+      entities/*:category: 17
+      assertions/*:args: 16
+      entities/*:canonical_name: 14
+      assertions/*:content: 13
+      assertions/*:evidence_handles: 13
+      assertions/*:evidence_refs: 10
+      events/*:kind: 7
+      entities/*:type: 4
+      anchors/*:type: 3
+      events/*:type: 3
+      anchors/*:anchor_text: 2
+      assertions/*:validity_interval: 1
+      events/*:category: 1
+    enum_value_classes:
+      mentions/*/role:TOKEN_OF_ANOTHER_VOCABULARY_IN_THE_REGISTRY: 35
+      mentions/*/role:TOKEN_ABSENT_FROM_PROMPT: 19
+      evidence/*/role:TOKEN_OF_ANOTHER_VOCABULARY_IN_THE_REGISTRY: 6
+      entities/*/kind:TOKEN_ABSENT_FROM_PROMPT: 1
+    cases_affected_by_recurring_requirement:
+      enum:mentions/*/role: 9
+      required:assertions/*:proposition_handle: 8
+      required:assertions/*:support: 8
+      required:events/*:anchor_handle: 8
+      additionalProperties:assertions/*:predicate: 7
+      additionalProperties:assertions/*:arguments: 6
+      additionalProperties:assertions/*:evidence: 6
+      oneOf:propositions/*: 6
+      required:entities/*:kind: 6
+      additionalProperties:entities/*:category: 5
+      additionalProperties:entities/*:name: 5
+      required:events/*:event_kind: 5
+      additionalProperties:entities/*:canonical_name: 3
+      additionalProperties:events/*:kind: 3
+      additionalProperties:assertions/*:status: 2
+      enum:evidence/*/role: 2
+      required:anchors/*:anchor_kind: 2
+      required:anchors/*:event_handle: 2
+      required:assertions/*:epistemic_status: 2
+  repair_effects:
+    PARTIALLY_CLEARED: 5
+    SAME_BLOCKER: 4
+    DIFFERENT_BLOCKER: 1
+  terminal_cases_whose_schema_errors_all_lie_in_definitions_absent_from_prompt: 9
+  dominant_pattern:
+    single_pattern_explains_majority_of_cases: true
+    pattern: RECORD_SHAPES_DEFINED_ONLY_IN_THE_REFERENCED_V1_SCHEMA_ABSENT_FROM_THE_PROMPT
+    terminal_cases_explained: 9
+    terminal_cases_total: 10
+    primary_schema_errors_in_absent_definitions: 483
+    primary_schema_errors_total: 483
+    repair_schema_errors_in_absent_definitions: 545
+    repair_schema_errors_total: 545
+    schema_errors_in_definitions_present_in_prompt: 0
+
+# Mechanical answers to the forensic questions.
+answers:
+  q1_primary_blockers: >-
+    8 primaries are valid JSON that fails the Draft V1.1 schema (228 blocker paths, 483 schema errors);
+    2 primaries (DEV3_06, DEV3_08) are not valid JSON.
+  q2_repair_blockers: >-
+    9 repairs are valid JSON that fails the schema (240 blocker paths, 545 schema errors);
+    1 repair (DEV3_06) is not valid JSON.
+  q3_recurring_blockers: >-
+    Only two blocker codes occur, DRAFT_SCHEMA_FAILURE and JSON_PARSE_FAILURE. The recurring paths are
+    assertions, mention role, entities, events, propositions, anchors and evidence role.
+    See cases_affected_by_recurring_requirement.
+  q4_repair_effect: PARTIALLY_CLEARED 5, SAME_BLOCKER 4, DIFFERENT_BLOCKER 1. No repair cleared every blocker and none degraded to a JSON failure.
+  q5_valid_json_after_primary: [DEV3_01, DEV3_02, DEV3_03, DEV3_04, DEV3_05, DEV3_07, DEV3_09, DEV3_10]
+  q6_valid_json_after_repair: [DEV3_01, DEV3_02, DEV3_03, DEV3_04, DEV3_05, DEV3_07, DEV3_08, DEV3_09, DEV3_10]
+  q7_schema_pass_after_primary: []
+  q8_schema_pass_after_repair: []
+  q9_compiler_validation_reached: NO_CASE
+  q10_failure_kinds:
+    json_syntax: true
+    required_field_absence: true
+    unexpected_field: true
+    wrong_field_type: false
+    invalid_enum: true
+    invalid_handle_format: false
+    invalid_collection_shape: false
+    schema_additionalProperties: true
+    schema_oneOf_no_branch_matched: true
+    compiler_level_structural_relation: false
+
+case_matrix:
+  - blocker_paths_cleared: 3
+    blocker_paths_new: 0
+    blocker_paths_unchanged: 37
+    case_id: DEV3_01
+    primary:
+      blocker_codes:
+        DRAFT_SCHEMA_FAILURE: 40
+      blocker_count: 40
+      blocker_path_patterns:
+        assertions/*: 18
+        entities/*: 4
+        events/*: 3
+        evidence/*: 3
+        evidence/*/role: 3
+        mentions/*/role: 6
+        propositions/*: 3
+      category: DRAFT_SCHEMA_FAILURE
+      compiler_reached: false
+      json_failure_class: null
+      json_parse: true
+      schema_error_count: 86
+      schema_keywords:
+        additionalProperties: 28
+        enum: 9
+        oneOf: 3
+        required: 46
+      schema_pass: false
+    primary_and_repair_raw_bytes_identical: false
+    repair:
+      blocker_codes:
+        DRAFT_SCHEMA_FAILURE: 37
+      blocker_count: 37
+      blocker_path_patterns:
+        assertions/*: 18
+        entities/*: 4
+        events/*: 3
+        evidence/*/role: 3
+        mentions/*/role: 6
+        propositions/*: 3
+      category: DRAFT_SCHEMA_FAILURE
+      compiler_reached: false
+      json_failure_class: null
+      json_parse: true
+      schema_error_count: 83
+      schema_keywords:
+        additionalProperties: 25
+        enum: 9
+        oneOf: 3
+        required: 46
+      schema_pass: false
+    repair_effect: PARTIALLY_CLEARED
+    request_fingerprints_differ: true
+    terminal_category: DRAFT_SCHEMA_FAILURE
+    terminal_category_reproduced: true
+  - blocker_paths_cleared: 2
+    blocker_paths_new: 0
+    blocker_paths_unchanged: 23
+    case_id: DEV3_02
+    primary:
+      blocker_codes:
+        DRAFT_SCHEMA_FAILURE: 25
+      blocker_count: 25
+      blocker_path_patterns:
+        assertions/*: 13
+        entities/*: 3
+        events/*: 2
+        evidence/*/role: 2
+        mentions/*/role: 4
+        propositions/*: 1
+      category: DRAFT_SCHEMA_FAILURE
+      compiler_reached: false
+      json_failure_class: null
+      json_parse: true
+      schema_error_count: 54
+      schema_keywords:
+        additionalProperties: 16
+        enum: 6
+        oneOf: 1
+        required: 31
+      schema_pass: false
+    primary_and_repair_raw_bytes_identical: false
+    repair:
+      blocker_codes:
+        DRAFT_SCHEMA_FAILURE: 23
+      blocker_count: 23
+      blocker_path_patterns:
+        assertions/*: 13
+        entities/*: 3
+        events/*: 2
+        mentions/*/role: 4
+        propositions/*: 1
+      category: DRAFT_SCHEMA_FAILURE
+      compiler_reached: false
+      json_failure_class: null
+      json_parse: true
+      schema_error_count: 69
+      schema_keywords:
+        additionalProperties: 18
+        enum: 4
+        oneOf: 1
+        required: 46
+      schema_pass: false
+    repair_effect: PARTIALLY_CLEARED
+    request_fingerprints_differ: true
+    terminal_category: DRAFT_SCHEMA_FAILURE
+    terminal_category_reproduced: true
+  - blocker_paths_cleared: 0
+    blocker_paths_new: 0
+    blocker_paths_unchanged: 30
+    case_id: DEV3_03
+    primary:
+      blocker_codes:
+        DRAFT_SCHEMA_FAILURE: 30
+      blocker_count: 30
+      blocker_path_patterns:
+        anchors/*: 2
+        assertions/*: 14
+        entities/*: 5
+        events/*: 2
+        mentions/*/role: 7
+      category: DRAFT_SCHEMA_FAILURE
+      compiler_reached: false
+      json_failure_class: null
+      json_parse: true
+      schema_error_count: 71
+      schema_keywords:
+        additionalProperties: 23
+        enum: 7
+        required: 41
+      schema_pass: false
+    primary_and_repair_raw_bytes_identical: false
+    repair:
+      blocker_codes:
+        DRAFT_SCHEMA_FAILURE: 30
+      blocker_count: 30
+      blocker_path_patterns:
+        anchors/*: 2
+        assertions/*: 14
+        entities/*: 5
+        events/*: 2
+        mentions/*/role: 7
+      category: DRAFT_SCHEMA_FAILURE
+      compiler_reached: false
+      json_failure_class: null
+      json_parse: true
+      schema_error_count: 67
+      schema_keywords:
+        additionalProperties: 21
+        enum: 7
+        required: 39
+      schema_pass: false
+    repair_effect: SAME_BLOCKER
+    request_fingerprints_differ: true
+    terminal_category: DRAFT_SCHEMA_FAILURE
+    terminal_category_reproduced: true
+  - blocker_paths_cleared: 0
+    blocker_paths_new: 0
+    blocker_paths_unchanged: 27
+    case_id: DEV3_04
+    primary:
+      blocker_codes:
+        DRAFT_SCHEMA_FAILURE: 27
+      blocker_count: 27
+      blocker_path_patterns:
+        assertions/*: 13
+        entities/*: 2
+        events/*: 3
+        mentions/*/role: 4
+        propositions/*: 5
+      category: DRAFT_SCHEMA_FAILURE
+      compiler_reached: false
+      json_failure_class: null
+      json_parse: true
+      schema_error_count: 61
+      schema_keywords:
+        additionalProperties: 18
+        enum: 4
+        oneOf: 5
+        required: 34
+      schema_pass: false
+    primary_and_repair_raw_bytes_identical: false
+    repair:
+      blocker_codes:
+        DRAFT_SCHEMA_FAILURE: 27
+      blocker_count: 27
+      blocker_path_patterns:
+        assertions/*: 13
+        entities/*: 2
+        events/*: 3
+        mentions/*/role: 4
+        propositions/*: 5
+      category: DRAFT_SCHEMA_FAILURE
+      compiler_reached: false
+      json_failure_class: null
+      json_parse: true
+      schema_error_count: 55
+      schema_keywords:
+        additionalProperties: 15
+        enum: 4
+        oneOf: 5
+        required: 31
+      schema_pass: false
+    repair_effect: SAME_BLOCKER
+    request_fingerprints_differ: true
+    terminal_category: DRAFT_SCHEMA_FAILURE
+    terminal_category_reproduced: true
+  - blocker_paths_cleared: 2
+    blocker_paths_new: 0
+    blocker_paths_unchanged: 22
+    case_id: DEV3_05
+    primary:
+      blocker_codes:
+        DRAFT_SCHEMA_FAILURE: 24
+      blocker_count: 24
+      blocker_path_patterns:
+        assertions/*: 10
+        entities/*: 4
+        events/*: 1
+        evidence/*/role: 2
+        mentions/*/role: 6
+        propositions/*: 1
+      category: DRAFT_SCHEMA_FAILURE
+      compiler_reached: false
+      json_failure_class: null
+      json_parse: true
+      schema_error_count: 48
+      schema_keywords:
+        additionalProperties: 14
+        enum: 8
+        oneOf: 1
+        required: 25
+      schema_pass: false
+    primary_and_repair_raw_bytes_identical: false
+    repair:
+      blocker_codes:
+        DRAFT_SCHEMA_FAILURE: 22
+      blocker_count: 22
+      blocker_path_patterns:
+        assertions/*: 10
+        entities/*: 4
+        events/*: 1
+        mentions/*/role: 6
+        propositions/*: 1
+      category: DRAFT_SCHEMA_FAILURE
+      compiler_reached: false
+      json_failure_class: null
+      json_parse: true
+      schema_error_count: 48
+      schema_keywords:
+        additionalProperties: 15
+        enum: 6
+        oneOf: 1
+        required: 26
+      schema_pass: false
+    repair_effect: PARTIALLY_CLEARED
+    request_fingerprints_differ: true
+    terminal_category: DRAFT_SCHEMA_FAILURE
+    terminal_category_reproduced: true
+  - blocker_paths_cleared: 0
+    blocker_paths_new: 0
+    blocker_paths_unchanged: 1
+    case_id: DEV3_06
+    primary:
+      blocker_codes:
+        JSON_PARSE_FAILURE: 1
+      blocker_count: 1
+      blocker_path_patterns:
+        $: 1
+      category: JSON_PARSE_FAILURE
+      compiler_reached: false
+      json_failure_class: MALFORMED_OBJECT_MEMBER
+      json_parse: false
+      schema_error_count: 0
+      schema_keywords: {}
+      schema_pass: false
+    primary_and_repair_raw_bytes_identical: true
+    repair:
+      blocker_codes:
+        JSON_PARSE_FAILURE: 1
+      blocker_count: 1
+      blocker_path_patterns:
+        $: 1
+      category: JSON_PARSE_FAILURE
+      compiler_reached: false
+      json_failure_class: MALFORMED_OBJECT_MEMBER
+      json_parse: false
+      schema_error_count: 0
+      schema_keywords: {}
+      schema_pass: false
+    repair_effect: SAME_BLOCKER
+    request_fingerprints_differ: true
+    terminal_category: JSON_PARSE_FAILURE
+    terminal_category_reproduced: true
+  - blocker_paths_cleared: 3
+    blocker_paths_new: 0
+    blocker_paths_unchanged: 39
+    case_id: DEV3_07
+    primary:
+      blocker_codes:
+        DRAFT_SCHEMA_FAILURE: 42
+      blocker_count: 42
+      blocker_path_patterns:
+        anchors/*: 3
+        assertions/*: 15
+        entities/*: 3
+        events/*: 2
+        evidence/*: 3
+        evidence/*/role: 3
+        mentions/*/role: 13
+      category: DRAFT_SCHEMA_FAILURE
+      compiler_reached: false
+      json_failure_class: null
+      json_parse: true
+      schema_error_count: 83
+      schema_keywords:
+        additionalProperties: 26
+        enum: 16
+        required: 41
+      schema_pass: false
+    primary_and_repair_raw_bytes_identical: false
+    repair:
+      blocker_codes:
+        DRAFT_SCHEMA_FAILURE: 39
+      blocker_count: 39
+      blocker_path_patterns:
+        anchors/*: 3
+        assertions/*: 15
+        entities/*: 3
+        events/*: 2
+        evidence/*/role: 3
+        mentions/*/role: 13
+      category: DRAFT_SCHEMA_FAILURE
+      compiler_reached: false
+      json_failure_class: null
+      json_parse: true
+      schema_error_count: 97
+      schema_keywords:
+        additionalProperties: 23
+        enum: 16
+        required: 58
+      schema_pass: false
+    repair_effect: PARTIALLY_CLEARED
+    request_fingerprints_differ: true
+    terminal_category: DRAFT_SCHEMA_FAILURE
+    terminal_category_reproduced: true
+  - blocker_paths_cleared: 1
+    blocker_paths_new: 26
+    blocker_paths_unchanged: 0
+    case_id: DEV3_08
+    primary:
+      blocker_codes:
+        JSON_PARSE_FAILURE: 1
+      blocker_count: 1
+      blocker_path_patterns:
+        $: 1
+      category: JSON_PARSE_FAILURE
+      compiler_reached: false
+      json_failure_class: MALFORMED_OBJECT_MEMBER
+      json_parse: false
+      schema_error_count: 0
+      schema_keywords: {}
+      schema_pass: false
+    primary_and_repair_raw_bytes_identical: false
+    repair:
+      blocker_codes:
+        DRAFT_SCHEMA_FAILURE: 26
+      blocker_count: 26
+      blocker_path_patterns:
+        assertions/*: 13
+        entities/*: 5
+        events/*: 2
+        mentions/*/role: 5
+        propositions/*: 1
+      category: DRAFT_SCHEMA_FAILURE
+      compiler_reached: false
+      json_failure_class: null
+      json_parse: true
+      schema_error_count: 52
+      schema_keywords:
+        additionalProperties: 18
+        enum: 5
+        oneOf: 1
+        required: 28
+      schema_pass: false
+    repair_effect: DIFFERENT_BLOCKER
+    request_fingerprints_differ: true
+    terminal_category: DRAFT_SCHEMA_FAILURE
+    terminal_category_reproduced: true
+  - blocker_paths_cleared: 0
+    blocker_paths_new: 0
+    blocker_paths_unchanged: 33
+    case_id: DEV3_09
+    primary:
+      blocker_codes:
+        DRAFT_SCHEMA_FAILURE: 33
+      blocker_count: 33
+      blocker_path_patterns:
+        assertions/*: 16
+        entities/*: 6
+        entities/*/kind: 1
+        events/*: 3
+        mentions/*/role: 6
+        propositions/*: 1
+      category: DRAFT_SCHEMA_FAILURE
+      compiler_reached: false
+      json_failure_class: null
+      json_parse: true
+      schema_error_count: 71
+      schema_keywords:
+        additionalProperties: 25
+        enum: 7
+        oneOf: 1
+        required: 38
+      schema_pass: false
+    primary_and_repair_raw_bytes_identical: false
+    repair:
+      blocker_codes:
+        DRAFT_SCHEMA_FAILURE: 33
+      blocker_count: 33
+      blocker_path_patterns:
+        assertions/*: 16
+        entities/*: 6
+        entities/*/kind: 1
+        events/*: 3
+        mentions/*/role: 6
+        propositions/*: 1
+      category: DRAFT_SCHEMA_FAILURE
+      compiler_reached: false
+      json_failure_class: null
+      json_parse: true
+      schema_error_count: 71
+      schema_keywords:
+        additionalProperties: 25
+        enum: 7
+        oneOf: 1
+        required: 38
+      schema_pass: false
+    repair_effect: SAME_BLOCKER
+    request_fingerprints_differ: true
+    terminal_category: DRAFT_SCHEMA_FAILURE
+    terminal_category_reproduced: true
+  - blocker_paths_cleared: 4
+    blocker_paths_new: 0
+    blocker_paths_unchanged: 3
+    case_id: DEV3_10
+    primary:
+      blocker_codes:
+        DRAFT_SCHEMA_FAILURE: 7
+      blocker_count: 7
+      blocker_path_patterns:
+        entities/*/kind: 1
+        events/*: 1
+        mentions/*/role: 3
+        propositions/*: 2
+      category: DRAFT_SCHEMA_FAILURE
+      compiler_reached: false
+      json_failure_class: null
+      json_parse: true
+      schema_error_count: 9
+      schema_keywords:
+        additionalProperties: 1
+        enum: 4
+        oneOf: 2
+        required: 2
+      schema_pass: false
+    primary_and_repair_raw_bytes_identical: false
+    repair:
+      blocker_codes:
+        DRAFT_SCHEMA_FAILURE: 3
+      blocker_count: 3
+      blocker_path_patterns:
+        mentions/*/role: 3
+      category: DRAFT_SCHEMA_FAILURE
+      compiler_reached: false
+      json_failure_class: null
+      json_parse: true
+      schema_error_count: 3
+      schema_keywords:
+        enum: 3
+      schema_pass: false
+    repair_effect: PARTIALLY_CLEARED
+    request_fingerprints_differ: true
+    terminal_category: DRAFT_SCHEMA_FAILURE
+    terminal_category_reproduced: true
+
+json_parse_failures:
+  class: MALFORMED_OBJECT_MEMBER
+  description: A non-string token where an object property name is expected, partway through the document.
+  truncated: false
+  non_json_prefix_or_code_fence: false
+  braces_and_brackets_balanced: true
+  affected_responses: [DEV3_06_PRIMARY, DEV3_06_REPAIR, DEV3_08_PRIMARY]
+  DEV3_06:
+    primary_raw_bytes_valid_json: false
+    repair_raw_bytes_valid_json: false
+    primary_raw_sha256_equals_repair_raw_sha256: true
+    request_fingerprints_differ: true
+    separate_durable_jobs: true
+    separate_provider_windows_with_different_start_times: true
+    prompt_token_counts_differ: true
+    mechanism: MODEL_RETURNED_IDENTICAL_BYTES_FOR_A_DIFFERENT_REQUEST
+    request_or_prompt_fingerprint_defect: false
+    checkpoint_reuse_defect: false
+    sanitized_repair_diagnostic: PHASE_JSON_CODE_JSON_PARSE_FAILURE_PATH_ROOT_WITHOUT_POSITION
+  DEV3_08:
+    primary_raw_bytes_valid_json: false
+    repair_raw_bytes_valid_json: true
+    repair_then_failed: DRAFT_SCHEMA_FAILURE
+
+repair_forensics:
+  primary_category_repair_eligible: 10
+  recorded_blockers_have_phase_code_path_only: 20
+  repair_prompt_grew_by_at_least_the_primary_output_tokens: 10
+  repair_request_fingerprint_differs_from_primary: 10
+  repairs: 10
+  repairs_reaching_schema_validity: 0
+  primary_schema_blocker_paths_in_schema_failed_primaries: 228
+  of_those_cleared_by_repair: 14
+  new_blocker_paths_introduced_in_those_cases: 0
+  repair_constructor: UNCHANGED_B3G_RUNNER_CORE_EXECUTE_CASE
+  gold_or_quality_signal_in_repair_request: false
+  exact_repair_prompt_reconstruction: NOT_PERFORMED_REQUIRES_DEV3_PREPARED_INPUT
+
+# Compared offline against public tracked files only.
+prompt_schema_audit:
+  definitions_present_in_prompt:
+  - Mention
+  definitions_referenced_but_absent_from_prompt:
+  - Assertion
+  - Entity
+  - Event
+  - Evidence
+  - EvidenceRole
+  - Proposition
+  - TemporalAnchor
+  external_ref_resource: urn:ai-storytelling:story-extraction:draft:v1
+  prompt_schema_section_is_the_v1_1_schema_file: true
+  provider_response_schema_used: false
+  v1_definitions_total: 17
+  v1_schema_id_appears_only_as_ref_target: true
+  v1_schema_text_in_prompt: false
+  key_name_status_meaning: WHERE_THE_KEY_NAME_APPEARS_IN_THE_PROMPT_NOT_WHETHER_THE_RECORD_IS_DEFINED
+  referenced_definitions:
+    Assertion:
+      all_keys:
+        epistemic_status: ABSENT_FROM_PROMPT
+        handle: EXPLICIT_IN_PROMPT
+        polarity: IMPLICIT_ONLY
+        proposition_handle: ABSENT_FROM_PROMPT
+        support: IMPLICIT_ONLY
+        textual_ambiguity: ABSENT_FROM_PROMPT
+        validity: IMPLICIT_ONLY
+      definition_text_in_prompt: false
+      enum_values_appearing_anywhere_in_prompt: 0
+      enum_values_total: 0
+      required_keys:
+        epistemic_status: ABSENT_FROM_PROMPT
+        handle: EXPLICIT_IN_PROMPT
+        polarity: IMPLICIT_ONLY
+        proposition_handle: ABSENT_FROM_PROMPT
+        support: IMPLICIT_ONLY
+    Entity:
+      all_keys:
+        editorial_label: ABSENT_FROM_PROMPT
+        handle: EXPLICIT_IN_PROMPT
+        kind: IMPLICIT_ONLY
+        placeholder: IMPLICIT_ONLY
+      definition_text_in_prompt: false
+      enum_values_appearing_anywhere_in_prompt: 0
+      enum_values_total: 0
+      required_keys:
+        handle: EXPLICIT_IN_PROMPT
+        kind: IMPLICIT_ONLY
+    Event:
+      all_keys:
+        anchor_handle: ABSENT_FROM_PROMPT
+        editorial_label: ABSENT_FROM_PROMPT
+        event_kind: IMPLICIT_ONLY
+        handle: EXPLICIT_IN_PROMPT
+      definition_text_in_prompt: false
+      enum_values_appearing_anywhere_in_prompt: 0
+      enum_values_total: 0
+      required_keys:
+        anchor_handle: ABSENT_FROM_PROMPT
+        event_kind: IMPLICIT_ONLY
+        handle: EXPLICIT_IN_PROMPT
+    Evidence:
+      all_keys:
+        handle: EXPLICIT_IN_PROMPT
+        occurrence: EXPLICIT_IN_PROMPT
+        passage_handle: EXPLICIT_IN_PROMPT
+        quote: EXPLICIT_IN_PROMPT
+        role: EXPLICIT_IN_PROMPT
+      definition_text_in_prompt: false
+      enum_values_appearing_anywhere_in_prompt: 0
+      enum_values_total: 0
+      required_keys:
+        handle: EXPLICIT_IN_PROMPT
+        passage_handle: EXPLICIT_IN_PROMPT
+        quote: EXPLICIT_IN_PROMPT
+        role: EXPLICIT_IN_PROMPT
+    EvidenceRole:
+      all_keys: {}
+      definition_text_in_prompt: false
+      enum_values_appearing_anywhere_in_prompt: 3
+      enum_values_total: 5
+      required_keys: {}
+    Proposition:
+      all_keys:
+        args: IMPLICIT_ONLY
+        editorial_label: ABSENT_FROM_PROMPT
+        handle: EXPLICIT_IN_PROMPT
+        placeholder: IMPLICIT_ONLY
+        predicate: IMPLICIT_ONLY
+      definition_text_in_prompt: false
+      enum_values_appearing_anywhere_in_prompt: 0
+      enum_values_total: 0
+      required_keys: {}
+    TemporalAnchor:
+      all_keys:
+        anchor_kind: ABSENT_FROM_PROMPT
+        editorial_label: ABSENT_FROM_PROMPT
+        event_handle: ABSENT_FROM_PROMPT
+        handle: EXPLICIT_IN_PROMPT
+      definition_text_in_prompt: false
+      enum_values_appearing_anywhere_in_prompt: 0
+      enum_values_total: 0
+      required_keys:
+        anchor_kind: ABSENT_FROM_PROMPT
+        handle: EXPLICIT_IN_PROMPT
+  recurring_requirements:
+    - requirement: assertions required proposition_handle
+      repair_cases_affected: 8
+      prompt_status: ABSENT_FROM_PROMPT
+      conflict: NO_CONFLICT
+    - requirement: assertions required support
+      repair_cases_affected: 8
+      prompt_status: IMPLICIT_ONLY
+      conflict: NO_CONFLICT
+      note: The preamble speaks of assertion support and its labels; the support object and its keys are not defined.
+    - requirement: assertions allowed key set
+      repair_cases_affected: 8
+      prompt_status: ABSENT_FROM_PROMPT
+      conflict: NO_CONFLICT
+    - requirement: mention role allowed values
+      repair_cases_affected: 9
+      prompt_status: ABSENT_FROM_PROMPT
+      conflict: NO_CONFLICT
+      note: The role key is defined; its value set is delegated to the absent EvidenceRole definition.
+    - requirement: events required anchor_handle
+      repair_cases_affected: 8
+      prompt_status: ABSENT_FROM_PROMPT
+      conflict: NO_CONFLICT
+    - requirement: events required event_kind
+      repair_cases_affected: 5
+      prompt_status: IMPLICIT_ONLY
+      conflict: NO_CONFLICT
+      note: The name occurs only inside the predicate registry.
+    - requirement: entities required kind
+      repair_cases_affected: 6
+      prompt_status: IMPLICIT_ONLY
+      conflict: NO_CONFLICT
+      note: The word and the kind values occur only inside the predicate registry.
+    - requirement: entities allowed key set
+      repair_cases_affected: 8
+      prompt_status: ABSENT_FROM_PROMPT
+      conflict: NO_CONFLICT
+    - requirement: propositions record shape
+      repair_cases_affected: 6
+      prompt_status: ABSENT_FROM_PROMPT
+      conflict: NO_CONFLICT
+    - requirement: anchors required anchor_kind and event_handle
+      repair_cases_affected: 2
+      prompt_status: ABSENT_FROM_PROMPT
+      conflict: NO_CONFLICT
+    - requirement: assertions required epistemic_status
+      repair_cases_affected: 2
+      prompt_status: ABSENT_FROM_PROMPT
+      conflict: NO_CONFLICT
+      note: The three values are listed in the preamble; the key name is not.
+    - requirement: eight top-level arrays, draft_version, mention keys and handle formats
+      repair_cases_affected: 0
+      prompt_status: EXPLICIT_IN_PROMPT
+      conflict: NO_CONFLICT
+      note: Every JSON-valid response satisfied these.
+  overall: >-
+    The preamble calls the appended schema exact and authoritative and tells the model to use only schema
+    keys. The appended schema is the Draft V1.1 delta: it defines the root object and Mention and refers to
+    the Draft V1 schema for everything else. The Draft V1 schema text is not in the prompt. The earlier P2
+    prompt embedded the full Draft V1 schema and contains these definitions.
+
+root_cause_attribution:
+  - id: RC1_SCHEMA_IN_PROMPT_IS_NOT_SELF_CONTAINED
+    category: B_PROMPT_INTERFACE_SPECIFICATION_GAP
+    confidence: HIGH
+    affects: PRIMARY_AND_REPAIR
+    terminal_cases_explained: 9
+    evidence:
+      - The schema section of the locked system prompt is exactly the Draft V1.1 schema file.
+      - That file defines the root object and Mention only, and refers by $ref to seven Draft V1 definitions.
+      - The Draft V1 schema text is absent from the prompt; its identifier appears only as a $ref target.
+      - The keys proposition_handle, epistemic_status, anchor_handle, anchor_kind, event_handle, evidence_sets, evidence_handles, derivations, premise_handles and rule_id appear nowhere in the prompt.
+      - 483 of 483 primary and 545 of 545 repair schema errors lie in those absent definitions.
+      - 0 schema errors lie in the root object or the Mention structure, which the prompt does define.
+      - The repair system prompt is the primary system prompt plus a suffix, so it has the same gap.
+  - id: RC2_MALFORMED_JSON_UNDER_JSON_MIME_MODE
+    category: A_MODEL_STRUCTURAL_CONFORMANCE
+    confidence: MEDIUM
+    affects: PRIMARY_AND_REPAIR
+    terminal_cases_explained: 1
+    evidence:
+      - 3 of 20 responses are not valid JSON. All three have the class MALFORMED_OBJECT_MEMBER, are not truncated and carry no prefix.
+      - The request set the JSON response MIME type and no provider response schema.
+      - Raw bytes are hash-locked at receipt, and the hashes verify.
+  - id: RC3_SANITIZED_REPAIR_DIAGNOSTIC_CARRIES_PATH_ONLY
+    category: C_REPAIR_DIAGNOSTIC_OR_REPAIR_PROMPT_LIMITATION
+    confidence: MEDIUM
+    affects: REPAIR
+    role: SECONDARY_TO_RC1
+    evidence:
+      - Each schema blocker is phase, code and path. All 468 share one code and name no keyword and no field.
+      - The JSON blocker has the root path and no position.
+      - 0 of 10 repairs reached schema validity. Repairs cleared 14 of 228 primary schema blocker paths and introduced 0.
+      - One repair returned bytes identical to its primary.
+      - The definitions needed to correct the blockers were absent from the repair prompt as well, so RC1 alone would prevent a successful repair.
+  - id: RC4_SCHEMA_OR_COMPILER_DEFECT
+    category: D_SCHEMA_OR_COMPILER_DEFECT
+    finding: NOT_SUPPORTED_BY_EVIDENCE
+    confidence: HIGH
+    evidence:
+      - The replay of the unchanged validator is deterministic and equals all 20 recorded blocker sets.
+      - The validator resolves the Draft V1 references correctly; committed tests show oracle drafts pass it.
+      - The gap is in what the prompt shows the model, not in what the validator enforces.
+  - id: RC5_EXECUTION_OR_SERIALIZATION_DEFECT
+    category: E_EXECUTION_OR_SERIALIZATION_DEFECT
+    finding: NOT_SUPPORTED_BY_EVIDENCE
+    confidence: HIGH
+    evidence:
+      - All 20 raw-response hashes, 17 draft hashes and 10 failure-record hashes verify against the lock.
+      - The identical DEV3_06 bytes came from two separate provider operations with different request fingerprints and prompt token counts.
+  - id: RC6_OPEN_QUESTIONS
+    category: F_INSUFFICIENT_EVIDENCE_FOR_ATTRIBUTION
+    items:
+      - Whether the DEV3_06 content would pass the schema is unknown; it never parsed.
+      - Why DEV3_10 has far fewer blockers than the other cases was not investigated.
+      - Whether a self-contained prompt would have produced valid drafts is unknown; it cannot be tested without a new run.
+      - Extraction quality was not evaluated. No draft reached the compiler, and gold stayed sealed.
+
+h0_known_fact:
+  source: M4_04B3H0_DEV3_EVALUATION_DECISION_LOCK
+  terminal_structural_failure_case: L0_FAIL_AND_FULL_CANONICAL_CASE_SUCCESS_FALSE
+  l0_valid_final_case_count: 0
+  required: 10
+  safety_gate_can_pass: false
+  holdout_eligibility_possible: false
+  formal_decide_invoked: false
+  reason: REMAINING_GOLD_DEPENDENT_OBSERVATIONS_NOT_FABRICATED
+  gold_dependent_observations: UNKNOWN_NOT_EVALUATED
+  assumes: CHRONOLOGY_REMAINS_VALID
+
+tooling:
+  hash_mode: UTF8_LF_NORMALIZED_SHA256
+  analyzer:
+    path: tools/story_extraction/analyze_m4_04b3hr_dev3_p3_structural_failures_v1.py
+    sha256: 306a0debc3d1349fce32a288d8fac799831b1caa59ed3645a86cb909c5b23040
+  focused_tests:
+    path: tests/story_extraction/test_analyze_m4_04b3hr_dev3_p3_structural_failures_v1.py
+    sha256: c80089f6a5f7babe797bff42512d8de78dae56f27f394258792ecb0b32b677fb
+
+verification:
+  focused_forensic_tests: 17/17_PASS
+  full_offline_suites_in_accepted_environment:
+    canonical_story: 99/99_PASS
+    story_ingestion: 79/79_PASS
+    story_extraction: 495/495_PASS
+    script_quality: 64/64_PASS
+    story_benchmark: 298/298_PASS_OFFLINE
+    total: 1035/1035_PASS
+  protected_stack_verification: PASS
+  secret_scan: PASS
+  private_publication_scan: PASS
+
+decision:
+  structural_forensics_complete: true
+  dominant_attribution: B_PROMPT_INTERFACE_SPECIFICATION_GAP
+  what_the_run_did_not_measure: EXTRACTION_QUALITY_OR_SEMANTIC_ABILITY_OF_THE_EXTRACTOR
+  design_change_made_in_this_task: false
+  DEV3_gold: SEALED
+  holdout: NOT_AUTHORIZED
+  recommended_next_action: ORCHESTRATOR_REVIEW_FOR_VERSIONED_P4_REDESIGN_AND_FRESH_DEV4
+  secondary_considerations_for_the_orchestrator:
+    - STRUCTURED_OUTPUT_STRATEGY_FOR_JSON_SYNTAX_PER_RC2
+    - CONTENT_OF_THE_SANITIZED_REPAIR_DIAGNOSTIC_PER_RC3
