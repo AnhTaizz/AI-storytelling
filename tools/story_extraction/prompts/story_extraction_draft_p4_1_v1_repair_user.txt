@@ -1,0 +1,87 @@
+STRUCTURAL REPAIR FOR {CASE_ID}
+
+This is the only repair for this case. The primary response below was rejected by
+deterministic JSON parsing, by the model output schema, or by the frozen compiler and
+canonical validator. STRUCTURAL_DIAGNOSTIC_V3_JSON lists what was rejected.
+
+WHAT TO DO
+- Correct every finding. Change only what a finding requires.
+- Preserve every other choice of the primary response: its records, handles, predicates,
+  arguments, polarity, epistemic status and support, wherever a finding does not require
+  a change.
+- Do not add facts, improve coverage, optimize quality, use scores or consult gold.
+- Do not reinterpret the story merely to satisfy a rule. If a finding cannot be corrected
+  without asserting something the passages do not support, remove the record that
+  breaks the rule, together with the records that depend on it, instead of inventing a
+  replacement.
+- Return a response that is different from the primary response. Returning it unchanged
+  repeats the same rejection.
+
+HOW TO READ A FINDING
+- phase and code name the stage and the rule that rejected the draft. rule_class says
+  the same thing in words.
+- record_collection, record_index and record_handle identify the record in the primary
+  response. record_index counts from 0 within that collection. schema_path points
+  further inside the record. A value of null or <UNVERIFIED> means the host could not
+  identify that part safely.
+- validator_check and validator_section name the canonical validator check, when the
+  finding comes from canonical conformance.
+- structural_detail holds counts, registry values and verified handles. It never holds
+  story text and never states what the story content should be.
+- source says who found the problem. FROZEN_COMPILER_BLOCKER is the compiler's own
+  rejection. INDEPENDENT_REGISTRY_CHECK is the host applying the same registry rule to
+  your draft directly. When compiler_reached is false, the compiler stopped at an
+  earlier finding and would have rejected this one next. Correct it as well.
+- repairable_by_model false marks a failure on the host side. You cannot correct it.
+  Do not change the draft because of it.
+- Every finding is a separate problem. Correct all of them.
+- complete false means the host could not describe at least one failure fully.
+  limitations says what the host could not tell you. When canonical validation was not
+  reached, or when not every canonical issue is enumerated, re-check the whole draft
+  against the three COMPILER RULE sections, not only the listed findings.
+
+RULES BY CODE
+- AMBIGUOUS_QUOTE: the quote of that record occurs more than once in its passage and the
+  record has no occurrence. exact_match_count is the number of exact matches. Add
+  occurrence with the 1-based index of the match the record refers to, between
+  valid_occurrence_minimum and valid_occurrence_maximum. Decide which match from the
+  passage. The host does not know which one you mean and no default is correct.
+- QUOTE_NOT_FOUND: the quote is not an exact substring of its passage. Copy it from the
+  passage code point for code point.
+- OCCURRENCE_OUT_OF_RANGE: occurrence is larger than exact_match_count.
+- UNKNOWN_PASSAGE_HANDLE and CONTEXT_ONLY_EVIDENCE: the record cites a passage that was
+  not supplied, or one that is not EVIDENCE_ELIGIBLE.
+- UNKNOWN_HANDLE, HANDLE_TYPE_MISMATCH, DUPLICATE_HANDLE and PRIOR_CONTEXT_NOT_EVIDENCE:
+  a handle at schema_path does not exist, has the wrong record type, is used for more
+  than one record, or is not evidence declared in this draft.
+- UNREGISTERED_PREDICATE, UNREGISTERED_EVENT_KIND and UNREGISTERED_RULE: the value at
+  schema_path is not in the predicate registry.
+- ARGUMENT_ENTITY_KIND_NOT_ALLOWED: in the proposition named by the finding, the entity
+  referenced by argument has kind referenced_entity_kind, and the registry allows only
+  allowed_entity_kinds for that argument of that predicate. The registry constraint is
+  fixed. The host does not say which record is wrong.
+- RULE_CANNOT_CONCLUDE_PREDICATE: in the assertion named by the finding, the derivation
+  at derivation_index uses rule_id, and that rule may conclude only
+  allowed_conclusion_predicates. The assertion's proposition uses a different predicate.
+  The registry constraint is fixed. The host does not say which predicate is right.
+- DUPLICATE_CONCRETE_PROPOSITION_CONTENT: the proposition named by the finding has the
+  same content as identical_to_record_handle. Keep one of them and make every reference
+  cite the one you keep.
+- CANONICAL_CONFORMANCE_FAILURE with rule_class UNRECOGNIZED_CANONICAL_RULE: the
+  canonical validator rejected the draft in validator_check and the host cannot name the
+  rule. Re-check the draft against the registry and the three COMPILER RULE sections.
+- DRAFT_SCHEMA_FAILURE: structural_detail names the schema keyword and the allowed
+  fields, tokens, type or pattern at schema_path.
+- JSON_PARSE_FAILURE: the response was not one JSON value. structural_detail gives the
+  error class with its line and column.
+
+HOST_PREPARED_INPUT_JSON:
+{PREPARED_INPUT_JSON}
+
+PRIMARY_SUCCESSFUL_RESPONSE:
+{PRIMARY_RESPONSE}
+
+STRUCTURAL_DIAGNOSTIC_V3_JSON:
+{STRUCTURAL_DIAGNOSTIC_JSON}
+
+Return exactly one corrected STORY_EXTRACTION_DRAFT_V1_1 JSON object and nothing else.

@@ -1,0 +1,111 @@
+STORY EXTRACTION DRAFT P4.1 V1
+
+Return exactly one JSON object conforming to STORY_EXTRACTION_DRAFT_V1_1, as defined by
+the complete model output schema below. Return no Markdown, prose, code fence,
+commentary, alternate answer, or canonical batch. Do not reproduce trusted host metadata.
+
+The host compiles the draft deterministically with a frozen compiler and then checks the
+result with a frozen canonical validator. A draft that satisfies the schema can still be
+rejected by them. The three sections marked COMPILER RULE state what they enforce beyond
+the schema. Check each one before you answer.
+
+INPUT AND LOCAL HANDLES
+- Passages are P1, P2, ... in supplied order. Read only supplied passages.
+- EVIDENCE_ELIGIBLE passages may be cited. CONTEXT_ONLY passages may guide
+  interpretation but must never be cited by evidence or mentions.
+- Existing context handles such as E_EXISTING_1, EVT_EXISTING_1, T_EXISTING_1,
+  PROP_EXISTING_1, M_EXISTING_1, EV_EXISTING_1, and A_EXISTING_1 are immutable. Reuse
+  an appropriate existing handle for the same record and do not emit that record again.
+- New local handles are EV1 for evidence, M1 for mentions, E_NEW_1 for entities, EVT1
+  for events, T1 for temporal anchors, PROP1 for propositions, and A1 for assertions.
+  Handles carry no story meaning and must remain type-correct.
+
+EXACT EVIDENCE AND MENTIONS
+- Every evidence and mention selects one passage_handle and a quote taken from that
+  passage.
+- A mention has only handle, passage_handle, quote, optional occurrence, role, and
+  optional surface_form. A mention MUST NOT contain evidence_handle. The compiler
+  deterministically creates or reuses its exact mention EvidenceRef.
+- Assertion support is separate: assertions cite EV handles declared in evidence[].
+  Broad assertion evidence must never be used as an implicit mention locator.
+- New evidence and mention locators may cite only EVIDENCE_ELIGIBLE passages. Existing
+  evidence and CONTEXT_ONLY text cannot support a new assertion.
+
+QUOTE LOCATORS - COMPILER RULE
+- The compiler finds a quote by exact code-point substring matching in the text of the
+  selected passage. Nothing is normalized. Letter case, whitespace, punctuation and
+  Unicode composition must be identical to the passage, code point for code point.
+- Count the exact matches of the quote in the selected passage. Matches may overlap and
+  every match counts.
+- If the count is 0, the locator is rejected. The quote is not in that passage as written.
+- If the count is 1, occurrence may be omitted.
+- If the count is 2 or more, occurrence is required. A repeated quote without occurrence
+  is rejected.
+- occurrence is the 1-based index, in reading order, of the match you are citing. It
+  must not exceed the count. Give the index of the match you actually mean. Do not give
+  1 merely to satisfy the rule.
+- Do this for every mention and for every evidence record. Short quotes, such as one
+  character, a pronoun, a name or a common word, are the most likely to repeat. Count
+  them before you emit them.
+- occurrence says which match is cited. It is not a source offset. Never output
+  offsets, positions or any other host-owned metadata.
+- Synthetic examples. The text is invented and is not from any story:
+{QUOTE_LOCATOR_EXAMPLES}
+
+SEMANTIC DISCIPLINE
+- Emit draft_version and all seven required top-level arrays, including empty arrays.
+  In every record use only the keys the model output schema defines for that record.
+- Use only predicates, argument names, argument kinds, vocabularies, and derivation
+  rules in the appended exact predicate registry. Never invent or approximate a predicate.
+- Preserve polarity exactly: AFFIRMED, NEGATED, or OPEN. Preserve EXPLICIT, ENTAILED,
+  and SUGGESTED without upgrading uncertainty or suggestion.
+- Says, Attitude, and Intends are holder-relative. They do not assert embedded content
+  as world truth. A report or belief does not make an event occur.
+- An event record does not establish occurrence. Adjacency and temporal order do not
+  establish Causes. Keep identity unresolved unless RefersTo or SameAs is supported.
+- For stative assertions, keep unsupported temporal bounds OPEN. PARTIAL and
+  CORROBORATING evidence do not replace a SUFFICIENT support path.
+
+REGISTRY CONSTRAINTS - COMPILER RULE
+- The appended predicate registry is enforced after compilation. A registered predicate,
+  a registered argument name and a registered rule can still be combined in a way the
+  registry forbids.
+- Entity kinds. An argument of kind ENTITY takes the handle of an entity. That is one
+  constraint. Some arguments also carry entity_kinds in the registry. Then the
+  referenced entity's own kind must be one of the listed kinds. That is a second,
+  separate constraint. A type-correct entity handle can still break it. Before you emit
+  a proposition, check every such argument against the kind of the entity it references:
+  the kind you gave a new entity, or the kind of the existing entity. Use the registry's
+  values. Never guess them.
+- Derivation rules. A derivation inside an assertion's support may support only an
+  assertion whose proposition uses a predicate listed in that rule's
+  conclusion_predicates. A registered rule_id is not sufficient, and valid premise
+  handles are not sufficient. If no registered rule can conclude the predicate, do not
+  attach that derivation.
+- The two lists below are derived mechanically from the appended registry. They repeat
+  it and add nothing. The registry is authoritative.
+{REGISTRY_DERIVED_CONSTRAINTS}
+
+PROPOSITION IDENTITY - COMPILER RULE
+- Two concrete propositions with identical content are rejected. Content is identical
+  when the predicate is the same and, for every argument name, the kind is the same and
+  the referenced handle, or the token vocabulary and value, or the literal type and
+  value, is the same. Argument order and a different handle do not make two propositions
+  different.
+- Emit such a proposition once. Several assertions may cite the same proposition handle.
+  If an identical proposition is already in existing_context, reuse its PROP_EXISTING
+  handle and do not emit it again.
+- Propositions that differ in the predicate or in any argument are distinct. Keep them.
+  Similar meaning is not identical content. Placeholder propositions are never
+  duplicates of each other.
+
+HOST-OWNED FIELDS - NEVER OUTPUT
+Do not output hashes, offsets, byte ranges, locators, source positions, source document
+or segment ids, an envelope, provenance, process/review/provider metadata, canonical
+IDs, confidence, or supplied passages/existing_context. The output root is only the
+STORY_EXTRACTION_DRAFT_V1_1 object.
+
+The complete model output schema and the exact predicate registry follow. The schema is
+self-contained: it defines every record, field, value vocabulary and handle pattern, and
+every reference in it points to a definition inside it. Both are authoritative. If an
+instruction conflicts with either one, follow the schema and registry conservatively.

@@ -1,0 +1,332 @@
+task: M4-04B4D
+status: M4_04B4D_P4_1_OFFLINE_CONTRACT_READY
+base_commit: 0d5d9ddcfe885a5b4e8a877b5c820f43a2d8b611
+scope: OFFLINE_VERSIONED_REDESIGN_OF_MODEL_FACING_INSTRUCTIONS_AND_REPAIR_DIAGNOSTIC
+accepted_forensics:
+  B4CR_commit: 0d5d9ddcfe885a5b4e8a877b5c820f43a2d8b611
+  B4CR_status: M4_04B4CR_COMPILER_FORENSICS_COMPLETE
+  B4CR_orchestrator_verdict: ACCEPT
+  B4CR_record_sha256: 9d936e007fae80a98c1be146392cb3fcbf39781783deb346caa439685e71ee31
+  P4_prediction_set_sha256: ee67ff92c72f01b98d2bd7ac892fa3fb13d437074511bc5b4bf946aa7ee66538
+  P4_result:
+    structural_valid: 5
+    structural_failure: 5
+    transport_failure: 0
+    cases: 10
+    provider_operations: 18
+  supported_compiler_defect: NONE
+  observed_failure_mechanisms:
+  - mechanism: AMBIGUOUS_QUOTE
+    stage: COMPILER_QUOTE_LOCATOR
+    blockers: 9
+    attempts: 6
+    finding: Every blocker was a mention whose quote occurs exactly twice in its passage and carries no occurrence.
+  - mechanism: ARGUMENT_ENTITY_KIND_NOT_ALLOWED
+    stage: CANONICAL_VALIDATOR
+    affected_attempts: 2
+    finding: A type-correct entity handle referenced an entity whose kind the registry does not allow for that argument.
+  - mechanism: RULE_CANNOT_CONCLUDE_PREDICATE
+    stage: CANONICAL_VALIDATOR
+    affected_attempts: 2
+    finding: A registered derivation rule supported an assertion whose predicate the rule may not conclude.
+  - mechanism: DUPLICATE_CONCRETE_PROPOSITION_CONTENT
+    stage: CANONICAL_VALIDATOR
+    affected_attempts: 1
+    finding: Two concrete propositions had identical content.
+  - mechanism: REPAIR_DIAGNOSTIC_V2_NOT_ACTIONABLE
+    stage: REPAIR
+    repair_attempts: 6
+    identical_repair_responses: 4
+    finding: Diagnostic V2 masked every record handle, named no canonical check or record, and merged blockers into
+      one finding in one repair.
+candidate:
+  identity: P4_1_STORY_EXTRACTION_DRAFT_V1_1_COMPILER_AWARE_V1
+  format: M4_P4_1_CANDIDATE_DEFINITION_V1
+  sha256: f016306647b48bf9b9dd6c7531a49c5e5775d8d9c7c760a54406e1035db218a8
+  supersedes_extractor: P4_STORY_EXTRACTION_DRAFT_V1_1_SELF_CONTAINED_V1
+  change: MODEL_FACING_INSTRUCTIONS_AND_REPAIR_DIAGNOSTIC_ONLY
+  canonical_contract_unchanged: true
+  model_schema_unchanged: true
+  provider_projection_unchanged: true
+  compiler_unchanged: true
+  canonical_validator_unchanged: true
+  registry_unchanged: true
+  new_semantic_draft_version: NONE
+  canonical_acceptance_standard_lowered: false
+  model_schema_sha256: 5aa2ed6dde3791546ddd5e059648d8dac38df1571a6073b7abc31c89eb257f14
+  provider_projection_sha256: 89506defa4089b1449f7c80bbcf782d94065802ceae71aa86e1598a5a17ab9bd
+  predicate_registry_sha256: 44f3eafc6982f84bcc74ccb91abe7cd467a453352ee96be147095f27559c5350
+  prompt_hashes:
+    primary_system_sha256: 92869de37874635a7511af7220cb015a944753316d7047e4678e3f5f80a07ccf
+    primary_user_template_sha256: 4a642008e3b4be809ab71cf9a107a35260950066bb48ee90ca9e2d64ed76c01a
+    primary_prompt_pair_sha256: b93e752db7f020398b946b3bb5c5abecee70269444fc3618baf55fef389672e4
+    repair_system_sha256: b9529f4a7fdee9ee08454688d8c30cbc573957348c403d61a8e5af2a1d0719a6
+    repair_user_template_sha256: ba1d2035852a0fca8f4d889ca8f26cadb2410373fbe6e5208b40d800a9e30ab6
+    repair_prompt_pair_sha256: 1e97f0ff6f62fb41d0dccb4b11faff4a0feee7aff3431194e8cad448f1d7e59b
+  prompt_files:
+    tools/story_extraction/prompts/story_extraction_draft_p4_1_v1_system.txt: 598aae325585dddae4588ca6f23551fe53ca91043bc9722e7fdafbc6afbbfea8
+    tools/story_extraction/prompts/story_extraction_draft_p4_1_v1_user.txt: 4a642008e3b4be809ab71cf9a107a35260950066bb48ee90ca9e2d64ed76c01a
+    tools/story_extraction/prompts/story_extraction_draft_p4_1_v1_repair_user.txt: ba1d2035852a0fca8f4d889ca8f26cadb2410373fbe6e5208b40d800a9e30ab6
+  generated_prompt_sections:
+    quote_locator_examples_sha256: 3a011df6b7c17c328c766f69eab9e0f06a5f4aa8c64a4e148c4c9e8e5df0d994
+    registry_derived_constraints_sha256: e3386cf773bf25fe91f85db63ddce5083876e81b801f1ea09ef0d2cdde801cbf
+    repair_system_suffix_sha256: 3ad6c801f1a456d3b9ad4d72197482e383d61bb1e06ebc1f029a3a492ed59a7b
+  contract_tool:
+    path: tools/story_extraction/m4_04b4d_p4_1_compiler_aware_contract_v1.py
+    sha256: daefe500545bdd03c7a07ffe364495304c4c85980ba583336b7d8dc9197e093b
+  diagnostic_v3_identity: M4_P4_1_STRUCTURAL_REPAIR_DIAGNOSTIC_V3
+  diagnostic_v3_format: M4_P4_1_STRUCTURAL_DIAGNOSTIC_V3_FORMAT_1
+  diagnostic_v3_tool:
+    path: tools/story_extraction/m4_04b4d_structural_diagnostic_v3.py
+    sha256: 962ad21da3448d73efc6fabcbe443a41b838a0cf180ec6047a4b5f58320e4adc
+  prompt_changes_relative_to_P4:
+  - ADDED_COMPILER_RULE_SECTION_QUOTE_LOCATORS
+  - ADDED_COMPILER_RULE_SECTION_REGISTRY_CONSTRAINTS
+  - ADDED_COMPILER_RULE_SECTION_PROPOSITION_IDENTITY
+  - ADDED_GENERATED_SYNTHETIC_QUOTE_EXAMPLES
+  - ADDED_GENERATED_REGISTRY_CONSTRAINT_LISTS
+  - CORRECTED_TOP_LEVEL_ARRAY_COUNT_FROM_EIGHT_TO_SEVEN_PLUS_DRAFT_VERSION
+  - REPLACED_REPAIR_PROMPT_FOR_DIAGNOSTIC_V3
+  runtime:
+    live_protocol_bound: false
+    model_bound: false
+    credential_bound: false
+    operation_budget_bound: false
+    live_runner: NOT_CREATED
+quote_locator:
+  exact_matching_semantics: EXACT_CODE_POINT_SUBSTRING_MATCH_IN_THE_SELECTED_PASSAGE_NO_NORMALIZATION
+  occurrence_rule: OPTIONAL_WHEN_EXACT_MATCH_COUNT_IS_1_REQUIRED_WHEN_2_OR_MORE_ONE_BASED_INDEX_OF_EXACT_MATCHES
+  overlapping_match_rule: OVERLAPPING_MATCHES_ALL_COUNT
+  eligible_passages: EVIDENCE_ELIGIBLE_ONLY
+  no_automatic_occurrence_guessing: true
+  host_changes_model_quote_or_occurrence: false
+  repeated_quote_without_occurrence: REJECTED_BY_THE_UNCHANGED_COMPILER
+  rule_statements_checked_in_prompt: 15
+  rule_statements_present: 15
+  synthetic_examples: 7
+  synthetic_example_properties:
+    A:
+    - QUOTE_OCCURS_ONCE
+    - QUOTE_OF_SEVERAL_CODE_POINTS
+    B:
+    - QUOTE_OCCURS_TWICE
+    - QUOTE_OF_SEVERAL_CODE_POINTS
+    C:
+    - QUOTE_OCCURS_THREE_TIMES
+    - QUOTE_OF_SEVERAL_CODE_POINTS
+    D:
+    - OVERLAPPING_MATCHES
+    - QUOTE_OCCURS_THREE_TIMES
+    - QUOTE_OF_SEVERAL_CODE_POINTS
+    E:
+    - OTHER_COUNT
+    - QUOTE_OF_SEVERAL_CODE_POINTS
+    - UNICODE_EXACT_MATCHING
+    F:
+    - QUOTE_OCCURS_TWICE
+    - QUOTE_OF_ONE_CODE_POINT
+    G:
+    - QUOTE_OCCURS_TWICE
+    - QUOTE_OF_SEVERAL_CODE_POINTS
+  synthetic_example_exact_match_counts:
+    A: 1
+    B: 2
+    C: 3
+    D: 3
+    E: 0
+    F: 2
+    G: 2
+  example_counts_computed_by_the_frozen_matcher: true
+  examples_use_DEV3_text: false
+  default_occurrence_wording_in_any_prompt: false
+canonical_rules:
+  source: GENERATED_FROM_THE_FROZEN_REGISTRY_NOT_HAND_MAINTAINED
+  registry_change_policy: COVERAGE_GATE_FAILS_CLOSED_UNTIL_REVIEWED
+  entity_kind_constraint_coverage:
+    registry_arguments_with_a_restriction: 14
+    covered_in_prompt: 14
+    arguments:
+    - AddressesAs.speaker
+    - Attitude.holder
+    - Conceals.concealer
+    - EmotionToward.holder
+    - Habitually.agent
+    - Intends.holder
+    - LocatedAt.location
+    - OccursAt.location
+    - Owns.item
+    - Owns.owner
+    - Possesses.holder
+    - Possesses.item
+    - Regard.holder
+    - Says.speaker
+    rule_statements_present: 5
+    rule_statements_checked: 5
+  derivation_conclusion_constraint_coverage:
+    registry_rules_total: 4
+    registry_rules_with_a_restriction: 4
+    covered_in_prompt: 4
+    rules:
+    - BEHAVIOUR_ENTAILS_UNAWARE
+    - BEHAVIOUR_SUGGESTS_STATE
+    - REVEAL_RESULT
+    - TRANSFER_RESULT
+    rule_statements_present: 4
+    rule_statements_checked: 4
+  duplicate_proposition_rule_coverage:
+    rule_statements_present: 8
+    rule_statements_checked: 8
+    identity: SAME_PREDICATE_AND_SAME_ARGUMENTS_BY_KIND_AND_REFERENCE_TOKEN_OR_LITERAL
+    fuzzy_or_semantic_deduplication: FORBIDDEN
+    host_rewrites_propositions: false
+diagnostic:
+  identity: M4_P4_1_STRUCTURAL_REPAIR_DIAGNOSTIC_V3
+  acceptance_authority: UNCHANGED_COMPILER_AND_CANONICAL_VALIDATOR
+  compiler_wrapped_or_patched_at_runtime: false
+  compiler_verdict_overturned_by_the_diagnostic: NEVER
+  finding_sources:
+  - JSON_PARSER
+  - MODEL_SCHEMA_VALIDATOR
+  - FROZEN_COMPILER_BLOCKER
+  - INDEPENDENT_REGISTRY_CHECK
+  sanitized_record_locator_policy:
+    record_named_by: HANDLE_MATCHING_THE_FROZEN_SCHEMA_GRAMMAR_OF_ITS_COLLECTION_PRESENT_EXACTLY_ONCE_IN_THE_PARSED_DRAFT_PLUS_NUMERIC_INDEX
+    handle_grammar_source: FROZEN_MODEL_SCHEMA
+    fallback: MASKED_LOCATOR_AND_DIAGNOSTIC_MARKED_INCOMPLETE
+    guessing: NEVER
+    mask_token: <UNVERIFIED>
+    never_copied:
+    - QUOTE_TEXT
+    - PASSAGE_TEXT
+    - ARGUMENT_VALUES
+    - UNEXPECTED_KEYS
+    - EXCEPTION_MESSAGES
+    - UNVERIFIED_HANDLES
+    - UNRECOGNIZED_COMPILER_CODES
+  known_error_class_coverage:
+    taxonomy_codes: 27
+    codes_repairable_by_the_model: 18
+    codes_explained_in_the_repair_prompt: 18
+    every_frozen_compiler_code_in_taxonomy: true
+    observed_rule_classes:
+      AMBIGUOUS_QUOTE:
+        phase: QUOTE
+        rule_class: QUOTE_REPEATED_OCCURRENCE_MISSING
+        validator_check: null
+        validator_section: null
+      ARGUMENT_ENTITY_KIND_NOT_ALLOWED:
+        phase: CANONICAL
+        rule_class: ARGUMENT_ENTITY_KIND_NOT_ALLOWED
+        validator_check: canonical
+        validator_section: predicate_integrity
+      RULE_CANNOT_CONCLUDE_PREDICATE:
+        phase: CANONICAL
+        rule_class: RULE_CANNOT_CONCLUDE_PREDICATE
+        validator_check: canonical
+        validator_section: derivation_integrity
+      DUPLICATE_CONCRETE_PROPOSITION_CONTENT:
+        phase: CANONICAL
+        rule_class: DUPLICATE_CONCRETE_PROPOSITION_CONTENT
+        validator_check: canonical
+        validator_section: predicate_integrity
+    unknown_compiler_code: REPORTED_AS_UNRECOGNIZED_COMPILER_CODE_AND_MARKED_INCOMPLETE
+  multiple_blocker_preservation:
+    one_finding_per_compiler_blocker: true
+    findings_merged_or_deduplicated: false
+    ordering: DETERMINISTIC_BY_PHASE_COLLECTION_RECORD_INDEX_CODE_PATH_DETAIL
+  canonical_check_attribution:
+    frozen_compiler_exposes: FAILED_VALIDATOR_CHECK_NAMES_ONLY
+    validator_issue_list_available_without_changing_frozen_code: false
+    method: INDEPENDENT_READ_ONLY_CHECK_OF_THE_PARSED_DRAFT_AGAINST_THE_FROZEN_REGISTRY
+    independently_checked_rule_classes:
+    - ARGUMENT_ENTITY_KIND_NOT_ALLOWED
+    - RULE_CANNOT_CONCLUDE_PREDICATE
+    - DUPLICATE_CONCRETE_PROPOSITION_CONTENT
+    other_canonical_issues: NOT_ENUMERATED_REPORTED_AS_UNRECOGNIZED_CANONICAL_RULE_WITH_THE_FAILED_CHECK_NAME
+    limitation_tokens:
+    - CANONICAL_VALIDATION_WAS_NOT_REACHED_BY_THE_COMPILER
+    - CANONICAL_ISSUES_OUTSIDE_THE_CHECKED_RULE_CLASSES_ARE_NOT_ENUMERATED
+    - A_CANONICAL_FAILURE_COULD_NOT_BE_ATTRIBUTED_TO_A_KNOWN_RULE_CLASS
+    - A_RECORD_COULD_NOT_BE_IDENTIFIED_SAFELY
+    - A_FAILURE_IS_ON_THE_HOST_SIDE_AND_IS_NOT_REPAIRABLE_BY_THE_MODEL
+    - A_COMPILER_CODE_IS_NOT_IN_THE_V3_TAXONOMY
+    - A_SCHEMA_REJECTION_COULD_NOT_BE_DESCRIBED_FROM_THE_MODEL_SCHEMA
+    - AN_INDEPENDENT_CHECK_DISAGREED_WITH_THE_COMPILER_AND_WAS_DISCARDED
+    agreement_with_the_frozen_validator_on_synthetic_mutations:
+      comparison: TEST_ONLY_FORENSIC_RECORDER_FROM_M4_04B4CR
+      targeted_variants_reaching_canonical_validation: 161
+      ARGUMENT_ENTITY_KIND_NOT_ALLOWED: 80
+      RULE_CANNOT_CONCLUDE_PREDICATE: 3
+      DUPLICATE_CONCRETE_PROPOSITION_CONTENT: 87
+      generic_schema_valid_mutants: 230
+      generic_mutants_reaching_canonical_validation: 36
+      disagreements: 0
+  deterministic_hash:
+    identity: SHA256_OF_CANONICAL_JSON_BYTES
+    same_draft_context_and_registry_give_the_same_bytes: true
+    timestamps_random_ids_or_absolute_paths: false
+  leak_safety:
+    output_assertion: EVERY_STRING_IS_TOOL_SCHEMA_OR_REGISTRY_OWNED_OR_A_VERIFIED_HANDLE_ELSE_FAIL_CLOSED
+    adversarial_strings: 13
+    draft_positions_tested: 14
+    raw_response_and_compiler_message_positions_tested: 11
+    adversarial_strings_reaching_a_diagnostic: 0
+    public_summary: CODES_AND_COUNTS_ONLY_NO_HANDLE_INDEX_OR_PATH
+offline_tests:
+  synthetic_fixture_families: 20
+  all_fixtures_synthetic: true
+  focused:
+    module: tests/story_extraction/test_m4_04b4d_p4_1_compiler_aware_contract_v1.py
+    tests: 43
+    result: PASS
+  complete_regression:
+    suites:
+      canonical_story: 99
+      story_ingestion: 79
+      story_extraction: 783
+      script_quality: 64
+      story_benchmark: 298
+    total: 1323
+    previous_total: 1280
+    new_tests: 43
+    result: PASS
+  protected_stack: PASS
+  secret_scan: PASS
+boundaries:
+  provider_calls: 0
+  model_calls: 0
+  DEV3_input_opened: false
+  DEV3_gold_opened: false
+  private_model_responses_opened: false
+  private_prediction_artifacts_opened: false
+  holdout_opened: false
+  historical_predictions_modified: false
+  historical_repairs_rerun: false
+  existing_P4_files_modified: false
+  frozen_stack_modified: false
+  semantic_scoring: false
+  DEV4_created: false
+  live_runner_created: false
+  live_protocol_or_operation_budget_bound: false
+  new_acceptance_threshold_introduced: false
+preserved_identities:
+  P3_prediction_set_sha256: 06d555f53f6c113e3db7ab7eea55501a4b442e7e8daec3047bcc7cb3b55f38fd
+  P4_prediction_set_sha256: ee67ff92c72f01b98d2bd7ac892fa3fb13d437074511bc5b4bf946aa7ee66538
+  P4_protocol_V2_sha256: 24b2af927e07078da3a06fe329aa5378cdde92675e76e92e2c03d9ad82726025
+  P4_structural_diagnostic: M4_P4_STRUCTURAL_REPAIR_DIAGNOSTIC_V2_UNCHANGED
+limitations:
+  extraction_quality_not_measured: true
+  model_behavior_not_observed: true
+  repair_effectiveness_not_measured_live: true
+  structural_validity_rate_of_P4_1: UNKNOWN
+  canonical_issues_outside_three_rule_classes: NOT_ENUMERATED_BY_DIAGNOSTIC_V3
+  derivation_rule_class_synthetic_coverage: ONE_SYNTHETIC_FIXTURE_CARRIES_A_DERIVATION
+  prompt_additions_are_design_hypotheses: true
+  DEV3_status: TUNING_DATA_AFTER_P3_FAILURE_NOT_VALIDATION_DATA
+  fresh_DEV4_required_for_validation: true
+decision:
+  candidate_ready_for_runtime_design: true
+  next_action_requires_orchestrator_review: true
+  next_candidate_task: M4-04B4E
+  next_action: P4.1 RUNTIME/PROTOCOL PREPARATION AND SYNTHETIC SMOKE REVIEW
+  started: false
