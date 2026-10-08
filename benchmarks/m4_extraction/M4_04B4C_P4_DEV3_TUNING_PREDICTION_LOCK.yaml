@@ -1,0 +1,313 @@
+task: M4-04B4C
+status: M4_04B4C_P4_DEV3_TUNING_COMPLETE
+artifact: M4_04B4C_P4_DEV3_TUNING_PREDICTION_LOCK_V1
+experiment:
+  identity: M4_04B4C_P4_DEV3_STRUCTURAL_TUNING_EXPERIMENT_V1
+  experiment_lock_sha256: 4e407e0c644cfd359f1c4114c6bf98902d7cb453457277345631aea4b73fc840
+  classification: TUNING_EXPERIMENT_NOT_FRESH_BLIND_VALIDATION
+  prelive_commit: c18e051b400baf2b26490588bcd089d769718ce1
+  runner_id: M4_04B4C_P4_DEV3_TUNING_ADAPTER_V1
+  adapter_sha256: 6265931dbd58912746ab5af9fe5e5a878bb6e69f7a2d67233eb0713edcbe47ac
+identities:
+  protocol_id: M4_P4_STRUCTURAL_TUNING_PROTOCOL_V2
+  protocol_sha256: 24b2af927e07078da3a06fe329aa5378cdde92675e76e92e2c03d9ad82726025
+  full_model_schema_sha256: 5aa2ed6dde3791546ddd5e059648d8dac38df1571a6073b7abc31c89eb257f14
+  provider_projection_sha256: 89506defa4089b1449f7c80bbcf782d94065802ceae71aa86e1598a5a17ab9bd
+dev3:
+  input_sha256: 47ae7c743065f8ff001f4db6a398df2edf1db094383b1fe2d0c3a05ab40c55c7
+  status_for_p4: TUNING_DATA_AFTER_P3_FAILURE
+  case_order:
+  - DEV3_01
+  - DEV3_02
+  - DEV3_03
+  - DEV3_04
+  - DEV3_05
+  - DEV3_06
+  - DEV3_07
+  - DEV3_08
+  - DEV3_09
+  - DEV3_10
+extractor:
+  identity: P4_STORY_EXTRACTION_DRAFT_V1_1_SELF_CONTAINED_V1
+  model: gemini-3.5-flash-lite
+  credential_slot: gemini_slot_3
+provenance:
+  process_id: M4_04B4C_P4
+  process_version: v1.1
+  run_id_pattern: P4_CASE_ID
+execution:
+  terminal_case_count: 10
+  structural_valid_count: 5
+  structural_failure_count: 5
+  transport_failure_count: 0
+  repairs_used: 6
+  interpretation: STRUCTURAL_CONFORMANCE_ONLY_NOT_EXTRACTION_QUALITY
+operation_accounting:
+  durable_jobs: 16
+  successful_first_response_jobs: 16
+  structural_repair_jobs: 6
+  real_provider_operations: 18
+  pacing_reservations: 18
+  durable_recorded_provider_operations: 18
+  transport_retry_attempts: 2
+  operation_budget: 30
+  budget_refusals: 0
+  within_budget: true
+pacing:
+  max_provider_operations_per_window: 6
+  rolling_window_seconds: 60.0
+  wait_count: 2
+  max_rolling_reservations_observed: 6
+  restart_persistent: true
+  invariant: PASS
+cases:
+- case_id: DEV3_01
+  protocol_sha256: 24b2af927e07078da3a06fe329aa5378cdde92675e76e92e2c03d9ad82726025
+  experiment_lock_sha256: 4e407e0c644cfd359f1c4114c6bf98902d7cb453457277345631aea4b73fc840
+  primary_request_fingerprint: 8972d20ac48e8b9833de0c218b501aee1df8ca2da2bef163002c663dd15aa733
+  primary_response_sha256: 8bca8fdfe9f8d0a7cab67d7c41b93db58a397f71096488ff0c297915ae1414c7
+  repair_used: true
+  repair_request_fingerprint: 6d3c582574bf97ded487855a20e7fcbec4a3bc933cfc7148d8444fee741fa793
+  repair_response_sha256: 8bca8fdfe9f8d0a7cab67d7c41b93db58a397f71096488ff0c297915ae1414c7
+  terminal_status: STRUCTURAL_FAILURE
+  terminal_draft_sha256: 1da1a39259f701e30acb9c80c24a7d32f34c373b9e923d09622f1276084173e9
+  compiled_batch_sha256: null
+  terminal_failure_sha256: e4627318af64f22cde117ba421dd291ed07338d18fc8ba8693cb5bb8829947a2
+  durable_job_success_identities:
+  - job_id: M4B4BR_P4V2_DEV3_01_PRIMARY
+    response_sha256: 8bca8fdfe9f8d0a7cab67d7c41b93db58a397f71096488ff0c297915ae1414c7
+  - job_id: M4B4BR_P4V2_DEV3_01_REPAIR_1
+    response_sha256: 8bca8fdfe9f8d0a7cab67d7c41b93db58a397f71096488ff0c297915ae1414c7
+  run_id: P4_DEV3_01
+  terminal_phase: REPAIR_1
+  terminal_failure_category: DRAFT_COMPILER_FAILURE
+  primary_draft_sha256: 1da1a39259f701e30acb9c80c24a7d32f34c373b9e923d09622f1276084173e9
+  repair_draft_sha256: 1da1a39259f701e30acb9c80c24a7d32f34c373b9e923d09622f1276084173e9
+  repair_skipped_reason: null
+  durable_jobs: 2
+  durable_provider_operations: 2
+- case_id: DEV3_02
+  protocol_sha256: 24b2af927e07078da3a06fe329aa5378cdde92675e76e92e2c03d9ad82726025
+  experiment_lock_sha256: 4e407e0c644cfd359f1c4114c6bf98902d7cb453457277345631aea4b73fc840
+  primary_request_fingerprint: 6dbeacaa0adb3d1b7b8cc794160805e3850f8689785f9b0a7a21e031613f5fd7
+  primary_response_sha256: ae1b6d5c39aa6d75a80940865f7a103000e76c1c9b22ee702aff2fa27d8f8e58
+  repair_used: false
+  repair_request_fingerprint: null
+  repair_response_sha256: null
+  terminal_status: STRUCTURAL_VALID
+  terminal_draft_sha256: 31c70dfe2747d97b44ca7c539e346e28fa20bece77c64ce199776ac3138e0755
+  compiled_batch_sha256: b6deebb424cc7af20b399a6e8bc428ca6cc4b71614b2ed07a5126c8d3f2ffa18
+  terminal_failure_sha256: null
+  durable_job_success_identities:
+  - job_id: M4B4BR_P4V2_DEV3_02_PRIMARY
+    response_sha256: ae1b6d5c39aa6d75a80940865f7a103000e76c1c9b22ee702aff2fa27d8f8e58
+  run_id: P4_DEV3_02
+  terminal_phase: PRIMARY
+  terminal_failure_category: null
+  primary_draft_sha256: 31c70dfe2747d97b44ca7c539e346e28fa20bece77c64ce199776ac3138e0755
+  repair_draft_sha256: null
+  repair_skipped_reason: null
+  durable_jobs: 1
+  durable_provider_operations: 2
+- case_id: DEV3_03
+  protocol_sha256: 24b2af927e07078da3a06fe329aa5378cdde92675e76e92e2c03d9ad82726025
+  experiment_lock_sha256: 4e407e0c644cfd359f1c4114c6bf98902d7cb453457277345631aea4b73fc840
+  primary_request_fingerprint: 013db9fd2d7a6b7f279ff6eb0e1bf4e4dfb7607f288860d278fb637e3dd89624
+  primary_response_sha256: d47548de5dc63eecf6c59a66211f46730d98163b86fd9a05bc94f117ed67e3b8
+  repair_used: false
+  repair_request_fingerprint: null
+  repair_response_sha256: null
+  terminal_status: STRUCTURAL_VALID
+  terminal_draft_sha256: 7549625f6c5c9c152fc9245e623e40148d2fd50c270f810e3c2d4f613a4d5640
+  compiled_batch_sha256: 243ba9080af0ca8c9db6d35ab7e58ad3050b47cba416c65c14f1158bb57e2bd0
+  terminal_failure_sha256: null
+  durable_job_success_identities:
+  - job_id: M4B4BR_P4V2_DEV3_03_PRIMARY
+    response_sha256: d47548de5dc63eecf6c59a66211f46730d98163b86fd9a05bc94f117ed67e3b8
+  run_id: P4_DEV3_03
+  terminal_phase: PRIMARY
+  terminal_failure_category: null
+  primary_draft_sha256: 7549625f6c5c9c152fc9245e623e40148d2fd50c270f810e3c2d4f613a4d5640
+  repair_draft_sha256: null
+  repair_skipped_reason: null
+  durable_jobs: 1
+  durable_provider_operations: 1
+- case_id: DEV3_04
+  protocol_sha256: 24b2af927e07078da3a06fe329aa5378cdde92675e76e92e2c03d9ad82726025
+  experiment_lock_sha256: 4e407e0c644cfd359f1c4114c6bf98902d7cb453457277345631aea4b73fc840
+  primary_request_fingerprint: 8559013eb0bcaf431bf732eab6f30d99060637c49d34d443f09a3f553db2b362
+  primary_response_sha256: e456f2d81892a75dfc212f2a5316f5e647614146c090b64e0896298e5191b82d
+  repair_used: true
+  repair_request_fingerprint: be8184950df1541c5f09a0885a8b9667e16a0f552bee515f4fc0177aefaad2c4
+  repair_response_sha256: b9bce9b54f6b85ab494583f093a8b0321f989ee517d32df86a85a9a6ead5b54b
+  terminal_status: STRUCTURAL_FAILURE
+  terminal_draft_sha256: ea37d47f71fce8d972939f31963a5b333d27bdb5ea99d5ee7d45e742edb754a9
+  compiled_batch_sha256: null
+  terminal_failure_sha256: 730014bba1e700ec37680729673eb119ab22e11d4eaf3a524607bacc5602c0b1
+  durable_job_success_identities:
+  - job_id: M4B4BR_P4V2_DEV3_04_PRIMARY
+    response_sha256: e456f2d81892a75dfc212f2a5316f5e647614146c090b64e0896298e5191b82d
+  - job_id: M4B4BR_P4V2_DEV3_04_REPAIR_1
+    response_sha256: b9bce9b54f6b85ab494583f093a8b0321f989ee517d32df86a85a9a6ead5b54b
+  run_id: P4_DEV3_04
+  terminal_phase: REPAIR_1
+  terminal_failure_category: DRAFT_COMPILER_FAILURE
+  primary_draft_sha256: aaa4a3d2af85a3bc24b85972d1fc5e9af06514b3ac02841a198b921e8e40ed5f
+  repair_draft_sha256: ea37d47f71fce8d972939f31963a5b333d27bdb5ea99d5ee7d45e742edb754a9
+  repair_skipped_reason: null
+  durable_jobs: 2
+  durable_provider_operations: 3
+- case_id: DEV3_05
+  protocol_sha256: 24b2af927e07078da3a06fe329aa5378cdde92675e76e92e2c03d9ad82726025
+  experiment_lock_sha256: 4e407e0c644cfd359f1c4114c6bf98902d7cb453457277345631aea4b73fc840
+  primary_request_fingerprint: a85f6cd41585fb38cd9351504bfede0b42c796d7e449036b3d44b986bb2d8d75
+  primary_response_sha256: 1510d776280071a00078bbd45f969fc47e5ba17dbdf92cd05a970ddbddd30186
+  repair_used: false
+  repair_request_fingerprint: null
+  repair_response_sha256: null
+  terminal_status: STRUCTURAL_VALID
+  terminal_draft_sha256: b4f99988abfb07049451453f5782d03ee6a070ec69d8c3ece4aa2b3317b54c16
+  compiled_batch_sha256: 5ed15e8a4899e0b28c2ff8c02fe10ce945a3f1c1de401f7b66cd933c635a2dd7
+  terminal_failure_sha256: null
+  durable_job_success_identities:
+  - job_id: M4B4BR_P4V2_DEV3_05_PRIMARY
+    response_sha256: 1510d776280071a00078bbd45f969fc47e5ba17dbdf92cd05a970ddbddd30186
+  run_id: P4_DEV3_05
+  terminal_phase: PRIMARY
+  terminal_failure_category: null
+  primary_draft_sha256: b4f99988abfb07049451453f5782d03ee6a070ec69d8c3ece4aa2b3317b54c16
+  repair_draft_sha256: null
+  repair_skipped_reason: null
+  durable_jobs: 1
+  durable_provider_operations: 1
+- case_id: DEV3_06
+  protocol_sha256: 24b2af927e07078da3a06fe329aa5378cdde92675e76e92e2c03d9ad82726025
+  experiment_lock_sha256: 4e407e0c644cfd359f1c4114c6bf98902d7cb453457277345631aea4b73fc840
+  primary_request_fingerprint: fb2195333f1634f50af763e02e4546f2bd9472133b3aee58c9df599b687db051
+  primary_response_sha256: f58e68a2f828dc7ab6d9dde3ec60a37a42366b528c8ed0b087c3bdaeb2dfb320
+  repair_used: true
+  repair_request_fingerprint: 70f1ec676f05b2352c74b8a323a3236c8d6d34a31f2b218b6bdffaad156a4c1f
+  repair_response_sha256: f58e68a2f828dc7ab6d9dde3ec60a37a42366b528c8ed0b087c3bdaeb2dfb320
+  terminal_status: STRUCTURAL_FAILURE
+  terminal_draft_sha256: 496f2d5dbd757d6f0c57879f335c008ea1630c10059070ccde6d0231ec4295ca
+  compiled_batch_sha256: null
+  terminal_failure_sha256: 879c0edbfaf442794b5d8bd824e610222c96a73b97dd5c396b1e1db283e54148
+  durable_job_success_identities:
+  - job_id: M4B4BR_P4V2_DEV3_06_PRIMARY
+    response_sha256: f58e68a2f828dc7ab6d9dde3ec60a37a42366b528c8ed0b087c3bdaeb2dfb320
+  - job_id: M4B4BR_P4V2_DEV3_06_REPAIR_1
+    response_sha256: f58e68a2f828dc7ab6d9dde3ec60a37a42366b528c8ed0b087c3bdaeb2dfb320
+  run_id: P4_DEV3_06
+  terminal_phase: REPAIR_1
+  terminal_failure_category: DRAFT_COMPILER_FAILURE
+  primary_draft_sha256: 496f2d5dbd757d6f0c57879f335c008ea1630c10059070ccde6d0231ec4295ca
+  repair_draft_sha256: 496f2d5dbd757d6f0c57879f335c008ea1630c10059070ccde6d0231ec4295ca
+  repair_skipped_reason: null
+  durable_jobs: 2
+  durable_provider_operations: 2
+- case_id: DEV3_07
+  protocol_sha256: 24b2af927e07078da3a06fe329aa5378cdde92675e76e92e2c03d9ad82726025
+  experiment_lock_sha256: 4e407e0c644cfd359f1c4114c6bf98902d7cb453457277345631aea4b73fc840
+  primary_request_fingerprint: 201fe85fa4c30bbccc94b0bc6ee0375d72532a5d4624a91a5f5f678d22c6bca7
+  primary_response_sha256: e8513da5b96708376bf7b1d3bf834b78912d1ce3b7866c55e2c18669931fd8b8
+  repair_used: true
+  repair_request_fingerprint: 7781524edb081154bcc0c727ea49a4f672413bc9b30724a639dc54b243647ee1
+  repair_response_sha256: 126250a37a8b592f5f5f3c2e8361412f64a1c9cc6053c318c49c48b358f48f1c
+  terminal_status: STRUCTURAL_VALID
+  terminal_draft_sha256: 8a75af7f1e44db1e7da92016cf08b3e0eed09b723ede5396bebea664156f9572
+  compiled_batch_sha256: 47a686c908ab9e3af1f63740ed0735c8760138036d151795564d2473f42cb44f
+  terminal_failure_sha256: null
+  durable_job_success_identities:
+  - job_id: M4B4BR_P4V2_DEV3_07_PRIMARY
+    response_sha256: e8513da5b96708376bf7b1d3bf834b78912d1ce3b7866c55e2c18669931fd8b8
+  - job_id: M4B4BR_P4V2_DEV3_07_REPAIR_1
+    response_sha256: 126250a37a8b592f5f5f3c2e8361412f64a1c9cc6053c318c49c48b358f48f1c
+  run_id: P4_DEV3_07
+  terminal_phase: REPAIR_1
+  terminal_failure_category: null
+  primary_draft_sha256: 07da65f58e7346440a9deb8fbe3da10e9f82698951a917cc095505e3f9379616
+  repair_draft_sha256: 8a75af7f1e44db1e7da92016cf08b3e0eed09b723ede5396bebea664156f9572
+  repair_skipped_reason: null
+  durable_jobs: 2
+  durable_provider_operations: 2
+- case_id: DEV3_08
+  protocol_sha256: 24b2af927e07078da3a06fe329aa5378cdde92675e76e92e2c03d9ad82726025
+  experiment_lock_sha256: 4e407e0c644cfd359f1c4114c6bf98902d7cb453457277345631aea4b73fc840
+  primary_request_fingerprint: 76f8c47cfc989835564e1298971edef5db9d825c846d486580294b11c787a737
+  primary_response_sha256: 2934ce35c0a6b2adaf8cfb2bbbfb0f5c46e011cd534c7c33dcdbbd84aa2f8de8
+  repair_used: true
+  repair_request_fingerprint: 6b56ccd76e8b6f464b40cf21f94f5f6476d2c3bd801418bf6c30bf04a1bd4213
+  repair_response_sha256: 2934ce35c0a6b2adaf8cfb2bbbfb0f5c46e011cd534c7c33dcdbbd84aa2f8de8
+  terminal_status: STRUCTURAL_FAILURE
+  terminal_draft_sha256: dc6fdf0846c46185742963b3e66f25c445379c8038cb16a9419d9c1bb18be772
+  compiled_batch_sha256: null
+  terminal_failure_sha256: 278b13b6471381cdf913d0d9701433ab26ce76bf0f781e09c27b0be1e1baf5c7
+  durable_job_success_identities:
+  - job_id: M4B4BR_P4V2_DEV3_08_PRIMARY
+    response_sha256: 2934ce35c0a6b2adaf8cfb2bbbfb0f5c46e011cd534c7c33dcdbbd84aa2f8de8
+  - job_id: M4B4BR_P4V2_DEV3_08_REPAIR_1
+    response_sha256: 2934ce35c0a6b2adaf8cfb2bbbfb0f5c46e011cd534c7c33dcdbbd84aa2f8de8
+  run_id: P4_DEV3_08
+  terminal_phase: REPAIR_1
+  terminal_failure_category: DRAFT_COMPILER_FAILURE
+  primary_draft_sha256: dc6fdf0846c46185742963b3e66f25c445379c8038cb16a9419d9c1bb18be772
+  repair_draft_sha256: dc6fdf0846c46185742963b3e66f25c445379c8038cb16a9419d9c1bb18be772
+  repair_skipped_reason: null
+  durable_jobs: 2
+  durable_provider_operations: 2
+- case_id: DEV3_09
+  protocol_sha256: 24b2af927e07078da3a06fe329aa5378cdde92675e76e92e2c03d9ad82726025
+  experiment_lock_sha256: 4e407e0c644cfd359f1c4114c6bf98902d7cb453457277345631aea4b73fc840
+  primary_request_fingerprint: 71ae83dfbddabcce26d527b34de0e3418008c21d240f8d7acb55a06c67c86d21
+  primary_response_sha256: ea6d436d7ef903830ae1d2f26247691d099b90e0e8db061864a6566e53591333
+  repair_used: false
+  repair_request_fingerprint: null
+  repair_response_sha256: null
+  terminal_status: STRUCTURAL_VALID
+  terminal_draft_sha256: 8a76c9201a30668b1b6c7db4b262a59086e74f6d9b14dc29b43dba0c684f260e
+  compiled_batch_sha256: 8db515bc9ed6de3384192a453733fd7c1ba6db5df501e77617b18eb42c2455a9
+  terminal_failure_sha256: null
+  durable_job_success_identities:
+  - job_id: M4B4BR_P4V2_DEV3_09_PRIMARY
+    response_sha256: ea6d436d7ef903830ae1d2f26247691d099b90e0e8db061864a6566e53591333
+  run_id: P4_DEV3_09
+  terminal_phase: PRIMARY
+  terminal_failure_category: null
+  primary_draft_sha256: 8a76c9201a30668b1b6c7db4b262a59086e74f6d9b14dc29b43dba0c684f260e
+  repair_draft_sha256: null
+  repair_skipped_reason: null
+  durable_jobs: 1
+  durable_provider_operations: 1
+- case_id: DEV3_10
+  protocol_sha256: 24b2af927e07078da3a06fe329aa5378cdde92675e76e92e2c03d9ad82726025
+  experiment_lock_sha256: 4e407e0c644cfd359f1c4114c6bf98902d7cb453457277345631aea4b73fc840
+  primary_request_fingerprint: 401a3485bef05c5cf62fc0cfb1ac28cd5ed42a1b78d028be5029385b05f8571e
+  primary_response_sha256: 7d9d685c281093f9f145f2132f6813b09498b289aefdcbb6beaa29457c3d8eb4
+  repair_used: true
+  repair_request_fingerprint: 74807cf7e5bbdc0035cbe36f974c149361eb7f9aa3c5f62d1a2ba2da064441ee
+  repair_response_sha256: 7d9d685c281093f9f145f2132f6813b09498b289aefdcbb6beaa29457c3d8eb4
+  terminal_status: STRUCTURAL_FAILURE
+  terminal_draft_sha256: 77574d2101fd988ae8dcdf28159db8a29cc1db082e91b6b447a46444d0b128a7
+  compiled_batch_sha256: null
+  terminal_failure_sha256: cf47b07d8cd90b8d12130aa67f3ac85651db46d01f9d4b5cf8c4085cd49aced2
+  durable_job_success_identities:
+  - job_id: M4B4BR_P4V2_DEV3_10_PRIMARY
+    response_sha256: 7d9d685c281093f9f145f2132f6813b09498b289aefdcbb6beaa29457c3d8eb4
+  - job_id: M4B4BR_P4V2_DEV3_10_REPAIR_1
+    response_sha256: 7d9d685c281093f9f145f2132f6813b09498b289aefdcbb6beaa29457c3d8eb4
+  run_id: P4_DEV3_10
+  terminal_phase: REPAIR_1
+  terminal_failure_category: DRAFT_COMPILER_FAILURE
+  primary_draft_sha256: 77574d2101fd988ae8dcdf28159db8a29cc1db082e91b6b447a46444d0b128a7
+  repair_draft_sha256: 77574d2101fd988ae8dcdf28159db8a29cc1db082e91b6b447a46444d0b128a7
+  repair_skipped_reason: null
+  durable_jobs: 2
+  durable_provider_operations: 2
+prediction_set:
+  identity: M4_04B4C_P4_DEV3_PREDICTION_SET_V1
+  prediction_set_sha256: ee67ff92c72f01b98d2bd7ac892fa3fb13d437074511bc5b4bf946aa7ee66538
+predictions_locked: true
+all_cases_terminal_before_lock: true
+DEV3_gold_opened: false
+holdout_opened: false
+semantic_scoring_performed: false

@@ -1,0 +1,168 @@
+task: M4-04B4C
+status: M4_04B4C_P4_DEV3_TUNING_COMPLETE
+artifact: M4_04B4C_P4_DEV3_TUNING_PUBLIC_RESULT_V1
+experiment:
+  identity: M4_04B4C_P4_DEV3_STRUCTURAL_TUNING_EXPERIMENT_V1
+  experiment_lock_sha256: 4e407e0c644cfd359f1c4114c6bf98902d7cb453457277345631aea4b73fc840
+  classification: TUNING_EXPERIMENT_NOT_FRESH_BLIND_VALIDATION
+  prelive_commit: c18e051b400baf2b26490588bcd089d769718ce1
+  base_commit: 3ac509af4cb99a04ab4de806541bc4019f23bdca
+  runner_id: M4_04B4C_P4_DEV3_TUNING_ADAPTER_V1
+  adapter_sha256: 6265931dbd58912746ab5af9fe5e5a878bb6e69f7a2d67233eb0713edcbe47ac
+  execution_environment: ISOLATED_CLONE_AUTOCRLF_FALSE_WITH_TWO_FILE_CRLF_ATTRIBUTE_EXCEPTION
+  transport: ACCEPTED_GEMINI_DEV_WINDOW_TRANSPORT
+identities:
+  extractor_id: P4_STORY_EXTRACTION_DRAFT_V1_1_SELF_CONTAINED_V1
+  protocol_id: M4_P4_STRUCTURAL_TUNING_PROTOCOL_V2
+  protocol_sha256: 24b2af927e07078da3a06fe329aa5378cdde92675e76e92e2c03d9ad82726025
+  full_model_schema_sha256: 5aa2ed6dde3791546ddd5e059648d8dac38df1571a6073b7abc31c89eb257f14
+  provider_projection_sha256: 89506defa4089b1449f7c80bbcf782d94065802ceae71aa86e1598a5a17ab9bd
+  dev3_input_sha256: 47ae7c743065f8ff001f4db6a398df2edf1db094383b1fe2d0c3a05ab40c55c7
+  dev3_status_for_p4: TUNING_DATA_AFTER_P3_FAILURE
+  model: gemini-3.5-flash-lite
+  credential_slot: gemini_slot_3
+  process_id: M4_04B4C_P4
+  process_version: v1.1
+prediction_set_sha256: ee67ff92c72f01b98d2bd7ac892fa3fb13d437074511bc5b4bf946aa7ee66538
+public_prediction_lock:
+  path: benchmarks/m4_extraction/M4_04B4C_P4_DEV3_TUNING_PREDICTION_LOCK.yaml
+  file_sha256: 4574994a093b18c7923d1524d0175c1c7e9931451643d297f9daa74954fb5683
+structural_metrics:
+  primary_outcomes:
+    compiler_reached: 10
+    compiler_success: 4
+    full_draft_v1_1_schema_valid: 10
+    provider_projection_valid: 10
+    provider_success: 10
+    requests: 10
+    structural_failure_categories:
+      DRAFT_COMPILER_FAILURE: 6
+    valid_json: 10
+  repair_outcomes:
+    compiler_reached: 6
+    compiler_success: 1
+    full_draft_v1_1_schema_valid: 6
+    provider_projection_valid: 6
+    provider_success: 6
+    repairs_eligible: 6
+    repairs_skipped_empty_primary_response: 0
+    requests: 6
+    structural_failure_categories:
+      DRAFT_COMPILER_FAILURE: 5
+    valid_json: 6
+  runtime_metrics:
+    durable_jobs: 16
+    durable_recorded_provider_operations: 18
+    latency_seconds:
+      jobs_measured: 16
+      maximum: 26.755
+      total: 214.105
+    max_rolling_reservations_observed: 6
+    operation_budget_utilization: 18/30
+    pacing_invariant: PASS
+    pacing_reservations: 18
+    pacing_wait_count: 2
+    real_provider_operations: 18
+    structural_repair_jobs: 6
+    successful_first_response_jobs: 16
+    tokens_where_reported:
+      cached_content_token_count: 93622
+      candidates_token_count: 43937
+      prompt_token_count: 159060
+      total_token_count: 202997
+    transport_retry_attempts: 2
+    transport_terminal_jobs: 0
+  terminal_outcomes:
+    STRUCTURAL_FAILURE: 5
+    STRUCTURAL_VALID: 5
+    TRANSPORT_FAILURE: 0
+    case_completion_count: 10
+    terminal_structural_valid_percent: 50.0
+    terminal_structural_valid_rate: 5/10
+comparison_with_p3:
+  label: TUNING_COMPARISON_NOT_BLIND_VALIDATION
+  p3_prediction_set_sha256: 06d555f53f6c113e3db7ab7eea55501a4b442e7e8daec3047bcc7cb3b55f38fd
+  p3_structural_valid: 0/10
+  p4_structural_valid: 5/10
+  cause_attributed_solely_to_schema_packaging: false
+  p4_also_differs_in:
+  - PROVIDER_NATIVE_PROJECTION
+  - STRUCTURAL_REPAIR_DIAGNOSTIC_V2
+transport_and_accounting:
+  budget_refusals: 0
+  max_provider_operations_per_window: 6
+  max_rolling_reservations_observed: 6
+  operation_budget: 30
+  pacing_invariant: PASS
+  pacing_reservations: 18
+  real_provider_operations: 18
+  restart_persistent: true
+  rolling_window_seconds: 60.0
+  wait_count: 2
+  within_budget: true
+integrity:
+  status: POST_RUN_INTEGRITY_PASS
+  checks:
+    result_bound_to_this_lock_and_protocol: true
+    adapter_unchanged_since_the_run: true
+    all_ten_cases_terminal_exactly_once: true
+    case_result_files_match_the_result: true
+    request_fingerprints_rebuild_from_input: true
+    raw_response_hashes_match_files_and_checkpoints: true
+    parsed_draft_hashes_and_categories_recompute: true
+    compiled_and_failure_record_hashes: true
+    immutable_success_locks: true
+    no_model_or_credential_switch: true
+    durable_jobs_are_exactly_the_expected_jobs: true
+    maximum_one_repair_per_case_and_no_other_retry: true
+    provider_operations_within_budget: true
+    pacing_invariant: true
+    prediction_set_rebuilds_deterministically: true
+    metrics_rebuild_from_case_results: true
+    public_prediction_lock_rebuilds: true
+    result_is_for_this_input: true
+    gold_and_holdout_flags_false: true
+  provider_operations_after_the_run: 0
+regression:
+  focused_tests:
+    count: 55
+    result: PASS
+  full_offline_suites:
+    canonical_story: 99
+    story_ingestion: 79
+    story_extraction: 715
+    script_quality: 64
+    story_benchmark: 298
+    total: 1255
+    result: PASS
+limitations:
+- This is a tuning experiment on DEV3, which P3 had already failed on. It is not a fresh blind validation.
+- Structural validity means a response parsed, satisfied the full Draft V1.1 contract and compiled. It says nothing about
+  whether the extracted content is correct or complete.
+- DEV3 gold was not opened and nothing was scored against it. Semantic recall, semantic precision, grounding accuracy, epistemic
+  correctness and extraction quality are not established.
+- The comparison with P3 is descriptive. P4 differs from P3 in the self-contained prompt schema, the provider-native schema
+  projection and structural repair diagnostic V2, so no single cause is isolated.
+- Each request was sent once to one model at temperature 0. Run-to-run variation was not measured.
+- Ten cases from one source family. The result does not generalize beyond them.
+- Fresh validation of P4 needs a later DEV4 that P4 has not been tuned on.
+claims:
+  semantic_quality_claim: false
+  not_established:
+  - SEMANTIC_RECALL
+  - SEMANTIC_PRECISION
+  - GROUNDING_ACCURACY
+  - EPISTEMIC_CORRECTNESS
+  - EXTRACTION_QUALITY
+recommended_next_action:
+  action: ORCHESTRATOR REVIEW FOR OFFLINE P4 STRUCTURAL FORENSICS
+  binding: RECOMMENDATION_FOR_ORCHESTRATOR_REVIEW_ONLY
+  rule: STRUCTURAL_VALID_AT_LEAST_8_OF_10
+  rule_fixed_before_the_run: true
+boundaries:
+  DEV3_gold_opened: false
+  holdout_opened: false
+  semantic_scoring_performed: false
+  DEV4_created: false
+  P3_predictions_modified: false
+  provider_calls_after_prediction_lock: 0
