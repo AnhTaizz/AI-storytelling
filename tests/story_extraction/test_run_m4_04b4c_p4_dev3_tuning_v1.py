@@ -155,8 +155,13 @@ class Workspace:
             return adapter.run(input_archive=self.archive, private_root=self.private, expected_input_sha256=self.sha256,
                                transport_factory=self.factory(script or {}, operations), **kwargs)
 
+    @property
+    def published_lock(self):
+        """Where this synthetic run would publish its lock. The tracked DEV3 lock is never used."""
+        return self.root / "published_prediction_lock.yaml"
+
     def verify(self):
-        with self.clock.patched():
+        with self.clock.patched(), mock.patch.object(adapter, "PREDICTION_LOCK_PATH", self.published_lock):
             return adapter.verify_run(input_archive=self.archive, private_root=self.private,
                                       expected_input_sha256=self.sha256)
 
@@ -901,6 +906,20 @@ class PredictionSetAndPublicRecordTests(unittest.TestCase):
                 self.workspace.verify()
         finally:
             result_path.write_bytes(original)
+        published = self.workspace.published_lock
+        public_lock = adapter.build_public_prediction_lock(self.result)
+        try:
+            adapter.write_public_prediction_lock(public_lock, published)
+            report = self.workspace.verify()
+            self.assertIs(True, report["checks"]["published_prediction_lock_matches_private_result"])
+            other = copy.deepcopy(public_lock)
+            other["operation_accounting"]["transport_retry_attempts"] += 1
+            published.write_text(yaml.safe_dump(other, sort_keys=False), encoding="utf-8")
+            with self.assertRaisesRegex(adapter.P4Dev3Error, "published_prediction_lock_matches_private_result"):
+                self.workspace.verify()
+        finally:
+            published.unlink()
+        self.assertNotIn("published_prediction_lock_matches_private_result", self.workspace.verify()["checks"])
         extra = private / "checkpoints" / "jobs" / "M4B4BR_P4V2_DEV3_01_REPAIR_2.json"
         try:
             extra.write_bytes(b"{}")
@@ -1292,6 +1311,7 @@ class AcceptedTransportRehearsalTests(unittest.TestCase):
         with contextlib.ExitStack() as stack:
             for patch in self.identity_patches():
                 stack.enter_context(patch)
+            stack.enter_context(mock.patch.object(adapter, "PREDICTION_LOCK_PATH", self.workspace.published_lock))
             return adapter.verify_run(input_archive=self.workspace.archive, private_root=self.workspace.private,
                                       expected_input_sha256=self.workspace.sha256)
 
