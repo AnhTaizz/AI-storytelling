@@ -24,6 +24,7 @@ from tools.story_extraction import analyze_m4_04b4cr_p4_dev3_compiler_forensics_
 from tools.story_extraction import draft_compiler_v1_1 as compiler_v1_1
 from tools.story_extraction import m4_04b4a_p4_output_contract_v1 as p4_contract
 from tools.story_extraction import m4_04b4br_p4_protocol_v2 as protocol_v2
+from tools.story_extraction import m4_04b4d_f1_structural_diagnostic_v3_1 as v3_1
 from tools.story_extraction import m4_04b4d_p4_1_compiler_aware_contract_v1 as contract
 from tools.story_extraction import m4_04b4d_structural_diagnostic_v3 as v3
 from tools.story_extraction import materialize_draft_v1_1_model_schema_v1 as materializer
@@ -1083,15 +1084,25 @@ class LeakSafetyTests(unittest.TestCase):
         self.assertEqual(diagnostic["findings"][2], diagnostic["findings"][3])
         self.assertIsNone(diagnostic["findings"][4]["validator_check"])
 
-    def test_duplicate_handle_is_named_and_counted(self):
+    def test_duplicate_handle_is_counted_and_never_named(self):
+        """Corrected by M4-04B4D-F1. This test used to expect V3 to name the duplicated handle.
+
+        A handle shared by two records identifies neither, so naming it broke the stated
+        invariant. V3 is history and still does it (pinned in the M4-04B4D-F1 tests). The
+        expectation that holds going forward is asserted here on diagnostic V3.1.
+        """
         context, draft = fixture("c02_two_mentions_one_entity")
         draft["mentions"][1]["handle"] = draft["mentions"][0]["handle"]
-        diagnostic = diagnose(draft, context)
+        diagnostic = v3_1.structural_diagnostic_v3_1(json.dumps(draft), context)
         finding = next(finding for finding in diagnostic["findings"] if finding["code"] == "DUPLICATE_HANDLE")
-        self.assertEqual(("mentions", None, draft["mentions"][0]["handle"], {"records_sharing_this_handle": 2}),
-                         (finding["record_collection"], finding["record_index"], finding["record_handle"],
-                          finding["structural_detail"]))
-        self.assertNotIn(v3.LIMIT_LOCATOR, diagnostic["limitations"])
+        self.assertEqual(("mentions", v3_1.LOCATOR_UNAVAILABLE, None, None, {"records_sharing_this_handle": 2}),
+                         (finding["record_collection"], finding["record_locator"], finding["record_index"],
+                          finding["record_handle"], finding["structural_detail"]))
+        self.assertIn(v3_1.LIMIT_LOCATOR, diagnostic["limitations"])
+        self.assertFalse(diagnostic["completeness"]["observed_blockers_located"])
+        self.assertFalse(diagnostic["complete"])
+        self.assertNotIn(draft["mentions"][0]["handle"],
+                         [value for value in strings_in(diagnostic) if v3_1.is_safe_handle(value)])
         huge = diagnose(mention_draft("x", 10 ** 30), text_context("x + x = y"))
         self.assertEqual(["OCCURRENCE_OUT_OF_RANGE"], codes(huge))
         self.assertNotIn("occurrence_given", huge["findings"][0]["structural_detail"])

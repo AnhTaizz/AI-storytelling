@@ -1,0 +1,337 @@
+task: M4-04B4D-F1
+status: M4_04B4D_F1_SAFE_LOCATOR_CORRECTION_READY
+base_commit: e0a048fc07bed2d348a8eb1ed75d1c842c1a146e
+scope: ADDITIVE_VERSIONED_CORRECTION_OF_THE_P4_1_REPAIR_DIAGNOSTIC_AND_REPAIR_PROMPT
+orchestrator_verdict_on_B4D: FIX_REQUIRED_NARROW_SAFE_LOCATOR_CONTRACT_ISSUE
+historical_B4D:
+  commit: e0a048fc07bed2d348a8eb1ed75d1c842c1a146e
+  status: M4_04B4D_P4_1_OFFLINE_CONTRACT_READY
+  record: benchmarks/m4_extraction/M4_04B4D_P4_1_COMPILER_AWARE_REDESIGN.yaml
+  candidate_identity: P4_1_STORY_EXTRACTION_DRAFT_V1_1_COMPILER_AWARE_V1
+  candidate_sha256: f016306647b48bf9b9dd6c7531a49c5e5775d8d9c7c760a54406e1035db218a8
+  diagnostic_identity: M4_P4_1_STRUCTURAL_REPAIR_DIAGNOSTIC_V3
+  standing: SUPERSEDED_HISTORICAL_NOT_FOR_RUNTIME_USE
+  record_rewritten: false
+  files_unchanged:
+    benchmarks/m4_extraction/M4_04B4D_P4_1_COMPILER_AWARE_REDESIGN.yaml: a5322846f5e539f0d6a8b9facd8aaf72fd420089ff8fa118dc8f159e1013b79f
+    docs/research/m4/M4_P4_1_COMPILER_AWARE_INTERFACE_DESIGN_V1.md: 7a7f23346e39c5c9da9bd95344d9b7aa856635d9a2a7f1a56c7b59b8010fbeaf
+    tools/story_extraction/m4_04b4d_p4_1_compiler_aware_contract_v1.py: daefe500545bdd03c7a07ffe364495304c4c85980ba583336b7d8dc9197e093b
+    tools/story_extraction/m4_04b4d_structural_diagnostic_v3.py: 962ad21da3448d73efc6fabcbe443a41b838a0cf180ec6047a4b5f58320e4adc
+    tools/story_extraction/prompts/story_extraction_draft_p4_1_v1_system.txt: 598aae325585dddae4588ca6f23551fe53ca91043bc9722e7fdafbc6afbbfea8
+    tools/story_extraction/prompts/story_extraction_draft_p4_1_v1_user.txt: 4a642008e3b4be809ab71cf9a107a35260950066bb48ee90ca9e2d64ed76c01a
+    tools/story_extraction/prompts/story_extraction_draft_p4_1_v1_repair_user.txt: ba1d2035852a0fca8f4d889ca8f26cadb2410373fbe6e5208b40d800a9e30ab6
+corrected:
+  diagnostic_identity: M4_P4_1_STRUCTURAL_REPAIR_DIAGNOSTIC_V3_1
+  diagnostic_format: M4_P4_1_STRUCTURAL_DIAGNOSTIC_V3_1_FORMAT_1
+  diagnostic_tool:
+    path: tools/story_extraction/m4_04b4d_f1_structural_diagnostic_v3_1.py
+    sha256: 6cd81cb029baa48998cb2f4da9c75a17be6c984965584b8cedb52c721ae3ee33
+  candidate_identity: P4_1_STORY_EXTRACTION_DRAFT_V1_1_COMPILER_AWARE_V1_1
+  candidate_format: M4_P4_1_CANDIDATE_DEFINITION_V1_1
+  candidate_sha256: 5a102aa782f876dcbfc94d71fef238de0e712288ed4428a27df6984edfe23019
+  contract_tool:
+    path: tools/story_extraction/m4_04b4d_f1_p4_1_compiler_aware_contract_v1_1.py
+    sha256: dc8d4a6d48e4d5eded2c237533fa92d4a55620fb9e7a9c12bf0b8786b7659731
+  repair_prompt_template:
+    path: tools/story_extraction/prompts/story_extraction_draft_p4_1_v1_1_repair_user.txt
+    sha256: 2680d93120d4b26b107ca61f4fd557c72f1790bb54807bb01153c73c366cebf2
+  change: REPAIR_DIAGNOSTIC_AND_REPAIR_PROMPT_ONLY
+  prompt_hashes:
+    primary_system_sha256: 92869de37874635a7511af7220cb015a944753316d7047e4678e3f5f80a07ccf
+    primary_user_template_sha256: 4a642008e3b4be809ab71cf9a107a35260950066bb48ee90ca9e2d64ed76c01a
+    primary_prompt_pair_sha256: b93e752db7f020398b946b3bb5c5abecee70269444fc3618baf55fef389672e4
+    repair_system_sha256: c509e85b5e1a34b18b03ba6b22b39595d84517906aaa679ed4975d35d213e2e6
+    repair_user_template_sha256: 2680d93120d4b26b107ca61f4fd557c72f1790bb54807bb01153c73c366cebf2
+    repair_prompt_pair_sha256: f19e7ca25df7b53d66a103d52a9d3f50c5b32c3625e096ffb5fa1edb2f42f0b3
+  primary_prompts_identical_to_B4D: true
+  repair_prompts_changed: true
+  stale_candidate_hash_preserved: false
+reproduced_original_mismatch:
+  stated_invariant: A record handle is shown only if it matches the frozen schema grammar and occurs exactly once
+    in the draft.
+  reproduced_on: UNCHANGED_DIAGNOSTIC_V3_WITH_SYNTHETIC_DRAFTS
+  A_locator_refuses_a_duplicated_handle: true
+  B_duplicate_handle_finding_named_the_handle_with_no_index: true
+  C_safety_assertion_accepted_grammar_valid_handles_it_did_not_verify: true
+  D_a_synthetic_test_expected_the_duplicated_handle_to_be_named: true
+  D_resolution: TEST_REPLACED_BY_ONE_ASSERTING_THE_CORRECTED_INVARIANT_ON_V3_1
+  also_found: V3_REPORTED_COMPLETE_TRUE_FOR_A_DIAGNOSTIC_WITH_A_DUPLICATED_HANDLE_AND_NO_CANONICAL_VALIDATION
+  source_text_disclosure_demonstrated: false
+  exposure_class: A_HANDLE_OF_THE_MODELS_OWN_DRAFT_SHOWN_WITHOUT_UNIQUENESS_AND_AN_ASSERTION_WEAKER_THAN_STATED
+unique_record_identity_rule:
+  record_index_and_record_handle: A_VERIFIED_PAIR_OR_BOTH_NULL
+  conditions_all_required:
+  - HANDLE_MATCHES_THE_FROZEN_GRAMMAR_OF_ITS_COLLECTION
+  - HANDLE_OCCURS_IN_THE_PARSED_DRAFT
+  - HANDLE_OCCURS_IN_THE_EXPECTED_COLLECTION
+  - HANDLE_OCCURS_EXACTLY_ONCE_IN_THAT_COLLECTION
+  - A_DETERMINISTIC_RECORD_INDEX_IDENTIFIES_THE_RECORD
+  - THE_RECORD_AT_THAT_INDEX_HAS_THAT_HANDLE
+  - COLLECTION_INDEX_AND_HANDLE_OF_THE_FINDING_AGREE
+  on_any_failure: RECORD_HANDLE_NULL_AND_RECORD_INDEX_NULL
+  locator_states:
+  - VERIFIED_UNIQUE_RECORD
+  - SCHEMA_PATH_INDEX
+  - NOT_RECORD_SCOPED
+  - UNAVAILABLE
+  locator_state_meaning:
+    VERIFIED_UNIQUE_RECORD: COLLECTION_INDEX_AND_HANDLE_VERIFIED_AGAINST_THE_PARSED_DRAFT
+    SCHEMA_PATH_INDEX: SCHEMA_FINDING_POSITIONED_BY_THE_SCHEMA_VALIDATOR_PATH_NO_INDEX_FIELD_AND_NO_HANDLE
+    NOT_RECORD_SCOPED: FINDING_IS_ABOUT_THE_RESPONSE_THE_ROOT_OR_A_WHOLE_CHECK
+    UNAVAILABLE: A_RECORD_LOCATOR_IS_REQUIRED_AND_COULD_NOT_BE_VERIFIED
+  when_required_but_unavailable:
+  - A_RECORD_COULD_NOT_BE_IDENTIFIED_SAFELY
+  - observed_blockers_located_false
+  - complete_false
+  guessing: NEVER
+duplicate_handle_behavior:
+  compiler_blocker_preserved: true
+  collection_preserved_when_verified: true
+  record_handle: 'NULL'
+  record_index: 'NULL'
+  record_locator: UNAVAILABLE
+  number_of_records_sharing_the_handle: PRESERVED_AS_A_COUNT
+  duplicated_identifier_echoed: false
+  diagnostic_marked_incomplete: true
+  conflict_indices_field: NOT_ADDED_NO_SCHEMA_OR_SAFETY_CONTRACT_DEFINED_FOR_IT
+  other_blockers_on_a_record_with_a_duplicated_handle: REPORTED_WITH_AN_UNAVAILABLE_LOCATOR_AND_NO_DETAIL
+  independent_checks_on_a_record_with_a_duplicated_handle: SKIPPED
+referenced_handle_verification_rule:
+  fields:
+  - identical_to_record_handle
+  - referenced_record_handle
+  new_record_reference: SHOWN_ONLY_IF_A_UNIQUE_RECORD_OF_THE_EXPECTED_COLLECTION_IN_THE_PARSED_DRAFT
+  existing_context_reference: SHOWN_ONLY_IF_THE_HOST_CONTEXT_HOLDS_THAT_HANDLE_WITH_THE_EXPECTED_RECORD_TYPE
+  namespace_is_explicit: true
+  grammar_alone_sufficient: false
+  unverifiable_reference: NO_INDEPENDENT_FINDING_IS_PRODUCED_THE_COMPILER_BLOCKER_IS_STILL_REPORTED
+  passage_handle: SHOWN_ONLY_IF_SUPPLIED_BY_THE_HOST
+safety_assertions:
+  checker_input: HOST_BUILT_IDENTITY_INDEX_OF_THE_PARSED_DRAFT_AND_THE_COMPILER_CONTEXT
+  plain_set_of_handles_accepted: false
+  fail_closed: true
+  runs_on_every_diagnostic: true
+  rejects:
+  - GRAMMAR_VALID_INVENTED_RECORD_HANDLE
+  - HANDLE_PRESENT_IN_ANOTHER_COLLECTION
+  - DUPLICATED_HANDLE_PRESENTED_AS_A_UNIQUE_LOCATOR
+  - CORRECT_HANDLE_WITH_THE_WRONG_INDEX
+  - CORRECT_INDEX_WITH_THE_WRONG_HANDLE
+  - INDEX_WITHOUT_HANDLE_OR_HANDLE_WITHOUT_INDEX
+  - UNVERIFIED_OR_WRONGLY_TYPED_EXISTING_CONTEXT_HANDLE
+  - REFERENCE_WITHOUT_AN_EXPLICIT_NAMESPACE
+  - PASSAGE_HANDLE_NOT_SUPPLIED_BY_THE_HOST
+  - ARBITRARY_SOURCE_OR_MODEL_STRINGS
+  - MALICIOUS_OR_UNVERIFIED_PATH_COMPONENTS
+  - PATH_THAT_DISAGREES_WITH_ITS_RECORD
+  - ENVELOPE_THAT_DISAGREES_WITH_ITS_FINDINGS
+  - DIAGNOSTIC_CHECKED_AGAINST_ANOTHER_DRAFT_OR_CONTEXT
+  repair_request: DIAGNOSTIC_IS_REBUILT_FROM_THE_RESPONSE_AND_CONTEXT_AND_COMPARED_BEFORE_RENDERING
+  only_error_raised_by_the_diagnostic: ITS_OWN_SAFETY_ASSERTION
+completeness_semantics:
+  complete: TRUE_ONLY_WHEN_EVERY_STATEMENT_IS_TRUE
+  complete_for_a_rejected_draft: ALWAYS_FALSE
+  reason: THE_FROZEN_COMPILER_EXPOSES_FAILED_CHECK_NAMES_ONLY_SO_FULL_CANONICAL_ENUMERATION_IS_NEVER_SHOWN
+  statements:
+  - observed_blockers_preserved
+  - observed_blockers_located
+  - observed_blockers_attributed
+  - compiler_structural_rules_checked
+  - canonical_validation_reached
+  - downstream_canonical_issues_enumerated
+  - independent_checks_consistent_with_compiler
+  statement_meaning:
+    observed_blockers_preserved: ONE_FINDING_FOR_EVERY_BLOCKER_THE_PARSER_SCHEMA_OR_COMPILER_GAVE
+    observed_blockers_located: EVERY_FINDING_THAT_NEEDS_A_RECORD_HAS_A_VERIFIED_LOCATOR
+    observed_blockers_attributed: EVERY_FINDING_HAS_A_RECOGNIZED_CODE_AND_RULE_CLASS
+    compiler_structural_rules_checked: THE_COMPILER_RAN_ITS_QUOTE_HANDLE_AND_REGISTRY_PHASES
+    canonical_validation_reached: THE_COMPILER_REACHED_THE_CANONICAL_VALIDATOR
+    downstream_canonical_issues_enumerated: EVERY_CANONICAL_ISSUE_IS_KNOWN_TO_BE_LISTED_TRUE_ONLY_FOR_AN_ACCEPTED_DRAFT
+    independent_checks_consistent_with_compiler: NO_INDEPENDENT_CHECK_FIRED_ON_A_DRAFT_THE_COMPILER_ACCEPTED
+  limitation_tokens:
+  - THE_COMPILER_DID_NOT_CHECK_ITS_QUOTE_HANDLE_AND_REGISTRY_RULES
+  - CANONICAL_VALIDATION_WAS_NOT_REACHED_BY_THE_COMPILER
+  - CANONICAL_ISSUES_OUTSIDE_THE_CHECKED_RULE_CLASSES_ARE_NOT_ENUMERATED
+  - A_CANONICAL_FAILURE_COULD_NOT_BE_ATTRIBUTED_TO_A_KNOWN_RULE_CLASS
+  - A_RECORD_COULD_NOT_BE_IDENTIFIED_SAFELY
+  - A_FAILURE_IS_ON_THE_HOST_SIDE_AND_IS_NOT_REPAIRABLE_BY_THE_MODEL
+  - A_COMPILER_CODE_IS_NOT_IN_THE_V3_1_TAXONOMY
+  - A_SCHEMA_REJECTION_COULD_NOT_BE_DESCRIBED_FROM_THE_MODEL_SCHEMA
+  - AN_INDEPENDENT_CHECK_DISAGREED_WITH_THE_COMPILER_AND_WAS_DISCARDED
+  compiler_canonical_blocker: ALWAYS_KEPT_AS_ONE_FINDING_NEXT_TO_ANY_INDEPENDENT_FINDINGS
+  findings_from_the_compiler_equal_its_blocker_count: true
+  findings_merged_or_deduplicated: false
+  ordering: DETERMINISTIC_BY_PHASE_COLLECTION_RECORD_INDEX_CODE_PATH_DETAIL
+  global_completeness_implied_when_the_compiler_stopped_early: false
+delta_from_diagnostic_V3:
+- DUPLICATE_HANDLE_FINDING_SHOWS_NO_HANDLE
+- RECORD_INDEX_AND_RECORD_HANDLE_ARE_A_VERIFIED_PAIR_OR_BOTH_NULL
+- NEW_FINDING_FIELD_RECORD_LOCATOR
+- SCHEMA_FINDING_WITHOUT_A_VERIFIED_HANDLE_KEEPS_ITS_POSITION_IN_SCHEMA_PATH_ONLY
+- SAFETY_ASSERTION_CHECKS_IDENTITY_RELATIONS_AGAINST_AN_IDENTITY_INDEX
+- REFERENCED_HANDLES_VERIFIED_IN_AN_EXPLICIT_NAMESPACE
+- INDEPENDENT_CHECKS_SKIP_RECORDS_AND_REFERENCES_THAT_CANNOT_BE_VERIFIED
+- COMPLETE_REPLACED_BY_A_CONJUNCTION_OF_SEVEN_NAMED_STATEMENTS
+- JSON_AND_SCHEMA_FAILURES_NOW_STATE_THAT_THE_COMPILER_AND_CANONICAL_VALIDATION_WERE_NOT_REACHED
+- COMPILER_CANONICAL_BLOCKER_KEPT_AS_ONE_FINDING_INSTEAD_OF_DROPPED_OR_SPLIT
+- CANONICAL_VALIDATION_COUNTED_AS_REACHED_ONLY_ON_A_CONFORMANCE_FAILURE_OR_ACCEPTANCE
+- REPAIR_REQUEST_REBUILDS_AND_COMPARES_THE_DIAGNOSTIC
+- REPAIR_PROMPT_EXPLAINS_LOCATOR_STATES_AND_COMPLETENESS_AND_REPLACES_TWO_AUDITED_INSTRUCTIONS
+unchanged_from_B4D:
+  primary_system_prompt: true
+  primary_user_template: true
+  quote_locator_rules_and_examples: true
+  registry_derived_constraint_lists: true
+  rule_taxonomy_codes: true
+  independent_rule_classes:
+  - ARGUMENT_ENTITY_KIND_NOT_ALLOWED
+  - RULE_CANNOT_CONCLUDE_PREDICATE
+  - DUPLICATE_CONCRETE_PROPOSITION_CONTENT
+  agreement_with_the_frozen_validator_on_synthetic_mutations:
+    targeted_variants_reaching_canonical_validation: 161
+    ARGUMENT_ENTITY_KIND_NOT_ALLOWED: 80
+    RULE_CANNOT_CONCLUDE_PREDICATE: 3
+    DUPLICATE_CONCRETE_PROPOSITION_CONTENT: 87
+    generic_schema_valid_mutants: 230
+    generic_mutants_reaching_canonical_validation: 36
+    disagreements: 0
+    V3_1_and_V3_report_the_same_records_for_these_rule_classes: true
+  no_automatic_occurrence_selection: true
+  host_rewrites_model_output: false
+prompt_risk_audit:
+  kind: OFFLINE_DESIGN_RISK_ANALYSIS_NO_LIVE_MODEL_BEHAVIOUR_OBSERVED_OR_CLAIMED
+  instructions_audited:
+  - B4D_wording: Return a response that is different from the primary response. Returning it unchanged repeats the
+      same rejection.
+    may_encourage:
+      arbitrary_change_to_make_bytes_differ: PLAUSIBLE
+      deleting_otherwise_supported_information: INDIRECT
+      excessive_record_removal: INDIRECT
+      empty_but_compiler_valid_drafts: INDIRECT
+      trading_coverage_for_validity: INDIRECT
+    reasoning: The instruction is satisfied by any change, including one no finding requires, and so contradicts
+      the instruction to change only what a finding requires.
+    assessment: REVISION_REQUIRED
+    V1_1_wording: An unchanged response is rejected again for the same findings. The changes that help are the ones
+      the findings require. Do not change anything else to make the response look different.
+  - B4D_wording: If a finding cannot be corrected without asserting something the passages do not support, remove
+      the record that breaks the rule, together with the records that depend on it, instead of inventing a replacement.
+    may_encourage:
+      arbitrary_change_to_make_bytes_differ: NOT_DIRECTLY
+      deleting_otherwise_supported_information: PLAUSIBLE
+      excessive_record_removal: PLAUSIBLE
+      empty_but_compiler_valid_drafts: POSSIBLE
+      trading_coverage_for_validity: PLAUSIBLE
+    reasoning: The set of dependent records was unbounded, removal was not ranked below correction, and structural
+      validity cannot see removed content. An ambiguous quote and a duplicate proposition can always be corrected
+      without losing content; the two registry rule classes may have no supported correction, so removal is kept
+      as a bounded last resort.
+    assessment: REVISION_REQUIRED
+    V1_1_wording: 'Correct a finding inside its record whenever the passages support a correction: add the occurrence,
+      correct the handle, correct the registry value, keep one of two identical propositions. Removing a record
+      is the last resort. Use it only when no correction of that record is supported by the passages. Then remove
+      that record and only the records that cannot exist without it. Keep every record that no finding names and
+      that does not depend on a removed record. Do not remove supported records to make the draft pass, and do not
+      return an empty or reduced draft in place of a correction.'
+  offline_fact:
+    an_empty_draft_is_accepted_by_the_unchanged_compiler: true
+  prompt_and_candidate_versioned_for_the_change: true
+  residual_risk: REMAINS_AND_CANNOT_BE_MEASURED_OFFLINE
+  later_revision: DEPENDS_ON_MEASURED_RECORD_RETENTION_AND_EMPTY_OUTPUT_RATES
+  required_reporting_in_any_live_experiment:
+  - STRUCTURAL_VALIDITY
+  - RECORD_RETENTION_FROM_PRIMARY_TO_REPAIR_BY_COLLECTION
+  - EMPTY_OUTPUT_RATE
+  - REPAIR_RESPONSES_IDENTICAL_TO_PRIMARY
+  acceptance_threshold: NONE_DEFINED
+synthetic_tests:
+  all_fixtures_synthetic: true
+  required_cases_covered:
+  - ONE_VALID_UNIQUE_HANDLE
+  - DUPLICATE_HANDLE_IN_ONE_COLLECTION
+  - SAME_LOOKING_HANDLE_IN_DIFFERENT_COLLECTIONS
+  - GRAMMAR_VALID_BUT_ABSENT_HANDLE
+  - HANDLE_WITH_MISMATCHED_RECORD_INDEX
+  - HANDLE_WITH_MISMATCHED_COLLECTION
+  - VALID_EXISTING_CONTEXT_HANDLE
+  - INVENTED_EXISTING_CONTEXT_HANDLE
+  - MALICIOUS_HANDLE_TEXT
+  - MULTIPLE_BLOCKERS_WITH_MASKED_IDENTITIES
+  - EXACT_PRESERVATION_OF_BLOCKER_COUNT
+  - DETERMINISTIC_DIAGNOSTIC_BYTES
+  - PUBLIC_SUMMARY_CODES_AND_COUNTS_ONLY
+  - NO_SEMANTIC_VALUES_IN_ANY_PUBLIC_ARTIFACT
+  - NO_IMPLICIT_OCCURRENCE_SELECTION
+  old_duplicate_handle_expectation: REPLACED_IN_tests/story_extraction/test_m4_04b4d_p4_1_compiler_aware_contract_v1.py
+  tests_deleted: 0
+  adversarial_strings: 13
+  adversarial_strings_reaching_a_diagnostic: 0
+  fresh_process_determinism: DIAGNOSTIC_AND_CANDIDATE_HASHES_EQUAL_UNDER_TWO_HASH_SEEDS
+offline_tests:
+  focused:
+    module: tests/story_extraction/test_m4_04b4d_f1_p4_1_diagnostic_identity_correction_v1.py
+    tests: 47
+    result: PASS
+  complete_regression:
+    suites:
+      canonical_story: 99
+      story_ingestion: 79
+      story_extraction: 830
+      script_quality: 64
+      story_benchmark: 298
+    total: 1370
+    previous_total: 1323
+    new_tests: 47
+    result: PASS
+  protected_stack: PASS
+  secret_scan: PASS
+  publication_scan: ALLOWLIST_AND_PATTERN_BASED_NO_PRIVATE_STORY_CONTENT_USED_AS_AN_ORACLE
+frozen_stack_unchanged:
+  canonical_draft_schemas: true
+  full_model_schema_sha256: 5aa2ed6dde3791546ddd5e059648d8dac38df1571a6073b7abc31c89eb257f14
+  provider_projection_sha256: 89506defa4089b1449f7c80bbcf782d94065802ceae71aa86e1598a5a17ab9bd
+  predicate_registry_sha256: 44f3eafc6982f84bcc74ccb91abe7cd467a453352ee96be147095f27559c5350
+  compiler_v1_1_sha256: f962e561a7801ddf48ef248416231673e1567b9eac9d04f2aaba1d1e16eed953
+  compiler_v1_sha256: 281a2dfb5e99e67cc82b71798c09c93c04ab9682e8385a9cf6dfaf8393d69800
+  canonical_validator: true
+  durable_runtime: true
+  protocol_V2_sha256: 24b2af927e07078da3a06fe329aa5378cdde92675e76e92e2c03d9ad82726025
+  P3_prediction_set_sha256: 06d555f53f6c113e3db7ab7eea55501a4b442e7e8daec3047bcc7cb3b55f38fd
+  P4_prediction_set_sha256: ee67ff92c72f01b98d2bd7ac892fa3fb13d437074511bc5b4bf946aa7ee66538
+boundaries:
+  provider_calls: 0
+  model_calls: 0
+  DEV3_input_opened: false
+  DEV3_gold_opened: false
+  private_model_responses_opened: false
+  private_prediction_artifacts_opened: false
+  holdout_opened: false
+  private_dataset_accessed: false
+  historical_predictions_modified: false
+  historical_B4D_record_rewritten: false
+  P3_or_P4_artifacts_modified: false
+  frozen_stack_modified: false
+  credential_used: false
+  semantic_scoring: false
+  DEV4_created: false
+  live_runner_created: false
+  live_protocol_or_operation_budget_bound: false
+  new_acceptance_threshold_introduced: false
+  live_quality_claim_made: false
+limitations:
+  model_behavior_not_observed: true
+  extraction_quality_not_measured: true
+  repair_effectiveness_not_measured_live: true
+  a_duplicate_handle_finding_gives_the_collection_and_a_count_only: true
+  canonical_issues_outside_three_rule_classes: NOT_ENUMERATED
+  derivation_rule_class_synthetic_coverage: ONE_SYNTHETIC_FIXTURE_CARRIES_A_DERIVATION
+  B4D_design_note_describes_the_superseded_candidate: true
+  DEV3_status: TUNING_DATA_AFTER_P3_FAILURE_NOT_VALIDATION_DATA
+  fresh_DEV4_required_for_validation: true
+decision:
+  invariant_resolved: true
+  candidate_for_runtime_design: P4_1_STORY_EXTRACTION_DRAFT_V1_1_COMPILER_AWARE_V1_1
+  next_action_requires_orchestrator_review: true
+  next_candidate_task: M4-04B4E
+  next_action: P4.1 RUNTIME/PROTOCOL PREPARATION
+  started: false
