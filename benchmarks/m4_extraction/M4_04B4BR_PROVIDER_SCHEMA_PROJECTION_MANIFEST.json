@@ -1,0 +1,226 @@
+{
+  "manifest": "M4_04B4BR_PROVIDER_SCHEMA_PROJECTION_MANIFEST_V1",
+  "projection_tool": "DRAFT_V1_1_MODEL_SCHEMA_TO_GEMINI_PROJECTION_V1",
+  "source_identity": "STORY_EXTRACTION_DRAFT_V1_1_MODEL_SCHEMA_V1",
+  "source_sha256": "5aa2ed6dde3791546ddd5e059648d8dac38df1571a6073b7abc31c89eb257f14",
+  "projection_identity": "STORY_EXTRACTION_DRAFT_V1_1_GEMINI_RESPONSE_SCHEMA_V1",
+  "projection_sha256": "89506defa4089b1449f7c80bbcf782d94065802ceae71aa86e1598a5a17ab9bd",
+  "transformation_count": 39,
+  "action_counts": {
+    "CONST_TO_SINGLETON_ENUM": 5,
+    "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT": 30,
+    "DROP_PROVIDER_METADATA": 4
+  },
+  "keyword_counts": {
+    "$id": 1,
+    "$schema": 1,
+    "const": 6,
+    "description": 1,
+    "else": 1,
+    "if": 1,
+    "maxLength": 3,
+    "minLength": 6,
+    "minProperties": 1,
+    "pattern": 13,
+    "then": 1,
+    "title": 1,
+    "uniqueItems": 3
+  },
+  "transformations": [
+    {
+      "pointer": "/$schema",
+      "keyword": "$schema",
+      "action": "DROP_PROVIDER_METADATA"
+    },
+    {
+      "pointer": "/$id",
+      "keyword": "$id",
+      "action": "DROP_PROVIDER_METADATA"
+    },
+    {
+      "pointer": "/title",
+      "keyword": "title",
+      "action": "DROP_PROVIDER_METADATA"
+    },
+    {
+      "pointer": "/description",
+      "keyword": "description",
+      "action": "DROP_PROVIDER_METADATA"
+    },
+    {
+      "pointer": "/properties/draft_version/const",
+      "keyword": "const",
+      "action": "CONST_TO_SINGLETON_ENUM"
+    },
+    {
+      "pointer": "/$defs/Mention/properties/handle/pattern",
+      "keyword": "pattern",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/Mention/properties/passage_handle/pattern",
+      "keyword": "pattern",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/Mention/properties/quote/minLength",
+      "keyword": "minLength",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/Mention/properties/surface_form/minLength",
+      "keyword": "minLength",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/Mention/properties/surface_form/maxLength",
+      "keyword": "maxLength",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/Handle/pattern",
+      "keyword": "pattern",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/EditorialLabel/maxLength",
+      "keyword": "maxLength",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/Argument/oneOf/1/properties/kind/const",
+      "keyword": "const",
+      "action": "CONST_TO_SINGLETON_ENUM"
+    },
+    {
+      "pointer": "/$defs/Argument/oneOf/2/properties/kind/const",
+      "keyword": "const",
+      "action": "CONST_TO_SINGLETON_ENUM"
+    },
+    {
+      "pointer": "/$defs/Argument/oneOf/2/properties/vocabulary/minLength",
+      "keyword": "minLength",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/Argument/oneOf/2/properties/value/minLength",
+      "keyword": "minLength",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/EvidenceSet/properties/evidence_handles/uniqueItems",
+      "keyword": "uniqueItems",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/Derivation/properties/rule_id/pattern",
+      "keyword": "pattern",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/Derivation/properties/premise_handles/uniqueItems",
+      "keyword": "uniqueItems",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/Bound/oneOf/0/properties/kind/const",
+      "keyword": "const",
+      "action": "CONST_TO_SINGLETON_ENUM"
+    },
+    {
+      "pointer": "/$defs/Bound/oneOf/1/properties/kind/const",
+      "keyword": "const",
+      "action": "CONST_TO_SINGLETON_ENUM"
+    },
+    {
+      "pointer": "/$defs/Entity/properties/handle/pattern",
+      "keyword": "pattern",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/Event/properties/handle/pattern",
+      "keyword": "pattern",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/Event/properties/event_kind/minLength",
+      "keyword": "minLength",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/Event/properties/event_kind/maxLength",
+      "keyword": "maxLength",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/TemporalAnchor/properties/handle/pattern",
+      "keyword": "pattern",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/TemporalAnchor/if",
+      "keyword": "if",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/TemporalAnchor/then",
+      "keyword": "then",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/TemporalAnchor/else",
+      "keyword": "else",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/Proposition/oneOf/0/properties/handle/pattern",
+      "keyword": "pattern",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/Proposition/oneOf/0/properties/predicate/pattern",
+      "keyword": "pattern",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/Proposition/oneOf/0/properties/args/minProperties",
+      "keyword": "minProperties",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/Proposition/oneOf/1/properties/handle/pattern",
+      "keyword": "pattern",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/Proposition/oneOf/1/properties/placeholder/const",
+      "keyword": "const",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/Assertion/properties/handle/pattern",
+      "keyword": "pattern",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/Assertion/properties/textual_ambiguity/properties/alternative_proposition_handles/uniqueItems",
+      "keyword": "uniqueItems",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/Evidence/properties/handle/pattern",
+      "keyword": "pattern",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/Evidence/properties/passage_handle/pattern",
+      "keyword": "pattern",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    },
+    {
+      "pointer": "/$defs/Evidence/properties/quote/minLength",
+      "keyword": "minLength",
+      "action": "DROP_PROVIDER_UNSUPPORTED_CONSTRAINT"
+    }
+  ]
+}

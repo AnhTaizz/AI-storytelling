@@ -1057,10 +1057,9 @@ class P4PublicRecordTests(unittest.TestCase):
         self.assertNotIn("GEMINI_API_KEY", self.text)
         self.assertNotIn(runner.SMOKE_TEXT, self.text)
 
-    def test_project_state_names_the_same_next_action(self):
+    def test_project_state_records_the_status_and_next_action(self):
         state = (protocol.REPO_ROOT / "docs/PROJECT_STATE.md").read_text(encoding="utf-8")
-        tail = state.rsplit("## Next Candidate\n", 1)[1]
-        self.assertTrue(tail.strip().startswith(self.record["decision"]["next_action"]))
+        self.assertIn(self.record["decision"]["next_action"], state)
         self.assertIn(f"Status: {self.record['status']}", state)
 
 

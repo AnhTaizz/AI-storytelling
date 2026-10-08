@@ -1,0 +1,517 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "draft_version",
+    "evidence",
+    "mentions",
+    "entities",
+    "events",
+    "anchors",
+    "propositions",
+    "assertions"
+  ],
+  "properties": {
+    "draft_version": {
+      "enum": [
+        "STORY_EXTRACTION_DRAFT_V1_1"
+      ]
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Evidence"
+      }
+    },
+    "mentions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Mention"
+      }
+    },
+    "entities": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Entity"
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Event"
+      }
+    },
+    "anchors": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/TemporalAnchor"
+      }
+    },
+    "propositions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Proposition"
+      }
+    },
+    "assertions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Assertion"
+      }
+    }
+  },
+  "$defs": {
+    "Mention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "handle",
+        "passage_handle",
+        "quote",
+        "role"
+      ],
+      "properties": {
+        "handle": {
+          "type": "string"
+        },
+        "passage_handle": {
+          "type": "string"
+        },
+        "quote": {
+          "type": "string"
+        },
+        "occurrence": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "role": {
+          "$ref": "#/$defs/EvidenceRole"
+        },
+        "surface_form": {
+          "type": "string"
+        }
+      }
+    },
+    "Handle": {
+      "type": "string"
+    },
+    "EvidenceRole": {
+      "enum": [
+        "DEPICTION",
+        "RETROSPECTIVE",
+        "IN_WORLD_REPORT",
+        "NARRATION_SUMMARY",
+        "PARATEXT"
+      ]
+    },
+    "EntityKind": {
+      "enum": [
+        "CHARACTER",
+        "LOCATION",
+        "OBJECT",
+        "GROUP",
+        "OTHER"
+      ]
+    },
+    "EditorialLabel": {
+      "type": "string"
+    },
+    "Argument": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "handle"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "ENTITY",
+                "EVENT",
+                "ANCHOR",
+                "MENTION",
+                "PROPOSITION"
+              ]
+            },
+            "handle": {
+              "$ref": "#/$defs/Handle"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value_type",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "LITERAL"
+              ]
+            },
+            "value_type": {
+              "enum": [
+                "STRING",
+                "NUMBER",
+                "BOOLEAN",
+                "DATE"
+              ]
+            },
+            "value": {
+              "type": [
+                "string",
+                "number",
+                "boolean"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "vocabulary",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "TOKEN"
+              ]
+            },
+            "vocabulary": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "EvidenceSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "label",
+        "evidence_handles"
+      ],
+      "properties": {
+        "label": {
+          "enum": [
+            "SUFFICIENT",
+            "CORROBORATING",
+            "PARTIAL"
+          ]
+        },
+        "evidence_handles": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/Handle"
+          }
+        }
+      }
+    },
+    "Derivation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rule_id",
+        "premise_handles"
+      ],
+      "properties": {
+        "rule_id": {
+          "type": "string"
+        },
+        "premise_handles": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/Handle"
+          }
+        }
+      }
+    },
+    "Support": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_sets",
+        "derivations"
+      ],
+      "properties": {
+        "evidence_sets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EvidenceSet"
+          }
+        },
+        "derivations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Derivation"
+          }
+        }
+      }
+    },
+    "Bound": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "OPEN"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "anchor_handle"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "ANCHOR"
+              ]
+            },
+            "anchor_handle": {
+              "$ref": "#/$defs/Handle"
+            },
+            "support": {
+              "$ref": "#/$defs/Support"
+            }
+          }
+        }
+      ]
+    },
+    "ValidityInterval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "$ref": "#/$defs/Bound"
+        },
+        "end": {
+          "$ref": "#/$defs/Bound"
+        }
+      }
+    },
+    "Entity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "handle",
+        "kind"
+      ],
+      "properties": {
+        "handle": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/EntityKind"
+        },
+        "placeholder": {
+          "type": "boolean"
+        },
+        "editorial_label": {
+          "$ref": "#/$defs/EditorialLabel"
+        }
+      }
+    },
+    "Event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "handle",
+        "event_kind",
+        "anchor_handle"
+      ],
+      "properties": {
+        "handle": {
+          "type": "string"
+        },
+        "event_kind": {
+          "type": "string"
+        },
+        "anchor_handle": {
+          "$ref": "#/$defs/Handle"
+        },
+        "editorial_label": {
+          "$ref": "#/$defs/EditorialLabel"
+        }
+      }
+    },
+    "TemporalAnchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "handle",
+        "anchor_kind"
+      ],
+      "properties": {
+        "handle": {
+          "type": "string"
+        },
+        "anchor_kind": {
+          "enum": [
+            "EVENT_TIME",
+            "NAMED_TIME"
+          ]
+        },
+        "event_handle": {
+          "$ref": "#/$defs/Handle"
+        },
+        "editorial_label": {
+          "$ref": "#/$defs/EditorialLabel"
+        }
+      }
+    },
+    "Proposition": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "handle",
+            "predicate",
+            "args"
+          ],
+          "properties": {
+            "handle": {
+              "type": "string"
+            },
+            "predicate": {
+              "type": "string"
+            },
+            "args": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/$defs/Argument"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "handle",
+            "placeholder"
+          ],
+          "properties": {
+            "handle": {
+              "type": "string"
+            },
+            "placeholder": {},
+            "editorial_label": {
+              "$ref": "#/$defs/EditorialLabel"
+            }
+          }
+        }
+      ]
+    },
+    "Assertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "handle",
+        "proposition_handle",
+        "polarity",
+        "epistemic_status",
+        "support"
+      ],
+      "properties": {
+        "handle": {
+          "type": "string"
+        },
+        "proposition_handle": {
+          "$ref": "#/$defs/Handle"
+        },
+        "polarity": {
+          "enum": [
+            "AFFIRMED",
+            "NEGATED",
+            "OPEN"
+          ]
+        },
+        "epistemic_status": {
+          "enum": [
+            "EXPLICIT",
+            "ENTAILED",
+            "SUGGESTED"
+          ]
+        },
+        "validity": {
+          "$ref": "#/$defs/ValidityInterval"
+        },
+        "support": {
+          "$ref": "#/$defs/Support"
+        },
+        "textual_ambiguity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "alternative_proposition_handles"
+          ],
+          "properties": {
+            "alternative_proposition_handles": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/Handle"
+              }
+            }
+          }
+        }
+      }
+    },
+    "Evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "handle",
+        "passage_handle",
+        "quote",
+        "role"
+      ],
+      "properties": {
+        "handle": {
+          "type": "string"
+        },
+        "passage_handle": {
+          "type": "string"
+        },
+        "quote": {
+          "type": "string"
+        },
+        "occurrence": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "role": {
+          "$ref": "#/$defs/EvidenceRole"
+        }
+      }
+    }
+  }
+}

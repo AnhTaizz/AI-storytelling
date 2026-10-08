@@ -1,0 +1,424 @@
+task: M4-04B4BR
+date: '2026-10-08'
+status: M4_04B4BR_PROVIDER_PROJECTION_READY
+scope: PROVIDER_SCHEMA_PROJECTION_PROTOCOL_V2_AND_TWO_STAGE_SYNTHETIC_CAPABILITY_SMOKE
+base_commit: 057c0dc9edd97a5b5650c3ba6207ecee6741d2cc
+branch: research/m4-overnight-v1-1
+summary: 'A deterministic provider projection of the full P4 model schema was built and proven to be a relaxation.
+  Protocol V2 keeps the full schema in the prompt and sends the projection as the native response schema. Two synthetic
+  live requests were made: the provider accepted a minimal native schema, then accepted the exact P4 projection
+  and returned a response that parsed, passed the projection, passed the unchanged full local validator and compiled.
+  This establishes the runtime path on one invented sentence. It is not an extraction-quality result.'
+prior_B4B:
+  status: M4_04B4B_NATIVE_SCHEMA_PROVIDER_REJECTED
+  accepted_as: NEGATIVE_PROVIDER_CAPABILITY_RESULT
+  protocol_v1_id: M4_P4_STRUCTURAL_TUNING_PROTOCOL_V1
+  protocol_v1_sha256: e0c74be45bcfd7cdca4111ff6029358e668b68f0a94fa94cf52718614f75279a
+  native_schema_sent: FULL_MODEL_SCHEMA
+  native_schema_sha256: 5aa2ed6dde3791546ddd5e059648d8dac38df1571a6073b7abc31c89eb257f14
+  provider_rejection: PROVIDER_FAILURE:400:INVALID_ARGUMENT
+  provider_operations: 1
+  historical_protocol_runner_and_record_unchanged: true
+  erratum_not_applied_to_historical_record: The B4B record describes the protocol hash input as compact JSON. The
+    code hashes sorted-key JSON indented by two spaces with a trailing newline. The hash itself is correct and reproducible.
+orchestrator_decision:
+  old_rule: PROMPT_SCHEMA == NATIVE_SCHEMA
+  new_rule:
+  - PROMPT_SCHEMA == FULL_MODEL_SCHEMA
+  - NATIVE_SCHEMA == DETERMINISTIC_PROVIDER_PROJECTION(FULL_MODEL_SCHEMA)
+  projection_may_be_weaker_than_full_model_schema: true
+  authoritative: FULL_MODEL_SCHEMA_AND_UNCHANGED_LOCAL_DRAFT_V1_1_VALIDATOR
+  projection_role: OUTPUT_SHAPING_AID_ONLY
+projection:
+  identity: STORY_EXTRACTION_DRAFT_V1_1_GEMINI_RESPONSE_SCHEMA_V1
+  tool:
+    id: DRAFT_V1_1_MODEL_SCHEMA_TO_GEMINI_PROJECTION_V1
+    path: tools/story_extraction/project_draft_v1_1_model_schema_to_gemini_v1.py
+    sha256: 3fcfd71c9129ecac6de7e1d5341911073dad5326a74ed60741733c1808d6a5c5
+  tracked_file: schemas/story_extraction/story_extraction_draft_v1_1_gemini_response_schema_v1.schema.json
+  manifest_file: benchmarks/m4_extraction/M4_04B4BR_PROVIDER_SCHEMA_PROJECTION_MANIFEST.json
+  manifest_sha256: bf475e6c0c557ec8e5f6a40af94e1875f420d073fa29963f82c3741286793760
+  source_identity: STORY_EXTRACTION_DRAFT_V1_1_MODEL_SCHEMA_V1
+  source_full_schema_sha256: 5aa2ed6dde3791546ddd5e059648d8dac38df1571a6073b7abc31c89eb257f14
+  projection_sha256: 89506defa4089b1449f7c80bbcf782d94065802ceae71aa86e1598a5a17ab9bd
+  offline_basis: KEYWORD_SUBSET_DOCUMENTED_BY_INSTALLED_SDK_FOR_response_json_schema
+  transformation_total: 39
+  transformation_counts:
+    CONST_TO_SINGLETON_ENUM: 5
+    DROP_PROVIDER_UNSUPPORTED_CONSTRAINT: 30
+    DROP_PROVIDER_METADATA: 4
+  transformed_keyword_counts:
+    $id: 1
+    $schema: 1
+    const: 6
+    description: 1
+    else: 1
+    if: 1
+    maxLength: 3
+    minLength: 6
+    minProperties: 1
+    pattern: 13
+    then: 1
+    title: 1
+    uniqueItems: 3
+  unsupported_keywords_removed:
+  - const
+  - else
+  - if
+  - maxLength
+  - minLength
+  - minProperties
+  - pattern
+  - then
+  - uniqueItems
+  const_rewrites:
+    to_singleton_enum: 5
+    pointers:
+    - /properties/draft_version/const
+    - /$defs/Argument/oneOf/1/properties/kind/const
+    - /$defs/Argument/oneOf/2/properties/kind/const
+    - /$defs/Bound/oneOf/0/properties/kind/const
+    - /$defs/Bound/oneOf/1/properties/kind/const
+    equivalence_tested_for_each: true
+    not_rewritten:
+      pointer: /$defs/Proposition/oneOf/1/properties/placeholder/const
+      action: DROP_PROVIDER_UNSUPPORTED_CONSTRAINT
+      reason: BOOLEAN_CONST_AND_THE_SDK_DOCUMENTS_ENUM_FOR_STRINGS_AND_NUMBERS_ONLY
+  metadata_removed:
+  - $schema
+  - $id
+  - title
+  - description
+  keywords_used_by_projection:
+  - $defs
+  - $ref
+  - additionalProperties
+  - enum
+  - items
+  - minItems
+  - minimum
+  - oneOf
+  - properties
+  - required
+  - type
+  external_refs: 0
+  local_refs: 30
+  definitions: 17
+  cyclic_references: false
+  refs_inlined_or_retargeted: false
+  properties_added_removed_or_renamed: 0
+  required_lists_changed: 0
+  enum_values_changed: 0
+  one_of_nodes_with_provably_exclusive_variants: 3
+  lineage_gate:
+    full_model_schema_equals_materializer_output: PASS
+    full_model_schema_sha256: PASS
+    tracked_projection_equals_projection_of_full_model_schema: PASS
+    projection_sha256: PASS
+    tracked_manifest_equals_tool_output: PASS
+    projection_external_ref_count_zero: PASS
+    projection_inside_documented_provider_subset: PASS
+    relaxation_by_construction: PASS
+  relaxation_gate:
+    claim: FULL_VALID_IMPLIES_PROJECTION_VALID
+    inverse_required: false
+    by_construction:
+      projection_is_source_with_only_manifest_edits: true
+      every_action_is_authorized: true
+      every_transformed_keyword_is_unsupported_or_metadata: true
+      no_supported_constraint_dropped: true
+      no_edit_under_negation_or_conditional: true
+      no_negation_or_conditional_remains: true
+      one_of_nodes_all_kept_and_exclusive: true
+      provider_subset_only: true
+    full_corpus:
+      base_drafts: 27
+      drafts_checked: 63483
+      full_valid: 4106
+      projection_valid: 11877
+      full_valid_but_projection_invalid: 0
+      projection_valid_but_full_invalid: 7771
+      note: Run once over every single-edit mutant; the suite checks a deterministic sample.
+    expected_weaker_examples_demonstrated_for:
+    - pattern
+    - minLength
+    - maxLength
+    - minProperties
+    - uniqueItems
+    - if_then
+    - else_not
+    - const_boolean
+    result: PASS
+protocol_v2:
+  identity: M4_P4_STRUCTURAL_TUNING_PROTOCOL_V2
+  sha256: 24b2af927e07078da3a06fe329aa5378cdde92675e76e92e2c03d9ad82726025
+  canonical_form: SHA256 of sorted-key indented UTF-8 JSON of build_protocol()
+  protocol_module:
+    path: tools/story_extraction/m4_04b4br_p4_protocol_v2.py
+    sha256: 7410fbc6778eb8d4fe6c64794f645553c380da667f3f774522c6461ab508a001
+  runner:
+    id: M4_04B4BR_P4_PROJECTION_SMOKE_RUNNER_V1
+    path: tools/story_extraction/run_m4_04b4br_p4_projection_smoke_v1.py
+    sha256: 70dd4dd852399e184184c6e9188aa578dfdd32060fdd9e2f65a8e7768fdfed72
+  extractor_id: P4_STORY_EXTRACTION_DRAFT_V1_1_SELF_CONTAINED_V1
+  extractor_identity_changed: false
+  provider_output_shaping_constraint_changed: true
+  model: gemini-3.5-flash-lite
+  credential_slot: gemini_slot_3
+  runtime: GEMINI_TRANSPORT_RESILIENCE_V1_1
+  durable_executor: DURABLE_RESEARCH_EXECUTOR_V1
+  transport: GeminiDevWindowTransport
+  temperature: 0
+  max_output_tokens: 16384
+  response_mime_type: application/json
+  full_prompt_schema_sha256: 5aa2ed6dde3791546ddd5e059648d8dac38df1571a6073b7abc31c89eb257f14
+  native_projection_sha256: 89506defa4089b1449f7c80bbcf782d94065802ceae71aa86e1598a5a17ab9bd
+  generation_config_sha256: fb4e49a56e55adaa9d4ffefc81c3861602ce56d9bffcf38bb5f4fdac84970b74
+  generation_config_keys:
+  - max_output_tokens
+  - response_json_schema
+  - temperature
+  prompt_hashes:
+    primary_system_sha256: 00147760f65964246d8bece429a2fce1438e237ae6240ff9d10ba5ecc2915f49
+    primary_user_template_sha256: 86336a230640f0ee96c41abcd6f15a160b313f3fb1bc6612cdaf0abb27b59b3e
+    primary_prompt_pair_sha256: 378aaf653d2351ab4f1acc79788bd63e1aeebb1ec58464cde5c76257551c1322
+    repair_system_sha256: 394e812231b0fc183ef4d2df578d43556ba3b38c6e16d24ad940573fa5d81241
+    repair_user_template_sha256: 7681338344525f1722a4a2d9351177734404f18945e105a1848bd60f4707b55b
+    repair_prompt_pair_sha256: 79ee40ba7fef1e1547ae9fd75acf3f7c98467bad7460f7b38509057fe75fd0b6
+  prompt_hashes_equal_protocol_v1: true
+  schema_lineage_gate:
+    prompt_schema_equals_full_model_schema: PASS
+    full_model_schema_equals_materializer_output: PASS
+    full_model_schema_sha256: PASS
+    native_schema_equals_tracked_provider_projection: PASS
+    native_schema_equals_projection_of_full_model_schema: PASS
+    native_schema_differs_from_full_model_schema: PASS
+    provider_projection_sha256: PASS
+    provider_projection_is_relaxation_by_construction: PASS
+    external_ref_count_zero: PASS
+    prompt_structural_coverage: PASS
+  global_pacing:
+    max_operations: 6
+    rolling_window_seconds: 60.0
+  maximum_structural_repairs_per_case: 1
+  repair_diagnostic: M4_P4_STRUCTURAL_REPAIR_DIAGNOSTIC_V2
+  first_success: IMMUTABLE_LOCK
+  model_switch: FORBIDDEN
+  credential_switch: FORBIDDEN
+  quality_or_coverage_retry: FORBIDDEN
+  bound_to_a_fresh_benchmark: false
+  bound_file_hash_mode: UTF8_LF_NORMALIZED_SHA256
+  bound_files:
+    schemas/story_extraction/story_extraction_draft_v1_1_model_schema_v1.schema.json: 5aa2ed6dde3791546ddd5e059648d8dac38df1571a6073b7abc31c89eb257f14
+    schemas/story_extraction/story_extraction_draft_v1_1.schema.json: e0d38b65f0f265dfb1a0ef2be4e85c9b3950550a46f47e8980fbd6a7cab068a3
+    schemas/story_extraction/story_extraction_draft_v1.schema.json: 7993db7bdce15e461a0483ec3e4bf5cf7596b49393fab477d9d25d61bd1f0f15
+    schemas/canonical_story/predicate_registry_v0.yaml: 44f3eafc6982f84bcc74ccb91abe7cd467a453352ee96be147095f27559c5350
+    tools/story_extraction/draft_compiler_v1_1.py: f962e561a7801ddf48ef248416231673e1567b9eac9d04f2aaba1d1e16eed953
+    tools/story_extraction/draft_compiler_v1.py: 281a2dfb5e99e67cc82b71798c09c93c04ab9682e8385a9cf6dfaf8393d69800
+    tools/story_extraction/materialize_draft_v1_1_model_schema_v1.py: 4eba6f3c9907e9dca53586b8933587de6069ce248043d632e920dc47af1325dc
+    tools/story_extraction/m4_04b4a_p4_output_contract_v1.py: dba892456fdfd57211e8becedf1cd7296cb2b77c68885df9e5cf828379dcceec
+    tools/story_extraction/prompts/story_extraction_draft_p4_v1_system.txt: ff6dcfd8b31a6e9d75d6134f6393c19c3d1de582b5f2155986c9df38be20e035
+    tools/story_extraction/prompts/story_extraction_draft_p4_v1_user.txt: 86336a230640f0ee96c41abcd6f15a160b313f3fb1bc6612cdaf0abb27b59b3e
+    tools/story_extraction/prompts/story_extraction_draft_p4_v1_repair_user.txt: 7681338344525f1722a4a2d9351177734404f18945e105a1848bd60f4707b55b
+    tools/story_extraction/gemini_resilience_v1_1.py: 8b84804f5c5b94e1b2ac2507d8b7bc39697b916bbdd889fc1f9040762bfc9213
+    tools/story_extraction/durable_research_executor_v1.py: cc9bd7a863ff906dea8fcd2f753c552881acd33f97a72b4af4e4e84eb1bfbe66
+    tools/story_extraction/gemini_transport_v1.py: 0828c50bfb0b4b4b0ca6845aa1937af509637bc17c765f8bc1ab451255a307b5
+    tools/story_extraction/gemini_errors_v1.py: ee5dd06238233dce8a269a474d28c40ee2ed5171f1269fd6b96ed138645927d7
+    tools/story_extraction/gemini_key_pool_v1.py: 77ab9238e322e493ebfdab223098052e74a73d7d0125c6a314b24e096bc690d0
+    tools/story_extraction/run_m4_04b2_dev_predictions_v1.py: 0aaa275fe96bb8bcf0f10e2e0ca7b9e789f643e3d2a154ceeef532c4155a744d
+    tools/story_extraction/m4_04b4b_p4_protocol_v1.py: 513824f4c9c6f5208c73dd5d54c388f0d2577858570c8177551f6e0fda540a4b
+    tools/story_extraction/project_draft_v1_1_model_schema_to_gemini_v1.py: 3fcfd71c9129ecac6de7e1d5341911073dad5326a74ed60741733c1808d6a5c5
+    schemas/story_extraction/story_extraction_draft_v1_1_gemini_response_schema_v1.schema.json: 89506defa4089b1449f7c80bbcf782d94065802ceae71aa86e1598a5a17ab9bd
+    benchmarks/m4_extraction/M4_04B4BR_PROVIDER_SCHEMA_PROJECTION_MANIFEST.json: bf475e6c0c557ec8e5f6a40af94e1875f420d073fa29963f82c3741286793760
+interpretation_matrix:
+  locked_before_live_calls: true
+  experiment_id: M4_04B4BR_TWO_STAGE_NATIVE_SCHEMA_CAPABILITY_EXPERIMENT_V1
+  experiment_sha256: 71cea1f4e603995ffd7466e16fd2fbb3034fed7935c581f890cc81f13f01cdc0
+  stage_outcomes:
+    ACCEPTED: The provider accepted the request and returned a response. The job is locked as a first success.
+    REJECTED_HTTP_400: The provider answered HTTP 400 and the transport classified it as a provider failure, not
+      as an authentication failure.
+    UNDETERMINED: 'Anything else: a transient, rate-limit, timeout, network or authentication outcome, or an exhausted
+      operation budget. No capability claim follows.'
+  cases:
+    CASE_A:
+      when:
+        stage1: REJECTED_HTTP_400
+        stage2: NOT_RUN
+      status: M4_04B4BR_MINIMAL_NATIVE_SCHEMA_REJECTED
+      conclusion: NATIVE_SCHEMA_PARAMETER_OR_MINIMAL_SCHEMA_NOT_ACCEPTED_ON_LOCKED_MODEL_PATH
+      native_schema_runtime_capability: NOT_ESTABLISHED
+      provider_projection_compatible: NOT_TESTED
+      ready_for_DEV3_tuning: false
+      next_action: ORCHESTRATOR REVIEW — P4 JSON-MIME-ONLY RUNTIME
+    CASE_B:
+      when:
+        stage1: ACCEPTED
+        stage2: REJECTED_HTTP_400
+      status: M4_04B4BR_P4_PROJECTION_REJECTED
+      conclusion: NATIVE_SCHEMA_WORKS_IN_PRINCIPLE_BUT_P4_PROVIDER_PROJECTION_IS_PROVIDER_INCOMPATIBLE
+      native_schema_runtime_capability: ESTABLISHED_FOR_MINIMAL_SCHEMA
+      provider_projection_compatible: false
+      ready_for_DEV3_tuning: false
+      next_action: ORCHESTRATOR REVIEW — PROVIDER PROJECTION INCOMPATIBILITY
+    CASE_C:
+      when:
+        stage1: ACCEPTED
+        stage2: ACCEPTED
+      status: M4_04B4BR_PROVIDER_PROJECTION_READY
+      conclusion: PROVIDER_PROJECTION_RUNTIME_PATH_ESTABLISHED
+      native_schema_runtime_capability: ESTABLISHED
+      provider_projection_compatible: true
+      ready_for_DEV3_tuning: true
+      next_action: M4-04B4C — P4 STRUCTURAL TUNING RUN ON DEV3 INPUT USING PROTOCOL V2 AND EXACT PROVIDER PROJECTION
+    UNDETERMINED:
+      when: ANY_OTHER_COMBINATION
+      status: null
+      conclusion: CAPABILITY_NOT_DETERMINED_BY_THIS_SMOKE
+      native_schema_runtime_capability: NOT_DETERMINED
+      provider_projection_compatible: NOT_DETERMINED
+      ready_for_DEV3_tuning: false
+      next_action: ORCHESTRATOR REVIEW — CAPABILITY SMOKE UNDETERMINED
+offline:
+  focused_tests:
+    file: tests/story_extraction/test_m4_04b4br_provider_projection_v1.py
+    sha256: 1c5c096b668b35765835a0be3615796a04bec89eb04d9d973280f00c599ab183
+    count: 67
+    result: PASS
+  live_path_rehearsed_with_fake_sdk_client: true
+  full_offline_suites:
+    canonical_story: 99
+    story_ingestion: 79
+    story_extraction: 660
+    script_quality: 64
+    story_benchmark: 298
+    total: 1200
+    result: PASS
+  provider_operations_before_smoke: 0
+live:
+  synthetic_only: true
+  operation_budget: 2
+  actual_operations: 2
+  repair_calls: 0
+  case: CASE_C
+  experiment_sha256: 71cea1f4e603995ffd7466e16fd2fbb3034fed7935c581f890cc81f13f01cdc0
+  executed_from_commit: 057c0dc9edd97a5b5650c3ba6207ecee6741d2cc
+  execution_environment: ISOLATED_CLONE_AUTOCRLF_FALSE_WITH_TWO_FILE_CRLF_ATTRIBUTE_EXCEPTION
+  executed_runner_sha256: 70dd4dd852399e184184c6e9188aa578dfdd32060fdd9e2f65a8e7768fdfed72
+  executed_protocol_module_sha256: 7410fbc6778eb8d4fe6c64794f645553c380da667f3f774522c6461ab508a001
+  executed_projection_tool_sha256: 3fcfd71c9129ecac6de7e1d5341911073dad5326a74ed60741733c1808d6a5c5
+  executed_protocol_sha256: 24b2af927e07078da3a06fe329aa5378cdde92675e76e92e2c03d9ad82726025
+  transport: ACCEPTED_GEMINI_DEV_WINDOW_TRANSPORT
+  runtime_path:
+  - DurableResearchExecutor
+  - PersistentRollingOperationPacer
+  - GeminiDevWindowTransport
+  one_off_direct_sdk_call: false
+  provider_error_message_captured: false
+  new_private_checkpoint_root: true
+  historical_B4B_checkpoint_reused: false
+  started_utc: '2026-10-08T01:54:39Z'
+  finished_utc: '2026-10-08T01:55:02Z'
+  pacing_invariant: PASS
+  credential:
+    slot: gemini_slot_3
+    resolved_exactly_once_before_provider_construction: true
+    other_slots_in_process_environment: 0
+    secret_value_in_any_artifact: false
+  stage1:
+    purpose: DOES_THE_LOCKED_MODEL_AND_TRANSPORT_PATH_ACCEPT_A_NATIVE_RESPONSE_SCHEMA_AT_ALL
+    native_schema: MINIMAL_OBJECT_WITH_ONE_REQUIRED_STRING_ENUM_PROPERTY_AND_NO_ADDITIONAL_PROPERTIES
+    uses_draft_v1_1: false
+    job_state: SUCCEEDED_LOCKED
+    execution_windows: 1
+    provider_operations: 1
+    outcome: ACCEPTED
+    provider_rejection_category: null
+    request_fingerprint: bb553aebaec6fb727bcfbe769048f7b4823d53250f2005d56c0297f2f918b1e5
+    response_sha256: d1940c2dfeffce4d29a89fe68aca6bf9b111771fe66829d5fbe238d49f3f0342
+    provider_reported_model_version: gemini-3.5-flash-lite
+    usage:
+      candidates_token_count: 6
+      prompt_token_count: 29
+      total_token_count: 35
+    minimal_native_schema_accepted: true
+    response_json_parse: true
+    response_matches_minimal_schema: true
+  stage2:
+    purpose: DOES_THE_PROVIDER_ACCEPT_THE_EXACT_P4_PROVIDER_PROJECTION
+    prompt_schema_sha256: 5aa2ed6dde3791546ddd5e059648d8dac38df1571a6073b7abc31c89eb257f14
+    native_schema_sha256: 89506defa4089b1449f7c80bbcf782d94065802ceae71aa86e1598a5a17ab9bd
+    fixture: ONE_INVENTED_SENTENCE_THE_SAME_SYNTHETIC_FIXTURE_AS_THE_B4B_SMOKE
+    job_state: SUCCEEDED_LOCKED
+    execution_windows: 1
+    provider_operations: 1
+    outcome: ACCEPTED
+    provider_rejection_category: null
+    request_fingerprint: 0cbb113beb800e7acff03284f2483f005e4a52dd2b328fbd3e2842c29bf05bf4
+    response_sha256: 3009b1c3dca6c32dce200dec33b7e07e75973c361fd7a50d9df050a479c9d881
+    provider_reported_model_version: gemini-3.5-flash-lite
+    usage:
+      candidates_token_count: 1460
+      prompt_token_count: 8587
+      total_token_count: 10047
+    A_provider_request_accepted: true
+    B_response_received: true
+    C_json_parse: true
+    D_provider_projection_validation: true
+    E_full_local_draft_v1_1_validation: true
+    F_compiler: true
+    structural_failure_category: null
+    isolation_from_rejected_protocol_v1_request:
+      native_schema_differs: true
+      native_schema_is_projection_of_rejected_native_schema: true
+      same_model_and_credential_slot: true
+      same_other_generation_settings: true
+      same_system_prompt: true
+      same_user_prompt: true
+  private_artifacts: IGNORED_LOCAL_STORAGE_NOT_PUBLISHED
+  response_content_published: false
+interpretation:
+  established:
+  - 'The locked model and transport path accept a native response schema: the minimal baseline request returned
+    a response.'
+  - The provider accepts the exact P4 provider projection as the native response schema while the prompt carries
+    the full model schema.
+  - On one invented sentence, the response parsed, satisfied the projection, satisfied the unchanged full local
+    validator and compiled, with no repair.
+  - The accepted stage 2 request and the request rejected under protocol V1 are identical except for the native
+    schema. The rejection therefore lies in what the projection removed or rewrote.
+  not_established:
+  - Extraction quality. None of this measures it.
+  - The structural validity rate on real inputs. One short synthetic case is not a rate.
+  - Which of the removed or rewritten keywords the provider had rejected. They were removed together.
+  - How strictly the provider enforces the projection, and any behaviour of the repair path live.
+  - Stability over time. Each request was sent once.
+  what_the_provider_no_longer_enforces: Handle and identifier patterns, length bounds, uniqueness of handle lists,
+    the non-empty argument map, the temporal-anchor conditional and the boolean placeholder constant. The model
+    still sees all of them in the prompt and the local validator still enforces all of them.
+boundaries:
+  DEV3_input: NOT_ACCESSED
+  DEV3_gold: SEALED
+  holdout: SEALED
+  P3: UNCHANGED
+  P3_private_outputs: NOT_ACCESSED
+  DEV4: NOT_CREATED
+  canonical_draft_schemas: UNCHANGED
+  full_P4_model_schema: UNCHANGED
+  compiler_V1_1: UNCHANGED
+  predicate_registry: UNCHANGED
+  P4_B4A_prompts: UNCHANGED
+  B4B_protocol_V1_runner_and_record: UNCHANGED
+  accepted_runtime_and_transport: UNCHANGED
+  story_or_case_specific_rule: NONE
+  DEV3_tuning: NOT_STARTED
+  main_branch: UNTOUCHED
+  secret_published: false
+decision:
+  native_schema_runtime_capability: ESTABLISHED
+  provider_projection_compatible: true
+  ready_for_DEV3_tuning: true
+  conclusion: PROVIDER_PROJECTION_RUNTIME_PATH_ESTABLISHED
+  extraction_quality_result: false
+  next_action: M4-04B4C — P4 STRUCTURAL TUNING RUN ON DEV3 INPUT USING PROTOCOL V2 AND EXACT PROVIDER PROJECTION
+  next_action_requires_separate_authorization: true
