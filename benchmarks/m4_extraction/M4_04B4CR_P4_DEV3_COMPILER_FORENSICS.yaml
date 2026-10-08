@@ -1,0 +1,543 @@
+task: M4-04B4CR
+status: M4_04B4CR_COMPILER_FORENSICS_COMPLETE
+base_commit: 30436aca8d19fff16b61c3385a169568df575008
+analyzer:
+  id: M4_04B4CR_P4_DEV3_COMPILER_FORENSICS_ANALYZER_V1
+  path: tools/story_extraction/analyze_m4_04b4cr_p4_dev3_compiler_forensics_v1.py
+  sha256: cd6c1ca84bcb1015e5ee4345fcd40a763083f9ff47ed55758e0579d48b18f54a
+accepted_B4C:
+  status: M4_04B4C_P4_DEV3_TUNING_COMPLETE
+  orchestrator_verdict: ACCEPT
+  experiment_lock_sha256: 4e407e0c644cfd359f1c4114c6bf98902d7cb453457277345631aea4b73fc840
+  prediction_set_sha256: ee67ff92c72f01b98d2bd7ac892fa3fb13d437074511bc5b4bf946aa7ee66538
+  protocol_sha256: 24b2af927e07078da3a06fe329aa5378cdde92675e76e92e2c03d9ad82726025
+  full_model_schema_sha256: 5aa2ed6dde3791546ddd5e059648d8dac38df1571a6073b7abc31c89eb257f14
+  provider_projection_sha256: 89506defa4089b1449f7c80bbcf782d94065802ceae71aa86e1598a5a17ab9bd
+  adapter_sha256: 6265931dbd58912746ab5af9fe5e5a878bb6e69f7a2d67233eb0713edcbe47ac
+  prelive_commit: c18e051b400baf2b26490588bcd089d769718ce1
+  executor_recommendation_threshold: HISTORICAL_ADVISORY_ONLY_NOT_AN_ACCEPTANCE_GATE
+  comparison_with_p3:
+    label: TUNING_COMPARISON_NOT_BLIND_VALIDATION
+    p3_structural_valid: 0/10
+    p4_structural_valid: 5/10
+boundaries:
+  provider_calls: 0
+  model_calls: 0
+  predictions_rerun: false
+  repairs_issued: false
+  DEV3_gold_opened: false
+  holdout_opened: false
+  semantic_scoring: false
+  DEV3_input_use: DETERMINISTIC_COMPILER_REPLAY_AND_OCCURRENCE_COUNTING_ONLY
+  frozen_stack_modified: false
+  original_predictions_modified: false
+  B4C_records_modified: false
+  new_acceptance_threshold_introduced: false
+  redesign_implemented: false
+  DEV4_created: false
+reproduction:
+  experiment_lock_sha256: 4e407e0c644cfd359f1c4114c6bf98902d7cb453457277345631aea4b73fc840
+  protocol_sha256: 24b2af927e07078da3a06fe329aa5378cdde92675e76e92e2c03d9ad82726025
+  adapter_sha256: 6265931dbd58912746ab5af9fe5e5a878bb6e69f7a2d67233eb0713edcbe47ac
+  adapter_unchanged_since_the_run: true
+  b4c_integrity_checks_passed: 20
+  b4c_integrity_checks_all_pass: true
+  artifact_counts:
+    raw_responses: 16
+    parsed_drafts: 16
+    compiled_batches: 5
+    terminal_failure_records: 5
+    diagnostics: 11
+    case_results: 10
+    durable_checkpoints: 16
+  prediction_set_sha256_rebuilt_from_artifact_files: ee67ff92c72f01b98d2bd7ac892fa3fb13d437074511bc5b4bf946aa7ee66538
+  prediction_set_matches_private_result_manifest_and_public_lock: true
+  real_provider_operations_recorded: 18
+  operation_budget: 30
+  provider_operations_during_forensics: 0
+  attempts_replayed: 16
+  compiler_results_reproduced: true
+  terminal_statuses_reproduced: 10
+  compiled_batches_reproduced_byte_for_byte: 5
+  stored_diagnostics_equal_sanitized_replayed_blockers: true
+  instrumented_and_plain_compilation_agree: true
+attempt_metrics:
+  primary:
+    attempts: 10
+    json_valid: 10
+    projection_valid: 10
+    full_schema_valid: 10
+    compiler_reached: 10
+    compiler_success: 4
+    compiler_failure: 6
+    first_blocker_codes:
+      AMBIGUOUS_QUOTE: 4
+      CANONICAL_CONFORMANCE_FAILURE: 2
+    compiler_blockers_total: 9
+  repair:
+    attempts: 6
+    json_valid: 6
+    projection_valid: 6
+    full_schema_valid: 6
+    compiler_reached: 6
+    compiler_success: 1
+    compiler_failure: 5
+    first_blocker_codes:
+      AMBIGUOUS_QUOTE: 2
+      CANONICAL_CONFORMANCE_FAILURE: 3
+    compiler_blockers_total: 5
+  totals:
+    attempts: 16
+    json_valid: 16
+    projection_valid: 16
+    full_schema_valid: 16
+    compiler_reached: 16
+    compiler_success: 5
+    compiler_failure: 11
+    first_blocker_codes:
+      AMBIGUOUS_QUOTE: 6
+      CANONICAL_CONFORMANCE_FAILURE: 5
+    compiler_blockers_total: 14
+    cases: 10
+    final_structural_valid_cases: 5
+    final_structural_failure_cases: 5
+    final_transport_failure_cases: 0
+    repair_attempts: 6
+    identical_repair_responses: 4
+    distinct_repair_responses: 2
+    repair_compiler_successes: 1
+quote_forensics:
+  matcher: FROZEN_COMPILER_EXACT_CODE_POINT_MATCH_OVERLAPPING_NO_NORMALIZATION
+  quote_blockers: 9
+  attempts_with_a_quote_blocker: 6
+  blockers_by_code_and_class:
+    AMBIGUOUS_QUOTE:QUOTE_REPEATED_OCCURRENCE_MISSING: 9
+  ambiguous_quote:
+    blockers: 9
+    by_phase:
+      PRIMARY: 7
+      REPAIR_1: 2
+    by_record_kind:
+      mentions: 9
+    quote_exists_in_designated_passage: 9
+    occurrence_omitted: 9
+    passage_evidence_eligible: 9
+    caused_by_repeated_exact_text: 9
+    repetition_only_through_overlapping_matches: 0
+    exact_occurrence_count_buckets:
+      '2': 9
+    quote_length_buckets_in_code_points:
+      '1': 5
+      2_TO_3: 4
+  locator_census_all_attempts:
+    PRIMARY:evidence:QUOTE_UNIQUE_OCCURRENCE_OMITTED: 24
+    PRIMARY:mentions:QUOTE_REPEATED_OCCURRENCE_MISSING: 7
+    PRIMARY:mentions:QUOTE_REPEATED_OCCURRENCE_PRESENT: 1
+    PRIMARY:mentions:QUOTE_UNIQUE_OCCURRENCE_OMITTED: 37
+    REPAIR_1:evidence:QUOTE_UNIQUE_OCCURRENCE_OMITTED: 15
+    REPAIR_1:mentions:QUOTE_REPEATED_OCCURRENCE_MISSING: 2
+    REPAIR_1:mentions:QUOTE_REPEATED_OCCURRENCE_PRESENT: 6
+    REPAIR_1:mentions:QUOTE_UNIQUE_OCCURRENCE_OMITTED: 20
+    REPAIR_1:mentions:QUOTE_UNIQUE_OCCURRENCE_PRESENT: 1
+  repeated_quote_locators_that_did_carry_an_occurrence: 7
+  effect_of_repair_on_primary_quote_blockers:
+    primary_quote_blockers_in_repaired_cases: 7
+    record_still_present: 7
+    quote_text_changed: 0
+    occurrence_added: 5
+    ambiguity_cleared: 5
+    ambiguity_unchanged: 2
+canonical_conformance_forensics:
+  instrumentation: READ_ONLY_RECORDER_AROUND_THE_VALIDATOR_CALL_INSIDE_THE_UNCHANGED_COMPILER
+  authoritative_result: UNCHANGED_COMPILER_VERDICT
+  attempts_with_canonical_conformance_failure: 5
+  by_phase:
+    PRIMARY: 2
+    REPAIR_1: 3
+  failed_checks:
+    canonical: 5
+  issues_total: 5
+  issues_per_attempt_maximum: 1
+  issues_by_section:
+    derivation_integrity: 2
+    predicate_integrity: 3
+  issues_by_rule_class:
+    ARGUMENT_ENTITY_KIND_NOT_ALLOWED: 2
+    DUPLICATE_CONCRETE_PROPOSITION_CONTENT: 1
+    RULE_CANNOT_CONCLUDE_PREDICATE: 2
+  issues_by_category:
+    OTHER_CANONICAL_CONSTRAINT: 3
+    SUPPORT_RELATION: 2
+  rule_classes:
+    ARGUMENT_ENTITY_KIND_NOT_ALLOWED:
+      check: canonical
+      section: predicate_integrity
+      category: OTHER_CANONICAL_CONSTRAINT
+      affected_attempts: 2
+      primary_attempts: 1
+      repair_attempts: 1
+      issues: 2
+      violation_present_in_model_draft: 2
+      violation_not_mechanically_checked: 0
+      violation_absent_from_model_draft: 0
+    DUPLICATE_CONCRETE_PROPOSITION_CONTENT:
+      check: canonical
+      section: predicate_integrity
+      category: OTHER_CANONICAL_CONSTRAINT
+      affected_attempts: 1
+      primary_attempts: 0
+      repair_attempts: 1
+      issues: 1
+      violation_present_in_model_draft: 1
+      violation_not_mechanically_checked: 0
+      violation_absent_from_model_draft: 0
+    RULE_CANNOT_CONCLUDE_PREDICATE:
+      check: canonical
+      section: derivation_integrity
+      category: SUPPORT_RELATION
+      affected_attempts: 2
+      primary_attempts: 1
+      repair_attempts: 1
+      issues: 2
+      violation_present_in_model_draft: 2
+      violation_not_mechanically_checked: 0
+      violation_absent_from_model_draft: 0
+  attempts_with_zero_precompile_structural_blockers: 5
+  validator_exceptions: 0
+  unclassified_issues: 0
+repair_effectiveness:
+  repair_attempts: 6
+  effects:
+    IDENTICAL_RESPONSE: 4
+    PRIMARY_BLOCKER_CLEARED_BUT_NEW_BLOCKER: 1
+    REPAIR_STRUCTURALLY_VALID: 1
+  identical_repair_responses: 4
+  distinct_repair_responses: 2
+  repair_compiler_successes: 1
+  primary_blocker_cleared: 2
+  primary_blocker_not_cleared: 4
+  request_fingerprints_differ_from_primary: 6
+  by_primary_blocker_code:
+    AMBIGUOUS_QUOTE:
+      IDENTICAL_RESPONSE: 2
+      PRIMARY_BLOCKER_CLEARED_BUT_NEW_BLOCKER: 1
+      REPAIR_STRUCTURALLY_VALID: 1
+    CANONICAL_CONFORMANCE_FAILURE:
+      IDENTICAL_RESPONSE: 2
+repair_diagnostic_audit:
+  diagnostic_identity: M4_P4_STRUCTURAL_REPAIR_DIAGNOSTIC_V2
+  repairs_audited: 6
+  primary_error_category_correct: 6
+  blocker_phase_and_code_preserved: 6
+  diagnostic_equals_sanitized_compiler_blockers: 6
+  finding_fields:
+  - code
+  - path
+  - phase
+  record_handle_masked_in_path: 6
+  path_fully_masked: 2
+  canonical_failures_sent_to_repair: 2
+  canonical_failures_naming_the_failed_check: 0
+  repairs_where_blockers_were_collapsed: 1
+  raw_compiler_blockers_total: 9
+  findings_sent_total: 6
+  repair_system_prompt_states_the_occurrence_rule: true
+  repair_user_prompt_describes_findings_as_schema_rules: true
+  diagnostic_explains_any_compiler_code: false
+  probable_mechanisms:
+    CORRECT_DIAGNOSTIC_BUT_MODEL_DID_NOT_REPAIR: 2
+    DIAGNOSTIC_TOO_GENERIC_FOR_STRUCTURAL_REPAIR: 2
+    NOT_APPLICABLE_PRIMARY_BLOCKER_WAS_CLEARED: 2
+  mechanism_rule: A repair that cleared its primary blocker needs no mechanism. A canonical conformance failure that was
+    not cleared is classed as a diagnostic too generic to act on, because the finding named neither the failed check nor
+    the record. An ambiguous quote that was not cleared is classed as a correct diagnostic the model did not act on, because
+    the same shape of finding was acted on in other cases.
+contract_audit:
+  facts:
+    prompt_states_occurrence_is_mandatory_for_a_repeated_quote: true
+    prompt_states_occurrence_is_one_based: true
+    prompt_states_quotes_are_exact_byte_for_byte: true
+    prompt_states_how_overlapping_matches_are_counted: false
+    prompt_restricts_locators_to_evidence_eligible_passages: true
+    schema_makes_occurrence_optional: true
+    schema_can_express_quote_uniqueness: false
+    prompt_contains_the_registry_entity_kind_constraints: true
+    registry_arguments_with_an_entity_kind_constraint: 14
+    prompt_prose_explains_entity_kind_constraints: false
+    prompt_contains_the_derivation_rule_conclusion_predicates: true
+    registry_derivation_rules_with_conclusion_predicates: 4
+    prompt_prose_explains_what_a_derivation_rule_may_conclude: false
+    prompt_states_propositions_with_identical_content_must_be_one: false
+    prompt_tells_the_model_to_use_only_registry_predicates_arguments_and_rules: true
+    repair_prompt_describes_findings_as_schema_rules: true
+  rules:
+  - requirement: OCCURRENCE_REQUIRED_WHEN_THE_EXACT_QUOTE_REPEATS
+    enforced_by: COMPILER_QUOTE_RESOLUTION
+    classification: EXPLICIT_AND_CORRECT
+    observed_in_the_locked_failures: true
+    note: The prompt states the rule in words. The schema leaves occurrence optional and cannot express uniqueness, so neither
+      the schema nor the provider projection can enforce it.
+  - requirement: EXACT_QUOTE_MATCH_WITHOUT_NORMALIZATION
+    enforced_by: COMPILER_QUOTE_RESOLUTION
+    classification: EXPLICIT_AND_CORRECT
+    observed_in_the_locked_failures: false
+    note: The prompt requires an exact quote and tells the model to preserve Unicode, punctuation and whitespace. No quote-not-found
+      failure was observed.
+  - requirement: OVERLAPPING_MATCHES_COUNT_AS_OCCURRENCES
+    enforced_by: COMPILER_QUOTE_RESOLUTION
+    classification: ABSENT
+    observed_in_the_locked_failures: false
+    note: The compiler counts overlapping matches. The prompt does not say so. No observed ambiguity arose only from overlapping
+      matches.
+  - requirement: LOCATORS_ONLY_IN_EVIDENCE_ELIGIBLE_PASSAGES
+    enforced_by: COMPILER_QUOTE_RESOLUTION
+    classification: EXPLICIT_AND_CORRECT
+    observed_in_the_locked_failures: false
+    note: Stated in the prompt. Every observed locator was in an evidence-eligible passage.
+  - requirement: MENTION_EVIDENCE_BINDING
+    enforced_by: COMPILER_V1_1_BINDING
+    classification: EXPLICIT_AND_CORRECT
+    observed_in_the_locked_failures: false
+    note: The prompt says a mention carries no evidence handle and the compiler binds it. No binding failure was observed.
+  - requirement: HANDLE_AND_REFERENCE_TYPE_CORRECTNESS
+    enforced_by: COMPILER_HANDLE_CHECKS
+    classification: EXPLICIT_AND_CORRECT
+    observed_in_the_locked_failures: false
+    note: Handle patterns are in the schema and the prompt requires type-correct handles. No handle failure was observed.
+  - requirement: ARGUMENT_ENTITY_KIND_ALLOWED_BY_REGISTRY
+    enforced_by: CANONICAL_VALIDATOR_PREDICATE_INTEGRITY
+    classification: IMPLICIT_ONLY
+    observed_in_the_locked_failures: true
+    note: The constraint is in the registry text inside the prompt as a field of the argument. The prompt prose never says
+      that the referenced entity must have one of those kinds.
+  - requirement: DERIVATION_RULE_MAY_CONCLUDE_THE_ASSERTED_PREDICATE
+    enforced_by: CANONICAL_VALIDATOR_DERIVATION_INTEGRITY
+    classification: IMPLICIT_ONLY
+    observed_in_the_locked_failures: true
+    note: Each rule lists its conclusion predicates in the registry text inside the prompt. The prompt prose never says
+      that a derivation may only support an assertion of one of those predicates.
+  - requirement: PROPOSITIONS_WITH_IDENTICAL_CONTENT_MUST_BE_ONE_RECORD
+    enforced_by: CANONICAL_VALIDATOR_PREDICATE_INTEGRITY
+    classification: ABSENT
+    observed_in_the_locked_failures: true
+    note: Neither the prompt, the schema nor the registry text tells the model that two propositions with the same content
+      are rejected.
+  - requirement: EXTRACTION_ENVELOPE_AND_HOST_OWNED_FIELDS
+    enforced_by: COMPILER_AND_BATCH_VALIDATOR
+    classification: NOT_APPLICABLE
+    observed_in_the_locked_failures: false
+    note: The host builds the envelope and provenance. The model never outputs them and no envelope failure was observed.
+  - requirement: REPAIR_INSTRUCTIONS_FOR_COMPILER_FINDINGS
+    enforced_by: REPAIR_PROMPT_AND_DIAGNOSTIC_V2
+    classification: AMBIGUOUS
+    observed_in_the_locked_failures: true
+    note: The repair prompt says each finding gives a path and the schema rule broken there. A compiler finding gives a
+      code and a path with the record handle masked, and for canonical conformance it gives no check and no record at all.
+  schema_valid_is_not_compiler_valid_because:
+  - ARGUMENT_ENTITY_KIND_ALLOWED_BY_REGISTRY
+  - DERIVATION_RULE_MAY_CONCLUDE_THE_ASSERTED_PREDICATE
+  - OCCURRENCE_REQUIRED_WHEN_THE_EXACT_QUOTE_REPEATS
+  - PROPOSITIONS_WITH_IDENTICAL_CONTENT_MUST_BE_ONE_RECORD
+counterfactuals:
+  label: NON_PREDICTION_DIAGNOSTIC_ONLY
+  counted_as_predictions: false
+  written_to_the_prediction_root: false
+  an_occurrence_was_chosen_as_correct: false
+  quote_occurrence:
+    failed_attempts_examined: 6
+    attempts_enumerated: 6
+    occurrence_combinations_tried: 26
+    attempts_where_every_choice_clears_the_quote_blocker: 6
+    attempts_that_compile_under_every_choice: 5
+    attempts_where_another_blocker_follows: 1
+    attempts_where_the_outcome_depends_on_the_choice: 0
+    outcome_codes_after_the_edit:
+      CANONICAL_CONFORMANCE_FAILURE: 1
+      COMPILES: 5
+  canonical:
+    duplicate_proposition_edits_tried: 1
+    outcomes:
+      COMPILES: 1
+    skipped_because_the_edit_needs_a_semantic_choice:
+      ARGUMENT_ENTITY_KIND_NOT_ALLOWED: 2
+      RULE_CANNOT_CONCLUDE_PREDICATE: 2
+root_cause_attribution:
+- mechanism: AMBIGUOUS_QUOTE:QUOTE_REPEATED_OCCURRENCE_MISSING
+  affected_attempts: 6
+  primary_attempts: 4
+  repair_attempts: 2
+  attribution:
+  - A_MODEL_STRUCTURAL_CONFORMANCE
+  contributing:
+  - B_MODEL_FACING_INTERFACE_GAP
+  - C_REPAIR_DIAGNOSTIC_LIMITATION
+  confidence: HIGH
+  structural_evidence:
+    blockers: 9
+    all_on_mention_records: true
+    all_quotes_exist_and_repeat_exactly: true
+    all_omit_occurrence: true
+    rule_stated_in_prompt: true
+    rule_enforceable_by_schema_or_projection: false
+    other_repeated_quote_locators_carried_an_occurrence: 7
+    every_valid_occurrence_choice_clears_the_blocker: true
+  supporting: Every ambiguous-quote blocker is a mention whose exact quote occurs more than once in an evidence-eligible
+    passage and which omits occurrence. The prompt states that occurrence is mandatory in exactly that situation. The compiler
+    applied the stated rule.
+  contrary: The rule cannot be enforced by the model schema or the provider projection, so nothing stops a schema-valid
+    draft from breaking it. In the repair attempts the finding masked which mention was ambiguous. Both points bear on how
+    the rule is delivered, not on whether it was stated.
+  uncertainty: Why the model applied the rule to some repeated quotes and not to others is not observable offline. One run
+    at temperature 0 cannot separate a stable tendency from chance.
+- mechanism: CANONICAL_CONFORMANCE_FAILURE:ARGUMENT_ENTITY_KIND_NOT_ALLOWED
+  affected_attempts: 2
+  primary_attempts: 1
+  repair_attempts: 1
+  attribution:
+  - A_MODEL_STRUCTURAL_CONFORMANCE
+  - B_MODEL_FACING_INTERFACE_GAP
+  contributing:
+  - C_REPAIR_DIAGNOSTIC_LIMITATION
+  confidence: MEDIUM
+  structural_evidence:
+    validator_check: canonical
+    validator_section: predicate_integrity
+    category: OTHER_CANONICAL_CONSTRAINT
+    rule_is_part_of_the_frozen_canonical_contract: true
+    model_facing_rule_classification: IMPLICIT_ONLY
+    violation_present_in_the_model_draft_before_compilation: true
+    compiler_generated_the_invalid_structure: false
+    canonical_rule_stricter_than_the_model_output_schema: true
+    detected_by_precompile_structural_checks: false
+  supporting: The read-only recorder shows the canonical check, section and rule class that failed. A mechanical comparison
+    shows the rejected structure already present in the model draft, so the compiler transcribed it and the frozen canonical
+    rule rejected it.
+  contrary: The rule reaches the model only as registry data without an explanation, or not at all, and the model output
+    schema accepts the draft. When the failure went to repair, the finding named neither the check nor the record.
+  uncertainty: Each of these rule classes was seen in one case only. Whether the model would follow the rule if it were
+    stated in words, or would repair it if the finding named it, was not tested.
+- mechanism: CANONICAL_CONFORMANCE_FAILURE:DUPLICATE_CONCRETE_PROPOSITION_CONTENT
+  affected_attempts: 1
+  primary_attempts: 0
+  repair_attempts: 1
+  attribution:
+  - B_MODEL_FACING_INTERFACE_GAP
+  contributing:
+  - A_MODEL_STRUCTURAL_CONFORMANCE
+  confidence: MEDIUM
+  structural_evidence:
+    validator_check: canonical
+    validator_section: predicate_integrity
+    category: OTHER_CANONICAL_CONSTRAINT
+    rule_is_part_of_the_frozen_canonical_contract: true
+    model_facing_rule_classification: ABSENT
+    violation_present_in_the_model_draft_before_compilation: true
+    compiler_generated_the_invalid_structure: false
+    canonical_rule_stricter_than_the_model_output_schema: true
+    detected_by_precompile_structural_checks: false
+  supporting: The read-only recorder shows the canonical check, section and rule class that failed. A mechanical comparison
+    shows the rejected structure already present in the model draft, so the compiler transcribed it and the frozen canonical
+    rule rejected it.
+  contrary: The rule reaches the model only as registry data without an explanation, or not at all, and the model output
+    schema accepts the draft. When the failure went to repair, the finding named neither the check nor the record.
+  uncertainty: Each of these rule classes was seen in one case only. Whether the model would follow the rule if it were
+    stated in words, or would repair it if the finding named it, was not tested.
+- mechanism: CANONICAL_CONFORMANCE_FAILURE:RULE_CANNOT_CONCLUDE_PREDICATE
+  affected_attempts: 2
+  primary_attempts: 1
+  repair_attempts: 1
+  attribution:
+  - A_MODEL_STRUCTURAL_CONFORMANCE
+  - B_MODEL_FACING_INTERFACE_GAP
+  contributing:
+  - C_REPAIR_DIAGNOSTIC_LIMITATION
+  confidence: MEDIUM
+  structural_evidence:
+    validator_check: canonical
+    validator_section: derivation_integrity
+    category: SUPPORT_RELATION
+    rule_is_part_of_the_frozen_canonical_contract: true
+    model_facing_rule_classification: IMPLICIT_ONLY
+    violation_present_in_the_model_draft_before_compilation: true
+    compiler_generated_the_invalid_structure: false
+    canonical_rule_stricter_than_the_model_output_schema: true
+    detected_by_precompile_structural_checks: false
+  supporting: The read-only recorder shows the canonical check, section and rule class that failed. A mechanical comparison
+    shows the rejected structure already present in the model draft, so the compiler transcribed it and the frozen canonical
+    rule rejected it.
+  contrary: The rule reaches the model only as registry data without an explanation, or not at all, and the model output
+    schema accepts the draft. When the failure went to repair, the finding named neither the check nor the record.
+  uncertainty: Each of these rule classes was seen in one case only. Whether the model would follow the rule if it were
+    stated in words, or would repair it if the finding named it, was not tested.
+- mechanism: REPAIR_DID_NOT_CLEAR_THE_PRIMARY_BLOCKER
+  affected_attempts: 4
+  primary_attempts: 0
+  repair_attempts: 4
+  attribution:
+  - C_REPAIR_DIAGNOSTIC_LIMITATION
+  contributing:
+  - A_MODEL_STRUCTURAL_CONFORMANCE
+  confidence: MEDIUM
+  structural_evidence:
+    repair_attempts: 6
+    identical_repair_responses: 4
+    primary_blocker_cleared: 2
+    findings_with_the_record_handle_masked: 6
+    findings_with_the_whole_path_masked: 2
+    canonical_failures_sent_to_repair: 2
+    canonical_failures_naming_the_failed_check: 0
+    repairs_where_blockers_were_collapsed: 1
+    request_fingerprints_differ_from_primary: 6
+  supporting: Diagnostic V2 keeps only names that belong to the schema. A record handle is not one, so every compiler finding
+    lost the handle of the failing record, and the canonical finding lost its whole path. No canonical failure that went
+    to repair was cleared.
+  contrary: Findings of the same shape were enough for the repairs that did clear an ambiguous quote, so a masked handle
+    does not by itself prevent a repair. An identical response shows the model did not change its output; it does not show
+    why.
+  uncertainty: Whether a finding that names the record and the failed check would have produced a different repair is unknown.
+    No further model call is allowed in this task.
+alternative_explanations:
+  D_DETERMINISTIC_COMPILER_DEFECT:
+    supported: false
+    evidence: No compiler defect was demonstrated. The instrumented and plain compilations agree, every outcome and every
+      compiled batch reproduces, and each rejected canonical structure is already in the model draft. A defect claim would
+      need an input that the frozen canonical contract requires the compiler to accept; none was found.
+  E_CANONICAL_CONTRACT_MISMATCH:
+    supported: false
+    evidence: No conflict between the canonical contract and the draft contract was found. The canonical rules are stricter
+      than the model output schema, which is a gap in what the schema can express, not a contradiction.
+  F_EXECUTION_OR_SERIALIZATION_DEFECT:
+    supported: false
+    evidence: Not supported. All raw, draft, compiled and failure-record hashes match, request fingerprints rebuild from
+      the input, and the prediction set rebuilds from the artifact files.
+limitations:
+- No semantic quality was measured. Structural validity says nothing about whether extracted content is correct.
+- DEV3 gold was not opened and nothing was evaluated against it.
+- No model was called. Why the model produced a given draft or repeated a response is not observable offline.
+- DEV3 is tuning data for P4. Nothing here is fresh validation.
+- Sixteen attempts on ten cases from one source family, each sent once. Counts this small do not generalize.
+- The compiler stops canonical validation at the first failed batch, and a quote blocker hides later checks. Blockers that
+  would appear after a fix are known only where a counterfactual exposed them.
+- Counterfactuals show that an edit removes a blocker. They are not predictions and say nothing about which occurrence or
+  structure is correct.
+decision:
+  next_research_candidate:
+  - P4.1 VERSIONED REPAIR DIAGNOSTIC REDESIGN
+  - P4.1 VERSIONED QUOTE-LOCATOR / COMPILER-INTERFACE REDESIGN
+  - CANONICAL CONTRACT CLARIFICATION
+  recommendation_evidence:
+    P4.1 VERSIONED REPAIR DIAGNOSTIC REDESIGN: 'Supported by the diagnostic audit: every compiler finding sent to repair
+      masked the record handle, the canonical finding named no check and no record, several blockers were collapsed into
+      one finding, and no canonical failure was cleared by repair.'
+    P4.1 VERSIONED QUOTE-LOCATOR / COMPILER-INTERFACE REDESIGN: 'Supported by the quote forensics: the largest single blocker
+      is an omitted occurrence on a repeated exact quote, a rule the prompt states but which the schema and provider projection
+      cannot enforce. Every valid occurrence choice clears the blocker.'
+    CANONICAL CONTRACT CLARIFICATION: 'Supported by the conformance forensics: the three canonical rule classes that failed
+      are enforced only after compilation, are accepted by the model output schema, and reach the model as unexplained registry
+      data or not at all.'
+  not_recommended:
+    CANONICAL COMPILER DEFECT INVESTIGATION: Not supported. All sixteen outcomes reproduce, the rejected structures are
+      already in the model drafts, and no input was found that the frozen contract requires the compiler to accept.
+  implementation_authorized: false
+  requires_orchestrator_authorization: true
+  semantic_quality_claim: false
