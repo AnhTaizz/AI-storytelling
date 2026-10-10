@@ -1,0 +1,1152 @@
+task: M4-04B4E
+status: M4_04B4E_PROTOCOL_VIOLATION
+status_reason: A_LOCAL_CREDENTIAL_FILE_WAS_READ_BY_A_PRE_COMMIT_SECRET_SCAN_EVERY_OFFLINE_GATE_PASSES
+base_commit: 2d46358cdadd69dec50a3202cf3aad8c30878c96
+scope: OFFLINE_RUNTIME_PROTOCOL_CANDIDATE_AND_SYNTHETIC_MOCK_ONLY
+evidence_class: SYNTHETIC_MOCK_ONLY_NOT_PROVIDER_EVIDENCE
+protocol_violation:
+  declared: true
+  declared_by: EXECUTOR_SELF_REPORT_CONFIRMED_WITH_THE_USER_BEFORE_COMMIT
+  rule: IF_A_FORBIDDEN_DATASET_CREDENTIAL_OR_PROVIDER_IS_ACCESSED
+  boundary_not_kept: ZERO_CREDENTIALS_LOADED
+  kind: LOCAL_CREDENTIAL_FILE_READ_BY_A_PRE_COMMIT_SECRET_SCAN
+  what_happened: A scan script reused from earlier tasks parsed the local credential file of the main checkout and
+    compared the key values with the files about to be committed, to assert that none of them appears there.
+  times_in_this_task: 1
+  credential_values_held_in_the_scan_process: 7
+  credential_values_printed_stored_or_transmitted: false
+  provider_client_created: false
+  provider_or_model_call_made: false
+  credential_used_by_the_protocol_harness_or_tests: false
+  dataset_gold_or_holdout_accessed: false
+  effect_on_any_committed_artifact: NONE_THE_SCAN_ONLY_ASSERTS_ABSENCE
+  found_by: EXECUTOR_SELF_REVIEW_BEFORE_COMMIT
+  correction_in_this_task: THE_COMMITTED_FILES_WERE_SCANNED_AGAIN_WITH_A_PATTERN_ONLY_SCAN_THAT_OPENS_NO_CREDENTIAL_FILE
+  same_scan_in_earlier_offline_tasks:
+    M4-04B4D: RUN_VERIFIED_FROM_THIS_SESSION
+    M4-04B4D-F1: RUN_VERIFIED_FROM_THIS_SESSION
+    M4-04B4CR: USED_ACCORDING_TO_THE_SESSION_SUMMARY_NOT_RE_VERIFIED
+  earlier_claim_affected: THE_M4_04B4D_F1_RECORD_AND_REPORT_SAY_NO_CREDENTIAL_WAS_USED_WITHOUT_ACCOUNTING_FOR_THIS_SCAN
+  earlier_records_rewritten: false
+  offline_gates: EVERY_OFFLINE_SAFETY_MOCK_RUNTIME_AND_REGRESSION_GATE_PASSES
+  orchestrator_ruling_requested: true
+active_identities:
+  candidate: P4_1_STORY_EXTRACTION_DRAFT_V1_1_COMPILER_AWARE_V1_1
+  candidate_sha256: 5a102aa782f876dcbfc94d71fef238de0e712288ed4428a27df6984edfe23019
+  diagnostic: M4_P4_1_STRUCTURAL_REPAIR_DIAGNOSTIC_V3_1
+  diagnostic_format: M4_P4_1_STRUCTURAL_DIAGNOSTIC_V3_1_FORMAT_1
+  diagnostic_tool_sha256: 6cd81cb029baa48998cb2f4da9c75a17be6c984965584b8cedb52c721ae3ee33
+  superseded_candidates_rejected:
+  - P4_1_STORY_EXTRACTION_DRAFT_V1_1_COMPILER_AWARE_V1
+  superseded_diagnostics_rejected:
+  - M4_P4_1_STRUCTURAL_REPAIR_DIAGNOSTIC_V3
+  - M4_P4_STRUCTURAL_REPAIR_DIAGNOSTIC_V2
+  superseded_implementations_called_by_the_runtime: false
+protocol_candidate:
+  identity: M4_P4_1_RUNTIME_PROTOCOL_CANDIDATE_V1
+  schema_version: M4_P4_1_RUNTIME_PROTOCOL_CANDIDATE_SCHEMA_V1
+  sha256: 5917a012663963d1d9e15f3be00c38a9ea1306d4fe8ad1e01134a99dc3618ff7
+  standing: PROPOSED_EXPERIMENTAL_PROTOCOL_NOT_A_LIVE_AUTHORIZATION
+  live_provider_operations: NOT_AUTHORIZED
+  credential_resolution: NOT_AUTHORIZED
+  live_operation_budget: REQUIRES_ORCHESTRATOR_AUTHORIZATION
+  B4C_budget_inherited: false
+  open_decisions:
+  - LIVE_OPERATION_BUDGET
+  - REPAIR_POLICY_FOR_A_PARTIALLY_DESCRIBED_DIAGNOSTIC
+  - CONFIRMATION_OF_THE_PROPOSED_MODEL_CREDENTIAL_SLOT_AND_GENERATION_SETTINGS
+  - DATASET_AND_CASE_LIST_FOR_ANY_LIVE_RUN
+  - PRIVATE_ROOT_AND_RESULT_ARTIFACT_CONTRACT_FOR_ANY_LIVE_RUN
+  - LIVE_TRANSPORT_BINDING_AND_EXECUTION_ENVIRONMENT
+  ready_for_live_lock: false
+  proposed_configuration:
+    binding: PROPOSED_FUTURE_LIVE_BINDING_NOT_AN_AUTHORIZATION
+    model: gemini-3.5-flash-lite
+    credential_slot: gemini_slot_3
+    temperature: 0
+    max_output_tokens: 16384
+    response_mime_type: application/json
+    native_schema_enabled: true
+    native_schema_parameter: response_json_schema
+    native_schema_sha256: 89506defa4089b1449f7c80bbcf782d94065802ceae71aa86e1598a5a17ab9bd
+    generation_config_sha256: fb4e49a56e55adaa9d4ffefc81c3861602ce56d9bffcf38bb5f4fdac84970b74
+    generation_config_equals_protocol_v2: true
+    schema_response_mode: PROVIDER_JSON_MIME_PLUS_NATIVE_PROVIDER_PROJECTION_SCHEMA_V2
+    concurrency: 1
+    seed: NOT_SUPPORTED_NOT_USED
+  proposed_durable_execution:
+    runtime: GEMINI_TRANSPORT_RESILIENCE_V1_1
+    durable_executor: DURABLE_RESEARCH_EXECUTOR_V1
+    transport: NOT_BOUND_REQUIRES_ORCHESTRATOR_AUTHORIZATION
+    pacer: PersistentRollingOperationPacer
+    maximum_windows_per_job: 3
+    maximum_provider_attempts_per_window: 3
+    maximum_provider_attempts_per_job: 9
+    global_pacing_max_operations: 6
+    global_pacing_rolling_window_seconds: 60.0
+    window_cooldown_seconds: 60
+    model_switch: FORBIDDEN
+    credential_switch: FORBIDDEN
+  prompt_hashes:
+    primary_system_sha256: 92869de37874635a7511af7220cb015a944753316d7047e4678e3f5f80a07ccf
+    primary_user_template_sha256: 4a642008e3b4be809ab71cf9a107a35260950066bb48ee90ca9e2d64ed76c01a
+    primary_prompt_pair_sha256: b93e752db7f020398b946b3bb5c5abecee70269444fc3618baf55fef389672e4
+    repair_system_sha256: c509e85b5e1a34b18b03ba6b22b39595d84517906aaa679ed4975d35d213e2e6
+    repair_user_template_sha256: 2680d93120d4b26b107ca61f4fd557c72f1790bb54807bb01153c73c366cebf2
+    repair_prompt_pair_sha256: f19e7ca25df7b53d66a103d52a9d3f50c5b32c3625e096ffb5fa1edb2f42f0b3
+  schema_roles:
+    prompt_schema: STORY_EXTRACTION_DRAFT_V1_1_MODEL_SCHEMA_V1
+    prompt_schema_sha256: 5aa2ed6dde3791546ddd5e059648d8dac38df1571a6073b7abc31c89eb257f14
+    native_schema: STORY_EXTRACTION_DRAFT_V1_1_GEMINI_RESPONSE_SCHEMA_V1
+    native_schema_sha256: 89506defa4089b1449f7c80bbcf782d94065802ceae71aa86e1598a5a17ab9bd
+    native_schema_role: OUTPUT_SHAPING_AID_ONLY
+    authoritative_validator: UNCHANGED_LOCAL_DRAFT_V1_1_VALIDATOR
+  exactly_once_rules:
+    first_success: IMMUTABLE_LOCK
+    raw_response: WRITE_ONCE_IDENTIFIED_BY_SHA256
+    request_identity: REQUEST_FINGERPRINT_BOUND_INTO_THE_CHECKPOINT
+    retry_of_a_successful_response: FORBIDDEN
+    output_aware_transport_retry: FORBIDDEN
+    retry_of_a_terminal_case: FORBIDDEN
+    in_flight_checkpoint_on_restart: FAIL_CLOSED_MANUAL_REVIEW
+    existing_state_on_a_new_run: REFUSED
+    checkpoint_reset_to_evade_limits: FORBIDDEN
+    operation_accounting: PERSISTED_RESERVATION_COUNT_OF_THE_PACER
+  bound_files: 31
+  bound_file_hash_mode: UTF8_LF_NORMALIZED_SHA256
+  job_id_patterns:
+  - M4B4E_P41_{CASE_ID}_PRIMARY
+  - M4B4E_P41_{CASE_ID}_REPAIR_1
+  differences_from_protocol_V2:
+  - MODEL_FACING_CONTRACT_IS_P4_1_CANDIDATE_V1_1
+  - REPAIR_DIAGNOSTIC_IS_V3_1
+  - REPAIR_REQUEST_IS_REBUILT_AND_COMPARED_BEFORE_RENDERING
+  - EXPLICIT_REPAIR_ACTIONABILITY_RULE
+  - RETENTION_AND_EMPTY_OUTPUT_METRICS_ARE_PART_OF_THE_RESULT
+frozen_dependencies:
+  full_model_schema_sha256: 5aa2ed6dde3791546ddd5e059648d8dac38df1571a6073b7abc31c89eb257f14
+  provider_projection_sha256: 89506defa4089b1449f7c80bbcf782d94065802ceae71aa86e1598a5a17ab9bd
+  historical_protocol_V2_sha256: 24b2af927e07078da3a06fe329aa5378cdde92675e76e92e2c03d9ad82726025
+  P4_prediction_set_sha256: ee67ff92c72f01b98d2bd7ac892fa3fb13d437074511bc5b4bf946aa7ee66538
+  predicate_registry_sha256: 44f3eafc6982f84bcc74ccb91abe7cd467a453352ee96be147095f27559c5350
+  compiler_v1_1_sha256: f962e561a7801ddf48ef248416231673e1567b9eac9d04f2aaba1d1e16eed953
+  compiler_v1_sha256: 281a2dfb5e99e67cc82b71798c09c93c04ab9682e8385a9cf6dfaf8393d69800
+  durable_executor_sha256: cc9bd7a863ff906dea8fcd2f753c552881acd33f97a72b4af4e4e84eb1bfbe66
+  durable_executor: DURABLE_RESEARCH_EXECUTOR_V1
+  all_unchanged: true
+  historical_records_modified: false
+tools:
+  protocol_tool:
+    path: tools/story_extraction/m4_04b4e_p4_1_runtime_protocol_candidate_v1.py
+    sha256: abbe6bc5440321607bbb1c812bed3582baf33915e1524b9645f30a2a2c094618
+  mock_harness:
+    path: tools/story_extraction/run_m4_04b4e_p4_1_synthetic_mock_v1.py
+    sha256: c137f25f8e937d97b57e8a71477b258b77f4cf6c0cf95f71001ffdd9b5889793
+  retention_metrics:
+    path: tools/story_extraction/m4_04b4e_p4_1_retention_metrics_v1.py
+    sha256: f6eb7a07a9bc0b09a446d5c812554e7bc430cccb96063d30c151f4e58c6e1827
+  accepted_components_reused:
+  - DURABLE_RESEARCH_EXECUTOR_V1
+  - PERSISTENT_ROLLING_OPERATION_PACER
+  - DRAFT_V1_1_VALIDATOR
+  - DRAFT_COMPILER_V1_1
+  - P4_1_CANDIDATE_V1_1_PROMPT_CONTRACT
+  - STRUCTURAL_DIAGNOSTIC_V3_1
+  - PROVIDER_PROJECTION
+  - FROZEN_INGESTION_ADAPTER
+  written_again_in_the_offline_harness:
+  - EXECUTE_TO_TERMINAL_LOOP
+  - OPERATION_BUDGET_WRAPPER
+  - WRITE_ONCE_ARTIFACT_HELPER
+  reason: THE_ACCEPTED_VERSIONS_LIVE_IN_MODULES_THAT_IMPORT_THE_PROVIDER_TRANSPORT_AND_CREDENTIAL_LOADER
+request_builders_and_checker:
+  requests_built_without_a_provider_client: true
+  primary_system_prompt: P4_1_V1_1_PRIMARY_PROMPT_NOT_P4
+  repair_prompt_and_diagnostic: V1_1_REPAIR_PROMPT_AND_DIAGNOSTIC_V3_1
+  complete_schema_text_in_the_prompt: true
+  native_schema: EXACT_ACCEPTED_PROVIDER_PROJECTION
+  repair_diagnostic_rebuilt_and_compared_before_rendering: true
+  checker_rejects:
+  - SUPERSEDED_CANDIDATE_V1
+  - DIAGNOSTIC_V3
+  - DIAGNOSTIC_V2
+  - MISSING_PROVIDER_PROJECTION
+  - ALTERED_PROVIDER_PROJECTION
+  - FULL_MODEL_SCHEMA_AS_NATIVE_SCHEMA
+  - P4_PROMPTS
+  - CHANGED_PROMPTS
+  - PROMPT_WITHOUT_THE_COMPLETE_SCHEMA
+  - ALTERED_MODEL
+  - ALTERED_GENERATION_SETTINGS
+  - ALTERED_RESPONSE_MODE
+  - UNEXPECTED_CREDENTIAL_SLOT
+  - ADDITIONAL_REPAIR_ATTEMPTS
+  - REQUEST_OF_ANOTHER_PROTOCOL
+  - REQUEST_IDENTITY_MISMATCH
+  - REPAIR_REQUEST_WITHOUT_A_V3_1_DIAGNOSTIC
+  - DIAGNOSTIC_OF_ANOTHER_RESPONSE_OR_CONTEXT
+  - EDITED_DIAGNOSTIC
+  text_in_a_primary_response_cannot_pose_as_the_diagnostic_section: true
+diagnostic_integration:
+  compiler_verdict_is_final: true
+  diagnostic_built_from_the_exact_locked_response_and_context: true
+  diagnostic_that_disagrees_with_the_compiler: RUN_STOPS_FAIL_CLOSED
+  diagnostic_that_fails_its_safety_assertion: RESPONSE_KEEPS_THE_COMPILER_VERDICT_AND_NO_REPAIR_IS_SENT
+  host_edits_the_draft: false
+  automatic_occurrence_selection: false
+  rejected_primaries_in_the_mock: 13
+  repair_requests_in_the_mock: 12
+  repair_requests_equal_to_the_protocol_rebuild: 12
+repair_actionability:
+  classes:
+  - ACCEPTED_NO_REPAIR
+  - ACTIONABLE
+  - PARTIALLY_DESCRIBED
+  - NOT_ACTIONABLE_HOST_SIDE_FAILURE
+  - NOT_ACTIONABLE_INVALID_OR_UNSAFE_DIAGNOSTIC
+  - NOT_ACTIONABLE_EMPTY_PRIMARY_RESPONSE
+  decisions:
+    ACCEPTED_NO_REPAIR: NO_REPAIR
+    ACTIONABLE: REPAIR
+    PARTIALLY_DESCRIBED: UNRESOLVED_REQUIRES_ORCHESTRATOR_DECISION
+    NOT_ACTIONABLE_HOST_SIDE_FAILURE: NO_REPAIR
+    NOT_ACTIONABLE_INVALID_OR_UNSAFE_DIAGNOSTIC: NO_REPAIR
+    NOT_ACTIONABLE_EMPTY_PRIMARY_RESPONSE: NO_REPAIR
+  complete_false_alone_refuses_a_repair: false
+  statements_that_may_be_false_for_an_actionable_diagnostic:
+  - compiler_structural_rules_checked
+  - canonical_validation_reached
+  - downstream_canonical_issues_enumerated
+  refused_with_a_justified_decision:
+  - ACCEPTED_NO_REPAIR
+  - NOT_ACTIONABLE_HOST_SIDE_FAILURE
+  - NOT_ACTIONABLE_INVALID_OR_UNSAFE_DIAGNOSTIC
+  - NOT_ACTIONABLE_EMPTY_PRIMARY_RESPONSE
+  partially_described:
+    reasons:
+    - A_FINDING_ABOUT_ONE_RECORD_HAS_NO_VERIFIED_LOCATOR
+    - A_FINDING_HAS_NO_RECOGNIZED_RULE
+    standing: UNRESOLVED_REQUIRES_ORCHESTRATOR_DECISION
+    caller_must_state_the_policy_on_every_call: true
+    both_policies_exercised_in_the_mock:
+      REFUSE_REPAIR:
+        scenario: S20
+        terminal_status: STRUCTURAL_FAILURE
+        repair_used: false
+      ALLOW_REPAIR:
+        scenario: S21
+        terminal_status: STRUCTURAL_VALID
+        repair_used: true
+    the_mock_outcomes_say_nothing_about_a_model: true
+synthetic_mock:
+  evidence: SYNTHETIC_MOCK_ONLY_NOT_PROVIDER_EVIDENCE
+  transport: INJECTED_SCRIPTED_FAKE_NO_CLIENT_NO_CREDENTIAL_NO_NETWORK
+  time: VIRTUAL_CLOCK_NO_WALL_CLOCK_NO_WAITING
+  input: ONE_INVENTED_SENTENCE_AND_HAND_WRITTEN_DRAFTS_DEFINED_IN_THE_HARNESS
+  provider_latency_token_usage_or_cost_reported: false
+  fixture_set_sha256: ed5e5ea00b2b2dbb1014c46050ba613aecd0ab12f519fac092d5fb287dadad0a
+  run_summary_sha256: 96d64da343361e3456d451fa102098ff4f39ac82219182bd665faea0b0e882be
+  scenarios_run: 21
+  required_simulations: 20
+  required_simulations_covered: true
+  additional_scenario: S21_IS_S20_UNDER_THE_OTHER_UNDECIDED_POLICY
+  scenarios:
+  - scenario_id: S01
+    simulates: VALID_PRIMARY_RESPONSE
+    run_status: MOCK_RUN_COMPLETE
+    terminal_statuses:
+    - STRUCTURAL_VALID
+    primary_failure_categories:
+    - null
+    repair_actionability:
+    - null
+    repair_used:
+    - false
+    mock_operations: 1
+    pacing_waits: 0
+    max_rolling_operations_observed: 1
+    warnings: []
+    summary_sha256: 7d5bc1850defc4f1c526457a9c97ca59e3be815d6fc9e991016b892b8df7b3ca
+  - scenario_id: S02
+    simulates: INVALID_JSON_PRIMARY
+    run_status: MOCK_RUN_COMPLETE
+    terminal_statuses:
+    - STRUCTURAL_VALID
+    primary_failure_categories:
+    - JSON_PARSE_FAILURE
+    repair_actionability:
+    - ACTIONABLE
+    repair_used:
+    - true
+    mock_operations: 2
+    pacing_waits: 0
+    max_rolling_operations_observed: 2
+    warnings:
+    - PRIMARY_AND_REPAIR_ARE_NOT_COMPARABLE_BY_HANDLE
+    summary_sha256: 8187180cb4dc91f58ba4ae2884c07f0afae6496a3fa908ae80b40d4d84b1fffc
+    repair_effect:
+      identical_bytes: false
+      primary_findings: 1
+      primary_findings_cleared: 1
+      new_findings: 0
+      cleared_with_the_record_kept: 0
+      cleared_with_the_record_removed: 0
+      removed_records_by_explanation:
+        NAMED_BY_A_PRIMARY_FINDING: 0
+        DEPENDS_ON_A_NAMED_RECORD: 0
+        NOT_EXPLAINED_BY_ANY_FINDING: 0
+      changed_records_not_named_by_a_finding: 0
+      structural_validity_increased: true
+      structural_validity_increased_while_record_count_decreased: false
+    record_totals:
+      primary_records: 0
+      repair_records: 26
+      count_difference: 26
+      retained: 0
+      removed: 0
+      added: 0
+      unchanged: 0
+      changed_in_place: 0
+  - scenario_id: S03
+    simulates: FULL_SCHEMA_INVALID_PRIMARY
+    run_status: MOCK_RUN_COMPLETE
+    terminal_statuses:
+    - STRUCTURAL_VALID
+    primary_failure_categories:
+    - DRAFT_SCHEMA_FAILURE
+    repair_actionability:
+    - ACTIONABLE
+    repair_used:
+    - true
+    mock_operations: 2
+    pacing_waits: 0
+    max_rolling_operations_observed: 2
+    warnings:
+    - COUNTS_UNCHANGED_BUT_CONTENT_CHANGED
+    summary_sha256: df02c086864f5bf7e835ff32765332770ef4d5ce1578e19d5d3aeab65fc82413
+    repair_effect:
+      identical_bytes: false
+      primary_findings: 1
+      primary_findings_cleared: 1
+      new_findings: 0
+      cleared_with_the_record_kept: 1
+      cleared_with_the_record_removed: 0
+      removed_records_by_explanation:
+        NAMED_BY_A_PRIMARY_FINDING: 0
+        DEPENDS_ON_A_NAMED_RECORD: 0
+        NOT_EXPLAINED_BY_ANY_FINDING: 0
+      changed_records_not_named_by_a_finding: 0
+      structural_validity_increased: true
+      structural_validity_increased_while_record_count_decreased: false
+    record_totals:
+      primary_records: 26
+      repair_records: 26
+      count_difference: 0
+      retained: 26
+      removed: 0
+      added: 0
+      unchanged: 25
+      changed_in_place: 1
+  - scenario_id: S04
+    simulates: PROJECTION_VALID_BUT_FULL_SCHEMA_INVALID_PRIMARY
+    run_status: MOCK_RUN_COMPLETE
+    terminal_statuses:
+    - STRUCTURAL_VALID
+    primary_failure_categories:
+    - DRAFT_SCHEMA_FAILURE
+    repair_actionability:
+    - ACTIONABLE
+    repair_used:
+    - true
+    mock_operations: 2
+    pacing_waits: 0
+    max_rolling_operations_observed: 2
+    warnings:
+    - COUNTS_UNCHANGED_BUT_CONTENT_CHANGED
+    summary_sha256: ab56b823f9be9ab28cc54dd16b98c363f5df3c83e9a77639c5ce404dabd3f829
+    repair_effect:
+      identical_bytes: false
+      primary_findings: 1
+      primary_findings_cleared: 1
+      new_findings: 0
+      cleared_with_the_record_kept: 0
+      cleared_with_the_record_removed: 0
+      removed_records_by_explanation:
+        NAMED_BY_A_PRIMARY_FINDING: 1
+        DEPENDS_ON_A_NAMED_RECORD: 0
+        NOT_EXPLAINED_BY_ANY_FINDING: 0
+      changed_records_not_named_by_a_finding: 0
+      structural_validity_increased: true
+      structural_validity_increased_while_record_count_decreased: false
+    record_totals:
+      primary_records: 26
+      repair_records: 26
+      count_difference: 0
+      retained: 25
+      removed: 1
+      added: 1
+      unchanged: 25
+      changed_in_place: 0
+  - scenario_id: S05
+    simulates: COMPILER_INVALID_QUOTE_OCCURRENCE
+    run_status: MOCK_RUN_COMPLETE
+    terminal_statuses:
+    - STRUCTURAL_VALID
+    primary_failure_categories:
+    - DRAFT_COMPILER_FAILURE
+    repair_actionability:
+    - ACTIONABLE
+    repair_used:
+    - true
+    mock_operations: 2
+    pacing_waits: 0
+    max_rolling_operations_observed: 2
+    warnings:
+    - COUNTS_UNCHANGED_BUT_CONTENT_CHANGED
+    summary_sha256: 06cd38485c6bb48db7d5b3ed70b363d0b53177e94aae365b75f648d64c241fd8
+    repair_effect:
+      identical_bytes: false
+      primary_findings: 1
+      primary_findings_cleared: 1
+      new_findings: 0
+      cleared_with_the_record_kept: 1
+      cleared_with_the_record_removed: 0
+      removed_records_by_explanation:
+        NAMED_BY_A_PRIMARY_FINDING: 0
+        DEPENDS_ON_A_NAMED_RECORD: 0
+        NOT_EXPLAINED_BY_ANY_FINDING: 0
+      changed_records_not_named_by_a_finding: 0
+      structural_validity_increased: true
+      structural_validity_increased_while_record_count_decreased: false
+    record_totals:
+      primary_records: 26
+      repair_records: 26
+      count_difference: 0
+      retained: 26
+      removed: 0
+      added: 0
+      unchanged: 25
+      changed_in_place: 1
+  - scenario_id: S06
+    simulates: COMPILER_INVALID_ENTITY_KIND_REFERENCE
+    run_status: MOCK_RUN_COMPLETE
+    terminal_statuses:
+    - STRUCTURAL_VALID
+    primary_failure_categories:
+    - DRAFT_COMPILER_FAILURE
+    repair_actionability:
+    - ACTIONABLE
+    repair_used:
+    - true
+    mock_operations: 2
+    pacing_waits: 0
+    max_rolling_operations_observed: 2
+    warnings:
+    - COUNTS_UNCHANGED_BUT_CONTENT_CHANGED
+    summary_sha256: 40e36263d718e69d1b8e8598c10c2fd60fc3aa26f547bb22af44e5530dd1ba88
+    repair_effect:
+      identical_bytes: false
+      primary_findings: 2
+      primary_findings_cleared: 2
+      new_findings: 0
+      cleared_with_the_record_kept: 1
+      cleared_with_the_record_removed: 0
+      removed_records_by_explanation:
+        NAMED_BY_A_PRIMARY_FINDING: 0
+        DEPENDS_ON_A_NAMED_RECORD: 0
+        NOT_EXPLAINED_BY_ANY_FINDING: 0
+      changed_records_not_named_by_a_finding: 0
+      structural_validity_increased: true
+      structural_validity_increased_while_record_count_decreased: false
+    record_totals:
+      primary_records: 26
+      repair_records: 26
+      count_difference: 0
+      retained: 26
+      removed: 0
+      added: 0
+      unchanged: 25
+      changed_in_place: 1
+  - scenario_id: S07
+    simulates: COMPILER_INVALID_DERIVATION_CONCLUSION
+    run_status: MOCK_RUN_COMPLETE
+    terminal_statuses:
+    - STRUCTURAL_VALID
+    primary_failure_categories:
+    - DRAFT_COMPILER_FAILURE
+    repair_actionability:
+    - ACTIONABLE
+    repair_used:
+    - true
+    mock_operations: 2
+    pacing_waits: 0
+    max_rolling_operations_observed: 2
+    warnings:
+    - COUNTS_UNCHANGED_BUT_CONTENT_CHANGED
+    summary_sha256: c702e9c1f8e8bceddcb5227f4ee62bccff1125b83d93b1ef473701ffb75dcf15
+    repair_effect:
+      identical_bytes: false
+      primary_findings: 2
+      primary_findings_cleared: 2
+      new_findings: 0
+      cleared_with_the_record_kept: 1
+      cleared_with_the_record_removed: 0
+      removed_records_by_explanation:
+        NAMED_BY_A_PRIMARY_FINDING: 0
+        DEPENDS_ON_A_NAMED_RECORD: 0
+        NOT_EXPLAINED_BY_ANY_FINDING: 0
+      changed_records_not_named_by_a_finding: 0
+      structural_validity_increased: true
+      structural_validity_increased_while_record_count_decreased: false
+    record_totals:
+      primary_records: 26
+      repair_records: 26
+      count_difference: 0
+      retained: 26
+      removed: 0
+      added: 0
+      unchanged: 25
+      changed_in_place: 1
+  - scenario_id: S08
+    simulates: DUPLICATE_CONCRETE_PROPOSITION
+    run_status: MOCK_RUN_COMPLETE
+    terminal_statuses:
+    - STRUCTURAL_VALID
+    primary_failure_categories:
+    - DRAFT_COMPILER_FAILURE
+    repair_actionability:
+    - ACTIONABLE
+    repair_used:
+    - true
+    mock_operations: 2
+    pacing_waits: 0
+    max_rolling_operations_observed: 2
+    warnings:
+    - A_FINDING_WAS_CLEARED_BY_REMOVING_ITS_RECORD
+    - STRUCTURAL_VALIDITY_INCREASED_WHILE_RECORD_COUNT_DECREASED
+    summary_sha256: f3b0567da46dc59f9a117a712b528167024a8a22768300cb4765d15e8e586a32
+    repair_effect:
+      identical_bytes: false
+      primary_findings: 2
+      primary_findings_cleared: 2
+      new_findings: 0
+      cleared_with_the_record_kept: 0
+      cleared_with_the_record_removed: 1
+      removed_records_by_explanation:
+        NAMED_BY_A_PRIMARY_FINDING: 1
+        DEPENDS_ON_A_NAMED_RECORD: 0
+        NOT_EXPLAINED_BY_ANY_FINDING: 0
+      changed_records_not_named_by_a_finding: 0
+      structural_validity_increased: true
+      structural_validity_increased_while_record_count_decreased: true
+    record_totals:
+      primary_records: 27
+      repair_records: 26
+      count_difference: -1
+      retained: 26
+      removed: 1
+      added: 0
+      unchanged: 26
+      changed_in_place: 0
+  - scenario_id: S09
+    simulates: SUCCESSFUL_REPAIR_OF_SEVERAL_BLOCKERS
+    run_status: MOCK_RUN_COMPLETE
+    terminal_statuses:
+    - STRUCTURAL_VALID
+    primary_failure_categories:
+    - DRAFT_COMPILER_FAILURE
+    repair_actionability:
+    - ACTIONABLE
+    repair_used:
+    - true
+    mock_operations: 2
+    pacing_waits: 0
+    max_rolling_operations_observed: 2
+    warnings:
+    - A_FINDING_WAS_CLEARED_BY_REMOVING_ITS_RECORD
+    - STRUCTURAL_VALIDITY_INCREASED_WHILE_RECORD_COUNT_DECREASED
+    summary_sha256: 79b7c242571c32605e77a22c1f118ef6f7d83ac20829d66ea61324bfc9d47269
+    repair_effect:
+      identical_bytes: false
+      primary_findings: 3
+      primary_findings_cleared: 3
+      new_findings: 0
+      cleared_with_the_record_kept: 2
+      cleared_with_the_record_removed: 1
+      removed_records_by_explanation:
+        NAMED_BY_A_PRIMARY_FINDING: 1
+        DEPENDS_ON_A_NAMED_RECORD: 0
+        NOT_EXPLAINED_BY_ANY_FINDING: 0
+      changed_records_not_named_by_a_finding: 0
+      structural_validity_increased: true
+      structural_validity_increased_while_record_count_decreased: true
+    record_totals:
+      primary_records: 27
+      repair_records: 26
+      count_difference: -1
+      retained: 26
+      removed: 1
+      added: 0
+      unchanged: 24
+      changed_in_place: 2
+  - scenario_id: S10
+    simulates: BYTE_IDENTICAL_INEFFECTIVE_REPAIR
+    run_status: MOCK_RUN_COMPLETE
+    terminal_statuses:
+    - STRUCTURAL_FAILURE
+    primary_failure_categories:
+    - DRAFT_COMPILER_FAILURE
+    repair_actionability:
+    - ACTIONABLE
+    repair_used:
+    - true
+    mock_operations: 2
+    pacing_waits: 0
+    max_rolling_operations_observed: 2
+    warnings:
+    - REPAIR_IDENTICAL_TO_PRIMARY
+    summary_sha256: 6cb3c1918ba7bc99ef7f2b44e5b640802ce1fcbdaf92f771e6b950a53ee2cf94
+    repair_effect:
+      identical_bytes: true
+      primary_findings: 1
+      primary_findings_cleared: 0
+      new_findings: 0
+      cleared_with_the_record_kept: 0
+      cleared_with_the_record_removed: 0
+      removed_records_by_explanation:
+        NAMED_BY_A_PRIMARY_FINDING: 0
+        DEPENDS_ON_A_NAMED_RECORD: 0
+        NOT_EXPLAINED_BY_ANY_FINDING: 0
+      changed_records_not_named_by_a_finding: 0
+      structural_validity_increased: false
+      structural_validity_increased_while_record_count_decreased: false
+    record_totals:
+      primary_records: 26
+      repair_records: 26
+      count_difference: 0
+      retained: 26
+      removed: 0
+      added: 0
+      unchanged: 26
+      changed_in_place: 0
+  - scenario_id: S11
+    simulates: REPAIR_THAT_CHANGES_THE_BLOCKER_BUT_STILL_FAILS
+    run_status: MOCK_RUN_COMPLETE
+    terminal_statuses:
+    - STRUCTURAL_FAILURE
+    primary_failure_categories:
+    - DRAFT_COMPILER_FAILURE
+    repair_actionability:
+    - ACTIONABLE
+    repair_used:
+    - true
+    mock_operations: 2
+    pacing_waits: 0
+    max_rolling_operations_observed: 2
+    warnings:
+    - COUNTS_UNCHANGED_BUT_CONTENT_CHANGED
+    - RECORDS_CHANGED_THAT_NO_FINDING_NAMED
+    summary_sha256: 435ab7102fa037f22f683ed4640d9fe99fc1f6e41628da34dab0fe71ecbc85de
+    repair_effect:
+      identical_bytes: false
+      primary_findings: 1
+      primary_findings_cleared: 1
+      new_findings: 2
+      cleared_with_the_record_kept: 1
+      cleared_with_the_record_removed: 0
+      removed_records_by_explanation:
+        NAMED_BY_A_PRIMARY_FINDING: 0
+        DEPENDS_ON_A_NAMED_RECORD: 0
+        NOT_EXPLAINED_BY_ANY_FINDING: 0
+      changed_records_not_named_by_a_finding: 1
+      structural_validity_increased: false
+      structural_validity_increased_while_record_count_decreased: false
+    record_totals:
+      primary_records: 26
+      repair_records: 26
+      count_difference: 0
+      retained: 26
+      removed: 0
+      added: 0
+      unchanged: 24
+      changed_in_place: 2
+  - scenario_id: S12
+    simulates: TRANSPORT_RETRY_FOLLOWED_BY_SUCCESS
+    run_status: MOCK_RUN_COMPLETE
+    terminal_statuses:
+    - STRUCTURAL_VALID
+    primary_failure_categories:
+    - null
+    repair_actionability:
+    - null
+    repair_used:
+    - false
+    mock_operations: 5
+    pacing_waits: 0
+    max_rolling_operations_observed: 3
+    warnings: []
+    summary_sha256: 83c25f26eacff89177b3ea8ceef28b515b3c49b466e1a74767aed4aebdf416a2
+  - scenario_id: S13
+    simulates: TERMINAL_TRANSPORT_FAILURE
+    run_status: MOCK_RUN_COMPLETE
+    terminal_statuses:
+    - TRANSPORT_FAILURE
+    primary_failure_categories:
+    - null
+    repair_actionability:
+    - null
+    repair_used:
+    - false
+    mock_operations: 9
+    pacing_waits: 0
+    max_rolling_operations_observed: 3
+    warnings: []
+    summary_sha256: 87b55f8386749b409c5bd28125c5d9345330bd1f29e540bc39bedd1406679ca9
+  - scenario_id: S14
+    simulates: INTERRUPTED_CHECKPOINT
+    run_status: MOCK_RUN_INTERRUPTED_REQUIRES_CHECKPOINT_REVIEW
+    terminal_statuses: []
+    primary_failure_categories: []
+    repair_actionability: []
+    repair_used: []
+    mock_operations: 1
+    pacing_waits: 0
+    max_rolling_operations_observed: 1
+    warnings: []
+    summary_sha256: f21c83607d5ca2156702576ff888ac9cdcf74efc98a8a8a309b087223b4fe620
+    follow_up:
+      kind: RESTART_ON_THE_SAME_ROOT
+      process_died_inside_a_window: true
+      a_new_run_on_existing_state: REFUSED
+      resume_with_a_larger_budget: REFUSED
+      resume_run_status: MOCK_RUN_INTERRUPTED_REQUIRES_CHECKPOINT_REVIEW
+      operations_started_by_the_resume: 0
+      operations_persisted_across_restart: 1
+      cases_made_terminal_by_the_resume: 0
+  - scenario_id: S15
+    simulates: DUPLICATE_TERMINAL_JOB_ATTEMPT
+    run_status: MOCK_RUN_COMPLETE
+    terminal_statuses:
+    - STRUCTURAL_VALID
+    primary_failure_categories:
+    - null
+    repair_actionability:
+    - null
+    repair_used:
+    - false
+    mock_operations: 1
+    pacing_waits: 0
+    max_rolling_operations_observed: 1
+    warnings: []
+    summary_sha256: 7bbcbb69ff029373d4c7869dec5f852c7eea7fd97c820a505254465812b2a8f4
+    follow_up:
+      kind: EXECUTE_THE_TERMINAL_CASE_AND_JOB_AGAIN
+      terminal_case_executed_again: REFUSED
+      locked_job_returned_without_a_transport_call: true
+      locked_response_unchanged: true
+      success_lock_count: 1
+      a_new_run_on_existing_state: REFUSED
+  - scenario_id: S16
+    simulates: BUDGET_EXHAUSTION_UNDER_A_SYNTHETIC_LIMIT
+    run_status: MOCK_RUN_STOPPED_SYNTHETIC_BUDGET_EXHAUSTED
+    terminal_statuses: []
+    primary_failure_categories: []
+    repair_actionability: []
+    repair_used: []
+    mock_operations: 2
+    pacing_waits: 0
+    max_rolling_operations_observed: 2
+    warnings: []
+    summary_sha256: 46295868ed6f77d7d721c313d564092fd3552887bfaced64ff24f3aa7fa40ba1
+    follow_up:
+      kind: RESTART_ON_THE_SAME_ROOT
+      a_new_run_on_existing_state: REFUSED
+      resume_with_a_larger_budget: REFUSED
+      resume_run_status: MOCK_RUN_STOPPED_SYNTHETIC_BUDGET_EXHAUSTED
+      operations_started_by_the_resume: 0
+      operations_persisted_across_restart: 2
+      cases_made_terminal_by_the_resume: 0
+  - scenario_id: S17
+    simulates: PACING_WINDOW_SATURATION
+    run_status: MOCK_RUN_COMPLETE
+    terminal_statuses:
+    - STRUCTURAL_VALID
+    - STRUCTURAL_VALID
+    - STRUCTURAL_VALID
+    - STRUCTURAL_VALID
+    primary_failure_categories:
+    - null
+    - null
+    - null
+    - null
+    repair_actionability:
+    - null
+    - null
+    - null
+    - null
+    repair_used:
+    - false
+    - false
+    - false
+    - false
+    mock_operations: 8
+    pacing_waits: 1
+    max_rolling_operations_observed: 6
+    warnings: []
+    summary_sha256: 7858854522a8a541fa5b7284448a43eafbb4b1671cbdd7165b53c4a070e805f9
+  - scenario_id: S18
+    simulates: EMPTY_BUT_COMPILER_VALID_OUTPUT
+    run_status: MOCK_RUN_COMPLETE
+    terminal_statuses:
+    - STRUCTURAL_VALID
+    primary_failure_categories:
+    - null
+    repair_actionability:
+    - null
+    repair_used:
+    - false
+    mock_operations: 1
+    pacing_waits: 0
+    max_rolling_operations_observed: 1
+    warnings:
+    - EMPTY_OUTPUT
+    summary_sha256: 797fcf1d1f97e30825229844ef91064c11448dc1ad7d86d8b643eb4519e279ea
+  - scenario_id: S19
+    simulates: REPAIR_THAT_REMOVES_OTHERWISE_SUPPORTED_RECORDS
+    run_status: MOCK_RUN_COMPLETE
+    terminal_statuses:
+    - STRUCTURAL_VALID
+    primary_failure_categories:
+    - DRAFT_COMPILER_FAILURE
+    repair_actionability:
+    - ACTIONABLE
+    repair_used:
+    - true
+    mock_operations: 2
+    pacing_waits: 0
+    max_rolling_operations_observed: 2
+    warnings:
+    - A_FINDING_WAS_CLEARED_BY_REMOVING_ITS_RECORD
+    - RECORDS_REMOVED_THAT_NO_FINDING_EXPLAINS
+    - STRUCTURAL_VALIDITY_INCREASED_WHILE_RECORD_COUNT_DECREASED
+    summary_sha256: ffa7de1a9be75a9d43b5923631f1fd6bf463c07003c10ce190a4b923c9ca42f0
+    repair_effect:
+      identical_bytes: false
+      primary_findings: 1
+      primary_findings_cleared: 1
+      new_findings: 0
+      cleared_with_the_record_kept: 0
+      cleared_with_the_record_removed: 1
+      removed_records_by_explanation:
+        NAMED_BY_A_PRIMARY_FINDING: 1
+        DEPENDS_ON_A_NAMED_RECORD: 2
+        NOT_EXPLAINED_BY_ANY_FINDING: 7
+      changed_records_not_named_by_a_finding: 0
+      structural_validity_increased: true
+      structural_validity_increased_while_record_count_decreased: true
+    record_totals:
+      primary_records: 26
+      repair_records: 16
+      count_difference: -10
+      retained: 16
+      removed: 10
+      added: 0
+      unchanged: 16
+      changed_in_place: 0
+  - scenario_id: S20
+    simulates: UNKNOWN_CANONICAL_ERROR_WITH_AN_INCOMPLETE_DIAGNOSTIC
+    run_status: MOCK_RUN_COMPLETE
+    terminal_statuses:
+    - STRUCTURAL_FAILURE
+    primary_failure_categories:
+    - DRAFT_COMPILER_FAILURE
+    repair_actionability:
+    - PARTIALLY_DESCRIBED
+    repair_used:
+    - false
+    mock_operations: 1
+    pacing_waits: 0
+    max_rolling_operations_observed: 1
+    warnings: []
+    summary_sha256: a7f896902b90346970c9e744eeaaf6ab1c15b5dc2f2abd239e56bec7e7d03d2d
+  - scenario_id: S21
+    simulates: UNKNOWN_CANONICAL_ERROR_UNDER_THE_ALLOW_REPAIR_POLICY
+    run_status: MOCK_RUN_COMPLETE
+    terminal_statuses:
+    - STRUCTURAL_VALID
+    primary_failure_categories:
+    - DRAFT_COMPILER_FAILURE
+    repair_actionability:
+    - PARTIALLY_DESCRIBED
+    repair_used:
+    - true
+    mock_operations: 2
+    pacing_waits: 0
+    max_rolling_operations_observed: 2
+    warnings:
+    - COUNTS_UNCHANGED_BUT_CONTENT_CHANGED
+    - RECORDS_CHANGED_THAT_NO_FINDING_NAMED
+    summary_sha256: e54166de3dc3679fdd68b4801c26e07118d2987ae8d7056c6a0e3bdaabdb80fb
+    repair_effect:
+      identical_bytes: false
+      primary_findings: 1
+      primary_findings_cleared: 1
+      new_findings: 0
+      cleared_with_the_record_kept: 0
+      cleared_with_the_record_removed: 0
+      removed_records_by_explanation:
+        NAMED_BY_A_PRIMARY_FINDING: 0
+        DEPENDS_ON_A_NAMED_RECORD: 0
+        NOT_EXPLAINED_BY_ANY_FINDING: 0
+      changed_records_not_named_by_a_finding: 1
+      structural_validity_increased: true
+      structural_validity_increased_while_record_count_decreased: false
+    record_totals:
+      primary_records: 26
+      repair_records: 26
+      count_difference: 0
+      retained: 26
+      removed: 0
+      added: 0
+      unchanged: 25
+      changed_in_place: 1
+durability_and_exactly_once:
+  verified_in_the_mock_only: true
+  first_success_locked: true
+  raw_response_written_once_and_identified_by_sha256: true
+  request_fingerprint_bound_into_every_checkpoint: true
+  second_repair_possible: false
+  retry_of_a_structurally_invalid_response: false
+  retry_of_a_valid_response: false
+  terminal_case_executed_again: REFUSED
+  locked_job_run_again: RETURNS_THE_LOCK_WITHOUT_A_TRANSPORT_CALL
+  new_run_on_existing_state: REFUSED
+  resume_with_state_of_another_run: REFUSED
+  transport_retry_then_success:
+    scenario: S12
+    windows: 2
+    mock_operations: 5
+  terminal_transport_failure:
+    scenario: S13
+    windows: 3
+    mock_operations: 9
+    repair_sent: false
+  interrupted_window:
+    scenario: S14
+    checkpoint_state: IN_FLIGHT
+    on_restart: FAIL_CLOSED_NO_RETRY
+    operations_started_by_the_restart: 0
+  synthetic_budget:
+    scenario: S16
+    synthetic_limit: 2
+    operations_started: 2
+    operations_started_after_the_limit: 0
+    persists_across_restart: true
+    resume_with_another_limit: REFUSED
+    meaning: SIMULATION_PARAMETER_NOT_A_LIVE_BUDGET
+  pacing:
+    scenario: S17
+    max_operations: 6
+    rolling_window_seconds: 60
+    operations: 8
+    max_rolling_operations_observed: 6
+    waits: 1
+    persistent_across_restart: true
+  changed_bound_file_before_an_operation: RUN_STOPS_BEFORE_THE_OPERATION
+  accounting_note: A_WINDOW_THAT_ENDS_ABNORMALLY_RECORDS_NO_OPERATIONS_IN_ITS_CHECKPOINT_THE_PACER_COUNT_IS_AUTHORITATIVE
+  accounting_note_origin: BEHAVIOUR_OF_THE_ACCEPTED_DURABLE_EXECUTOR_UNCHANGED
+retention_and_empty_output:
+  metrics: M4_P4_1_STRUCTURAL_RETENTION_METRICS_V1
+  definition:
+    metrics: M4_P4_1_STRUCTURAL_RETENTION_METRICS_V1
+    collections:
+    - evidence
+    - mentions
+    - entities
+    - events
+    - anchors
+    - propositions
+    - assertions
+    profile_fields:
+    - parsed
+    - is_draft_object
+    - record_counts
+    - total_records
+    - empty_output
+    - empty_collections
+    - collections_not_arrays
+    - records_without_a_usable_handle
+    - duplicated_handles
+    collection_comparison_fields:
+    - comparable
+    - primary_count
+    - repair_count
+    - count_difference
+    - retained_handles
+    - removed_handles
+    - added_handles
+    - unchanged_records
+    - changed_in_place_records
+    comparison_fields:
+    - metrics
+    - comparable
+    - identical_bytes
+    - identical_parsed_content
+    - by_collection
+    - totals
+    - record_count_decreased
+    - counts_unchanged_but_content_changed
+    - repair_is_empty_output
+    - primary_is_empty_output
+    total_fields:
+    - primary_records
+    - repair_records
+    - count_difference
+    - retained
+    - removed
+    - added
+    - unchanged
+    - changed_in_place
+    effect_fields:
+    - metrics
+    - repair_attempted
+    - identical_bytes
+    - primary_structurally_valid
+    - repair_structurally_valid
+    - structural_validity_increased
+    - primary_findings
+    - primary_findings_cleared
+    - primary_findings_remaining
+    - new_findings
+    - all_primary_findings_cleared
+    - new_findings_appeared
+    - located_primary_findings
+    - cleared_with_the_record_kept
+    - cleared_with_the_record_removed
+    - removed_records_by_explanation
+    - changed_records_not_named_by_a_finding
+    - structural_validity_increased_while_record_count_decreased
+    - warnings
+    removal_classes:
+    - NAMED_BY_A_PRIMARY_FINDING
+    - DEPENDS_ON_A_NAMED_RECORD
+    - NOT_EXPLAINED_BY_ANY_FINDING
+    warnings:
+    - EMPTY_OUTPUT
+    - REPAIR_IS_EMPTY_OUTPUT
+    - REPAIR_IDENTICAL_TO_PRIMARY
+    - STRUCTURAL_VALIDITY_INCREASED_WHILE_RECORD_COUNT_DECREASED
+    - RECORDS_REMOVED_THAT_NO_FINDING_EXPLAINS
+    - A_FINDING_WAS_CLEARED_BY_REMOVING_ITS_RECORD
+    - RECORDS_CHANGED_THAT_NO_FINDING_NAMED
+    - COUNTS_UNCHANGED_BUT_CONTENT_CHANGED
+    - PRIMARY_AND_REPAIR_ARE_NOT_COMPARABLE_BY_HANDLE
+    record_matching: BY_HANDLE_WITHIN_A_COLLECTION_ONLY_WHEN_EVERY_HANDLE_IS_USED_ONCE
+    empty_output: A_DRAFT_OBJECT_WHOSE_SEVEN_COLLECTIONS_ARE_ALL_PRESENT_AND_ALL_EMPTY
+    interpretation: RESEARCH_WARNING_METRICS_NOT_EVIDENCE_OF_SEMANTIC_ERROR_NO_THRESHOLD
+    gold_used: false
+    threshold: NONE_DEFINED
+    edits_or_pads_predictions: false
+  empty_draft_is_structurally_valid: true
+  empty_output_flagged: true
+  records_in_the_synthetic_valid_draft:
+    evidence: 4
+    mentions: 3
+    entities: 3
+    events: 1
+    anchors: 1
+    propositions: 7
+    assertions: 7
+  correction_and_deletion_both_end_structurally_valid: true
+  structural_signals_that_separate_them:
+  - CLEARED_WITH_THE_RECORD_KEPT_OR_REMOVED
+  - REMOVED_RECORDS_BY_EXPLANATION
+  - RECORD_COUNT_DIFFERENCE_BY_COLLECTION
+  - CHANGED_RECORDS_NOT_NAMED_BY_A_FINDING
+  - EMPTY_OUTPUT
+  what_they_cannot_show:
+  - WHETHER_A_KEPT_RECORD_STILL_MEANS_THE_SAME
+  - WHETHER_REMOVED_CONTENT_WAS_SUPPORTED
+  - WHETHER_ANY_RECORD_IS_SEMANTICALLY_CORRECT
+  metrics_change_a_terminal_status: false
+  predictions_rewritten_or_padded: false
+  threshold: NONE_DEFINED
+security_and_integrity:
+  provider_sdk_credential_loader_or_accepted_transport_imported: false
+  verified_in_fresh_processes: true
+  process_holding_provider_credential_variables: REFUSED
+  transport_other_than_the_offline_mock: REFUSED
+  network_or_wall_clock_wait_used: false
+  dataset_or_credential_path_parameter: NONE_EXISTS
+  private_root_rule: ISOLATED_STORAGE_NOT_A_DATASET_GOLD_HOLDOUT_OR_FOREIGN_EXPERIMENT_LOCATION
+  fixtures_pinned_by_hash: true
+  private_files_reproduced_byte_for_byte: true
+  summaries_equal_under_other_hash_seeds: true
+  public_summaries: CODES_COUNTS_FLAGS_AND_HASHES_ONLY
+  story_text_or_mock_semantic_values_in_public_artifacts: false
+  record_handles_in_public_artifacts: false
+offline_tests:
+  focused:
+    modules:
+      test_m4_04b4e_p4_1_runtime_protocol_candidate_v1: 20
+      test_m4_04b4e_p4_1_retention_metrics_v1: 21
+      test_run_m4_04b4e_p4_1_synthetic_mock_v1: 38
+    tests: 79
+    result: PASS
+  complete_regression:
+    suites:
+      canonical_story: 99
+      story_ingestion: 79
+      story_extraction: 909
+      script_quality: 64
+      story_benchmark: 298
+    total: 1449
+    previous_total: 1370
+    new_tests: 79
+    result: PASS
+  protected_stack: PASS
+  secret_scan: PASS_PATTERN_ONLY_NO_CREDENTIAL_FILE_OPENED
+  secret_scan_run_before_the_correction: VALUE_COMPARING_SCAN_THAT_READ_THE_LOCAL_CREDENTIAL_FILE_SEE_PROTOCOL_VIOLATION
+  publication_scan: ALLOWLIST_AND_PATTERN_BASED_NO_PRIVATE_STORY_CONTENT_USED_AS_AN_ORACLE
+boundaries:
+  provider_calls: 0
+  model_calls: 0
+  credentials_loaded_by_the_protocol_harness_or_tests: 0
+  credential_file_read_by_the_pre_commit_secret_scan: true
+  DEV3_input_opened: false
+  DEV3_gold_opened: false
+  private_B4C_predictions_opened: false
+  holdout_opened: false
+  unrelated_private_story_content_opened: false
+  fresh_DEV4_created: false
+  semantic_scoring: false
+  live_runner_created: false
+  real_provider_smoke_run: false
+  historical_protocol_or_prediction_changed: false
+  live_P4_1_result: UNAVAILABLE
+limitations:
+  nothing_here_is_provider_evidence: true
+  model_behavior_not_observed: true
+  the_accepted_transport_retry_backoff_and_circuit_logic_is_not_exercised: true
+  mock_scenarios_are_scripted_so_their_outcomes_are_by_construction: true
+  retention_metrics_are_structural_and_need_gold_to_say_anything_about_meaning: true
+  one_invented_sentence_is_the_only_input: true
+  harness_glue_differs_from_the_accepted_live_glue: true
+  DEV3_status: TUNING_DATA_AFTER_P3_FAILURE_NOT_VALIDATION_DATA
+  fresh_DEV4_required_for_validation: true
+decisions_requiring_orchestrator_review:
+- LIVE_OPERATION_BUDGET
+- REPAIR_POLICY_FOR_A_PARTIALLY_DESCRIBED_DIAGNOSTIC
+- CONFIRMATION_OF_THE_PROPOSED_MODEL_CREDENTIAL_SLOT_AND_GENERATION_SETTINGS
+- DATASET_AND_CASE_LIST_FOR_ANY_LIVE_RUN
+- PRIVATE_ROOT_AND_RESULT_ARTIFACT_CONTRACT_FOR_ANY_LIVE_RUN
+- LIVE_TRANSPORT_BINDING_AND_EXECUTION_ENVIRONMENT
+- WHETHER_A_LIVE_SYNTHETIC_SMOKE_IS_REQUIRED_BEFORE_ANY_TUNING_RUN
+- WHETHER_A_FUTURE_LIVE_RUNNER_REUSES_THE_ACCEPTED_LIVE_GLUE_OR_THIS_HARNESS_GLUE
+decision:
+  offline_gates_passed: true
+  ready_status_claimed: false
+  next_action_requires_orchestrator_review: true
+  next_action: ORCHESTRATOR RULING ON THE M4-04B4E CREDENTIAL FILE READ AND REVIEW OF THE P4.1 RUNTIME PROTOCOL
+    CANDIDATE AND ITS OPEN DECISIONS
+  live_work_started: false
