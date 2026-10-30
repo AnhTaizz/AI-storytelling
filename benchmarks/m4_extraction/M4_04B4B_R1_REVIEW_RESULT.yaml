@@ -1,0 +1,74 @@
+task: M4-04B4B-R1
+date: 2026-10-30
+status: M4_04B4B_R1_REVIEW_COMPLETE_PENDING_PROJECT_OWNER_DECISION
+reviewed_commit: 786d1c11d536768fb45bab85edd997310d70234c
+scope: OFFLINE_REVIEW_AND_DESIGN_DECISION_PROPOSAL
+
+boundaries:
+  provider_or_api_calls: 0
+  dev1_or_dev2_predictions: 0
+  gold_or_holdout_opened: false
+  val1_created: false
+  frozen_schema_compiler_evaluator_modified: false
+  draft_v1_2_implemented: false
+  m4_04b4b_bound_files_modified: false
+  pushed: false
+
+m4_04b4b_review:
+  implementation_complete: true
+  offline_verified: true
+  development_candidate_accepted: NOT_GRANTED
+  independent_validation_approved: false
+  production_qualified: false
+  recommendation: CONDITIONAL_ACCEPT_AS_OFFLINE_INFRASTRUCTURE
+  p3_v1_1_as_validation_candidate: NOT_RECOMMENDED
+  findings:
+    R1: prompt states eight required top-level arrays; V1.1 has seven arrays plus draft_version (inherited from P2)
+    R2: execute() accepts any injected transport; authorization enforced only at CLI
+    R3: token cap checked after each job; overrun bounded by one job
+    R4: budget or drift stop mid-case leaves primary artifacts without a case result
+    R5: manifest omits gemini_errors_v1.py and m4_04b2_dev_protocol_v1.py on the live path
+    R6: third-party package and Python versions not recorded
+    R7: diagnostic observer swaps a module global; safe only at concurrency 1
+  bundle_equivalence: PROVEN_STRUCTURAL_EQUALITY_EXCEPT_ID_COMMENT_DESCRIPTION
+
+silent_grounding:
+  proven_mechanisms: [SC1_WRONG_IN_RANGE_OCCURRENCE, SC2_OVERLAP_COUNT_MISMATCH, SC3_WRONG_PASSAGE, SC4_REPEATED_DIALOGUE_EVIDENCE, SC5_FABRICATED_SURFACE_FORM, SC6_UNGROUNDED_LITERAL]
+  semantic_only: [SC7_MENTION_MISLINK, SC8_IRRELEVANT_EVIDENCE]
+  provenance_consistent_under_corruption: true
+  detected_structurally: false
+  detected_by_gold_evaluation: true
+  fail_closed_cases: [NFC_NFD_MISMATCH, RUBY_NOT_COPIED]
+  tests: tests/story_extraction/test_m4_04b4b_r1_silent_grounding_v1.py
+
+design_decision:
+  status: PROPOSED_PENDING_PROJECT_OWNER_APPROVAL
+  recommended: OPTION_B_CONTEXTUAL_ANCHORS_NO_OCCURRENCE
+  fallback: OPTION_C_SENTENCE_UNITS
+  interim_if_rejected: OPTION_A_UNIQUE_ONLY_COLOCATION_SURFACE_FORM_CHECKS
+  falsification_criteria: [K1, K2, K3, K4, K5, K6, K7]
+  canonical_story_model_change: false
+  evaluator_snapshot_v2_change: false
+
+conformance:
+  mechanism: PROVEN
+  historical_five_individually_diagnosed: false
+
+hashing:
+  index_text_files_lf: 397
+  renormalize_content_change_expected: false
+  policy: ENTRY_SPECIFIC_NORMALIZATION_NO_HISTORICAL_REWRITE
+  applied: false
+
+tests:
+  new_r1_tests: "14/14 PASS"
+  story_extraction: "423/429 PASS; 6 pre-existing D1 failures"
+  canonical_story: "99/99 PASS"
+  script_quality: "64/64 PASS"
+  story_ingestion: "78/79 PASS; 1 requires .local"
+  candidate_manifest_check: MATCH
+
+records:
+  - docs/research/m4/M4_04B4B_R1_INDEPENDENT_REVIEW.md
+  - docs/research/m4/M4_DRAFT_V1_2_GROUNDING_DECISION_PROPOSAL.md
+  - docs/research/m4/M4_DRAFT_V1_2_ADVERSARIAL_TEST_SPEC.md

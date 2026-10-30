@@ -944,3 +944,27 @@ Orchestrator review of M4-04B4B, with separate decisions on the following:
 - an offline private-environment attribution of the five canonical-conformance failures (DEV2 drafts and input only; no gold, no API).
 
 Gate A remains required before any VAL1 work.
+
+## M4-04B4B-R1 — CANDIDATE REVIEW AND DRAFT V1.2 DESIGN DECISION — COMPLETED — Status: M4_04B4B_R1_REVIEW_COMPLETE_PENDING_PROJECT_OWNER_DECISION
+
+- **Review of M4-04B4B.** Implementation complete and offline verified.
+  - Recommendation: CONDITIONAL ACCEPT as offline infrastructure, with conditions R1 (prompt array count), R2 (programmatic authorization), R5 (two unbound live-path modules) and R6 (package versions).
+  - P3 / Draft V1.1 is not recommended as the independent-validation candidate.
+  - Not accepted, not validation-approved, not production-qualified.
+- **Silent grounding corruption.** Proven synthetically:
+  - A wrong in-range occurrence, a wrong passage, or another speaker's identical line compiles into structurally valid, provenance-consistent records at the wrong span.
+  - A fabricated surface form or literal also compiles.
+  - Only gold-based evaluation detects these.
+- **Design proposal.** Draft V1.2 with contextual anchors (no `occurrence`, compiler-derived `surface_form`, explicit unresolved locators), with falsification criteria K1–K7. Sentence units are the fallback. The Canonical Story Model and Evaluator Snapshot V2 are unchanged. Status: `PROPOSED`, not accepted.
+- **Conformance.** The mechanism is proven; the five historical failures are still not individually diagnosed.
+- **Hashing.** Entry-specific normalization policy proposed; not applied.
+- **Boundaries.** No API call, prediction, gold, holdout, VAL1, frozen-artifact change, V1.2 implementation or push.
+- **Records.**
+  - `docs/research/m4/M4_04B4B_R1_INDEPENDENT_REVIEW.md`
+  - `docs/research/m4/M4_DRAFT_V1_2_GROUNDING_DECISION_PROPOSAL.md`
+  - `docs/research/m4/M4_DRAFT_V1_2_ADVERSARIAL_TEST_SPEC.md`
+  - `benchmarks/m4_extraction/M4_04B4B_R1_REVIEW_RESULT.yaml`
+
+## Next Candidate
+
+Project Owner decisions AR1–AR7 (decision proposal §9). If AR2 and AR3 are approved, the next task is M4-04B4C: offline Draft V1.2 implementation with the adversarial suite. No VAL1 work before Gate A.
