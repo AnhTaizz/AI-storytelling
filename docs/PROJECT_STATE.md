@@ -4,7 +4,7 @@
 
 M4 — Story Extraction: IN PROGRESS. M4-01: ACCEPTED. M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED. Extractor/model: NOT SELECTED. Holdout predictions: NOT RUN. Nothing in M4 is frozen. M5: NOT STARTED.
 
-M4-04B3A: `M4_04B3A_DRAFT_COMPILER_READY_FOR_FRESH_DEV_VALIDATION`. Offline failure forensics and an additive semantic-draft compiler prototype are complete. The B2 conclusion remains `M4_04B2_DEVELOPMENT_LEADER_NOT_LOCKABLE`. DEV1 is now TUNING DATA, not fresh validation. DEV2 is proposed, not selected or executed; M4-04C remains NOT STARTED.
+M4-04B3D: `M4_04B3D_DRAFT_V1_1_READY_FOR_FRESH_VALIDATION`. The B2 conclusion remains `M4_04B2_DEVELOPMENT_LEADER_NOT_LOCKABLE`. After the B3A draft compiler, a fresh DEV2 set was authored and sealed (B3B1), the P2 draft-extractor protocol was locked (B3B2) and blind DEV2 predictions were locked (B3C): 2/10 cases structurally valid. This is structural conformance only, not a quality score. B3C-R attributed all eight terminal failures to model misuse of `mention.evidence_handle`; B3D removed that field in the versioned `STORY_EXTRACTION_DRAFT_V1_1`, and offline migration of the locked drafts raised terminal structure to 6/10. DEV1 and DEV2 are both TUNING DATA, not fresh validation. DEV2 gold and the holdout remain sealed and unopened. Next candidate: a new independent fresh validation set for Draft V1.1 under separate authorization. M4-04C remains NOT STARTED.
 
 M3 — Light Novel Ingestion: COMPLETE / FROZEN (`LIGHT_NOVEL_INGESTION/v0`, DEC-018).
 
@@ -21,7 +21,7 @@ M2 — Canonical Story Model capability: COMPLETE / FROZEN (Canonical Story Mode
   - The contract defines the standard. It does not show that any current Writer or critic meets it. The M9 Script Quality Gate is not evaluated.
 - M2 — Canonical Story Model: capability COMPLETE / FROZEN (DEC-016). The expected capability has been established as `canonical_story/v0` + `predicate_registry/v0.1`. M2 ran under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015).
 - M3 — Light Novel Ingestion: COMPLETE / FROZEN — `LIGHT_NOVEL_INGESTION/v0`, DEC-018, freeze record `benchmarks/m3_ingestion/LIGHT_NOVEL_INGESTION_V0_FROZEN.yaml`. The roadmap is unchanged.
-- M4 — Story Extraction: IN PROGRESS (M4-01 accepted; M4-02 accepted; M4-03 fresh holdout V1 sealed; no extractor/model selected, no holdout predictions run, nothing frozen).
+- M4 — Story Extraction: IN PROGRESS (M4-01 accepted; M4-02 accepted; M4-03 fresh holdout V1 sealed; M4-04B3D Draft V1.1 ready for fresh validation; no extractor/model selected, no holdout predictions run, nothing frozen).
 - M5: NOT STARTED.
 
 *Correction (M2-02): an earlier version of this section labelled M1 "COMPLETED / CLOSED FOR CURRENT RESEARCH SCOPE". That overstated completion while the formal Script Quality Contract remains open. The M1 research program is closed; the contract is not.*

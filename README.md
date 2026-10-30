@@ -2,11 +2,11 @@
 
 AI-powered Story Intelligence and Narrative Production Platform.
 
-**Current stage:** Product Foundation complete. Preparing M1 — Script Quality & Narrative Contract.
+**Current stage:** M4 — Story Extraction in progress. M0–M3 are complete: Product Foundation, the Script Quality Contract (`SCRIPT_QUALITY_CONTRACT/v0`), the Canonical Story Model (`canonical_story/v0`) and Light Novel Ingestion (`LIGHT_NOVEL_INGESTION/v0`) are frozen. No extraction model or extractor has been selected yet. See [Project State](docs/PROJECT_STATE.md) for details.
 
 **Product purpose:** Transform long-form narrative sources (Light Novels, Manga, Web Novels) into grounded, engaging storytelling outputs. The first major product outcome is a high-quality grounded YouTube script.
 
-**Application implementation has not started.**
+**Implementation status:** The Canonical Story Model and the reference Light Novel ingestion adapter are implemented and frozen. Story Extraction has research-only tooling. Later pipeline stages (Story Memory, Retrieval, Story Brief, Narrative Planning, Script Generation) are not implemented.
 
 ## Foundation Documents
 
