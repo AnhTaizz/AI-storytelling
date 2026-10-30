@@ -1,0 +1,96 @@
+STORY EXTRACTION DRAFT P3 V1.1
+
+Return exactly one JSON object conforming to STORY_EXTRACTION_DRAFT_V1_1. Return no
+Markdown, prose, code fence, commentary, alternate answer, or canonical batch. Set
+draft_version to "STORY_EXTRACTION_DRAFT_V1_1". Emit all eight required top-level
+arrays, including empty arrays, and only the keys the schema below permits.
+
+WHO OWNS WHAT
+- You own semantic choices only: which passages and exact quotes ground each claim,
+  evidence roles, local handles, entities, events, anchors, propositions, predicates,
+  arguments, polarity, epistemic status, identity resolution, validity bounds, support
+  sets, derivations, and what to extract.
+- The host owns everything deterministic and will compute it after you answer: hashes,
+  byte or character offsets, source locators, source document and segment ids, the batch
+  envelope, canonical ids, the evidence record that locates each mention, process
+  metadata, provenance, review state, and validation. Never output any of these. The
+  host never adds a fact, predicate, identity, occurrence, or relation for you.
+
+INPUT HANDLES
+- Passages are P1, P2, ... in the supplied order. Read only supplied passages.
+- A passage marked EVIDENCE_ELIGIBLE may be quoted. CONTEXT_ONLY may help interpretation
+  but must never be quoted by evidence or mentions.
+- Existing prior records use handles such as E_EXISTING_1, EVT_EXISTING_1, T_EXISTING_1,
+  PROP_EXISTING_1, M_EXISTING_1, EV_EXISTING_1 and A_EXISTING_1. Reuse the appropriate
+  existing handle when it is the same referent or record; do not emit it again. Prior
+  context is never direct evidence for a new claim.
+- New records use local handles: EV1 for evidence, M1 for mentions, E_NEW_1 for new
+  entities, EVT1 for events, T1 for anchors, PROP1 for propositions, A1 for assertions.
+  Handles carry no story meaning. Each handle is used once and only for its own kind.
+
+EXACT QUOTES
+- Every evidence record and every mention names one passage_handle and a quote that is a
+  byte-for-byte substring of that passage text. Copy it; never paraphrase, translate,
+  normalize width, change punctuation or whitespace, or join text across passages.
+- A quote is located by counting its exact matches in that one passage text. Count every
+  start position where the quote matches, scanning left to right one character at a time;
+  overlapping matches count separately. The first match is occurrence 1.
+- If the quote matches exactly once in its passage, omit occurrence.
+- If it matches more than once, you must supply occurrence. Never guess it.
+  - For evidence, prefer extending the quote to a longer exact span that matches once and
+    still states the supported content; then omit occurrence.
+  - For a mention, the quote must be exactly the referring expression, so it cannot be
+    extended. Supply occurrence only when you have counted the earlier matches in that
+    passage. If you cannot be certain, omit that mention and any assertion that depends
+    on it. A missing mention is safer than a mislocated one.
+
+MENTIONS
+- A mention is only a located surface form: handle, passage_handle, quote, optional
+  occurrence, role, optional surface_form. It does not resolve itself and carries no
+  link to an evidence record; the host creates that locator from the exact quote.
+- If you give surface_form, it must equal the quote. Omit it otherwise.
+- Resolve a mention only through a RefersTo proposition and an assertion whose support
+  cites evidence. Do not create mentions that no assertion uses.
+
+EVIDENCE AND SUPPORT
+- Assertion support may cite only new EV handles that quote EVIDENCE_ELIGIBLE passages.
+  Existing evidence and context-only text cannot support a new assertion.
+- Choose the explicit evidence role that the quoted text actually plays.
+- Use a SUFFICIENT set only when its quotes together establish the claim. PARTIAL and
+  CORROBORATING sets never replace a SUFFICIENT path. Use a registered derivation only
+  when its rule and premises exist in the registry below.
+
+NO FABRICATION
+- Do not create a character, object, location, group, event, relation, state, speech, or
+  belief that the evidence-eligible passages do not express, even if it is likely, well
+  known, or implied by world knowledge or by prior context.
+- Do not cite evidence that does not state the content you attach it to.
+- An event record does not establish occurrence. Add an Occurred proposition and
+  assertion only when supported. Adjacency or temporal order does not establish Causes.
+- Use only predicates, argument names, argument kinds, vocabularies, and derivation rules
+  in the exact predicate registry below. Never invent or approximate a predicate. If the
+  text states something the registry cannot express, leave it out.
+
+UNCERTAINTY
+- Preserve polarity exactly: AFFIRMED, NEGATED or OPEN. Use OPEN when the text leaves
+  the truth unsettled.
+- Preserve EXPLICIT, ENTAILED and SUGGESTED. Use SUGGESTED for content the text only
+  implies through behaviour or hedges such as らしい, ようだ, そうだ or みたい. Never
+  upgrade uncertainty or suggestion.
+- Says, Attitude and Intends are holder-relative. Asserting them never asserts their
+  embedded content as world truth. A report or belief does not make an event occur.
+- Keep identities distinct unless evidence supports RefersTo or SameAs. When the text
+  leaves a referent unknown, use a placeholder entity or proposition; when a reading is
+  genuinely ambiguous, use textual_ambiguity with alternative propositions. Do not merge
+  a placeholder away when it is later resolved.
+- For stative assertions keep start or end OPEN unless evidence supports a bound.
+
+SCOPE
+Extract story-relevant commitments under STORY_UNDERSTANDING_CORE_V0: event progression,
+identity and reference, participants, state and relationship changes, knowledge and
+information flow, causality, location, possession and ownership, and material emotion
+and intention. Omit decorative wording and facts with no plausible story use.
+
+The exact model-facing JSON schema and predicate registry appended below are
+authoritative for your output. If this instruction conflicts with them, follow the schema
+and registry and fail conservatively by omitting the uncertain record.

@@ -1,0 +1,20 @@
+STRUCTURAL REPAIR FOR CASE {CASE_ID}
+
+This is the sole preregistered repair. It is allowed only because the primary response
+was received but failed deterministic JSON parsing, STORY_EXTRACTION_DRAFT_V1_1 schema
+validation, or deterministic compilation. Correct only the listed blockers while keeping
+the extraction you intended. If a blocker cannot be corrected with certainty, remove the
+affected record and every record that depends on it instead of guessing. Do not add facts
+because they appear missing. No quality judgment, score, gold, or expected answer exists
+for this repair.
+
+HOST_PREPARED_INPUT_JSON:
+{PREPARED_INPUT_JSON}
+
+PRIMARY_RESPONSE:
+{PRIMARY_RESPONSE}
+
+SANITIZED_DETERMINISTIC_BLOCKERS_JSON:
+{FAILURE_JSON}
+
+Return the corrected STORY_EXTRACTION_DRAFT_V1_1 JSON object and nothing else.

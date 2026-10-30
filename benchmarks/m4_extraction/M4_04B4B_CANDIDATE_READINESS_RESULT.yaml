@@ -1,0 +1,109 @@
+task: M4-04B4B
+date: 2026-10-30
+status: M4_04B4B_CANDIDATE_PREPARED_READY_FOR_ORCHESTRATOR_REVIEW
+scope: OFFLINE_DRAFT_V1_1_CANDIDATE_PREPARATION
+authorization: PROJECT_OWNER_LIMITED_OFFLINE_PREPARATION_NOT_GATE_A
+base_commit: f60ae48325786b8ed1c174c2a0b1d873b66f2ad6
+remote_branch_head_observed: 6a9754e
+
+boundaries:
+  provider_or_api_calls: 0
+  dev1_or_dev2_predictions: 0
+  val1_created: false
+  gold_opened: false
+  holdout_opened: false
+  frozen_schema_compiler_evaluator_protocol_or_prompt_modified: false
+  historical_records_rewritten: false
+  m4_04c_started: false
+  m5_started: false
+  pushed: false
+
+candidate:
+  identity: P3_STORY_EXTRACTION_DRAFT_V1_1_GEMINI_3_5_FLASH_LITE_V1
+  manifest: benchmarks/m4_extraction/M4_04B4B_DRAFT_V1_1_CANDIDATE_MANIFEST.yaml
+  candidate_definition_sha256: 4137afd829711b9bd659d6cd910fc5d142ff7abd4d5e7160827e3b5bb29b4292
+  hash_policy: M4_CROSS_PLATFORM_CONTENT_HASH_V1
+  model_and_generation: UNCHANGED_FROM_P2
+  draft_interface: STORY_EXTRACTION_DRAFT_V1_1
+  schema_bundle: STORY_EXTRACTION_DRAFT_V1_1_MODEL_FACING_BUNDLE_V1
+  authoritative_schema_modified: false
+  run_against_any_model: false
+  production_qualified: false
+  approved_for_blind_validation: false
+
+findings:
+  - id: F1
+    title: wrong in-range occurrence compiles silently to another identical span
+    evidence: tests/story_extraction/test_draft_v1_1_conformance_and_quotes_v1.py
+    severity: HIGH_FOR_GROUNDING
+  - id: F2
+    title: mention surface_form is unconstrained model text
+    handling: runner advisory SURFACE_FORM_DIFFERS_FROM_QUOTE; prompt requires equality or omission
+  - id: F3
+    title: orphan mentions compile
+    handling: runner advisory MENTION_WITHOUT_REFERSTO
+  - id: F4
+    title: authoritative V1.1 schema description names the removed field
+    handling: bundle overrides description only; validation verdicts unchanged
+  - id: F5
+    title: P2 prompt substitution is sequential, not single-pass
+    handling: latent in P2, not modified; P3 uses single-pass substitution
+  - id: F6
+    title: canonical failures reported only as CANONICAL_CONFORMANCE_FAILURE with section names
+    handling: additive observer classifies issue codes without changing compile outcomes
+
+failure_classes:
+  CANONICAL_CONFORMANCE_FAILURE:
+    recorded_blockers: 5
+    mechanism: predicate, support, epistemic, temporal and derivation invariants unchecked before canonical validation
+    synthetic_classes_reproduced: 7
+    per_failure_attribution: NOT_POSSIBLE_PRIVATE_DRAFTS_ABSENT_AND_PATHS_NOT_PUBLISHED
+    most_likely_origin: MODEL_AUTHORED_DRAFT
+    confidence: LOW_FOR_CLASS_MEDIUM_FOR_OWNERSHIP
+    resolved: false
+  AMBIGUOUS_QUOTE:
+    recorded_blockers: 7
+    mechanism: model must count overlapping exact matches; mentions cannot be extended to a unique span
+    v1_1_reliable_for_evidence: CONDITIONAL_ON_LONGER_UNIQUE_QUOTES
+    v1_1_reliable_for_mentions: false
+    v1_2_proposal: QUOTE_WITH_EXACT_PREFIX_SUFFIX_SELECTOR
+    implemented: false
+    resolved: false
+
+reproducibility:
+  lf_checkout_existing_lock_test_failures: 6
+  simulated_crlf_checkout_line_ending_lock_test_failures: 5
+  single_raw_byte_checkout_satisfies_all_locks: false
+  normalization_record: benchmarks/m4_extraction/M4_HASH_NORMALIZATION_RECORD_V1.yaml
+  gitattributes_patch: PROPOSED_NOT_APPLIED
+
+tests:
+  new_tests: "53/53 PASS"
+  story_extraction: "409/415 PASS; 6 pre-existing D1 failures"
+  canonical_story: "99/99 PASS"
+  script_quality: "64/64 PASS"
+  story_ingestion: "78/79 PASS; 1 requires .local"
+  story_benchmark: "193 run; 2 failures, 14 errors, 6 skipped from missing .local fixtures and optional dependencies"
+  expected_values_changed_in_existing_tests: 0
+
+pending_reviews:
+  M4-04B1D2: PENDING_FORMAL_DECISION
+  M4-04B3B1: PENDING_FORMAL_DECISION
+  M4-04B3B2: PENDING_FORMAL_DECISION
+  M4-04B3C: PENDING_FORMAL_DECISION
+
+readiness:
+  B1_prompt: RESOLVED_OFFLINE
+  B2_runner: RESOLVED_OFFLINE
+  B3_hashing: PARTIALLY_RESOLVED
+  B4_schema_bundle: RESOLVED
+  B5_derived_scorer: OPEN
+  B6_reviews: OPEN
+  B7_private_artifacts: OPEN
+  B8_failure_classes: PARTIALLY_RESOLVED
+  B9_model_version_binding: RESOLVED_IN_RUNNER
+
+records:
+  - docs/research/m4/M4_04B4B_DRAFT_V1_1_CANDIDATE_READINESS.md
+  - benchmarks/m4_extraction/M4_04B4B_DRAFT_V1_1_CANDIDATE_MANIFEST.yaml
+  - benchmarks/m4_extraction/M4_HASH_NORMALIZATION_RECORD_V1.yaml

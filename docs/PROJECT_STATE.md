@@ -914,3 +914,33 @@ M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02 are ACCEPTED. M4-03 is `FR
 ## Next Candidate
 
 Author and seal a new independent fresh validation set for Draft V1.1 under separate authorization. Do not reuse DEV2 as fresh validation, open DEV2 gold, rerun predictions, access the holdout, begin M4-04C, or begin M5 without a separately authorized task.
+
+## M4-04B4B — DRAFT V1.1 CANDIDATE READINESS (OFFLINE) — COMPLETED — Status: M4_04B4B_CANDIDATE_PREPARED_READY_FOR_ORCHESTRATOR_REVIEW
+
+- **Authorization.** Limited offline preparation by the Project Owner. This is not Gate A; Gates B, C and D are not authorized.
+- **Candidate.** `P3_STORY_EXTRACTION_DRAFT_V1_1_GEMINI_3_5_FLASH_LITE_V1`, definition SHA-256 `4137afd8…` (`benchmarks/m4_extraction/M4_04B4B_DRAFT_V1_1_CANDIDATE_MANIFEST.yaml`).
+  - Model and generation settings are unchanged from P2.
+  - New V1.1-only P3 prompts, with a reference-free model-facing schema bundle; the authoritative schema is unchanged.
+  - An offline-testable runner with durable checkpoints, one structural repair, token and operation caps, model-version drift stop, and gold/holdout refusal.
+  - Live mode requires an execution authorization record, and none exists.
+- **Failure classes.**
+  - `CANONICAL_CONFORMANCE_FAILURE`: the mechanism is identified and seven classes were reproduced synthetically. The five recorded DEV2 failures remain unattributed, because the private drafts are absent and the B3D record published codes only.
+  - `AMBIGUOUS_QUOTE`: the V1.1 interface is not reliable for repeated mentions. A wrong but in-range occurrence compiles silently. A V1.2 prefix/suffix locator is proposed, not implemented.
+- **Reproducibility.**
+  - No single raw-byte checkout satisfies all historical locks: an LF checkout fails 6 tests, a simulated CRLF checkout fails 5.
+  - The content-hash policy is adopted for the candidate. The normalization record and the `.gitattributes` patch are proposed only.
+- **Tests.** 53 new offline tests pass. Existing suites are unchanged except the pre-existing D1 and `.local/` failures.
+- **Boundaries.** No API call, prediction, VAL1, gold, holdout, frozen-artifact change, M4-04C, M5 or push.
+- **Not established.** Passing offline tests is not evidence of extraction quality. The candidate is not production-qualified and not approved for blind validation.
+- **Records.** `docs/research/m4/M4_04B4B_DRAFT_V1_1_CANDIDATE_READINESS.md`; `benchmarks/m4_extraction/M4_04B4B_CANDIDATE_READINESS_RESULT.yaml`.
+
+## Next Candidate
+
+Orchestrator review of M4-04B4B, with separate decisions on the following:
+
+- the hash-normalization patch;
+- the four pending reviews;
+- V1.1 versus a V1.2 locator design (O6);
+- an offline private-environment attribution of the five canonical-conformance failures (DEV2 drafts and input only; no gold, no API).
+
+Gate A remains required before any VAL1 work.

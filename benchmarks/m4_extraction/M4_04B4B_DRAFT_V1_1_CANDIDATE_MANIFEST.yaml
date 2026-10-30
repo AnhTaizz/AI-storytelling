@@ -1,0 +1,236 @@
+artifact: M4_04B4B_DRAFT_V1_1_CANDIDATE_MANIFEST_V1
+task: M4-04B4B-DRAFT-V1-1-CANDIDATE-READINESS
+status: CANDIDATE_PREPARED_PENDING_ORCHESTRATOR_REVIEW
+base_commit: f60ae48325786b8ed1c174c2a0b1d873b66f2ad6
+candidate_id: P3_STORY_EXTRACTION_DRAFT_V1_1_GEMINI_3_5_FLASH_LITE_V1
+candidate_definition_sha256: 4137afd829711b9bd659d6cd910fc5d142ff7abd4d5e7160827e3b5bb29b4292
+hash_policy:
+  identity: M4_CROSS_PLATFORM_CONTENT_HASH_V1
+  verification_hash: content_sha256_lf
+  content_sha256_lf: SHA-256 of file bytes after CRLF to LF; lone CR is kept
+  git_blob_sha1_lf: git blob id of the LF content (equals the committed blob)
+  raw_sha256_observed: informational; raw bytes on the platform that wrote this file
+  source_text_policy: raw source text is never normalized; M3 hashes raw bytes
+qualification:
+  production_qualified: false
+  approved_for_blind_validation: false
+  extraction_quality_measured: false
+  provider_calls_made_in_this_task: 0
+generation:
+  concurrency: 1
+  credential_slot: gemini_slot_3
+  credential_topology: UNKNOWN
+  json_mode: true
+  max_output_tokens: 16384
+  model: gemini-3.5-flash-lite
+  response_mime_type: application/json
+  schema_response_mode: PROVIDER_JSON_MIME_STORY_EXTRACTION_DRAFT_V1_1
+  seed: NOT_SUPPORTED_NOT_USED
+  temperature: 0
+  provider_reported_model_version: RECORDED_PER_JOB_DRIFT_FAILS_RUN
+durable_execution:
+  durable_executor: DURABLE_RESEARCH_EXECUTOR_V1
+  first_success: IMMUTABLE_LOCK
+  global_pacing_max_operations: 6
+  global_pacing_rolling_window_seconds: 60
+  maximum_provider_attempts_per_job: 9
+  maximum_provider_attempts_per_window: 3
+  maximum_windows_per_job: 3
+  output_aware_transport_retry: FORBIDDEN
+  profile_id: M4_DURABLE_RESEARCH_EXECUTION_PROFILE_V1
+  profile_sha256_recorded: c6c789f0f06d3fdabc2333c29b389252de853ffef0add536d4f06fb6b94e143e
+  profile_review_status: QUALIFIED_PENDING_ORCHESTRATOR_REVIEW
+  runtime: GEMINI_TRANSPORT_RESILIENCE_V1_1
+  window_cooldown_seconds: 60
+compiler_binding:
+  compiler_entrypoint: tools.story_extraction.draft_compiler_v1_1.compile_story_extraction_draft_v1_1
+  diagnostic_observer: DRAFT_V1_1_CANONICAL_REPORT_OBSERVER_V1
+  semantic_inference: false
+evaluation_snapshot:
+  identity: M4_EVALUATION_PROTOCOL_SNAPSHOT_V2
+  sha256: 8dddbd0b9f3ea51af593c1fab0631b088b6f4e6b8c16833a1f11b8448088eee9
+  used_by_runner: false
+repair_policy:
+  eligible_only_after_received_primary_response: true
+  eligible_primary_failure_categories:
+  - JSON_PARSE_FAILURE
+  - DRAFT_SCHEMA_FAILURE
+  - DRAFT_COMPILER_FAILURE
+  feedback: SANITIZED_AGGREGATE_V1_1_BLOCKERS_AND_CANONICAL_ISSUE_CLASSES
+  gold_signal: FORBIDDEN
+  maximum_per_case: 1
+  missing_fact_or_coverage_retry: FORBIDDEN
+  quality_signal: FORBIDDEN
+  repair_failure_is_terminal: true
+request_construction:
+  case_id_pattern: ^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*_[0-9]{2,3}$
+  input: HOST_PREPARED_DRAFT_V1_1_INPUT_ONLY
+  primary_job_id_pattern: P3V11_{CASE_ID}_PRIMARY
+  repair_job_id_pattern: P3V11_{CASE_ID}_REPAIR_1
+prompt_hashes:
+  schema_bundle_sha256: 81366171068acd0d8da5fd9ea814c701cebf36ff6e528d645d2a614b94f4203e
+  primary_system_sha256: a3d6668989038be15e410d52fbea48d8a4dce897bdd68808c955b356ec72c4dc
+  primary_user_template_sha256: 86336a230640f0ee96c41abcd6f15a160b313f3fb1bc6612cdaf0abb27b59b3e
+  primary_prompt_pair_sha256: 5f94757a3cceeaab85476ddfc03abfd4b9a90e7d528e685ae8f6d15dce8724a9
+  repair_system_sha256: 79cfc9489bc6e6b07c48f5ce12705617cbafdc24f1101196918500a292e44319
+  repair_user_template_sha256: 840556d925ed703c5610ed837c0cfa0d180a357b74372f2335f306b9409a88cf
+  repair_prompt_pair_sha256: d15aa410bf3cec214d671630f3df4db4a12011597275ce4bd04c5fec0d3fcee4
+prompt_size:
+  primary_system_characters: 32424
+  primary_system_utf8_bytes: 32448
+  repair_system_characters: 32712
+forbidden_input_archives:
+  11388350b830d08c48010a7010c7c376ea7b613abf30b71592b0a190ff80eceb: M4_03_HOLDOUT_INPUT_V1
+  77b9655b92b09c5b2c0d0ce749432ae12da342bbf07d62a01b16b37b1fce9939: M4_04B3_DEV2_GOLD_V1
+  7de8f597797dd24f493ce76f08284145c3245b0da8423fe8840411252aaa22cb: M4_03_HOLDOUT_GOLD_V1
+files:
+  draft_schema_v1_1:
+    raw_sha256_observed: 6b5267319e2b6be42734254ad8efdb8fe6ab6843c5ba945ae4e8b524f11f78c0
+    content_sha256_lf: 6b5267319e2b6be42734254ad8efdb8fe6ab6843c5ba945ae4e8b524f11f78c0
+    git_blob_sha1_lf: f688ba7fd88c5b24bbd6663a97adf3cb756b3e9f
+    observed_line_endings: LF
+    path: schemas/story_extraction/story_extraction_draft_v1_1.schema.json
+  draft_schema_v1_dependency:
+    raw_sha256_observed: 7993db7bdce15e461a0483ec3e4bf5cf7596b49393fab477d9d25d61bd1f0f15
+    content_sha256_lf: 7993db7bdce15e461a0483ec3e4bf5cf7596b49393fab477d9d25d61bd1f0f15
+    git_blob_sha1_lf: 1ce1b77de731aac950ad4378e22741b2c68ff362
+    observed_line_endings: LF
+    path: schemas/story_extraction/story_extraction_draft_v1.schema.json
+  predicate_registry:
+    raw_sha256_observed: 44f3eafc6982f84bcc74ccb91abe7cd467a453352ee96be147095f27559c5350
+    content_sha256_lf: 44f3eafc6982f84bcc74ccb91abe7cd467a453352ee96be147095f27559c5350
+    git_blob_sha1_lf: 1b0f1aa13babc570ebc428f5ec3dfb6e48f89d7e
+    observed_line_endings: LF
+    path: schemas/canonical_story/predicate_registry_v0.yaml
+  canonical_schema:
+    raw_sha256_observed: f67410fcb1a95253abe5877b1619f0e9057430ec7cba4afa66431e964142d5e9
+    content_sha256_lf: f67410fcb1a95253abe5877b1619f0e9057430ec7cba4afa66431e964142d5e9
+    git_blob_sha1_lf: caef830a15d0bd1c13317f91ad7c48ae5c9f00d9
+    observed_line_endings: LF
+    path: schemas/canonical_story/canonical_story_v0.schema.json
+  batch_schema:
+    raw_sha256_observed: a62306384e510e000b8ed77c7f6201870bc063007b18812bba485beb4059c9ea
+    content_sha256_lf: a62306384e510e000b8ed77c7f6201870bc063007b18812bba485beb4059c9ea
+    git_blob_sha1_lf: 1d3b22ef7d7d39f8324a7e91e57e005fd2575af0
+    observed_line_endings: LF
+    path: schemas/story_extraction/story_extraction_batch_v0.schema.json
+  compiler_v1_1:
+    raw_sha256_observed: c41730be4e661914faaf00dbf77b77f2dc46924543ee577de1e362b325e04166
+    content_sha256_lf: c41730be4e661914faaf00dbf77b77f2dc46924543ee577de1e362b325e04166
+    git_blob_sha1_lf: 152f4b7847ca5d94bd0a478100eab5939c6ab103
+    observed_line_endings: LF
+    path: tools/story_extraction/draft_compiler_v1_1.py
+  compiler_v1_backend:
+    raw_sha256_observed: 281a2dfb5e99e67cc82b71798c09c93c04ab9682e8385a9cf6dfaf8393d69800
+    content_sha256_lf: 281a2dfb5e99e67cc82b71798c09c93c04ab9682e8385a9cf6dfaf8393d69800
+    git_blob_sha1_lf: af2e1328717eaaf321e982a07c7caac34c32fc78
+    observed_line_endings: LF
+    path: tools/story_extraction/draft_compiler_v1.py
+  batch_contract:
+    raw_sha256_observed: 042e4ec1882d76c0730c6b059396d353ecb8b60c3f58456e4db7f5ab623bc56e
+    content_sha256_lf: 042e4ec1882d76c0730c6b059396d353ecb8b60c3f58456e4db7f5ab623bc56e
+    git_blob_sha1_lf: d5bb5cfbeb939092782987f198ad6cb0469e83db
+    observed_line_endings: LF
+    path: tools/story_extraction/extraction_contract_v0.py
+  batch_guard:
+    raw_sha256_observed: 85c6c7c81df3d0e144ba308a76430503aa9a643596f28e233a08a0e0ba9eebe0
+    content_sha256_lf: 85c6c7c81df3d0e144ba308a76430503aa9a643596f28e233a08a0e0ba9eebe0
+    git_blob_sha1_lf: a16eb4b5c0eaa1154e8314ea19036c4abdd30169
+    observed_line_endings: LF
+    path: tools/story_extraction/extraction_contract_guard_v1.py
+  canonical_conformance:
+    raw_sha256_observed: 6a016f9c614eb10cd32e993ce0d902bd3eeba14b25a71eb5496449147f8d0599
+    content_sha256_lf: 6a016f9c614eb10cd32e993ce0d902bd3eeba14b25a71eb5496449147f8d0599
+    git_blob_sha1_lf: 9cbac7dd0c11e607fb7f39b99d255cd02c03c92b
+    observed_line_endings: LF
+    path: tools/canonical_story/conformance_v0.py
+  m3_adapter:
+    raw_sha256_observed: a1f57330993e7eaa7ac56793cfaa6dca42e508fe925127cd7241e46bc9042709
+    content_sha256_lf: a1f57330993e7eaa7ac56793cfaa6dca42e508fe925127cd7241e46bc9042709
+    git_blob_sha1_lf: 8375fface8c6b48628fe914c3716a3f981e6221c
+    observed_line_endings: LF
+    path: tools/story_ingestion/light_novel_adapter_v0.py
+  schema_bundle:
+    raw_sha256_observed: 4d43aa76587b9d82668ea87cabeb8b5526959bb4b155b1063ce48aebcc4b4336
+    content_sha256_lf: 4d43aa76587b9d82668ea87cabeb8b5526959bb4b155b1063ce48aebcc4b4336
+    git_blob_sha1_lf: e38012cb88e8805d36c84ecc782ae7708eb517e7
+    observed_line_endings: LF
+    path: tools/story_extraction/draft_v1_1_schema_bundle_v1.py
+  conformance_diagnostics:
+    raw_sha256_observed: ad869b458e759765a231be4fd20a4d5b25ae6eb5017859eae4f3cb24d102b786
+    content_sha256_lf: ad869b458e759765a231be4fd20a4d5b25ae6eb5017859eae4f3cb24d102b786
+    git_blob_sha1_lf: 3539e5b8f31d675afd4a310290b51a62cf504b8d
+    observed_line_endings: LF
+    path: tools/story_extraction/draft_v1_1_conformance_diagnostics_v1.py
+  prompt_system:
+    raw_sha256_observed: 056c3bd96e469f6e7455b17c29fb8d5f1dd2c3e76adb9579a3ed072274042e7b
+    content_sha256_lf: 056c3bd96e469f6e7455b17c29fb8d5f1dd2c3e76adb9579a3ed072274042e7b
+    git_blob_sha1_lf: 17a0203c9dc8f91f38352d26289336ae3ff4e0bf
+    observed_line_endings: LF
+    path: tools/story_extraction/prompts/story_extraction_draft_p3_system_v1_1.txt
+  prompt_user:
+    raw_sha256_observed: 86336a230640f0ee96c41abcd6f15a160b313f3fb1bc6612cdaf0abb27b59b3e
+    content_sha256_lf: 86336a230640f0ee96c41abcd6f15a160b313f3fb1bc6612cdaf0abb27b59b3e
+    git_blob_sha1_lf: dbde0bcd2b98e6703b909f6c28e7b81a25ac854b
+    observed_line_endings: LF
+    path: tools/story_extraction/prompts/story_extraction_draft_p3_user_v1_1.txt
+  prompt_repair_user:
+    raw_sha256_observed: 840556d925ed703c5610ed837c0cfa0d180a357b74372f2335f306b9409a88cf
+    content_sha256_lf: 840556d925ed703c5610ed837c0cfa0d180a357b74372f2335f306b9409a88cf
+    git_blob_sha1_lf: f7a959c7a277fe3832df7d5264f04662c1591046
+    observed_line_endings: LF
+    path: tools/story_extraction/prompts/story_extraction_draft_p3_repair_user_v1_1.txt
+  candidate_module:
+    raw_sha256_observed: 230aa3680b60d80b7d85fe9d2e19e0b3abe9bb41535ba626f62b1ec1c6a6f2a6
+    content_sha256_lf: 230aa3680b60d80b7d85fe9d2e19e0b3abe9bb41535ba626f62b1ec1c6a6f2a6
+    git_blob_sha1_lf: e6ceab2dac8924c767c54f4b02239ed28da93f1f
+    observed_line_endings: LF
+    path: tools/story_extraction/m4_draft_v1_1_candidate_p3_v1.py
+  runner:
+    raw_sha256_observed: c6cbacc27aabc3c87c130d885c6d75d6fdfda7ebceb1ba37c64a3a82be32914f
+    content_sha256_lf: c6cbacc27aabc3c87c130d885c6d75d6fdfda7ebceb1ba37c64a3a82be32914f
+    git_blob_sha1_lf: e0f574ec9c55431667330b173fbec9044172ba74
+    observed_line_endings: LF
+    path: tools/story_extraction/run_m4_draft_v1_1_predictions_v1.py
+  durable_executor:
+    raw_sha256_observed: cc9bd7a863ff906dea8fcd2f753c552881acd33f97a72b4af4e4e84eb1bfbe66
+    content_sha256_lf: cc9bd7a863ff906dea8fcd2f753c552881acd33f97a72b4af4e4e84eb1bfbe66
+    git_blob_sha1_lf: d3b68e3a6f889bfcfbbfc1c70deb9998f7cd5b08
+    observed_line_endings: LF
+    path: tools/story_extraction/durable_research_executor_v1.py
+  runtime:
+    raw_sha256_observed: 8b84804f5c5b94e1b2ac2507d8b7bc39697b916bbdd889fc1f9040762bfc9213
+    content_sha256_lf: 8b84804f5c5b94e1b2ac2507d8b7bc39697b916bbdd889fc1f9040762bfc9213
+    git_blob_sha1_lf: d49d8aa90692b060bb8466ed14425436bba32506
+    observed_line_endings: LF
+    path: tools/story_extraction/gemini_resilience_v1_1.py
+  runtime_v1_base:
+    raw_sha256_observed: b567082ea8ffdd6c955e7cc2aa5a159920fc4be3b6f65e11b4afaf0708c077ec
+    content_sha256_lf: b567082ea8ffdd6c955e7cc2aa5a159920fc4be3b6f65e11b4afaf0708c077ec
+    git_blob_sha1_lf: bb2184e7695c4b7313fa17b0d8f72d795b41f171
+    observed_line_endings: LF
+    path: tools/story_extraction/gemini_resilience_v1.py
+  live_window_transport:
+    raw_sha256_observed: 0aaa275fe96bb8bcf0f10e2e0ca7b9e789f643e3d2a154ceeef532c4155a744d
+    content_sha256_lf: 0aaa275fe96bb8bcf0f10e2e0ca7b9e789f643e3d2a154ceeef532c4155a744d
+    git_blob_sha1_lf: 275d7fa3a782d5f9d858cdde40c3e3bbe9573477
+    observed_line_endings: LF
+    path: tools/story_extraction/run_m4_04b2_dev_predictions_v1.py
+  gemini_transport:
+    raw_sha256_observed: 0828c50bfb0b4b4b0ca6845aa1937af509637bc17c765f8bc1ab451255a307b5
+    content_sha256_lf: 0828c50bfb0b4b4b0ca6845aa1937af509637bc17c765f8bc1ab451255a307b5
+    git_blob_sha1_lf: 443f07db7e2cc5d7b43ea38877be03753786a010
+    observed_line_endings: LF
+    path: tools/story_extraction/gemini_transport_v1.py
+  gemini_key_pool:
+    raw_sha256_observed: 77ab9238e322e493ebfdab223098052e74a73d7d0125c6a314b24e096bc690d0
+    content_sha256_lf: 77ab9238e322e493ebfdab223098052e74a73d7d0125c6a314b24e096bc690d0
+    git_blob_sha1_lf: c1e4f1bf8283a4b1bd8953f9d20b31711d7cfd71
+    observed_line_endings: LF
+    path: tools/story_extraction/gemini_key_pool_v1.py
+  evaluation_snapshot_v2:
+    raw_sha256_observed: eef2db2ff2ba61f22a96d3a52ab64e07c6c9e9dbc9e9741e061f2893ba6283a8
+    content_sha256_lf: eef2db2ff2ba61f22a96d3a52ab64e07c6c9e9dbc9e9741e061f2893ba6283a8
+    git_blob_sha1_lf: b98c1dcc7ab6bdaf72f2838ee557218ac75e3693
+    observed_line_endings: LF
+    path: benchmarks/m4_extraction/M4_EVALUATION_PROTOCOL_SNAPSHOT_V2.yaml

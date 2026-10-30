@@ -1,0 +1,63 @@
+artifact: M4_HASH_NORMALIZATION_RECORD_V1
+task: M4-04B4B
+status: PROPOSED_PENDING_APPROVAL
+purpose: >-
+  Map historical raw-byte locks that were taken on a CRLF working copy to
+  checkout-independent content identities. Historical records are not edited.
+  No existing test or tool reads this record until a separately approved change
+  adopts it.
+
+hash_policy:
+  identity: M4_CROSS_PLATFORM_CONTENT_HASH_V1
+  content_sha256_lf: SHA-256 of file bytes after CRLF to LF; lone CR is kept
+  git_blob_sha1_lf: git blob id of the LF content; equals the committed index blob
+  raw_sha256: platform-dependent; retained only as historical evidence
+  excluded: raw source text under data/**/raw and M3 inputs, whose bytes are evidence
+
+observations:
+  lf_checkout_failures: 6
+  lf_checkout_failing_tests:
+    - test_draft_compiler_v1_1.DraftCompilerV11Tests.test_v1_history_is_byte_identical (2 subtests)
+    - test_m4_04b3b2_dev2_protocol_v1.M404B3B2Dev2ProtocolTests.test_canonical_private_protocol_hash_and_bytes_are_locked
+    - test_m4_04b3b2_dev2_protocol_v1.M404B3B2Dev2ProtocolTests.test_protocol_binds_all_required_fixed_values
+    - test_m4_04b3b2_dev2_protocol_v1.M404B3B2Dev2ProtocolTests.test_public_bindings_are_exact
+    - test_m4_04b3b2_dev2_protocol_v1.M404B3B2Dev2ProtocolTests.test_protocol_validation_fails_closed_on_mutation
+  simulated_full_crlf_checkout_failures_line_ending_related: 5
+  simulated_full_crlf_checkout_failing_tests:
+    - test_m4_04b3a_forensics_v1 test_m1_m2_m3_and_snapshot_bindings_are_byte_exact
+    - test_m4_04b3b2_dev2_protocol_v1 (four tests; LF-locked runtime, executor and registry)
+    - test_m4_04b4b_candidate_prompt_bundle_v1 test_committed_manifest_matches_current_candidate (manifest absent at simulation time)
+  conclusion: NO_SINGLE_RAW_BYTE_CHECKOUT_SATISFIES_ALL_HISTORICAL_LOCKS
+
+entries:
+  - path: schemas/story_extraction/story_extraction_draft_v1.schema.json
+    historical_raw_sha256: 498edf8dba8d45b80380a180d1383787f5c0e4ecea5060254883cc27c7d83e80
+    historical_raw_form: CRLF
+    content_sha256_lf: 7993db7bdce15e461a0483ec3e4bf5cf7596b49393fab477d9d25d61bd1f0f15
+    git_blob_sha1_lf: 1ce1b77de731aac950ad4378e22741b2c68ff362
+    committed_index_blob_matches: true
+    content_changed_since_lock: false
+    referenced_by:
+      - benchmarks/m4_extraction/M4_04B3B1_FRESH_DEV2_SEAL_RESULT.yaml
+      - benchmarks/m4_extraction/M4_04B3B2_DEV2_BENCHMARK_PROTOCOL_LOCK.yaml
+      - benchmarks/m4_extraction/M4_04B3C_DEV2_PREDICTION_LOCK.yaml
+      - benchmarks/m4_extraction/M4_04B3D_DRAFT_V1_1_REMEDIATION_RESULT.yaml
+      - tools/story_extraction/m4_04b3b2_dev2_protocol_v1.py
+      - tests/story_extraction/test_draft_compiler_v1_1.py
+  - path: tools/story_extraction/draft_compiler_v1.py
+    historical_raw_sha256: bcd15328cefafe86dd8e686fb35a155b2cb2c261b20017486ed106e85371d836
+    historical_raw_form: CRLF
+    content_sha256_lf: 281a2dfb5e99e67cc82b71798c09c93c04ab9682e8385a9cf6dfaf8393d69800
+    git_blob_sha1_lf: af2e1328717eaaf321e982a07c7caac34c32fc78
+    committed_index_blob_matches: true
+    content_changed_since_lock: false
+    referenced_by:
+      - benchmarks/m4_extraction/M4_04B3B2_DEV2_BENCHMARK_PROTOCOL_LOCK.yaml
+      - benchmarks/m4_extraction/M4_04B3C_DEV2_PREDICTION_LOCK.yaml
+      - benchmarks/m4_extraction/M4_04B3D_DRAFT_V1_1_REMEDIATION_RESULT.yaml
+      - tools/story_extraction/m4_04b3b2_dev2_protocol_v1.py
+      - tests/story_extraction/test_draft_compiler_v1_1.py
+
+evidence:
+  - tests/story_extraction/test_m4_04b4b_line_endings_v1.py
+  - docs/research/m4/M4_04B4B_DRAFT_V1_1_CANDIDATE_READINESS.md
