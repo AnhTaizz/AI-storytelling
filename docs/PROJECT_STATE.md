@@ -968,3 +968,39 @@ Gate A remains required before any VAL1 work.
 ## Next Candidate
 
 Project Owner decisions AR1–AR7 (decision proposal §9). If AR2 and AR3 are approved, the next task is M4-04B4C: offline Draft V1.2 implementation with the adversarial suite. No VAL1 work before Gate A.
+
+## M4-04B4C — DRAFT V1.2 GROUNDED EXTRACTION IMPLEMENTATION (OFFLINE) — COMPLETED — Status: M4_04B4C_READY_FOR_ORCHESTRATOR_REVIEW
+
+- **Authorization.** AR1, AR2 and AR3 (conditional, offline). Option B is implemented as a hypothesis. Option C is not implemented.
+- **Implemented.**
+  - Self-contained `STORY_EXTRACTION_DRAFT_V1_2` schema (no occurrence or surface form; contexts of 1–32 code points; `unresolved_locators`).
+  - Deterministic contextual resolver.
+  - Compiler V1.2 (all-or-nothing, host-computed occurrence, unchanged V1.1/V1 backend, G1/G4 post-invariants).
+  - Prompt P4.
+  - Offline-only runner (no live path; budget pre-check; interruption artifacts).
+  - Oracle projection with representability reporting.
+  - Candidate manifest `556da499…`, with import closure bound and environment recorded.
+- **Results.**
+  - 35/35 adversarial cases meet expectations, with zero false resolutions by the resolver. Three semantic-residue cases are documented, not fixed.
+  - K1–K6 pass offline (K4 and K5 on synthetic text or character proxy only). K7 is not evaluated.
+  - All 26 synthetic fixtures compile byte-identically to V1.1.
+- **Remaining.**
+  - Semantic residue (SC3, SC4, SC6–SC8).
+  - L1: periodic text cannot be anchored.
+  - R7 is serialized, not removed.
+  - G5 and the surface-form convention are unverified (AR4).
+  - D1 hash migration (AR5).
+- **Not established.** No model was called. Extraction quality is not measured. Not accepted as a development candidate, not validation-approved, not production-qualified.
+- **Records.** `docs/research/m4/M4_04B4C_DRAFT_V1_2_GROUNDING_RELIABILITY_REPORT.md`; `benchmarks/m4_extraction/M4_04B4C_IMPLEMENTATION_RESULT.yaml`, `M4_04B4C_ADVERSARIAL_RESULTS.yaml`, `M4_04B4C_GROUNDING_METRICS.yaml`, `M4_04B4C_DRAFT_V1_2_CANDIDATE_MANIFEST.yaml`.
+
+## Next Candidate
+
+Orchestrator review of M4-04B4C, then the following decisions:
+
+- accept P4 / V1.2 as the development candidate;
+- AR4 (read-only DEV1 gold convention check for G4/G5 and literals);
+- AR5 (hash migration);
+- AR6 (pending reviews);
+- AR7 (a K7 pilot on tuning inputs, which needs a new runner version with an authorized live path).
+
+Gate A is still required before VAL1.

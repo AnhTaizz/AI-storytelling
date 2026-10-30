@@ -1,0 +1,27 @@
+artifact: M4_04B4C_GROUNDING_METRICS_V1
+source_text: SYNTHETIC_ONLY
+k4:
+  repeated_occurrences: 56
+  unique_within_16: 56
+  rate_within_16: 1.0
+  unique_within_32: 56
+  rate_within_32: 1.0
+  no_unique_context_within_32: []
+k5:
+  every_repeated_occurrence_locator:
+    locators: 56
+    v1_1_code_points: 5028
+    v1_2_code_points: 4331
+    overhead: -0.13862370723945902
+    v1_1_without_surface_form_code_points: 3914
+    overhead_vs_v1_1_without_surface_form: 0.10654062340316811
+  synthetic_fixture_drafts:
+    v1_1_code_points: 48767
+    v1_2_code_points: 46861
+    overhead: -0.039083806672544956
+  repeated_quote_drafts_first_occurrences_only:
+    v1_1_code_points: 12639
+    v1_2_code_points: 12621
+    overhead: -0.0014241633040588653
+  unrepresentable_locators: 0
+  proxy: compact JSON code points; tokenizer-specific token counts not measured offline

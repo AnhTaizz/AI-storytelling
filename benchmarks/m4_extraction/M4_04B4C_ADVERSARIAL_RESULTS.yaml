@@ -1,0 +1,607 @@
+artifact: M4_04B4C_ADVERSARIAL_RESULTS_V1
+source_text: SYNTHETIC_ONLY
+summary:
+  cases: 35
+  pass: 35
+  valid: 18
+  invalid: 15
+  explicitly_unresolved: 2
+  semantic_residue_valid_at_unintended_span: 3
+  resolver_false_resolution: 0
+cases:
+- id: CTRL-POS
+  title: 'positive control: unique name'
+  expected: VALID
+  expected_codes: []
+  expected_span_matches_intent: true
+  actual: VALID
+  codes: []
+  resolver_statuses:
+  - RESOLVED
+  compiler_status: COMPILED
+  span_matches_intent: true
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: Unique quote, no context.
+  pass: true
+- id: CTRL-NEG
+  title: 'negative control: absent quote'
+  expected: INVALID
+  expected_codes:
+  - LOCATOR_QUOTE_NOT_FOUND
+  expected_span_matches_intent: null
+  actual: INVALID
+  codes:
+  - LOCATOR_QUOTE_NOT_FOUND
+  resolver_statuses:
+  - NOT_FOUND
+  compiler_status: BLOCKED
+  span_matches_intent: null
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: Quote absent.
+  pass: true
+- id: ADV-01
+  title: repeated name, distinguishing context
+  expected: VALID
+  expected_codes: []
+  expected_span_matches_intent: true
+  actual: VALID
+  codes: []
+  resolver_statuses:
+  - RESOLVED
+  compiler_status: COMPILED
+  span_matches_intent: true
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: Context selects the second 真白.
+  pass: true
+- id: ADV-02
+  title: repeated name, no context
+  expected: INVALID
+  expected_codes:
+  - LOCATOR_AMBIGUOUS
+  expected_span_matches_intent: null
+  actual: INVALID
+  codes:
+  - LOCATOR_AMBIGUOUS
+  resolver_statuses:
+  - AMBIGUOUS
+  compiler_status: BLOCKED
+  span_matches_intent: null
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: Two candidates survive; no default.
+  pass: true
+- id: ADV-03
+  title: context of the wrong occurrence
+  expected: VALID
+  expected_codes: []
+  expected_span_matches_intent: false
+  actual: VALID
+  codes: []
+  resolver_statuses:
+  - RESOLVED
+  compiler_status: COMPILED
+  span_matches_intent: false
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: 'Unique anchor at the first 真白 although the second was intended: semantic residue.'
+  pass: true
+- id: ADV-04
+  title: identical context at bounded length
+  expected: INVALID
+  expected_codes:
+  - LOCATOR_AMBIGUOUS
+  expected_span_matches_intent: null
+  actual: INVALID
+  codes:
+  - LOCATOR_AMBIGUOUS
+  resolver_statuses:
+  - AMBIGUOUS
+  compiler_status: BLOCKED
+  span_matches_intent: null
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: Middle occurrences share 16-character context on both sides.
+  pass: true
+- id: ADV-05
+  title: declared repeated identical context
+  expected: EXPLICITLY_UNRESOLVED
+  expected_codes: []
+  expected_span_matches_intent: null
+  actual: EXPLICITLY_UNRESOLVED
+  codes: []
+  resolver_statuses: []
+  compiler_status: COMPILED
+  span_matches_intent: null
+  hints: []
+  declaration_checks:
+  - CONSISTENT
+  - CONSISTENT
+  advisories: []
+  explanation: Declared and justified; no records emitted.
+  pass: true
+- id: ADV-06
+  title: repeated dialogue, correct speaker context
+  expected: VALID
+  expected_codes: []
+  expected_span_matches_intent: true
+  actual: VALID
+  codes: []
+  resolver_statuses:
+  - RESOLVED
+  compiler_status: COMPILED
+  span_matches_intent: true
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: context_before 遥も selects 遥's line.
+  pass: true
+- id: ADV-07
+  title: repeated dialogue, context matching neither
+  expected: INVALID
+  expected_codes:
+  - LOCATOR_CONTEXT_MISMATCH
+  expected_span_matches_intent: null
+  actual: INVALID
+  codes:
+  - LOCATOR_CONTEXT_MISMATCH
+  resolver_statuses:
+  - NOT_FOUND
+  - RESOLVED
+  compiler_status: BLOCKED
+  span_matches_intent: null
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: Quote exists; context eliminates every candidate.
+  pass: true
+- id: ADV-08
+  title: overlapping matches
+  expected: VALID
+  expected_codes: []
+  expected_span_matches_intent: true
+  actual: VALID
+  codes: []
+  resolver_statuses:
+  - RESOLVED
+  compiler_status: COMPILED
+  span_matches_intent: true
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: Overlapping candidates 1 and 2; context あ keeps offset 1.
+  pass: true
+- id: ADV-09
+  title: pronoun linked to a referent the text leaves open
+  expected: VALID
+  expected_codes: []
+  expected_span_matches_intent: true
+  actual: VALID
+  codes: []
+  resolver_statuses:
+  - RESOLVED
+  compiler_status: COMPILED
+  span_matches_intent: true
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: Position correct; the RefersTo is a semantic claim gold must judge.
+  pass: true
+- id: ADV-10
+  title: omitted subject
+  expected: VALID
+  expected_codes: []
+  expected_span_matches_intent: null
+  actual: VALID
+  codes: []
+  resolver_statuses:
+  - RESOLVED
+  compiler_status: COMPILED
+  span_matches_intent: null
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: No mention or evidence is fabricated for the absent subject; placeholder participant.
+  pass: true
+- id: ADV-11
+  title: aliases with honorifics
+  expected: VALID
+  expected_codes: []
+  expected_span_matches_intent: true
+  actual: VALID
+  codes: []
+  resolver_statuses:
+  - RESOLVED
+  compiler_status: COMPILED
+  span_matches_intent: true
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: Distinct unique quotes; aliasing is semantic.
+  pass: true
+- id: ADV-12
+  title: repeated honorific form
+  expected: INVALID
+  expected_codes:
+  - LOCATOR_AMBIGUOUS
+  expected_span_matches_intent: null
+  actual: INVALID
+  codes:
+  - LOCATOR_AMBIGUOUS
+  resolver_statuses:
+  - AMBIGUOUS
+  compiler_status: BLOCKED
+  span_matches_intent: null
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: Two identical candidates.
+  pass: true
+- id: ADV-13
+  title: multiple candidate referents
+  expected: VALID
+  expected_codes: []
+  expected_span_matches_intent: true
+  actual: VALID
+  codes: []
+  resolver_statuses:
+  - RESOLVED
+  compiler_status: COMPILED
+  span_matches_intent: true
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: Position correct; whether 彼女 is 真白 is semantic.
+  pass: true
+- id: ADV-14
+  title: model-supplied surface form
+  expected: INVALID
+  expected_codes:
+  - DRAFT_SCHEMA_FAILURE
+  expected_span_matches_intent: null
+  actual: INVALID
+  codes:
+  - DRAFT_SCHEMA_FAILURE
+  resolver_statuses: []
+  compiler_status: BLOCKED
+  span_matches_intent: null
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: surface_form is not a model field.
+  pass: true
+- id: ADV-15
+  title: invented quote
+  expected: INVALID
+  expected_codes:
+  - LOCATOR_QUOTE_NOT_FOUND
+  expected_span_matches_intent: null
+  actual: INVALID
+  codes:
+  - LOCATOR_QUOTE_NOT_FOUND
+  resolver_statuses:
+  - NOT_FOUND
+  compiler_status: BLOCKED
+  span_matches_intent: null
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: Quote absent.
+  pass: true
+- id: ADV-16
+  title: ruby dropped
+  expected: INVALID
+  expected_codes:
+  - LOCATOR_QUOTE_NOT_FOUND
+  expected_span_matches_intent: null
+  actual: INVALID
+  codes:
+  - LOCATOR_QUOTE_NOT_FOUND
+  resolver_statuses:
+  - NOT_FOUND
+  compiler_status: BLOCKED
+  span_matches_intent: null
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: Exact copy required.
+  pass: true
+- id: ADV-17
+  title: ruby kept
+  expected: VALID
+  expected_codes: []
+  expected_span_matches_intent: true
+  actual: VALID
+  codes: []
+  resolver_statuses:
+  - RESOLVED
+  compiler_status: COMPILED
+  span_matches_intent: true
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: Exact span includes ruby markup.
+  pass: true
+- id: ADV-18
+  title: NFC quote, NFD source
+  expected: INVALID
+  expected_codes:
+  - LOCATOR_QUOTE_NOT_FOUND
+  expected_span_matches_intent: null
+  actual: INVALID
+  codes:
+  - LOCATOR_QUOTE_NOT_FOUND
+  resolver_statuses:
+  - NOT_FOUND
+  - RESOLVED
+  compiler_status: BLOCKED
+  span_matches_intent: null
+  hints:
+  - NORMALIZATION_VARIANT_PRESENT
+  declaration_checks: []
+  advisories: []
+  explanation: No normalization; hint only.
+  pass: true
+- id: ADV-19
+  title: full-width digits
+  expected: INVALID
+  expected_codes:
+  - LOCATOR_QUOTE_NOT_FOUND
+  expected_span_matches_intent: null
+  actual: INVALID
+  codes:
+  - LOCATOR_QUOTE_NOT_FOUND
+  resolver_statuses:
+  - NOT_FOUND
+  - RESOLVED
+  compiler_status: BLOCKED
+  span_matches_intent: null
+  hints:
+  - COMPATIBILITY_VARIANT_PRESENT
+  declaration_checks: []
+  advisories: []
+  explanation: No width folding; hint only.
+  pass: true
+- id: ADV-20
+  title: multi-passage evidence set
+  expected: VALID
+  expected_codes: []
+  expected_span_matches_intent: null
+  actual: VALID
+  codes: []
+  resolver_statuses:
+  - RESOLVED
+  compiler_status: COMPILED
+  span_matches_intent: null
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: Two exact spans in one SUFFICIENT set.
+  pass: true
+- id: ADV-21
+  title: quote across passages
+  expected: INVALID
+  expected_codes:
+  - LOCATOR_QUOTE_NOT_FOUND
+  expected_span_matches_intent: null
+  actual: INVALID
+  codes:
+  - LOCATOR_QUOTE_NOT_FOUND
+  resolver_statuses:
+  - NOT_FOUND
+  - RESOLVED
+  compiler_status: BLOCKED
+  span_matches_intent: null
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: Passages are separate texts.
+  pass: true
+- id: ADV-22
+  title: mention without RefersTo
+  expected: VALID
+  expected_codes: []
+  expected_span_matches_intent: null
+  actual: VALID
+  codes: []
+  resolver_statuses:
+  - RESOLVED
+  compiler_status: COMPILED
+  span_matches_intent: null
+  hints: []
+  declaration_checks: []
+  advisories:
+  - MENTION_WITHOUT_REFERSTO
+  explanation: Compiles; advisory raised.
+  pass: true
+- id: ADV-23
+  title: unsupported relation
+  expected: VALID
+  expected_codes: []
+  expected_span_matches_intent: null
+  actual: VALID
+  codes: []
+  resolver_statuses:
+  - RESOLVED
+  compiler_status: COMPILED
+  span_matches_intent: null
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: Structurally valid; gold must score it unsupported.
+  pass: true
+- id: ADV-24
+  title: unsupported event
+  expected: VALID
+  expected_codes: []
+  expected_span_matches_intent: null
+  actual: VALID
+  codes: []
+  resolver_statuses:
+  - RESOLVED
+  compiler_status: COMPILED
+  span_matches_intent: null
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: Structurally valid; gold must score it unsupported.
+  pass: true
+- id: ADV-25
+  title: wrong passage
+  expected: VALID
+  expected_codes: []
+  expected_span_matches_intent: false
+  actual: VALID
+  codes: []
+  resolver_statuses:
+  - RESOLVED
+  compiler_status: COMPILED
+  span_matches_intent: false
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: 'Unique in P2 although P1 was intended: semantic residue.'
+  pass: true
+- id: ADV-26
+  title: context crossing the passage start
+  expected: INVALID
+  expected_codes:
+  - LOCATOR_CONTEXT_MISMATCH
+  expected_span_matches_intent: null
+  actual: INVALID
+  codes:
+  - LOCATOR_CONTEXT_MISMATCH
+  resolver_statuses:
+  - NOT_FOUND
+  compiler_status: BLOCKED
+  span_matches_intent: null
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: No text precedes the quote inside the passage.
+  pass: true
+- id: ADV-27
+  title: determinism under reordering
+  expected: VALID
+  expected_codes: []
+  expected_span_matches_intent: null
+  actual: VALID
+  codes: []
+  resolver_statuses:
+  - RESOLVED
+  compiler_status: COMPILED
+  span_matches_intent: null
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: 'Checked separately: identical canonical JSON under shuffled records.'
+  pass: true
+- id: ADV-28
+  title: occurrence field present
+  expected: INVALID
+  expected_codes:
+  - DRAFT_SCHEMA_FAILURE
+  expected_span_matches_intent: null
+  actual: INVALID
+  codes:
+  - DRAFT_SCHEMA_FAILURE
+  resolver_statuses: []
+  compiler_status: BLOCKED
+  span_matches_intent: null
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: No counting field exists.
+  pass: true
+- id: ADV-29
+  title: wrong dialogue attribution
+  expected: VALID
+  expected_codes: []
+  expected_span_matches_intent: false
+  actual: VALID
+  codes: []
+  resolver_statuses:
+  - RESOLVED
+  compiler_status: COMPILED
+  span_matches_intent: false
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: 'Unique anchor on 真白''s line cited for a claim about 遥: semantic residue.'
+  pass: true
+- id: ADV-30
+  title: unjustified unresolved declaration
+  expected: EXPLICITLY_UNRESOLVED
+  expected_codes: []
+  expected_span_matches_intent: null
+  actual: EXPLICITLY_UNRESOLVED
+  codes: []
+  resolver_statuses: []
+  compiler_status: COMPILED
+  span_matches_intent: null
+  hints: []
+  declaration_checks:
+  - UNIQUE_WITHOUT_CONTEXT
+  advisories: []
+  explanation: Quote is unique; declaration counted as unjustified.
+  pass: true
+- id: ADV-31
+  title: reference to a declared-unresolved locator
+  expected: INVALID
+  expected_codes:
+  - REFERENCE_TO_UNRESOLVED_LOCATOR
+  expected_span_matches_intent: null
+  actual: INVALID
+  codes:
+  - LOCATOR_AMBIGUOUS
+  - REFERENCE_TO_UNRESOLVED_LOCATOR
+  resolver_statuses:
+  - AMBIGUOUS
+  compiler_status: BLOCKED
+  span_matches_intent: null
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: Dependants of an unresolved locator must be omitted.
+  pass: true
+- id: ADV-32
+  title: invalid context length
+  expected: INVALID
+  expected_codes:
+  - DRAFT_SCHEMA_FAILURE
+  expected_span_matches_intent: null
+  actual: INVALID
+  codes:
+  - DRAFT_SCHEMA_FAILURE
+  resolver_statuses: []
+  compiler_status: BLOCKED
+  span_matches_intent: null
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: Context longer than 32 code points.
+  pass: true
+- id: ADV-33
+  title: fabricated name literal
+  expected: VALID
+  expected_codes: []
+  expected_span_matches_intent: null
+  actual: VALID
+  codes: []
+  resolver_statuses:
+  - RESOLVED
+  compiler_status: COMPILED
+  span_matches_intent: null
+  hints: []
+  declaration_checks: []
+  advisories: []
+  explanation: Literal values are not locators; gold must catch it (SC6 residue).
+  pass: true

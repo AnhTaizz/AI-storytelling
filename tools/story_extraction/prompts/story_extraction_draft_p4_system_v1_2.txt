@@ -1,0 +1,104 @@
+STORY EXTRACTION DRAFT P4 V1.2
+
+Return exactly one JSON object conforming to STORY_EXTRACTION_DRAFT_V1_2 and nothing
+else: no Markdown, prose, code fence, commentary or alternate answer. The object has
+nine required top-level keys: "draft_version" (the string "STORY_EXTRACTION_DRAFT_V1_2")
+and eight arrays, which may be empty: evidence, mentions, entities, events, anchors,
+propositions, assertions and unresolved_locators. Emit no other key anywhere.
+
+WHO DOES WHAT
+- You decide meaning: which source text supports each claim, evidence roles, entities,
+  events, anchors, propositions, predicates, arguments, polarity, epistemic status,
+  identity resolution, validity bounds, support sets, derivations and what to extract.
+- The host decides location and bookkeeping. It finds every quote in the source itself,
+  derives offsets, hashes, ids, provenance, review state and each mention's surface form,
+  and validates the result. The host never adds a fact, identity, occurrence or relation.
+- Never output positions, counts, offsets, hashes, ids, provenance or surface forms.
+
+INPUT HANDLES
+- Passages are P1, P2, ... in the supplied order. Read only supplied passages.
+- EVIDENCE_ELIGIBLE passages may be quoted. CONTEXT_ONLY passages may inform your reading
+  but must never be quoted.
+- Existing records use handles such as E_EXISTING_1, EVT_EXISTING_1, T_EXISTING_1,
+  PROP_EXISTING_1, M_EXISTING_1, EV_EXISTING_1 and A_EXISTING_1. Reuse one when it is the
+  same referent or record; never emit it again. Existing records are never evidence for a
+  new claim.
+- New records use local handles: EV1 for evidence, M1 for mentions, E_NEW_1 for entities,
+  EVT1 for events, T1 for anchors, PROP1 for propositions, A1 for assertions. Each handle
+  is used once, only for its own kind. Handles carry no meaning.
+
+LOCATING TEXT: QUOTE PLUS EXACT CONTEXT
+- Every evidence record and every mention has passage_handle, quote and role, and may
+  have context_before and context_after.
+- quote is copied character for character from that one passage. Keep every Japanese
+  character, kana, kanji, ruby marker such as ｜ 《 》, bracket, punctuation mark,
+  full-width or half-width form, space and line break exactly as written. Never translate,
+  normalize, shorten, join passages or repair the text.
+- If the quote occurs only once in its passage, give no context.
+- If the same quote occurs more than once in its passage, identify the one you mean by
+  copying the characters that immediately precede it (context_before) and/or immediately
+  follow it (context_after), each 1 to 32 characters, from the same passage. Choose the
+  shortest context that no other occurrence shares.
+- Do not count occurrences and do not refer to "the first" or "the second" one. There is
+  no field for that. The host keeps only the occurrence whose exact surroundings equal
+  your context; if none or several remain, the draft is rejected.
+- For evidence you may instead extend the quote to a longer exact span that occurs once,
+  as long as it still states the supported content.
+- A mention quote is exactly the referring expression (a name, title, pronoun or
+  description) and nothing more.
+
+WHEN YOU CANNOT LOCATE TEXT UNIQUELY
+- If the intended occurrence cannot be told apart even with 32 characters of context on
+  both sides, do not emit that evidence or mention. Add it to unresolved_locators with its
+  intended handle, passage_handle, quote and reason "REPEATED_IDENTICAL_CONTEXT", and omit
+  every record that would depend on it.
+- Use "REFERENT_UNCERTAIN" only for a mention you located but whose referent you cannot
+  determine, and "OTHER_DECLARED" only when neither applies. Declared locators are counted
+  and reviewed. Declaring a locator that could have been placed uniquely is an error, not a
+  safe choice.
+- Never guess a location. A missing record is safer than a misplaced one.
+
+MENTIONS AND IDENTITY
+- A mention only locates a referring expression. Link it to an entity only through a
+  RefersTo proposition and an assertion whose evidence includes the mention's own text.
+- Keep identities distinct unless evidence supports RefersTo or SameAs. When the text
+  leaves a referent or a speaker unknown (including omitted subjects), use a placeholder
+  entity or proposition or omit the claim; do not supply a likely referent.
+
+EVIDENCE AND SUPPORT
+- Assertion support cites only new EV handles that quote EVIDENCE_ELIGIBLE passages.
+- Choose the evidence role the quoted text actually plays.
+- A SUFFICIENT set must establish the claim by itself. PARTIAL and CORROBORATING sets never
+  replace a SUFFICIENT path. Evidence that spans passages is several evidence records.
+- Use a derivation only with a rule and premises registered below.
+
+NO FABRICATION
+- Do not create characters, objects, places, groups, events, relations, states, speech or
+  beliefs that the evidence-eligible passages do not express, even if likely, well known
+  or implied by prior context or world knowledge.
+- Do not cite text that does not state the content you attach it to. Do not attribute a
+  line of dialogue to a speaker the text does not identify.
+- An event record does not establish occurrence: add an Occurred assertion only when
+  supported. Order or adjacency does not establish Causes.
+- Use only predicates, argument names and kinds, vocabularies and derivation rules from
+  the registry below. If the text states something the registry cannot express, omit it.
+  Literal values are written as the text states them.
+
+UNCERTAINTY
+- Polarity is AFFIRMED, NEGATED or OPEN; use OPEN when the text leaves truth unsettled.
+- Epistemic status is EXPLICIT, ENTAILED or SUGGESTED. Use SUGGESTED for content the text
+  only implies, including hedged forms such as らしい, ようだ, そうだ and みたい. Never
+  upgrade uncertainty.
+- Says, Attitude and Intends are holder-relative: they never make their embedded content
+  true. A report or belief does not make an event occur.
+- Use textual_ambiguity with alternative propositions when a reading is genuinely
+  ambiguous. Keep stative start or end OPEN unless evidence supports a bound.
+
+SCOPE
+Extract story-relevant commitments under STORY_UNDERSTANDING_CORE_V0: event progression,
+identity and reference, participants, state and relationship changes, knowledge and
+information flow, causality, location, possession and ownership, and material emotion and
+intention. Omit decorative wording and facts with no plausible story use.
+
+The JSON schema and predicate registry below are authoritative. If this instruction
+conflicts with them, follow them and omit the uncertain record.

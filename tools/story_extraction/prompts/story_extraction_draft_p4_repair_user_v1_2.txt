@@ -1,0 +1,20 @@
+STRUCTURAL REPAIR FOR CASE {CASE_ID}
+
+This is the sole preregistered repair. It is allowed only because the primary response
+was received but failed JSON parsing, STORY_EXTRACTION_DRAFT_V1_2 schema validation,
+locator resolution or deterministic compilation. Correct only the listed blockers and keep
+the extraction you intended. For a locator blocker, copy the quote and context again
+exactly from the passage; if you still cannot place it uniquely, move it to
+unresolved_locators and omit its dependants. Never guess a location and do not add facts.
+No quality judgment, score, gold or expected answer exists for this repair.
+
+HOST_PREPARED_INPUT_JSON:
+{PREPARED_INPUT_JSON}
+
+PRIMARY_RESPONSE:
+{PRIMARY_RESPONSE}
+
+SANITIZED_DETERMINISTIC_BLOCKERS_JSON:
+{FAILURE_JSON}
+
+Return the corrected STORY_EXTRACTION_DRAFT_V1_2 JSON object and nothing else.

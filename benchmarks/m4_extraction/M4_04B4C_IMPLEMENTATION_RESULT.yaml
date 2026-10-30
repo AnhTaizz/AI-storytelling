@@ -1,0 +1,90 @@
+task: M4-04B4C
+date: 2026-10-30
+status: M4_04B4C_READY_FOR_ORCHESTRATOR_REVIEW
+base_commit: 45ef66a7eeefcc4cad9b120e32e8f7eb381f9b66
+authorization: AR1_AR2_AR3_CONDITIONAL_OFFLINE
+implementation_hypothesis: OPTION_B_CONTEXTUAL_ANCHORS
+option_c_implemented: false
+
+boundaries:
+  provider_or_api_calls: 0
+  live_execution_enabled: false
+  dev1_or_dev2_predictions: 0
+  gold_or_holdout_opened: false
+  val1_created: false
+  frozen_artifacts_modified: false
+  canonical_story_model_changed: false
+  evaluator_snapshot_v2_changed: false
+  pushed: false
+
+candidate:
+  identity: P4_STORY_EXTRACTION_DRAFT_V1_2_GEMINI_3_5_FLASH_LITE_V1
+  manifest: benchmarks/m4_extraction/M4_04B4C_DRAFT_V1_2_CANDIDATE_MANIFEST.yaml
+  candidate_definition_sha256: 556da499d71cd5c1ac3ecd759cd4511c6fc6154e772ff39ac67bd0473bbdcf67
+  hash_policy: M4_CROSS_PLATFORM_CONTENT_HASH_V1
+  development_candidate_accepted: false
+  independent_validation_approved: false
+  production_qualified: false
+
+artifacts_content_sha256_lf_prefix:
+  schemas/story_extraction/story_extraction_draft_v1_2.schema.json: 4aa355c62213e1c6
+  tools/story_extraction/contextual_anchor_resolver_v1.py: 902c5fe38c6e4e9a
+  tools/story_extraction/draft_compiler_v1_2.py: 943ba0e8257fa86c
+  tools/story_extraction/draft_v1_2_oracle_projection_v1.py: 926e5dfc2497353b
+  tools/story_extraction/m4_draft_v1_2_candidate_p4_v1.py: 13b08c39d28d472d
+  tools/story_extraction/run_m4_draft_v1_2_predictions_v1.py: 9a9b8c12631b2b77
+  tools/story_extraction/prepare_m4_04b4c_candidate_manifest_v1.py: abc252ba8932e267
+  tools/story_extraction/prompts/story_extraction_draft_p4_system_v1_2.txt: c5b696b5956b282f
+  tools/story_extraction/prompts/story_extraction_draft_p4_user_v1_2.txt: 93c6ec37ba1b5c6e
+  tools/story_extraction/prompts/story_extraction_draft_p4_repair_user_v1_2.txt: 62c03a4199fc57a1
+  full_hashes: see candidate manifest
+
+adversarial:
+  record: benchmarks/m4_extraction/M4_04B4C_ADVERSARIAL_RESULTS.yaml
+  cases: 35
+  pass: 35
+  valid: 18
+  invalid: 15
+  explicitly_unresolved: 2
+  semantic_residue_valid_at_unintended_span: 3
+  resolver_false_resolution: 0
+
+criteria:
+  K1_no_counting_field: PASS
+  K2_adversarial_suite: PASS
+  K3_identical_context_never_valid: PASS
+  K4_unique_within_16: PASS_SYNTHETIC_ONLY_56_OF_56
+  K5_output_overhead: PASS_CHARACTER_PROXY_PLUS_10_7_PERCENT_PER_REPEATED_LOCATOR
+  K6_no_dependency_deterministic: PASS
+  K7_tuning_pilot: NOT_EVALUATED_REQUIRES_AUTHORIZATION
+  option_b_failed_required_criterion: false
+
+review_findings_addressed_for_v1_2_path:
+  R1_prompt_shape: FIXED
+  R2_programmatic_authorization: FIXED_OFFLINE_ONLY_TRANSPORTS
+  R3_token_cap: FIXED_PRE_CALL_ESTIMATE
+  R4_interruption_artifacts: FIXED
+  R5_manifest_completeness: FIXED_IMPORT_CLOSURE_TESTED
+  R6_environment_record: FIXED
+  R7_observer_concurrency: MITIGATED_SERIAL_ONLY
+
+known_limitations:
+  - L1 periodic or identical text cannot be anchored, including at passage edges
+  - semantic residue (wrong passage, wrong attribution, wrong-occurrence context, literals, mislinks)
+  - G5 and source-derived surface form unverified against gold conventions
+  - historical D1 hash failures pending hash-migration task
+  - adversarial specification corrected (nine repetitions insufficient; 25 used)
+
+tests:
+  new_tests: "35/35 PASS (15 compiler/resolver, 12 runner, 8 candidate/reports)"
+  story_extraction: "458/464 PASS; 6 pre-existing D1 failures"
+  canonical_story: "99/99 PASS"
+  script_quality: "64/64 PASS"
+  story_ingestion: "78/79 PASS; 1 requires .local"
+  simulated_crlf_checkout_new_tests: PASS
+  m4_04b4b_manifest_check: MATCH
+  m4_04b4c_manifest_check: MATCH
+
+records:
+  - docs/research/m4/M4_04B4C_DRAFT_V1_2_GROUNDING_RELIABILITY_REPORT.md
+  - benchmarks/m4_extraction/M4_04B4C_GROUNDING_METRICS.yaml
