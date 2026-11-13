@@ -110,6 +110,31 @@ Each run writes to `.local/story_pipeline_runs/<run id>/` (git-ignored): `briefs
 `report.json`, `review_form.md`, `calls.jsonl` (every model call with raw output and validation errors) and
 `run_manifest.json` (scope, background chapters, where each brief came from — memory or model —, profile, model, prompt/schema sha256, status). Episode runs also write `memory_recap.json`.
 
+## Live runs
+
+**2026-11-13, chapter 1, `gemini-3.6-flash`, free-tier key.**
+
+Model availability on that key, from a one-line JSON request per model:
+
+| Model | Result |
+|---|---|
+| Pro models (`gemini-3.1-pro-preview`, `gemini-pro-latest`) | 429: free-tier quota is 0 |
+| `gemini-3.7-flash`, `gemini-3.8-flash`, `gemini-flash-latest` | 503: overloaded |
+| `gemini-3.6-flash`, `gemini-3.5-flash`, `gemini-3-flash-preview`, `gemini-3.5-flash-lite` | answered |
+
+What the run did:
+
+- **Brief:** the first attempt failed schema validation because `forbidden_inferences` items came back as objects instead of strings. The repair loop sent the exact errors back, and the second attempt was valid (about 31 s and 26 s). The brief was stored in story memory.
+- **Plan:** the call failed after 4 transport attempts with `SERVER_FAILURE`, which was 503 overload, not quota. The run stopped as FAILED.
+
+Follow-up: `--model` now accepts a fallback chain. The client moves to the next model only after a model has exhausted its retries on overload, quota or network failure; a rejected request is not retried on another model. Backoff between retries now starts at 5 s. Every call log entry records the model that served it and any models that failed first. For a free-tier key:
+
+```
+python -m tools.story_pipeline.run_pipeline --chapters 1 --model gemini-3.6-flash,gemini-3.5-flash,gemini-3-flash-preview
+```
+
+Because a 429 cools down the whole credential rather than one model, a fallback after a quota error first waits out that cooldown.
+
 ## Known limits
 
 - Brief paraphrase quality is not measured against gold. Quotes pin the evidence, but a

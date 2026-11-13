@@ -347,7 +347,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--profile", default=str(DEFAULT_PROFILE_PATH), help="Narrative Profile YAML")
     parser.add_argument("--min-words", type=int, default=None, help="override profile minimum length")
     parser.add_argument("--max-words", type=int, default=None, help="override profile maximum length")
-    parser.add_argument("--model", default=None, help="Gemini model id (default: GEMINI_MODEL in .env)")
+    parser.add_argument("--model", default=None,
+                        help="Gemini model id, or a comma-separated fallback chain tried in order when a "
+                             "model is overloaded or out of quota (default: GEMINI_MODEL)")
     parser.add_argument("--temperature", type=float, default=0.4)
     parser.add_argument("--dotenv", default=str(REPO / ".env"))
     parser.add_argument("--facts", default=None, help="optional story_facts/v0 JSON from upstream extraction")

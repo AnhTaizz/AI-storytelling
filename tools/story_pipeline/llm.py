@@ -40,8 +40,19 @@ class StageFailed(RuntimeError):
 # --------------------------------------------------------------------------- clients
 
 
+# Transport failures after which the next model in the chain is tried. Overload (503) and
+# per-model quota (429) are model-specific; a request the provider rejects is not.
+FALLBACK_CODES = frozenset({"SERVER_FAILURE", "RATE_LIMIT", "TIMEOUT", "NETWORK_FAILURE", "POOL_EXHAUSTED"})
+
+
 class GeminiLLMClient:
-    """Wraps the existing M4 Gemini transport and key pool (reads `.env`)."""
+    """Wraps the existing M4 Gemini transport and key pool (reads `.env` and the environment).
+
+    `model` may be a comma-separated chain, e.g. "gemini-3.6-flash,gemini-3.5-flash": each
+    call uses the first model and moves to the next only after the transport has exhausted
+    its retries with an overload, quota or network failure. Every record says which model
+    served it and which ones failed first.
+    """
 
     def __init__(
         self,
@@ -50,8 +61,11 @@ class GeminiLLMClient:
         dotenv_path: Path | str = Path(".env"),
         temperature: float = 0.4,
         max_transport_retries: int = 3,
+        base_backoff_seconds: float = 5.0,
         client_factory: Optional[Callable[[str], Any]] = None,
         environ: Optional[Dict[str, str]] = None,
+        sleep: Callable[[float], None] = time.sleep,
+        clock: Callable[[], float] = time.time,
     ) -> None:
         from tools.story_extraction.gemini_key_pool_v1 import (
             GeminiConfigError,
@@ -63,30 +77,48 @@ class GeminiLLMClient:
             official_client_factory,
         )
 
+        from tools.story_extraction.gemini_transport_v1 import GeminiTransportError
+
         config = load_runtime_config(dotenv_path, environ)
-        self.model = (model or config.model or "").strip()
-        if not self.model:
+        self.models = [m.strip() for m in (model or config.model or "").split(",") if m.strip()]
+        if not self.models:
             raise GeminiConfigError(
                 "No Gemini model: pass --model or set GEMINI_MODEL in .env")
+        self.model = self.models[0]
         self.temperature = temperature
-        self.name = f"gemini:{self.model}"
-        pool = GeminiKeyPool(config.credentials)
+        self.name = "gemini:" + ",".join(self.models)
+        self._transport_error = GeminiTransportError
+        # A 429 cools the whole credential, not just the model, so a fallback model may first
+        # wait out that cooldown; pool and transport share one clock for that reason.
+        pool = GeminiKeyPool(config.credentials, clock=clock)
         self._transport = GeminiTransport(
             pool,
             client_factory or official_client_factory,
             max_transport_retries=max_transport_retries,
-            base_backoff_seconds=2.0,
+            base_backoff_seconds=base_backoff_seconds,
+            sleep=sleep,
+            clock=clock,
         )
 
     def complete(self, *, system: str, user: str, request_id: str) -> Dict[str, Any]:
-        record = self._transport.generate(
-            system_instruction=system,
-            user_content=user,
-            model=self.model,
-            generation_config={"temperature": self.temperature},
-            request_id=request_id,
-        )
-        return record
+        failed: List[Dict[str, Any]] = []
+        for index, model in enumerate(self.models):
+            try:
+                record = self._transport.generate(
+                    system_instruction=system,
+                    user_content=user,
+                    model=model,
+                    generation_config={"temperature": self.temperature},
+                    request_id=request_id,
+                )
+            except self._transport_error as error:
+                if error.code not in FALLBACK_CODES or index == len(self.models) - 1:
+                    raise
+                failed.append({"model": model, "code": error.code, "attempts": error.attempts})
+                continue
+            record["fallback_from"] = failed
+            return record
+        raise AssertionError("unreachable: the loop returns or raises")
 
 
 class ScriptedLLMClient:
@@ -202,6 +234,8 @@ def run_json_stage(
                 "request_id": request_id,
                 "attempt": attempt,
                 "client": getattr(client, "name", "unknown"),
+                "model": record.get("model_requested"),
+                "fallback_from": record.get("fallback_from") or [],
                 "seconds": round(time.time() - started, 3),
                 "usage": record.get("usage_metadata"),
                 "valid": not errors,

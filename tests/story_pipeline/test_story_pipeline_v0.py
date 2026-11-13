@@ -400,6 +400,62 @@ class GeminiClientTests(unittest.TestCase):
         self.assertEqual(record["raw_content"], '{"n": 1}')
         self.assertEqual(sdk.kwargs["model"], "fake-model")
         self.assertEqual(client.name, "gemini:fake-model")
+        self.assertEqual(record["fallback_from"], [])
+
+    def test_model_fallback_chain(self):
+        class ProviderError(Exception):
+            def __init__(self, code):
+                super().__init__(f"HTTP {code}")
+                self.code = code
+
+        class FakeResponse:
+            text = '{"n": 1}'
+            usage_metadata = None
+            model_version = "fake"
+
+        class FakeSDK:
+            def __init__(self, failures):
+                self.failures = failures  # model -> HTTP status it fails with
+                self.calls = []
+
+            def generate(self, **kwargs):
+                self.calls.append(kwargs["model"])
+                if kwargs["model"] in self.failures:
+                    raise ProviderError(self.failures[kwargs["model"]])
+                return FakeResponse()
+
+        def client_for(sdk):
+            now = [1000.0]  # simulated time: sleeping advances it, so key cooldowns expire
+
+            def sleep(seconds):
+                now[0] += seconds
+
+            return GeminiLLMClient("busy-model, spare-model", dotenv_path=REPO / "does-not-exist.env",
+                                   client_factory=lambda key: sdk, max_transport_retries=1,
+                                   sleep=sleep, clock=lambda: now[0],
+                                   environ={"GEMINI_API_KEY_1": "test-key-not-real"})
+
+        cases = [
+            ("overloaded first model falls back", {"busy-model": 503}, "ok",
+             ["busy-model", "busy-model", "spare-model"]),
+            ("quota on first model falls back", {"busy-model": 429}, "ok", None),
+            ("rejected request does not fall back", {"busy-model": 400}, "raise", ["busy-model"]),
+            ("every model down raises", {"busy-model": 503, "spare-model": 503}, "raise", None),
+        ]
+        for label, failures, outcome, expected_calls in cases:
+            with self.subTest(label):
+                sdk = FakeSDK(failures)
+                client = client_for(sdk)
+                self.assertEqual(client.name, "gemini:busy-model,spare-model")
+                if outcome == "ok":
+                    record = client.complete(system="s", user="u", request_id="t:1")
+                    self.assertEqual(record["model_requested"], "spare-model")
+                    self.assertEqual(record["fallback_from"][0]["model"], "busy-model")
+                else:
+                    with self.assertRaises(RuntimeError):
+                        client.complete(system="s", user="u", request_id="t:1")
+                if expected_calls is not None:
+                    self.assertEqual(sdk.calls, expected_calls)
 
 
 if __name__ == "__main__":
