@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import re
 from pathlib import Path
 from string import Template
 from typing import Any, Dict, List, Optional, Sequence
@@ -55,24 +56,29 @@ def brief_semantic_errors(brief: Dict[str, Any], chapter: Chapter) -> List[str]:
     if brief["chapter_order"] != chapter.order:
         errors.append(f"chapter_order must be {chapter.order}")
     valid_ids = chapter.passage_ids
+    texts = {p.passage_id: p.text for p in chapter.passages}
 
-    def check_evidence(where: str, evidence: Sequence[str]) -> None:
+    def check_evidence(where: str, evidence: Sequence[str], quote: str = "") -> None:
         bad = [e for e in evidence if e not in valid_ids]
         if bad:
             errors.append(f"{where}: evidence ids {bad} are not passages of chapter "
                           f"{chapter.order} (valid ids look like '{chapter.order}.1')")
+            return
+        if not quote_in_passages(quote, [texts[e] for e in evidence]):
+            errors.append(f"{where}: quote {quote!r} does not appear verbatim in its cited passages "
+                          f"{list(evidence)}; copy an exact excerpt from one of them")
 
     char_ids = [c["id"] for c in brief["characters"]]
     if len(set(char_ids)) != len(char_ids):
         errors.append("character ids must be unique")
     for character in brief["characters"]:
         for index, fact in enumerate(character["facts"]):
-            check_evidence(f"characters {character['id']} facts[{index}]", fact["evidence"])
+            check_evidence(f"characters {character['id']} facts[{index}]", fact["evidence"], fact["quote"])
     for index, rel in enumerate(brief["relationships"]):
         missing = [c for c in rel["between"] if c not in char_ids]
         if missing:
             errors.append(f"relationships[{index}] references unknown characters {missing}")
-        check_evidence(f"relationships[{index}]", rel["evidence"])
+        check_evidence(f"relationships[{index}]", rel["evidence"], rel["quote"])
     event_ids = [e["id"] for e in brief["events"]]
     if len(set(event_ids)) != len(event_ids):
         errors.append("event ids must be unique")
@@ -80,10 +86,23 @@ def brief_semantic_errors(brief: Dict[str, Any], chapter: Chapter) -> List[str]:
         missing = [c for c in event["participants"] if c not in char_ids]
         if missing:
             errors.append(f"event {event['id']} references unknown characters {missing}")
-        check_evidence(f"event {event['id']}", event["evidence"])
+        check_evidence(f"event {event['id']}", event["evidence"], event["quote"])
     if not any(e["importance"] == "CORE" for e in brief["events"]):
         errors.append("at least one event must have importance CORE")
     return errors
+
+
+_SPACE = re.compile(r"\s+")
+
+
+def _squash(text: str) -> str:
+    """Drop all whitespace (including full-width spaces) so line wrapping cannot break a match."""
+    return _SPACE.sub("", text)
+
+
+def quote_in_passages(quote: str, passages: Sequence[str]) -> bool:
+    needle = _squash(quote).strip("「」『』\"'")
+    return bool(needle) and any(needle in _squash(text) for text in passages)
 
 
 def known_characters_text(briefs: Sequence[Dict[str, Any]]) -> str:

@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 7 — test files: 50 — test functions: 947
+Suites: 7 — test files: 50 — test functions: 948
 
 ## canonical_story
 
@@ -1145,7 +1145,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 
 ## story_pipeline
 
-### test_story_pipeline_v0 (19)
+### test_story_pipeline_v0 (20)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
 
 - `test_profile`
@@ -1160,6 +1160,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `JsonLoopTests.test_exhausted_repairs_raise`
 - `JsonLoopTests.test_soft_errors_accepted_on_last_attempt`
 - `SemanticValidationTests.test_brief_rejects_out_of_scope_evidence`
+- `SemanticValidationTests.test_brief_quote_must_be_verbatim_in_cited_passages`
 - `SemanticValidationTests.test_plan_requires_core_coverage_and_length`
 - `SemanticValidationTests.test_critic_unit_mismatch`
 - `FactsTests.test_valid_and_invalid`
