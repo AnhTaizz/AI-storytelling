@@ -61,4 +61,6 @@ test imports, a stale catalog, and environment gates that break the gate rules.
 - `tools/story_extraction` — M4 research tooling (Gemini runtime, draft compiler).
 - `tools/story_pipeline` — Brief → Plan → Script → Critic → Revision prototype.
 - `tools/ci` — the quality gate. `docs/engineering/QUALITY_GATES.md` explains it.
-- Python 3.13+, standard `unittest`; dependencies in `requirements-*.txt`.
+- Python 3.13+, standard `unittest`; dependencies in `requirements-*.txt` (install all of
+  them; CI does). A new third-party import needs a requirements entry in the same change,
+  otherwise CI fails on import.
