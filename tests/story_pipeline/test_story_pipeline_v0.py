@@ -473,6 +473,24 @@ class EndToEndTests(unittest.TestCase):
             self.assertEqual(second["brief_sources"], {"1": "memory", "2": "memory", "3": "memory"})
             self.assertNotIn("brief", [c["stage"] for c in again.calls])
 
+    def test_memory_brief_failing_current_checks_is_regenerated(self):
+        scope = load_scope(DEFAULT_MANIFEST, (1, 1))
+        chapter = scope.chapters[0]
+        with tempfile.TemporaryDirectory() as tmp:
+            memory = StoryMemory(Path(tmp) / "memory", scope.story_id)
+            stale = brief_json(1)
+            stale["events"] = stale["events"][:2]  # written before the granularity rule existed
+            memory.put_brief(1, chapter.version, stages.brief_fingerprint(test_profile()), stale, "old-model")
+            client = ScriptedLLMClient(FakeModel())
+            manifest = run(client, scope, test_profile(), Path(tmp) / "run", memory=memory)
+            self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
+            self.assertEqual(manifest["brief_sources"], {"1": "model (memory stale)"})
+            self.assertIn("needs at least 5 events", manifest["stale_memory"]["1"][0])
+            self.assertEqual([c["stage"] for c in client.calls][0], "brief")
+            again = ScriptedLLMClient(FakeModel())  # the regenerated brief is valid and reused
+            reused = run(again, scope, test_profile(), Path(tmp) / "run2", memory=memory)
+            self.assertEqual(reused["brief_sources"], {"1": "memory"})
+
     def test_cli_episode_mode(self):
         with tempfile.TemporaryDirectory() as tmp, \
                 mock.patch("tools.story_pipeline.llm.GeminiLLMClient",

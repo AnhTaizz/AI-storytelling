@@ -266,13 +266,20 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
             progress(f"brief: chapter {chapter.order}")
 
             def produce(chapter: Chapter = chapter) -> Dict[str, Any]:
+                stale: List[str] = []
                 if memory is not None:
                     stored = memory.get_brief(chapter.order, chapter.version, fingerprint)
-                    if stored is not None:
+                    # A stored brief must still pass today's checks: validators added after it
+                    # was written (live run 6 reused a brief the new hedge check would reject).
+                    stale = stages.brief_semantic_errors(stored, chapter, scope.source_language,
+                                                         profile.brief_language) if stored is not None else []
+                    if stored is not None and not stale:
                         manifest["brief_sources"][str(chapter.order)] = "memory"
                         return stored
+                    if stale:
+                        manifest.setdefault("stale_memory", {})[str(chapter.order)] = stale[:5]
                 brief = stages.run_brief(client, scope, chapter, profile, all_briefs, facts, log, max_repairs)
-                manifest["brief_sources"][str(chapter.order)] = "model"
+                manifest["brief_sources"][str(chapter.order)] = "model (memory stale)" if stale else "model"
                 if memory is not None:
                     memory.put_brief(chapter.order, chapter.version, fingerprint, brief,
                                      getattr(client, "name", "unknown"))

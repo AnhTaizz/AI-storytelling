@@ -265,6 +265,12 @@ Manual check of v2 found two kinds of remaining defect:
 
 Brief fidelity now varies more from run to run than the script stage does. The next step is to check briefs against the source, for example by flagging facts whose quoted sentence carries a hedging marker (らしい, そうだ, ように見え, 噂) when the fact text has no Vietnamese hedge.
 
+**2026-11-13, run 6.** The run COMPLETED in 9 calls and 366 s. The audit found 12 issues in v1 and 1 in v2.
+
+The run did **not** exercise the new brief hedge check. Chapter 1's brief was served from story memory, because the brief prompt, schema and language had not changed, so it was run 5's brief with the hearsay still stated as fact. Validators added after a brief was stored never saw it.
+
+Fix: a brief read from memory is re-validated with the current checks before it is reused. If it fails, it is regenerated; the manifest records `brief_sources` = `model (memory stale)` and the reasons under `stale_memory`.
+
 ## Known limits
 
 - Brief paraphrase quality is not measured against gold. Quotes pin the evidence, but a

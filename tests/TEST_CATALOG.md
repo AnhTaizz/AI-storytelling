@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 8 — test files: 52 — test functions: 968
+Suites: 8 — test files: 52 — test functions: 969
 
 ## canonical_story
 
@@ -1166,7 +1166,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `LexiconFileTests.test_unknown_language_has_no_lexicon`
 - `MatchingTests.test_concepts_found_per_language`
 
-### test_story_pipeline_v0 (29)
+### test_story_pipeline_v0 (30)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
 
 - `test_profile`
@@ -1192,6 +1192,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `FactsTests.test_valid_and_invalid`
 - `EndToEndTests.test_full_pipeline_with_revision`
 - `EndToEndTests.test_episode_with_memory_recap`
+- `EndToEndTests.test_memory_brief_failing_current_checks_is_regenerated`
 - `EndToEndTests.test_cli_episode_mode`
 - `EndToEndTests.test_plan_may_call_back_to_recap_but_must_cover_episode`
 - `EndToEndTests.test_stage_failure_is_recorded`
