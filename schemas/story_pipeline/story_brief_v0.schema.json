@@ -1,0 +1,227 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "story_pipeline/story_brief_v0",
+  "title": "Chapter Story Brief v0",
+  "type": "object",
+  "required": [
+    "chapter_order",
+    "chapter_summary",
+    "characters",
+    "relationships",
+    "events",
+    "unknowns",
+    "forbidden_inferences",
+    "ending_state"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "chapter_order": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "chapter_summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "characters": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "romanized_name",
+          "aliases",
+          "facts"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^CH\\d+$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "romanized_name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "facts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "text",
+                "evidence"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "evidence": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "pattern": "^\\d+\\.\\d+$"
+                  },
+                  "description": "Source passage ids such as \"1.12\" that establish the item."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "relationships": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "between",
+          "state",
+          "evidence"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "between": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "string",
+              "pattern": "^CH\\d+$"
+            }
+          },
+          "state": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^\\d+\\.\\d+$"
+            },
+            "description": "Source passage ids such as \"1.12\" that establish the item."
+          }
+        }
+      }
+    },
+    "events": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "summary",
+          "participants",
+          "location",
+          "importance",
+          "motivation",
+          "consequence",
+          "evidence"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^E\\d+$"
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          },
+          "participants": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^CH\\d+$"
+            }
+          },
+          "location": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "importance": {
+            "enum": [
+              "CORE",
+              "SUPPORTING",
+              "MINOR"
+            ]
+          },
+          "motivation": {
+            "type": "object",
+            "required": [
+              "text",
+              "status"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "text": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "status": {
+                "enum": [
+                  "EXPLICIT",
+                  "SUPPORTED_INFERENCE",
+                  "REPORTED",
+                  "UNKNOWN"
+                ]
+              }
+            }
+          },
+          "consequence": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^\\d+\\.\\d+$"
+            },
+            "description": "Source passage ids such as \"1.12\" that establish the item."
+          }
+        }
+      }
+    },
+    "unknowns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "forbidden_inferences": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ending_state": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

@@ -1,0 +1,16 @@
+# Narrative Profile used by the M1 runs (casual spoken Vietnamese, young audience).
+# A profile, not a standard: see Script Quality Contract v0, section 3.
+profile_id: VI_YOUTUBE_CASUAL_V0
+target_language: vi
+brief_language: vi
+audience: "Khán giả YouTube Việt Nam 15-25 tuổi"
+narration: "Người kể chuyện ngôi thứ ba, giọng kể chuyện nói tự nhiên như đang trò chuyện"
+tone: "Gần gũi, hơi dí dỏm, nhưng tôn trọng cảm xúc của nhân vật"
+humor_level: light
+commentary_intensity: medium
+hook_style: curiosity-first
+length_words:
+  min: 900
+  max: 1100
+call_to_action: false
+name_policy: "Dùng tên phiên âm Latin (ví dụ: Amane, Mahiru, Fujimiya, Shiina). Không dùng chữ Nhật (kanji/kana) trong kịch bản."

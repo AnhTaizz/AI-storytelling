@@ -103,6 +103,8 @@ Implemented and frozen:
 - Canonical Story Model v0: schema, predicate registry, conformance validator and reference as-of projection (DEC-016).
 - Light Novel ingestion: the M3 reference ingestion adapter is implemented and frozen as the validated reference implementation for `LIGHT_NOVEL_INGESTION/v0` (DEC-018).
 
+Prototype (not frozen, not a milestone completion): `STORY_PIPELINE_PROTOTYPE/v0` (2026-11-13) runs Story Brief → Narrative Plan → Script → claim-level Critic → Revision end to end from M3-ingested chapters, with validation-feedback repair and an automated gate pre-check against `SCRIPT_QUALITY_CONTRACT/v0`. It accepts future M4 output through the `story_facts/v0` seam. Not yet run against a live model. See `docs/research/pipeline/STORY_PIPELINE_PROTOTYPE_V0.md`.
+
 Story Extraction now has research-only validation/runtime tooling and the additive `STORY_EXTRACTION_DRAFT_V1` deterministic compiler prototype (M4-04B3A). No extraction model or end-to-end extractor is selected, locked, or production-qualified. Later application pipeline stages remain unimplemented.
 
 Not yet implemented:
