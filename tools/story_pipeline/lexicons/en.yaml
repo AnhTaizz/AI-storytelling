@@ -1,0 +1,18 @@
+# English lexicon (for English sources, briefs or scripts).
+language: en
+word_boundaries: true
+strength:
+  degree_extreme: [extremely, incredibly, utterly]
+  completeness: [completely, totally, entirely, from head to toe]
+  quantity_large: [countless, a lot of, lots of]
+  universality: [everyone, everybody, all of them]
+  frequency_always: [always, never, constantly]
+  certainty: [certainly, definitely, surely]
+  firmness: [firmly, flatly, adamantly]
+  reputation: [nickname, famous]
+  intensity_fill: [full of, filled with]
+hedge:
+  reported: [reportedly, rumor, rumour, rumored, said to, supposedly, apparently]
+  appearance: [seems, seemed, appears, appeared, looked like, as if]
+  speculation: [maybe, perhaps, probably, might]
+  metaphor: [likened, metaphor, compared to, like an]

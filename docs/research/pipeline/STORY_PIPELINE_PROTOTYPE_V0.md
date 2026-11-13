@@ -83,6 +83,28 @@ Limits: the roster merge is name-based (two people with the same name would merg
 person with no shared name across chapters would split); memory stores briefs, not
 canonical assertions, until M4 output can be projected in through `story_facts/v0`.
 
+## Languages
+
+The pipeline is meant to work for any source language (`source_language` in the M3 manifest), any brief language and any script language (both set in the Narrative Profile). Prompts are written in English and name the languages explicitly; the model does the translating.
+
+The deterministic checks that depend on words read them from **concept-keyed lexicons** in `tools/story_pipeline/lexicons/<iso code>.yaml`. Each file maps the same concept ids, defined in `tools/story_pipeline/lexicon.py`, to the phrases of that language:
+
+| Kind | Concepts | Used by |
+|---|---|---|
+| `strength` | `degree_extreme`, `completeness`, `quantity_large`, `universality`, `frequency_always`, `certainty`, `firmness`, `reputation`, `intensity_fill` | **Strength audit:** a concept in an accepted script claim or paragraph must also be expressed in the cited brief items |
+| `hedge` | `reported`, `appearance`, `speculation`, `metaphor` | **Brief hedge check:** when the source sentence a brief item quotes carries one of these, outside dialogue, the item must carry a hedge in the brief language. For a metaphor the hedge must itself be a metaphor marker. |
+
+Because the checks compare concepts, the script and the brief may be in different languages. For example, a Vietnamese "vô cùng" is supported by an English brief's "extremely".
+
+Lexicons exist for **vi**, **ja** and **en**.
+- **Missing lexicon:** when a run involves a language without one, the affected checks do not run. The run manifest (`language_checks`) and `report.md` say so explicitly; nothing is skipped silently.
+- **Adding a language:** add one YAML file containing every concept. `tests/story_pipeline/test_lexicon.py` validates every file it finds: all concepts present, lowercase phrases, and no phrase listed under two concepts. Spaced languages set `word_boundaries: true`; languages written without spaces, such as ja, zh and th, set it to `false`.
+- **Dialogue detection** uses quote characters (「」『』“”"" «»), not words, so it is language-independent.
+
+Replay on the saved live briefs (ja → vi):
+- Run 2's and run 5's hearsay facts are flagged: 「らしく」 for the confessions and 「…そうだ」 for the PE performance.
+- Run 3's brief is clean. Its only candidate was a 「だろう」 inside Amane's own line, which the dialogue rule excludes.
+
 ## Integration seam for M4: `story_facts/v0`
 
 `tools/story_pipeline/facts.py` defines a small format (facts with kind, epistemic status

@@ -1,0 +1,19 @@
+# Japanese lexicon (source language of the sample corpus). Japanese has no spaces, so
+# phrases are matched as substrings.
+language: ja
+word_boundaries: false
+strength:
+  degree_extreme: [非常に, とても, 極めて, すごく]
+  completeness: [完全に, 全く, 全身]
+  quantity_large: [無数, たくさん]
+  universality: [誰もが, 皆, みんな]
+  frequency_always: [いつも, 常に, 決して]
+  certainty: [絶対, 必ず, 間違いなく]
+  firmness: [きっぱり, 断固]
+  reputation: [あだ名, 有名]
+  intensity_fill: [満ちた, あふれ]
+hedge:
+  reported: [らしい, らしく, らしかった, そうだ, そうで, 噂, と言われ, とのこと]
+  appearance: [ように見え, ようだ, みたいだ, 気がする]
+  speculation: [かもしれない, だろう, はずだ, 恐らく, おそらく, 多分]
+  metaphor: [比喩, まるで, のような]

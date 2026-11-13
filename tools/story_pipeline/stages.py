@@ -8,10 +8,10 @@ import json
 import re
 from pathlib import Path
 from string import Template
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 from tools.story_memory.memory_v0 import recap_event_refs
-from tools.story_pipeline import checks
+from tools.story_pipeline import checks, lexicon
 from tools.story_pipeline.facts import StoryFacts
 from tools.story_pipeline.llm import CallLog, LLMClient, run_json_stage
 from tools.story_pipeline.profile import LANGUAGE_NAMES, NarrativeProfile
@@ -62,7 +62,8 @@ def dump(obj: Any) -> str:
 # --------------------------------------------------------------------------- briefs
 
 
-def brief_semantic_errors(brief: Dict[str, Any], chapter: Chapter) -> List[str]:
+def brief_semantic_errors(brief: Dict[str, Any], chapter: Chapter, source_language: Optional[str] = None,
+                          brief_language: Optional[str] = None) -> List[str]:
     errors: List[str] = []
     if brief["chapter_order"] != chapter.order:
         errors.append(f"chapter_order must be {chapter.order}")
@@ -106,12 +107,74 @@ def brief_semantic_errors(brief: Dict[str, Any], chapter: Chapter) -> List[str]:
             errors.append("closing_hook: a closing hook needs a verbatim quote and its evidence passages")
         else:
             check_evidence("closing_hook", hook["evidence"], hook["quote"])
+    if source_language and brief_language:
+        errors += brief_hedge_errors(brief, chapter, source_language, brief_language)
     needed = min_events(len(chapter.passages))
     if len(brief["events"]) < needed:
         errors.append(f"events: a chapter of {len(chapter.passages)} passages needs at least {needed} events "
                       f"at the level of single actions and dialogue turns; you listed {len(brief['events'])}. "
                       f"Split merged events: each refusal, offer, decision, reveal or change of place is "
                       f"its own event")
+    return errors
+
+
+_SOURCE_SENTENCE = re.compile(r"[^.!?。！？]+[.!?。！？]*")
+# Quoted speech in common scripts: Japanese brackets, curly and straight quotes, guillemets.
+_DIALOGUE = re.compile(r"「[^」]*」|『[^』]*』|“[^”]*”|\"[^\"]*\"|«[^»]*»")
+
+
+def _quoted_sentences(quote: str, passages: Sequence[str]) -> str:
+    """The source sentence(s) a quote was taken from (whitespace-insensitive)."""
+    needle = _squash(quote).strip("「」『』\"'")
+    for text in passages:
+        if needle and needle in _squash(text):
+            hits = [m.group(0) for m in _SOURCE_SENTENCE.finditer(text)
+                    if (lambda sq: sq and (needle in sq or sq in needle))(_squash(m.group(0)))]
+            return " ".join(hits) or text
+    return ""
+
+
+def brief_hedge_errors(brief: Dict[str, Any], chapter: Chapter, source_language: str,
+                       brief_language: str) -> List[str]:
+    """Brief items must keep the source's hedging.
+
+    When the sentence a brief item quotes marks its content as reported, apparent, guessed or
+    figurative (for example 「受けているらしく」), the item must carry a hedge of the same kind in
+    the brief language. Live run 5's brief turned that hearsay into "frequently receives
+    confessions", and every later stage treated it as fact. Language-specific phrases live in
+    the lexicons; when either language has none, nothing is checked (see audit_coverage).
+    """
+    src, dst = lexicon.load(source_language), lexicon.load(brief_language)
+    if src is None or dst is None:
+        return []
+    texts = {p.passage_id: p.text for p in chapter.passages}
+    items = []
+    for character in brief["characters"]:
+        for index, fact in enumerate(character["facts"]):
+            items.append((f"characters {character['id']} facts[{index}]", fact["text"], fact["quote"],
+                          fact["evidence"]))
+    for index, rel in enumerate(brief["relationships"]):
+        items.append((f"relationships[{index}]", rel["state"], rel["quote"], rel["evidence"]))
+    for event in brief["events"]:
+        text = " ".join([event["summary"], event.get("consequence") or "", event["motivation"].get("text") or ""])
+        items.append((f"event {event['id']}", text, event["quote"], event["evidence"]))
+    errors = []
+    for where, text, quote, evidence in items:
+        sentence = _quoted_sentences(quote, [texts[e] for e in evidence if e in texts])
+        # Hedges inside dialogue are the character's way of speaking, not the narrator's
+        # uncertainty (run 3: 「…気になるだろう」), so quoted speech is ignored.
+        source_hedges = src.find(_DIALOGUE.sub(" ", sentence), "hedge")
+        if not source_hedges:
+            continue
+        kinds = {concept for concept, _ in source_hedges}
+        rendered = dst.concepts(text, "hedge")
+        required = {"metaphor"} if "metaphor" in kinds else set(lexicon.HEDGE_CONCEPTS)
+        if rendered & required:
+            continue
+        examples = [p for c in sorted(kinds) for p in dst.phrases["hedge"].get(c, ())[:2]]
+        errors.append(f"{where}: the quoted source marks this as {sorted(kinds)} "
+                      f"({', '.join(sorted({p for _, p in source_hedges}))}); keep that in the brief text "
+                      f"(for example: {', '.join(examples)}) instead of stating it as plain fact")
     return errors
 
 
@@ -169,7 +232,8 @@ def run_brief(client: LLMClient, scope: StoryScope, chapter: Chapter, profile: N
                   chapter_title=chapter.title, known_characters=known_characters_text(earlier_briefs),
                   facts_block=facts_block, chapter_text=chapter.render())
     return run_json_stage(client, stage="brief", system=system, user=user, schema=schema,
-                          semantic_check=lambda b: brief_semantic_errors(b, chapter),
+                          semantic_check=lambda b: brief_semantic_errors(b, chapter, scope.source_language,
+                                                                         profile.brief_language),
                           max_repairs=max_repairs, log=log, request_suffix=f"ch{chapter.order}")
 
 
@@ -364,13 +428,6 @@ def critic_density_errors(critic: Dict[str, Any], units: List[Dict[str, str]]) -
     return errors
 
 
-# Words that raise degree, frequency, scope, certainty or reputation in Vietnamese narration.
-# A supported claim containing one of them must find the same word in the brief item it cites.
-STRENGTH_MARKERS = (
-    "vô cùng", "cực kỳ", "cực kì", "hoàn toàn", "tuyệt đối", "rất nhiều", "vô số", "mọi người",
-    "ai ai", "ai cũng", "tất cả mọi", "luôn luôn", "lúc nào cũng", "thường xuyên", "không bao giờ",
-    "chưa bao giờ", "chắc chắn", "nhất định", "toàn thân", "từ đầu đến chân", "biệt danh",
-)
 SUPPORTED_CLAIM_TYPES = {"SUPPORTED_FACT", "SUPPORTED_INFERENCE", "ATTRIBUTED_REPORT"}
 
 
@@ -392,71 +449,95 @@ def brief_item_texts(briefs: Sequence[Dict[str, Any]], recap: Optional[Dict[str,
     return texts
 
 
+def _strength_finding(unit_id: str, claim: str, refs: List[str], phrases: List[Tuple[str, str]],
+                      source: str) -> Dict[str, Any]:
+    words = [phrase for _, phrase in phrases]
+    return {
+        "unit_id": unit_id, "claim": claim,
+        "claim_type": "STRENGTHENED_STORY_CLAIM", "failure_category": "EPISTEMIC_ERROR",
+        "severity": "MEDIUM", "brief_refs": refs, "source": source,
+        "concepts": sorted({concept for concept, _ in phrases}), "phrases": words,
+        "explanation": f"Từ tăng mức độ {words} (khái niệm {sorted({c for c, _ in phrases})}) không có "
+                       f"trong mục brief được trích ({', '.join(refs)}).",
+        "suggested_fix": "Viết lại đúng mức độ của brief, bỏ hoặc làm nhẹ từ: " + ", ".join(words),
+    }
+
+
 def strength_audit(critic: Dict[str, Any], briefs: Sequence[Dict[str, Any]],
                    recap: Optional[Dict[str, Any]] = None,
-                   units: Optional[Sequence[Dict[str, str]]] = None) -> List[Dict[str, Any]]:
+                   units: Optional[Sequence[Dict[str, str]]] = None,
+                   script_language: str = "vi", brief_language: Optional[str] = None) -> List[Dict[str, Any]]:
     """Deterministic second opinion on claims the critic accepted.
 
-    In live run 3 the critic accepted "everyone calls her by the nickname Angel" (brief:
-    "likened to an angel") and "his guilt eased a lot" (brief: "eased"). Such claims are
-    returned as STRENGTHENED_STORY_CLAIM findings so they reach the revision step.
+    Works on language-independent concepts (tools/story_pipeline/lexicon.py): a strengthening
+    concept found in an accepted claim (script language) must also be expressed in the brief
+    items it cites (brief language, which may differ). In live run 3 the critic accepted
+    "everyone calls her by the nickname Angel" against "likened to an angel" and "eased a
+    lot" against "eased". Returns [] when either language has no lexicon; callers report that
+    through `audit_coverage`.
     """
+    script_lex, brief_lex = lexicon.load(script_language), lexicon.load(brief_language or script_language)
+    if script_lex is None or brief_lex is None:
+        return []
     texts = brief_item_texts(briefs, recap)
+
+    def unsupported(text: str, refs: Sequence[str]) -> List[Tuple[str, str]]:
+        cited = brief_lex.concepts(" ".join(texts.get(ref, "") for ref in refs), "strength")
+        return [(c, p) for c, p in script_lex.find(text, "strength") if c not in cited]
+
     findings = []
     for unit in critic["units"]:
         for claim in unit["claims"]:
             if claim["claim_type"] not in SUPPORTED_CLAIM_TYPES or not claim["brief_refs"]:
                 continue
-            cited = " ".join(texts.get(ref, "") for ref in claim["brief_refs"]).casefold()
-            text = claim["claim"].casefold()
-            extra = [m for m in STRENGTH_MARKERS if m in text and m not in cited]
+            extra = unsupported(claim["claim"], claim["brief_refs"])
             if extra:
-                findings.append({
-                    "unit_id": unit["unit_id"], "claim": claim["claim"],
-                    "claim_type": "STRENGTHENED_STORY_CLAIM", "failure_category": "EPISTEMIC_ERROR",
-                    "severity": "MEDIUM", "brief_refs": claim["brief_refs"], "source": "strength_audit",
-                    "explanation": f"Từ tăng mức độ {extra} không có trong mục brief được trích "
-                                   f"({', '.join(claim['brief_refs'])}).",
-                    "suggested_fix": "Viết lại đúng mức độ của brief, bỏ hoặc làm nhẹ từ: " + ", ".join(extra),
-                })
+                findings.append(_strength_finding(unit["unit_id"], claim["claim"], claim["brief_refs"],
+                                                  extra, "strength_audit"))
     if units is not None:
-        findings += _unit_text_audit(critic, units, texts, findings)
+        findings += _unit_text_audit(critic, units, findings, unsupported)
     return findings
 
 
-_SENTENCE = re.compile(r"[^.!?…]*[.!?…]?")
+def audit_coverage(script_language: str, brief_language: str, source_language: str) -> Dict[str, Any]:
+    """Which deterministic language checks can run, so a missing lexicon is reported, not silent."""
+    missing = sorted(lexicon.missing_languages(script_language, brief_language, source_language))
+    return {
+        "strength_audit": not ({script_language, brief_language} & set(missing)),
+        "brief_hedge_check": not ({brief_language, source_language} & set(missing)),
+        "missing_lexicons": missing,
+        "available_lexicons": lexicon.available_languages(),
+    }
 
 
-def _unit_text_audit(critic: Dict[str, Any], units: Sequence[Dict[str, str]], texts: Dict[str, str],
-                     already: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+_SENTENCE = re.compile(r"[^.!?…。！？]*[.!?…。！？]?")
+
+
+def _unit_text_audit(critic: Dict[str, Any], units: Sequence[Dict[str, str]], already: List[Dict[str, Any]],
+                     unsupported: Callable[[str, Sequence[str]], List[Tuple[str, str]]]) -> List[Dict[str, Any]]:
     """Check the script's own wording, not just the critic's paraphrase of it.
 
     In live run 4 the script said "vô cùng áy náy" (extremely guilty) but the critic's claim
-    read "khó chịu và áy náy", so the claim-level audit never saw the intensifier. Here every
-    marker in a paragraph must occur in some brief item cited by that paragraph's claims;
-    paragraphs that cite nothing (pure commentary) are not judged.
+    read "khó chịu và áy náy", so the claim-level audit never saw the intensifier. Every
+    strengthening concept in a paragraph must occur in some brief item cited by that
+    paragraph's claims; paragraphs that cite nothing (pure commentary) are not judged.
     """
     unit_text = {u["unit_id"]: u["text"] for u in units}
-    flagged = {(f["unit_id"], m) for f in already for m in STRENGTH_MARKERS if m in f["explanation"]}
+    flagged = {(f["unit_id"], c) for f in already for c in f["concepts"]}
     findings = []
     for unit in critic["units"]:
         refs = sorted({ref for claim in unit["claims"] for ref in claim["brief_refs"]})
         text = unit_text.get(unit["unit_id"], "")
         if not refs or not text:
             continue
-        cited = " ".join(texts.get(ref, "") for ref in refs).casefold()
-        for marker in STRENGTH_MARKERS:
-            if marker in text.casefold() and marker not in cited and (unit["unit_id"], marker) not in flagged:
-                sentence = next((m.group(0).strip() for m in _SENTENCE.finditer(text)
-                                 if marker in m.group(0).casefold()), text[:200])
-                findings.append({
-                    "unit_id": unit["unit_id"], "claim": sentence,
-                    "claim_type": "STRENGTHENED_STORY_CLAIM", "failure_category": "EPISTEMIC_ERROR",
-                    "severity": "MEDIUM", "brief_refs": refs, "source": "strength_audit_text",
-                    "explanation": f"Từ tăng mức độ ['{marker}'] trong câu chữ kịch bản không có trong các mục "
-                                   f"brief mà đoạn này trích ({', '.join(refs)}).",
-                    "suggested_fix": f"Viết lại đúng mức độ của brief, bỏ hoặc làm nhẹ từ: {marker}",
-                })
+        for concept, phrase in unsupported(text, refs):
+            if (unit["unit_id"], concept) in flagged:
+                continue
+            flagged.add((unit["unit_id"], concept))
+            sentence = next((m.group(0).strip() for m in _SENTENCE.finditer(text)
+                             if phrase in m.group(0).casefold()), text[:200])
+            findings.append(_strength_finding(unit["unit_id"], sentence, refs, [(concept, phrase)],
+                                              "strength_audit_text"))
     return findings
 
 

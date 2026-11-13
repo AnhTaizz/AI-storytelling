@@ -130,6 +130,15 @@ STATUS_VI = {"PASS": "ĐẠT", "FLAG": "CẦN XEM", "FAIL": "KHÔNG ĐẠT",
              "NOT_CHECKED": "CHƯA KIỂM TRA", "PLAN_ONLY": "CHỈ KIỂM Ở PLAN"}
 
 
+def _language_line(coverage: Optional[Dict[str, Any]]) -> str:
+    if not coverage or not coverage["missing_lexicons"]:
+        return "- Kiểm tra theo ngôn ngữ: đầy đủ (mức độ, rào đón trong brief)"
+    return (f"- Kiểm tra theo ngôn ngữ: **THIẾU** từ điển cho {coverage['missing_lexicons']} — "
+            f"kiểm tra mức độ: {'có' if coverage['strength_audit'] else 'KHÔNG chạy'}, "
+            f"rào đón trong brief: {'có' if coverage['brief_hedge_check'] else 'KHÔNG chạy'} "
+            f"(thêm tools/story_pipeline/lexicons/<mã>.yaml)")
+
+
 def report_markdown(manifest: Dict[str, Any], report: Dict[str, Any]) -> str:
     lines = [
         f"# Báo cáo chạy pipeline — {manifest['run_id']}",
@@ -140,6 +149,7 @@ def report_markdown(manifest: Dict[str, Any], report: Dict[str, Any]) -> str:
         f"{manifest['profile']['min_words']}–{manifest['profile']['max_words']} từ",
         f"- Số lần gọi mô hình: {manifest['model_calls']} — thời gian: {manifest['seconds']} giây",
         f"- Trạng thái: **{manifest['status']}**",
+        _language_line(manifest.get("language_checks")),
         "",
         "> Đây là kiểm tra tự động sơ bộ, không phải verdict chính thức theo "
         "`SCRIPT_QUALITY_CONTRACT/v0`. Critic là một mô hình và có thể bỏ sót lỗi.",
@@ -228,6 +238,8 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         "settings": {"max_repairs": max_repairs, "revision_rounds": revision_rounds,
                      "revise_severities": list(revise_severities), "stop_after": stop_after},
         "prompt_fingerprints": stages.prompt_fingerprints(),
+        "language_checks": stages.audit_coverage(profile.target_language, profile.brief_language,
+                                                 scope.source_language),
         "versions": [],
         "status": "RUNNING",
     }
@@ -294,7 +306,8 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                 critic = cached(out_dir / f"critic_v{version}.json", resume,
                                 lambda: stages.run_critic(client, scope, briefs, units, profile,
                                                           log, max_repairs, version, recap))
-                audit = stages.strength_audit(critic, briefs, recap, units)
+                audit = stages.strength_audit(critic, briefs, recap, units, profile.target_language,
+                                              profile.brief_language)
                 write_json(out_dir / f"strength_audit_v{version}.json", audit)
                 problems = stages.findings_for_revision(critic, SEVERITY_ORDER) + audit
                 check = checks.check_script(script, profile.min_words, profile.max_words,
@@ -321,7 +334,8 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         (out_dir / "script_final.md").write_text(script_markdown(script, f"final v{version}"),
                                                  encoding="utf-8")
         final_units = checks.split_units(checks.script_text(script))
-        final_audit = stages.strength_audit(critic, briefs, recap, final_units) if critic is not None else []
+        final_audit = (stages.strength_audit(critic, briefs, recap, final_units, profile.target_language,
+                                             profile.brief_language) if critic is not None else [])
         report = gate_report(critic, final_check, briefs, final_audit)
         report["final_version"] = version
         report["final_check"] = final_check

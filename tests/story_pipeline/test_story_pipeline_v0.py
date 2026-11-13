@@ -29,7 +29,7 @@ from tools.story_pipeline.profile import load_profile  # noqa: E402
 from tools.story_pipeline import run_pipeline  # noqa: E402
 from tools.story_pipeline.run_pipeline import DEFAULT_MANIFEST, gate_report, run  # noqa: E402
 from tools.story_memory.memory_v0 import StoryMemory  # noqa: E402
-from tools.story_pipeline.source import StoryScope, load_scope, parse_range  # noqa: E402
+from tools.story_pipeline.source import Chapter, Passage, StoryScope, load_scope, parse_range  # noqa: E402
 
 SECTION_1 = ("Một buổi chiều mưa, Amane đi ngang qua công viên và thấy Mahiru ngồi một mình "
              "trên xích đu, người ướt sũng.")
@@ -290,6 +290,41 @@ class SemanticValidationTests(unittest.TestCase):
         plan["closing_hook"] = "Kết bằng câu: cậu đã nghĩ vậy, vào lúc đó."
         self.assertEqual(stages.plan_semantic_errors(plan, [hooked], test_profile()), [])
 
+    def test_brief_keeps_source_hedging_in_any_language_pair(self):
+        """A brief item quoting hearsay, appearance, guesswork or a metaphor must keep it."""
+        def chapter_with(text):
+            passage = Passage("1.1", text)
+            return Chapter(1, "doc", "t", (passage,) * 1)
+
+        def brief_with(fact_text, quote):
+            brief = brief_json(1, ["1.1"], quote)
+            brief["characters"][0]["facts"] = [{"text": fact_text, "evidence": ["1.1"], "quote": quote}]
+            brief["relationships"] = []
+            brief["events"] = [dict(e, quote=quote, evidence=["1.1"], summary="Gặp nhau") for e in brief["events"]]
+            return brief
+
+        hearsay = "彼女は学年問わず告白を受けているらしく、困っている。"
+        dialogue = "「この雨の中なら気になるだろう」と彼は言った。"
+        metaphor = "天使というのは勿論比喩である。"
+        cases = [
+            ("hearsay stated as fact", hearsay, "Cô thường xuyên nhận lời tỏ tình", "ja", "vi", 1),
+            ("hearsay kept", hearsay, "Nghe nói cô nhận nhiều lời tỏ tình", "ja", "vi", 0),
+            ("hearsay kept in an English brief", hearsay, "She reportedly gets confessions", "ja", "en", 0),
+            ("hedge only inside dialogue", dialogue, "Amane nói ai cũng sẽ lo", "ja", "vi", 0),
+            ("metaphor needs a metaphor", metaphor, "Cô có vẻ là thiên thần", "ja", "vi", 1),
+            ("metaphor kept", metaphor, "Cô được ví như thiên thần", "ja", "vi", 0),
+            ("no lexicon: not checked", hearsay, "Cô nhận lời tỏ tình", "xx", "vi", 0),
+        ]
+        for label, source, fact, src_lang, brief_lang, expected in cases:
+            with self.subTest(label):
+                quote = source[2:12]
+                errors = stages.brief_hedge_errors(brief_with(fact, quote), chapter_with(source), src_lang, brief_lang)
+                fact_errors = [e for e in errors if e.startswith("characters")]
+                self.assertEqual(len(fact_errors), expected, errors)
+        self.assertEqual(stages.audit_coverage("vi", "vi", "xx")["missing_lexicons"], ["xx"])
+        self.assertFalse(stages.audit_coverage("vi", "vi", "xx")["brief_hedge_check"])
+        self.assertTrue(stages.audit_coverage("vi", "vi", "xx")["strength_audit"])
+
     def test_critic_must_extract_claims_at_paragraph_density(self):
         paragraph = " ".join(["từ"] * 95)  # 95 words -> at least 3 claims
         units = checks.split_units(paragraph + "\n\nNgắn thôi.")
@@ -332,7 +367,7 @@ class SemanticValidationTests(unittest.TestCase):
         for text, refs, claim_type, expected in cases:
             with self.subTest(text=text, claim_type=claim_type):
                 findings = stages.strength_audit(critic_with(text, refs, claim_type), [brief], recap)
-                markers = [m for f in findings for m in stages.STRENGTH_MARKERS if m in f["explanation"]]
+                markers = [m for f in findings for m in f["phrases"]]
                 self.assertEqual(sorted(markers), sorted(expected))
                 for finding in findings:
                     self.assertEqual((finding["severity"], finding["source"]), ("MEDIUM", "strength_audit"))
@@ -346,6 +381,13 @@ class SemanticValidationTests(unittest.TestCase):
                                                recap, units)[0]["source"], "strength_audit")  # no duplicate
         self.assertEqual(len(stages.strength_audit(critic_with("Cậu thấy vô cùng áy náy", ["c1.E1"]), [brief],
                                                    recap, units)), 1)
+        english_brief = json.loads(json.dumps(brief))
+        english_brief["events"][0]["summary"] = "Amane was extremely uneasy"
+        cross = stages.strength_audit(critic_with("Amane vô cùng áy náy", ["c1.E1"]), [english_brief],
+                                      script_language="vi", brief_language="en")
+        self.assertEqual(cross, [])  # degree_extreme is in the English brief too
+        self.assertEqual(stages.strength_audit(critic_with("Amane vô cùng áy náy", ["c1.E1"]), [brief],
+                                               script_language="xx"), [])  # no lexicon: not judged
         commentary = critic_with("Bình luận", [])
         self.assertEqual(stages.strength_audit(commentary, [brief], recap, units), [])  # cites nothing
         audited = gate_report(critic_with("Sự áy náy vơi đi rất nhiều", ["c1.E1"]),
