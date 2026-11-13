@@ -283,6 +283,24 @@ The run did **not** exercise the new brief hedge check. Chapter 1's brief was se
 
 Fix: a brief read from memory is re-validated with the current checks before it is reused. If it fails, it is regenerated; the manifest records `brief_sources` = `model (memory stale)` and the reasons under `stale_memory`.
 
+**2026-11-13, run 7 (memory re-validation and the brief hedge check, live).**
+
+The run COMPLETED in 7 calls and 397 s.
+
+- **Memory:** the stored chapter-1 brief from run 5 failed the current checks, with two hearsay facts (「そうだ」, 「らしく」). It was regenerated (`model (memory stale)`).
+- **First new brief:** rejected for three reasons:
+  - the metaphor 「比喩」 was stated as a nickname;
+  - the hearsay 「らしい」 was stated as fact;
+  - it listed 4 events where 5 are required.
+- **Second brief:** passed, with "được ví như Thiên sứ" (likened to an angel) and "nghe nói ... được tỏ tình" (said to receive confessions).
+- **Strength audit:** 9 findings in v1, 0 in v2. All automated gates passed.
+
+Manual check of the final script against the two defects that had persisted since run 2:
+- "everyone's nickname Angel" became "được ví như Thiên sứ";
+- confessions are now attributed with "Nghe nói".
+
+The closing hook is rendered faithfully ("Nhưng đó chỉ là những gì cậu nghĩ vào lúc ấy mà thôi"), and Amane is addressed with one pronoun throughout. Remaining small issue: Mahiru's hair is rendered as chestnut, where 亜麻色 means flaxen.
+
 ## Known limits
 
 - Brief paraphrase quality is not measured against gold. Quotes pin the evidence, but a
