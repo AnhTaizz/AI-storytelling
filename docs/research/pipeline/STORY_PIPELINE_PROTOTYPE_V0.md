@@ -161,6 +161,33 @@ Changes:
 - **Brief granularity (hard check):** a brief needs at least ⌈passages/15⌉ events, and never fewer than 2. The prompt now defines an event as one action or one dialogue turn, and asks for hearsay markers to be recorded as REPORTED.
 - **Critic density (soft check):** each paragraph needs at least one claim per 30 words unless the critic gives a no-claim reason. The prompt now lists the claim kinds to check separately: intensifiers, physical and emotional states, nicknames and reputation, and reported facts.
 
+**2026-11-13, run 3 (chapter 1, same chain, after the granularity and density fixes).**
+
+The run COMPLETED in 6 calls and 498 s.
+
+- **Brief:** 7 events instead of 2, including Mahiru's refusal (E5).
+  - The first attempt failed two checks. A `quote` stitched together from two passages was caught by the verbatim check, and the new minimum-event rule also fired.
+  - The repaired attempt passed both.
+- **Plan and critic v2:** both fell back to `gemini-3.5-flash` after 503 errors.
+- **Critic:** 37 claims instead of 23. The density soft check asked for more once.
+- **Script:** includes the refusal and the dialogue turns, and drops the hearsay about confessions.
+
+The critic again reported 0 problems. The manual check still found strengthening that the critic labelled SUPPORTED_FACT:
+
+| Script claim | Brief item it cited |
+|---|---|
+| "everyone calls her by the nickname Angel" | "likened to an angel" |
+| "the guilt eased a lot" | "eased" |
+| "the whisper was completely drowned out" | 「ほぼかき消される」: almost |
+
+The brief was right; the writer strengthened the wording and the critic let it through.
+
+**Strength audit (deterministic).** For every claim the critic accepts, each Vietnamese strengthening marker in the claim must also appear in the brief items the claim cites. The markers cover degree, frequency, scope, certainty, whole-body states and nicknames. Claims that fail become MEDIUM `STRENGTHENED_STORY_CLAIM` findings, which feed revision and the epistemic gate; they are also saved as `strength_audit_v*.json`.
+
+Replayed offline on the saved critic outputs:
+- **Run 2:** 6 flags, matching the manual findings ("utterly devastated", "freezing all over", "very often").
+- **Run 3:** 7 flags, covering all three items above. One flag is arguably strict: Mahiru "soaked all over" while sitting in the rain.
+
 ## Known limits
 
 - Brief paraphrase quality is not measured against gold. Quotes pin the evidence, but a

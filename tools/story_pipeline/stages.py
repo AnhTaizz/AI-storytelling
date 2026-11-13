@@ -354,6 +354,63 @@ def critic_density_errors(critic: Dict[str, Any], units: List[Dict[str, str]]) -
     return errors
 
 
+# Words that raise degree, frequency, scope, certainty or reputation in Vietnamese narration.
+# A supported claim containing one of them must find the same word in the brief item it cites.
+STRENGTH_MARKERS = (
+    "vô cùng", "cực kỳ", "cực kì", "hoàn toàn", "tuyệt đối", "rất nhiều", "vô số", "mọi người",
+    "ai ai", "ai cũng", "tất cả mọi", "luôn luôn", "lúc nào cũng", "thường xuyên", "không bao giờ",
+    "chưa bao giờ", "chắc chắn", "nhất định", "toàn thân", "từ đầu đến chân", "biệt danh",
+)
+SUPPORTED_CLAIM_TYPES = {"SUPPORTED_FACT", "SUPPORTED_INFERENCE", "ATTRIBUTED_REPORT"}
+
+
+def brief_item_texts(briefs: Sequence[Dict[str, Any]], recap: Optional[Dict[str, Any]] = None) -> Dict[str, str]:
+    """Ref ("c1.E3", "c1.CH2") -> the brief text a claim citing it may rely on."""
+    texts: Dict[str, str] = {}
+    for brief in briefs:
+        n = brief["chapter_order"]
+        for character in brief["characters"]:
+            parts = [character["name"], character["romanized_name"], *character["aliases"],
+                     *(f["text"] for f in character["facts"])]
+            texts[f"c{n}.{character['id']}"] = " ".join(parts)
+        for event in brief["events"]:
+            parts = [event["summary"], event.get("consequence") or "", event["motivation"].get("text") or ""]
+            texts[f"c{n}.{event['id']}"] = " ".join(parts)
+    for chapter in (recap or {}).get("chapters", []):
+        for event in chapter["core_events"]:
+            texts[event["ref"]] = event["summary"]
+    return texts
+
+
+def strength_audit(critic: Dict[str, Any], briefs: Sequence[Dict[str, Any]],
+                   recap: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    """Deterministic second opinion on claims the critic accepted.
+
+    In live run 3 the critic accepted "everyone calls her by the nickname Angel" (brief:
+    "likened to an angel") and "his guilt eased a lot" (brief: "eased"). Such claims are
+    returned as STRENGTHENED_STORY_CLAIM findings so they reach the revision step.
+    """
+    texts = brief_item_texts(briefs, recap)
+    findings = []
+    for unit in critic["units"]:
+        for claim in unit["claims"]:
+            if claim["claim_type"] not in SUPPORTED_CLAIM_TYPES or not claim["brief_refs"]:
+                continue
+            cited = " ".join(texts.get(ref, "") for ref in claim["brief_refs"]).casefold()
+            text = claim["claim"].casefold()
+            extra = [m for m in STRENGTH_MARKERS if m in text and m not in cited]
+            if extra:
+                findings.append({
+                    "unit_id": unit["unit_id"], "claim": claim["claim"],
+                    "claim_type": "STRENGTHENED_STORY_CLAIM", "failure_category": "EPISTEMIC_ERROR",
+                    "severity": "MEDIUM", "brief_refs": claim["brief_refs"], "source": "strength_audit",
+                    "explanation": f"Từ tăng mức độ {extra} không có trong mục brief được trích "
+                                   f"({', '.join(claim['brief_refs'])}).",
+                    "suggested_fix": "Viết lại đúng mức độ của brief, bỏ hoặc làm nhẹ từ: " + ", ".join(extra),
+                })
+    return findings
+
+
 def normalize_critic(critic: Dict[str, Any]) -> Dict[str, Any]:
     """Acceptable claim types carry no severity/category, whatever the model wrote."""
     for unit in critic["units"]:

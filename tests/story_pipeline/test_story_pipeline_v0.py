@@ -285,6 +285,38 @@ class SemanticValidationTests(unittest.TestCase):
                 if expected:
                     self.assertIn("P001: 95 words but only 1 claims", errors[0])
 
+    def test_strength_audit_flags_intensifiers_missing_from_cited_brief(self):
+        brief = brief_json(1)
+        brief["events"][0]["consequence"] = "Amane bớt áy náy"
+        brief["characters"][1]["facts"][:] = [{"text": "Được ví như thiên thần, vô cùng xinh đẹp",
+                                               "evidence": ["1.4"], "quote": "x"}]
+        recap = {"chapters": [{"core_events": [{"ref": "c0.E1", "summary": "Hai người chưa bao giờ nói chuyện"}]}]}
+
+        def critic_with(claim_text, refs, claim_type="SUPPORTED_FACT"):
+            return {"units": [{"unit_id": "P001", "no_claim_reason": None, "claims": [
+                {"claim": claim_text, "claim_type": claim_type, "failure_category": None, "severity": None,
+                 "brief_refs": refs, "explanation": "e", "suggested_fix": None}]}]}
+
+        cases = [
+            ("Sự áy náy vơi đi rất nhiều", ["c1.E1"], "SUPPORTED_FACT", ["rất nhiều"]),   # live run 3
+            ("Mọi người gọi cô bằng biệt danh Thiên sứ", ["c1.CH2"], "SUPPORTED_FACT", ["mọi người", "biệt danh"]),
+            ("Cô vô cùng xinh đẹp", ["c1.CH2"], "SUPPORTED_FACT", []),                    # brief has it too
+            ("Họ chưa bao giờ nói chuyện", ["c0.E1"], "SUPPORTED_FACT", []),              # recap memory has it
+            ("Cô vô cùng đau khổ", [], "SUPPORTED_FACT", []),                             # nothing cited: not judged
+            ("Cô vô cùng đau khổ", ["c1.E1"], "UNSUPPORTED_STORY_CLAIM", []),             # critic already flagged it
+        ]
+        for text, refs, claim_type, expected in cases:
+            with self.subTest(text=text, claim_type=claim_type):
+                findings = stages.strength_audit(critic_with(text, refs, claim_type), [brief], recap)
+                markers = [m for f in findings for m in stages.STRENGTH_MARKERS if m in f["explanation"]]
+                self.assertEqual(sorted(markers), sorted(expected))
+                for finding in findings:
+                    self.assertEqual((finding["severity"], finding["source"]), ("MEDIUM", "strength_audit"))
+        audited = gate_report(critic_with("Sự áy náy vơi đi rất nhiều", ["c1.E1"]),
+                              checks.check_script(SCRIPT, 20, 200, "vi"), [brief],
+                              stages.strength_audit(critic_with("Sự áy náy vơi đi rất nhiều", ["c1.E1"]), [brief]))
+        self.assertEqual(audited["gates"]["GATE_EPISTEMIC_INTEGRITY"]["status"], "FLAG")
+
     def test_critic_unit_mismatch(self):
         units = checks.split_units("a\n\nb")
         critic = {"units": [{"unit_id": "P001", "claims": [], "no_claim_reason": "none"}]}

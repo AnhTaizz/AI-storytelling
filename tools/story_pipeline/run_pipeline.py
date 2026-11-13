@@ -86,7 +86,8 @@ def coverage_gate(critic: Optional[Dict[str, Any]], briefs: Optional[Sequence[Di
 
 
 def gate_report(critic: Optional[Dict[str, Any]], check: Dict[str, Any],
-                briefs: Optional[Sequence[Dict[str, Any]]] = None) -> Dict[str, Any]:
+                briefs: Optional[Sequence[Dict[str, Any]]] = None,
+                audit: Sequence[Dict[str, Any]] = ()) -> Dict[str, Any]:
     findings: List[Dict[str, Any]] = []
     undetermined: List[Dict[str, Any]] = []
     claim_counts: Dict[str, int] = {}
@@ -98,6 +99,7 @@ def gate_report(critic: Optional[Dict[str, Any]], check: Dict[str, Any],
                     undetermined.append({"unit_id": unit["unit_id"], **claim})
                 elif claim["claim_type"] in stages.PROBLEM_TYPES:
                     findings.append({"unit_id": unit["unit_id"], **claim})
+    findings += list(audit)  # deterministic strength audit (stages.strength_audit)
 
     gates: Dict[str, Dict[str, Any]] = {}
     for gate, categories in GATES.items():
@@ -292,14 +294,17 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                 critic = cached(out_dir / f"critic_v{version}.json", resume,
                                 lambda: stages.run_critic(client, scope, briefs, units, profile,
                                                           log, max_repairs, version, recap))
-                problems = stages.findings_for_revision(critic, SEVERITY_ORDER)
+                audit = stages.strength_audit(critic, briefs, recap)
+                write_json(out_dir / f"strength_audit_v{version}.json", audit)
+                problems = stages.findings_for_revision(critic, SEVERITY_ORDER) + audit
                 check = checks.check_script(script, profile.min_words, profile.max_words,
                                             profile.target_language)
                 manifest["versions"].append({
                     "version": version, "word_count": check["word_count"],
-                    "problem_claims": len(problems),
+                    "problem_claims": len(problems), "strength_audit": len(audit),
                     "high_or_worse": sum(1 for p in problems if p["severity"] in ("CRITICAL", "HIGH"))})
-                to_fix = stages.findings_for_revision(critic, revise_severities)
+                to_fix = stages.findings_for_revision(critic, revise_severities) + \
+                    [f for f in audit if f["severity"] in revise_severities]
                 if stop_after == "critic" or not to_fix or version > revision_rounds:
                     break
                 version += 1
@@ -315,7 +320,8 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                                           profile.target_language)
         (out_dir / "script_final.md").write_text(script_markdown(script, f"final v{version}"),
                                                  encoding="utf-8")
-        report = gate_report(critic, final_check, briefs)
+        final_audit = stages.strength_audit(critic, briefs, recap) if critic is not None else []
+        report = gate_report(critic, final_check, briefs, final_audit)
         report["final_version"] = version
         report["final_check"] = final_check
         write_json(out_dir / "report.json", report)
