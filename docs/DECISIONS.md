@@ -692,3 +692,19 @@ Not frozen.
 The Script Quality evaluation contract belongs to M1 — Script Quality & Narrative Contract.
 
 Retrieval evaluation metrics remain an open design decision and must be defined by the relevant retrieval work no later than the milestone where they are needed for verification. They may be introduced earlier if an approved benchmark or research design requires them.
+
+---
+
+## DEC-019 — Automated Quality Gate for Agent-Written Changes
+
+STATUS: ACCEPTED (Project Owner approval of the quality-gate plan, 2026-11-13)
+
+DECISION:
+Every change is verified by one command, `python -m tools.ci.check`, run locally by agents and in CI on every pull request (`.github/workflows/ci.yml`).
+
+1. All test suites run, each in its own process. A test may be skipped for its environment only through `tests/environment_gates.yaml`, and only for allow-listed heavy modules (torch stack) or git-ignored private data. `--strict` turns every unmet gate into a failure for full local runs.
+2. A static test policy rejects shadowed test names, identical test bodies, `tools/` modules that no test imports, and a stale `tests/TEST_CATALOG.md`. Pre-existing gaps are recorded in `tools/ci/policy/*_baseline.txt`; baselines may only shrink.
+3. Protected paths (`tools/ci/policy/protected_paths.txt`: frozen M1–M3 layers, locked M4 interfaces, `benchmarks/`, `data/sample/`, the gate rules) are append-only. Modifying, deleting or renaming an existing protected file requires a change to this file in the same branch.
+4. Tracked files are scanned for credentials and local-only data. Lines changed under `tools/` must be at least 80% covered by tests in CI.
+5. Agent rules live in `CLAUDE.md`; a Claude Code hook (`.claude/hooks/guard_bash.py`) blocks pushes to `main`, force-pushes and commits of local-only files.
+6. `.gitattributes` checks out the two hash-bound M4 V1 files (`schemas/story_extraction/story_extraction_draft_v1.schema.json`, `tools/story_extraction/draft_compiler_v1.py`) with CRLF line endings. Their locked hashes were computed on CRLF working copies, so LF checkouts (Linux, macOS, CI) failed the bindings. Repository content is unchanged; only the checkout representation is pinned.

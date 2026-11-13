@@ -105,6 +105,8 @@ Implemented and frozen:
 
 Prototype (not frozen, not a milestone completion): `STORY_PIPELINE_PROTOTYPE/v0` (2026-11-13) runs Story Brief → Narrative Plan → Script → claim-level Critic → Revision end to end from M3-ingested chapters, with validation-feedback repair and an automated gate pre-check against `SCRIPT_QUALITY_CONTRACT/v0`. It accepts future M4 output through the `story_facts/v0` seam. Not yet run against a live model. See `docs/research/pipeline/STORY_PIPELINE_PROTOTYPE_V0.md`.
 
+Quality gate (DEC-019, 2026-11-13): `python -m tools.ci.check` runs compile, test policy (no shadowed or duplicated tests, no untested new modules, generated `tests/TEST_CATALOG.md`), every suite with declared environment gates, and repository guards (append-only protected paths, secret/private-data scan, changed-line coverage in CI). CI: `.github/workflows/ci.yml`. Agent rules: `CLAUDE.md`. See `docs/engineering/QUALITY_GATES.md`.
+
 Story Extraction now has research-only validation/runtime tooling and the additive `STORY_EXTRACTION_DRAFT_V1` deterministic compiler prototype (M4-04B3A). No extraction model or end-to-end extractor is selected, locked, or production-qualified. Later application pipeline stages remain unimplemented.
 
 Not yet implemented:

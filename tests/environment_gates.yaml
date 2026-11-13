@@ -1,0 +1,42 @@
+# Environment gates: the ONLY way a test may be skipped because of the environment.
+#
+# A gate names tests ("<suite>/<module>" or "<suite>/<module>.<Class>.<test>") and what
+# they need. When the need is not met, the runner reports the test as GATED (skipped,
+# with the reason) instead of running it. `python -m tools.ci.run_tests --strict` turns
+# unmet gates into failures, for a full local run on a machine that has everything.
+#
+# Policy (enforced by tools/ci/test_policy.py):
+# - requires_modules may only name modules in tools/ci/config.py OPTIONAL_HEAVY_MODULES.
+# - requires_paths must be git-ignored (private corpus, local artifacts), so a gate can
+#   never hide a test whose input is supposed to be in the repository.
+# - every gated test id must exist.
+# A failing test is never fixed by adding a gate.
+
+gates:
+  - tests:
+      - story_benchmark/test_dense_e5_small_v1
+      - story_benchmark/test_dense_e5_large_v1
+      - story_benchmark/test_dense_e5_mmr_v1
+      - story_benchmark/test_dense_e5_multiquery_v1
+      - story_benchmark/test_dense_e5_window_max_v1
+      - story_benchmark/test_bge_reranker_v2_m3_top30_v1
+    requires_modules: [torch, sentence_transformers, transformers]
+    reason: "local ML inference stack (CPU torch, sentence-transformers) is not installed"
+
+  - tests:
+      - story_benchmark/test_validate_independent_validation_fixture_v1
+    requires_paths:
+      - .local/story_integration/otonari_30ch/INDEPENDENT_VALIDATION_FIXTURE_V1/draft_probes.yaml
+    reason: "private 30-chapter validation fixture is local-only"
+
+  - tests:
+      - story_benchmark/test_km_consensus_rank_sum_v1.TestFullExperimentRun.test_real_artifacts_execution_and_determinism
+    requires_paths:
+      - .local/story_integration/otonari_30ch/LONG_RANGE_PROBE_V1/probes.yaml
+    reason: "private 30-chapter experiment artifacts are local-only"
+
+  - tests:
+      - story_ingestion/test_paragraph_pack_v1.TestParagraphPack.test_aggregate_failure_returns_false
+    requires_paths:
+      - data/sample/otonari_no_tenshi/wn_jp/raw/chapter_006.txt
+    reason: "chapters 6-30 of the private corpus are not tracked"

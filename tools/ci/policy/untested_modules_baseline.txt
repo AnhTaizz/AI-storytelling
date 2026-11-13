@@ -1,0 +1,10 @@
+# Existing gaps when the policy was adopted. This list may only shrink.
+tools.story_extraction.discover_gemini_smoke_model_v1_1
+tools.story_extraction.m4_04b2r_continuation_v2
+tools.story_extraction.prepare_m4_04b1d2_protocol_v1
+tools.story_extraction.prepare_m4_04b2_protocol_v1
+tools.story_extraction.prepare_m4_04b2r_continuation_v2
+tools.story_extraction.prepare_m4_04b3b2_dev2_protocol_v1
+tools.story_extraction.run_gemini_resilience_smoke_v1
+tools.story_extraction.run_gemini_resilience_smoke_v1_1
+tools.story_extraction.run_m4_04b2r_dev_predictions_v2

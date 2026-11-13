@@ -1,0 +1,2 @@
+schemas/story_extraction/story_extraction_draft_v1.schema.json eol=crlf
+tools/story_extraction/draft_compiler_v1.py eol=crlf
