@@ -493,6 +493,8 @@ class GeminiClientTests(unittest.TestCase):
                 failure = self.failures.get(kwargs["model"])
                 if isinstance(failure, list):  # a different status on each successive call
                     failure = failure.pop(0) if failure else None
+                if failure == "timeout":
+                    raise TimeoutError("read timed out")
                 if failure:
                     raise ProviderError(failure)
                 return FakeResponse()
@@ -515,6 +517,8 @@ class GeminiClientTests(unittest.TestCase):
             ("rejected request does not fall back", {"busy-model": 400}, "raise", ["busy-model"]),
             ("unclassified error after a retry falls back", {"busy-model": [503, 400]}, "ok",
              ["busy-model", "busy-model", "spare-model"]),
+            ("dropped connection is retried, then falls back", {"busy-model": ["timeout", "timeout"]}, "ok",
+             ["busy-model", "busy-model", "spare-model"]),
             ("every model down raises", {"busy-model": 503, "spare-model": 503}, "raise", None),
         ]
         for label, failures, outcome, expected_calls in cases:
@@ -526,9 +530,12 @@ class GeminiClientTests(unittest.TestCase):
                     record = client.complete(system="s", user="u", request_id="t:1")
                     self.assertEqual(record["model_requested"], "spare-model")
                     self.assertEqual(record["fallback_from"][0]["model"], "busy-model")
+                    self.assertEqual(len(record["attempt_failures"]), len(sdk.calls) - 1)
                 else:
-                    with self.assertRaises(RuntimeError):
+                    with self.assertRaises(RuntimeError) as raised:
                         client.complete(system="s", user="u", request_id="t:1")
+                    self.assertIn("attempt errors:", str(raised.exception))
+                    self.assertIn("ProviderError", str(raised.exception))
                 if expected_calls is not None:
                     self.assertEqual(sdk.calls, expected_calls)
 
