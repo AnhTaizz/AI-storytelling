@@ -81,6 +81,7 @@ def _base_brief(order, evidence=None, quote=None):
         "unknowns": ["Lý do Mahiru ngồi dưới mưa"],
         "forbidden_inferences": ["Mahiru thích Amane"],
         "ending_state": "Amane về nhà.",
+        "closing_hook": {"text": None, "quote": None, "evidence": []},
     }
 
 
@@ -95,6 +96,7 @@ PLAN = {
     ],
     "callbacks": [],
     "omitted_events": [],
+    "closing_hook": None,
 }
 
 SCRIPT = {"title_idea": "Chiếc ô", "sections": [{"beat_id": "B1", "text": SECTION_1},
@@ -266,6 +268,28 @@ class SemanticValidationTests(unittest.TestCase):
         errors = stages.brief_semantic_errors(coarse, self.chapter)
         self.assertTrue(any("needs at least 5 events" in e and "you listed 2" in e for e in errors), errors)
 
+    def test_closing_hook_is_quoted_and_landed_by_the_plan(self):
+        last = self.chapter.passages[-1]
+        hooked = brief_json(1)
+        hooked["closing_hook"] = {"text": "Cậu nghĩ vậy, vào lúc đó", "quote": last.text[-6:],
+                                  "evidence": [last.passage_id]}
+        self.assertEqual(stages.brief_semantic_errors(hooked, self.chapter), [])
+        cases = {
+            "quote not in passage": {"quote": "không có câu này", "evidence": [last.passage_id]},
+            "missing quote": {"quote": None, "evidence": []},
+        }
+        for label, change in cases.items():
+            with self.subTest(label):
+                broken = json.loads(json.dumps(hooked))
+                broken["closing_hook"].update(change)
+                errors = stages.brief_semantic_errors(broken, self.chapter)
+                self.assertTrue(any(e.startswith("closing_hook") for e in errors), errors)
+        plan = json.loads(json.dumps(PLAN))
+        errors = stages.plan_semantic_errors(plan, [hooked], test_profile())
+        self.assertTrue(any("closing_hook" in e for e in errors), errors)
+        plan["closing_hook"] = "Kết bằng câu: cậu đã nghĩ vậy, vào lúc đó."
+        self.assertEqual(stages.plan_semantic_errors(plan, [hooked], test_profile()), [])
+
     def test_critic_must_extract_claims_at_paragraph_density(self):
         paragraph = " ".join(["từ"] * 95)  # 95 words -> at least 3 claims
         units = checks.split_units(paragraph + "\n\nNgắn thôi.")
@@ -312,6 +336,18 @@ class SemanticValidationTests(unittest.TestCase):
                 self.assertEqual(sorted(markers), sorted(expected))
                 for finding in findings:
                     self.assertEqual((finding["severity"], finding["source"]), ("MEDIUM", "strength_audit"))
+        # The critic may paraphrase an intensifier away; the paragraph's own wording is checked too.
+        units = [{"unit_id": "P001", "sha256": "x", "text": "Cậu thấy vô cùng áy náy. Rồi cậu về nhà."}]
+        paraphrased = critic_with("Cậu thấy áy náy", ["c1.E1"])
+        text_findings = stages.strength_audit(paraphrased, [brief], recap, units)
+        self.assertEqual([(f["source"], f["claim"]) for f in text_findings],
+                         [("strength_audit_text", "Cậu thấy vô cùng áy náy.")])
+        self.assertEqual(stages.strength_audit(critic_with("Cậu thấy vô cùng áy náy", ["c1.E1"]), [brief],
+                                               recap, units)[0]["source"], "strength_audit")  # no duplicate
+        self.assertEqual(len(stages.strength_audit(critic_with("Cậu thấy vô cùng áy náy", ["c1.E1"]), [brief],
+                                                   recap, units)), 1)
+        commentary = critic_with("Bình luận", [])
+        self.assertEqual(stages.strength_audit(commentary, [brief], recap, units), [])  # cites nothing
         audited = gate_report(critic_with("Sự áy náy vơi đi rất nhiều", ["c1.E1"]),
                               checks.check_script(SCRIPT, 20, 200, "vi"), [brief],
                               stages.strength_audit(critic_with("Sự áy náy vơi đi rất nhiều", ["c1.E1"]), [brief]))

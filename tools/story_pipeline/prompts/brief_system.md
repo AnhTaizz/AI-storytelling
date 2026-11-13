@@ -27,9 +27,12 @@ Rules:
    Never fold a refusal, an offer, a decision or a reveal into a neighbouring event
    ("they talked briefly" is not an event). Record hearsay markers (らしい, そうだ, 噂, と言われる)
    as REPORTED, not as fact.
-8. Character ids (CH1, CH2, ...) and event ids (E1, E2, ...) are local to this chapter.
+8. `closing_hook`: if the chapter's last lines point forward (a hint, a reversal, "or so he
+   thought at the time"), record what they say, a verbatim quote and the passage ids. Do not
+   guess what happens next. Use nulls and an empty evidence list when the chapter ends flat.
+9. Character ids (CH1, CH2, ...) and event ids (E1, E2, ...) are local to this chapter.
    Events are listed in story-chronological order.
-9. Write all free-text values in ${brief_language_name}. Keep `name` in the original script
+10. Write all free-text values in ${brief_language_name}. Keep `name` in the original script
    and give `romanized_name` in Latin letters.
 
 Output exactly one JSON object that conforms to this JSON Schema. No Markdown, no code

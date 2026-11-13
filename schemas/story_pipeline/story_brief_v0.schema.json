@@ -11,7 +11,8 @@
     "events",
     "unknowns",
     "forbidden_inferences",
-    "ending_state"
+    "ending_state",
+    "closing_hook"
   ],
   "additionalProperties": false,
   "properties": {
@@ -243,6 +244,40 @@
     "ending_state": {
       "type": "string",
       "minLength": 1
+    },
+    "closing_hook": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "quote",
+        "evidence"
+      ],
+      "description": "How the chapter's last lines point forward (a hint, a reversal, 'or so he thought'). All null/empty when the chapter ends flat.",
+      "properties": {
+        "text": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "What the closing device says or implies, without guessing what comes next."
+        },
+        "quote": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 80,
+          "description": "Verbatim excerpt of the closing device."
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+$"
+          }
+        }
+      }
     }
   }
 }

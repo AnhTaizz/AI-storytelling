@@ -100,6 +100,12 @@ def brief_semantic_errors(brief: Dict[str, Any], chapter: Chapter) -> List[str]:
         check_evidence(f"event {event['id']}", event["evidence"], event["quote"])
     if not any(e["importance"] == "CORE" for e in brief["events"]):
         errors.append("at least one event must have importance CORE")
+    hook = brief["closing_hook"]
+    if hook["text"]:
+        if not hook["quote"] or not hook["evidence"]:
+            errors.append("closing_hook: a closing hook needs a verbatim quote and its evidence passages")
+        else:
+            check_evidence("closing_hook", hook["evidence"], hook["quote"])
     needed = min_events(len(chapter.passages))
     if len(brief["events"]) < needed:
         errors.append(f"events: a chapter of {len(chapter.passages)} passages needs at least {needed} events "
@@ -228,6 +234,10 @@ def plan_semantic_errors(plan: Dict[str, Any], briefs: Sequence[Dict[str, Any]],
     omitted_core = [ref for ref in omitted if ref in events and events[ref]["importance"] == "CORE"]
     if omitted_core:
         errors.append(f"CORE events cannot be omitted: {omitted_core}")
+    last = max(briefs, key=lambda b: b["chapter_order"]) if briefs else None
+    if last is not None and last["closing_hook"]["text"] and not plan["closing_hook"]:
+        errors.append(f"closing_hook: chapter {last['chapter_order']} ends on a closing hook "
+                      f"({last['closing_hook']['text']!r}); say how the final beat lands it")
     total = sum(b["target_words"] for b in plan["beats"])
     if not profile.min_words <= total <= profile.max_words:
         errors.append(f"beat target_words sum to {total}; must be between "
@@ -383,7 +393,8 @@ def brief_item_texts(briefs: Sequence[Dict[str, Any]], recap: Optional[Dict[str,
 
 
 def strength_audit(critic: Dict[str, Any], briefs: Sequence[Dict[str, Any]],
-                   recap: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+                   recap: Optional[Dict[str, Any]] = None,
+                   units: Optional[Sequence[Dict[str, str]]] = None) -> List[Dict[str, Any]]:
     """Deterministic second opinion on claims the critic accepted.
 
     In live run 3 the critic accepted "everyone calls her by the nickname Angel" (brief:
@@ -407,6 +418,44 @@ def strength_audit(critic: Dict[str, Any], briefs: Sequence[Dict[str, Any]],
                     "explanation": f"Từ tăng mức độ {extra} không có trong mục brief được trích "
                                    f"({', '.join(claim['brief_refs'])}).",
                     "suggested_fix": "Viết lại đúng mức độ của brief, bỏ hoặc làm nhẹ từ: " + ", ".join(extra),
+                })
+    if units is not None:
+        findings += _unit_text_audit(critic, units, texts, findings)
+    return findings
+
+
+_SENTENCE = re.compile(r"[^.!?…]*[.!?…]?")
+
+
+def _unit_text_audit(critic: Dict[str, Any], units: Sequence[Dict[str, str]], texts: Dict[str, str],
+                     already: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Check the script's own wording, not just the critic's paraphrase of it.
+
+    In live run 4 the script said "vô cùng áy náy" (extremely guilty) but the critic's claim
+    read "khó chịu và áy náy", so the claim-level audit never saw the intensifier. Here every
+    marker in a paragraph must occur in some brief item cited by that paragraph's claims;
+    paragraphs that cite nothing (pure commentary) are not judged.
+    """
+    unit_text = {u["unit_id"]: u["text"] for u in units}
+    flagged = {(f["unit_id"], m) for f in already for m in STRENGTH_MARKERS if m in f["explanation"]}
+    findings = []
+    for unit in critic["units"]:
+        refs = sorted({ref for claim in unit["claims"] for ref in claim["brief_refs"]})
+        text = unit_text.get(unit["unit_id"], "")
+        if not refs or not text:
+            continue
+        cited = " ".join(texts.get(ref, "") for ref in refs).casefold()
+        for marker in STRENGTH_MARKERS:
+            if marker in text.casefold() and marker not in cited and (unit["unit_id"], marker) not in flagged:
+                sentence = next((m.group(0).strip() for m in _SENTENCE.finditer(text)
+                                 if marker in m.group(0).casefold()), text[:200])
+                findings.append({
+                    "unit_id": unit["unit_id"], "claim": sentence,
+                    "claim_type": "STRENGTHENED_STORY_CLAIM", "failure_category": "EPISTEMIC_ERROR",
+                    "severity": "MEDIUM", "brief_refs": refs, "source": "strength_audit_text",
+                    "explanation": f"Từ tăng mức độ ['{marker}'] trong câu chữ kịch bản không có trong các mục "
+                                   f"brief mà đoạn này trích ({', '.join(refs)}).",
+                    "suggested_fix": f"Viết lại đúng mức độ của brief, bỏ hoặc làm nhẹ từ: {marker}",
                 })
     return findings
 

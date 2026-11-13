@@ -294,7 +294,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                 critic = cached(out_dir / f"critic_v{version}.json", resume,
                                 lambda: stages.run_critic(client, scope, briefs, units, profile,
                                                           log, max_repairs, version, recap))
-                audit = stages.strength_audit(critic, briefs, recap)
+                audit = stages.strength_audit(critic, briefs, recap, units)
                 write_json(out_dir / f"strength_audit_v{version}.json", audit)
                 problems = stages.findings_for_revision(critic, SEVERITY_ORDER) + audit
                 check = checks.check_script(script, profile.min_words, profile.max_words,
@@ -320,7 +320,8 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                                           profile.target_language)
         (out_dir / "script_final.md").write_text(script_markdown(script, f"final v{version}"),
                                                  encoding="utf-8")
-        final_audit = stages.strength_audit(critic, briefs, recap) if critic is not None else []
+        final_units = checks.split_units(checks.script_text(script))
+        final_audit = stages.strength_audit(critic, briefs, recap, final_units) if critic is not None else []
         report = gate_report(critic, final_check, briefs, final_audit)
         report["final_version"] = version
         report["final_check"] = final_check

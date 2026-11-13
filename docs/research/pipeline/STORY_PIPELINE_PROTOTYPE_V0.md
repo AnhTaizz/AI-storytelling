@@ -206,6 +206,23 @@ The 7 audit findings went to revision, which was served by `gemini-3.5-flash` af
 
 One finding remains, "được mọi người ví như Thiên sứ" (likened to an angel *by everyone*). It is reported, and `GATE_EPISTEMIC_INTEGRITY` = FLAG. With the default of one revision round it was not revised again.
 
+**Review of the run 4 final script (manual).**
+
+The chapter was faithful overall. Remaining defects:
+- An "everyone" that the audit flagged.
+- "vô cùng áy náy" (extremely guilty) against 「何となく寝覚めが悪い」 (vaguely uneasy).
+- An invented motive: he explains himself "to make clear he means no harm".
+- Small invented details: "ordinary student", "freezing weather", "storm".
+- A lost closing hook: the chapter ends on 「その時は」, "(so he thought) at that time".
+- One switch of pronoun for Amane, from "cậu" to "anh".
+
+The "vô cùng" slipped through because the critic paraphrased the sentence as "khó chịu và áy náy". The claim-level audit never saw the intensifier.
+
+Changes:
+- **Text-level strength audit.** Every marker in a paragraph's own wording must also occur in a brief item cited by that paragraph's claims. Paragraphs that cite nothing (pure commentary) are skipped, and markers already flagged at claim level are not reported twice. Replayed on run 4 it adds "vô cùng áy náy" to v2, and "chắc chắn ... rất áy náy" plus "cực kỳ lịch sự" to v1.
+- **Closing hook.** Briefs record a `closing_hook` with a verbatim quote and its evidence; the quote is checked. When the last chapter has one, the plan must say in `closing_hook` how the final beat lands it (hard check), and the script ends on it.
+- **Script prompt.** Keep each character's pronoun consistent, and vary repeated phrasing.
+
 ## Known limits
 
 - Brief paraphrase quality is not measured against gold. Quotes pin the evidence, but a

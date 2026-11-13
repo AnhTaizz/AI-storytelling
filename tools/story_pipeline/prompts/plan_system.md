@@ -24,7 +24,10 @@ Rules:
    most about 10% of the words) and may call back to earlier CORE events by their refs.
    The beats must center on the episode's own chapters; only their CORE events must be
    covered.
-9. Write free-text values in ${target_language_name}.
+9. If the brief of the last chapter has a `closing_hook`, the final beat must land it, and
+   `closing_hook` says how. It may raise the question the chapter raises; it must not
+   answer it or hint at anything the briefs do not contain.
+10. Write free-text values in ${target_language_name}.
 
 Output exactly one JSON object that conforms to this JSON Schema. No Markdown, no code
 fences, no text before or after the JSON.
