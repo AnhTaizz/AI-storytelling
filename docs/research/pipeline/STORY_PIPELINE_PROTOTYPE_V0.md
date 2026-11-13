@@ -190,6 +190,22 @@ Replayed offline on the saved critic outputs:
 
 A model that has already been retried (for example three 503s) now falls back whatever its final error is. In live run 4 the last attempt of an overloaded model ended in an unclassified provider failure, and the run stopped instead of moving on. A request refused on its first attempt is still not retried on another model.
 
+**2026-11-13, run 4 (resume of run 3 with the strength audit driving revision).**
+
+The 7 audit findings went to revision, which was served by `gemini-3.5-flash` after `gemini-3.6-flash` failed. The re-critic succeeded after two recorded attempt failures (429, then 503). The run COMPLETED.
+
+| | v1 | v2 |
+|---|---|---|
+| Words | 1040 | 957 |
+| Strength-audit findings | 7 | 1 |
+| "everyone calls her by the nickname" | yes | no, now "likened to an angel" |
+| "everyone at school knows her" | yes | no |
+| "the guilt eased a lot" | yes | no |
+| "completely drowned out" | yes | no, now "drowned out" |
+| "vô cùng" ("extremely") | 4 | 2 |
+
+One finding remains, "được mọi người ví như Thiên sứ" (likened to an angel *by everyone*). It is reported, and `GATE_EPISTEMIC_INTEGRITY` = FLAG. With the default of one revision round it was not revised again.
+
 ## Known limits
 
 - Brief paraphrase quality is not measured against gold. Quotes pin the evidence, but a
