@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 8 — test files: 51 — test functions: 959
+Suites: 8 — test files: 51 — test functions: 961
 
 ## canonical_story
 
@@ -1158,7 +1158,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 
 ## story_pipeline
 
-### test_story_pipeline_v0 (24)
+### test_story_pipeline_v0 (26)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
 
 - `test_profile`
@@ -1175,6 +1175,8 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `SemanticValidationTests.test_brief_rejects_out_of_scope_evidence`
 - `SemanticValidationTests.test_brief_quote_must_be_verbatim_in_cited_passages`
 - `SemanticValidationTests.test_plan_requires_core_coverage_and_length`
+- `SemanticValidationTests.test_brief_must_be_fine_grained_enough`
+- `SemanticValidationTests.test_critic_must_extract_claims_at_paragraph_density`
 - `SemanticValidationTests.test_critic_unit_mismatch`
 - `FactsTests.test_valid_and_invalid`
 - `EndToEndTests.test_full_pipeline_with_revision`

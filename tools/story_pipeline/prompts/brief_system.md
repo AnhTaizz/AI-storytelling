@@ -23,9 +23,13 @@ Rules:
    SUPPORTING = adds understanding; MINOR = colour.
 6. `forbidden_inferences` lists tempting conclusions a writer might draw that the chapter
    does NOT support (for example an unstated motive or a feeling not yet established).
-7. Character ids (CH1, CH2, ...) and event ids (E1, E2, ...) are local to this chapter.
+7. Granularity: one event is one action or one dialogue turn that changes the situation.
+   Never fold a refusal, an offer, a decision or a reveal into a neighbouring event
+   ("they talked briefly" is not an event). Record hearsay markers (らしい, そうだ, 噂, と言われる)
+   as REPORTED, not as fact.
+8. Character ids (CH1, CH2, ...) and event ids (E1, E2, ...) are local to this chapter.
    Events are listed in story-chronological order.
-8. Write all free-text values in ${brief_language_name}. Keep `name` in the original script
+9. Write all free-text values in ${brief_language_name}. Keep `name` in the original script
    and give `romanized_name` in Latin letters.
 
 Output exactly one JSON object that conforms to this JSON Schema. No Markdown, no code

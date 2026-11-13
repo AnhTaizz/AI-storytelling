@@ -135,6 +135,32 @@ python -m tools.story_pipeline.run_pipeline --chapters 1 --model gemini-3.6-flas
 
 Because a 429 cools down the whole credential rather than one model, a fallback after a quota error first waits out that cooldown.
 
+**2026-11-13, run 2 (chapter 1, two free-tier keys, chain `gemini-3.6-flash,gemini-3.5-flash,gemini-3-flash-preview`).**
+
+The run COMPLETED in 4 calls and 740 s:
+- The brief came from story memory.
+- The plan was served by `gemini-3-flash-preview` after both other models returned 503.
+- The script needed one length repair: the first draft was 1204 words and the repaired one 1029.
+- The critic reported **0 problems** across 23 claims in 17 paragraphs, and every automated gate passed.
+
+A manual check against the Japanese source found defects the critic missed:
+
+| Script claim | Source |
+|---|---|
+| everyone at school calls her "Thiên sứ" (angel) | "angel" is the narrator's metaphor (1.4); no such nickname is established |
+| she receives countless confessions, very often | 「受けているらしく」 (1.39) is hearsay |
+| she looked utterly devastated | 「どこか泣きそうに歪んだように見えて」 (1.26): she seemed somehow close to tears |
+| he ran home soaked head to toe and freezing, and felt much lighter | he walked off briskly (1.55–1.56); his guilt eased "a little" (1.58) |
+| (omitted) | Mahiru's refusal 「私はここに居たいから居るので」 (1.41) |
+
+Root causes:
+1. **The brief was too coarse.** It reduced 61 passages to 2 events, and the refusal was folded into "they talked briefly". The plan and the script could not cover what the brief did not separate.
+2. **The critic under-extracted.** It produced about one claim per paragraph, so the intensifiers and the invented physical and emotional states were never isolated and checked.
+
+Changes:
+- **Brief granularity (hard check):** a brief needs at least ⌈passages/15⌉ events, and never fewer than 2. The prompt now defines an event as one action or one dialogue turn, and asks for hearsay markers to be recorded as REPORTED.
+- **Critic density (soft check):** each paragraph needs at least one claim per 30 words unless the critic gives a no-claim reason. The prompt now lists the claim kinds to check separately: intensifiers, physical and emotional states, nicknames and reputation, and reported facts.
+
 ## Known limits
 
 - Brief paraphrase quality is not measured against gold. Quotes pin the evidence, but a

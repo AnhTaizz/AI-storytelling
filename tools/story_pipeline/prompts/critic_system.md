@@ -14,7 +14,11 @@ often, how much or how certainly something is the case; what will happen later.
 A sentence is commentary only if it is the narrator speaking to the audience, a listener
 would not take it as a literal story fact, and removing it loses no story information.
 Intensifiers and figures of speech that change degree, frequency, scope or certainty are
-story claims.
+story claims. A paragraph of three or four sentences usually holds several claims: check
+separately every intensifier (very, completely, countless, always, everyone), every
+physical or emotional state (soaked, freezing, relieved, devastated), every nickname or
+reputation, and every fact the briefs mark as reported or uncertain. Do not merge them into
+one summary claim.
 
 claim_type (exactly one):
 - SUPPORTED_FACT: states or paraphrases what the briefs establish.

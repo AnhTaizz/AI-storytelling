@@ -100,7 +100,23 @@ def brief_semantic_errors(brief: Dict[str, Any], chapter: Chapter) -> List[str]:
         check_evidence(f"event {event['id']}", event["evidence"], event["quote"])
     if not any(e["importance"] == "CORE" for e in brief["events"]):
         errors.append("at least one event must have importance CORE")
+    needed = min_events(len(chapter.passages))
+    if len(brief["events"]) < needed:
+        errors.append(f"events: a chapter of {len(chapter.passages)} passages needs at least {needed} events "
+                      f"at the level of single actions and dialogue turns; you listed {len(brief['events'])}. "
+                      f"Split merged events: each refusal, offer, decision, reveal or change of place is "
+                      f"its own event")
     return errors
+
+
+PASSAGES_PER_EVENT = 15
+
+
+def min_events(passage_count: int) -> int:
+    """Lower bound on brief events for a chapter. The first live run compressed 61 passages
+    into 2 events, folding a character's refusal into "they talked briefly", and the script
+    then left the refusal out entirely."""
+    return max(2, -(-passage_count // PASSAGES_PER_EVENT))
 
 
 _SPACE = re.compile(r"\s+")
@@ -318,6 +334,26 @@ def critic_semantic_errors(critic: Dict[str, Any], units: List[Dict[str, str]]) 
     return errors
 
 
+WORDS_PER_CLAIM = 30
+
+
+def critic_density_errors(critic: Dict[str, Any], units: List[Dict[str, str]]) -> List[str]:
+    """Flag units the critic under-extracted. In the first live run it took about one claim
+    per paragraph and passed strengthened and invented details it never isolated."""
+    words = {u["unit_id"]: checks.count_words(u["text"]) for u in units}
+    errors = []
+    for unit in critic["units"]:
+        if unit["no_claim_reason"]:
+            continue
+        needed = words.get(unit["unit_id"], 0) // WORDS_PER_CLAIM
+        if len(unit["claims"]) < needed:
+            errors.append(f"{unit['unit_id']}: {words[unit['unit_id']]} words but only {len(unit['claims'])} "
+                          f"claims; extract every atomic claim separately (expected at least {needed}). "
+                          f"Check each intensifier, frequency word, physical or emotional state and "
+                          f"reported fact on its own")
+    return errors
+
+
 def normalize_critic(critic: Dict[str, Any]) -> Dict[str, Any]:
     """Acceptable claim types carry no severity/category, whatever the model wrote."""
     for unit in critic["units"]:
@@ -340,5 +376,6 @@ def run_critic(client: LLMClient, scope: StoryScope, briefs: Sequence[Dict[str, 
                   unit_count=len(units), units=unit_lines)
     critic = run_json_stage(client, stage="critic", system=system, user=user, schema=schema,
                             semantic_check=lambda c: critic_semantic_errors(c, units),
+                            soft_check=lambda c: critic_density_errors(c, units),
                             max_repairs=max_repairs, log=log, request_suffix=f"v{version}")
     return normalize_critic(critic)

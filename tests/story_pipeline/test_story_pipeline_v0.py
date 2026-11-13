@@ -41,7 +41,19 @@ _SAMPLE = load_scope(DEFAULT_MANIFEST, (1, 5))
 PASSAGE_TEXT = {p.passage_id: p.text for c in _SAMPLE.chapters for p in c.passages}
 
 
+PASSAGE_COUNT = {c.order: len(c.passages) for c in _SAMPLE.chapters}
+
+
 def brief_json(order, evidence=None, quote=None):
+    """A valid brief: two named events plus MINOR filler up to the chapter's event minimum."""
+    brief = _base_brief(order, evidence, quote)
+    template = brief["events"][-1]
+    for n in range(len(brief["events"]) + 1, stages.min_events(PASSAGE_COUNT.get(order, 0)) + 1):
+        brief["events"].append({**template, "id": f"E{n}", "summary": f"Chi tiết phụ {n}", "importance": "MINOR"})
+    return brief
+
+
+def _base_brief(order, evidence=None, quote=None):
     evidence = evidence or [f"{order}.2"]
     if quote is None:
         quote = PASSAGE_TEXT.get(evidence[0], "xx")[:12]
@@ -246,6 +258,32 @@ class SemanticValidationTests(unittest.TestCase):
         self.assertTrue(any("CORE events not covered" in e for e in errors))
         self.assertTrue(any("target_words sum" in e for e in errors))
         self.assertEqual(stages.plan_semantic_errors(PLAN, [brief_json(1)], profile), [])
+
+    def test_brief_must_be_fine_grained_enough(self):
+        self.assertEqual([stages.min_events(n) for n in (0, 15, 16, 61)], [2, 2, 2, 5])
+        coarse = brief_json(1)
+        coarse["events"] = coarse["events"][:2]  # the first live run: 61 passages in 2 events
+        errors = stages.brief_semantic_errors(coarse, self.chapter)
+        self.assertTrue(any("needs at least 5 events" in e and "you listed 2" in e for e in errors), errors)
+
+    def test_critic_must_extract_claims_at_paragraph_density(self):
+        paragraph = " ".join(["từ"] * 95)  # 95 words -> at least 3 claims
+        units = checks.split_units(paragraph + "\n\nNgắn thôi.")
+        one_claim = {"claim": "x", "claim_type": "SUPPORTED_FACT", "failure_category": None, "severity": None,
+                     "brief_refs": [], "explanation": "y", "suggested_fix": None}
+        cases = [
+            ([one_claim], None, 1),          # under-extracted
+            ([one_claim] * 3, None, 0),      # dense enough
+            ([], "pure narration", 0),       # explicit no-claim reason is respected
+        ]
+        for claims, reason, expected in cases:
+            with self.subTest(claims=len(claims), reason=reason):
+                critic = {"units": [{"unit_id": "P001", "claims": claims, "no_claim_reason": reason},
+                                    {"unit_id": "P002", "claims": [], "no_claim_reason": None}]}
+                errors = stages.critic_density_errors(critic, units)
+                self.assertEqual(len(errors), expected, errors)
+                if expected:
+                    self.assertIn("P001: 95 words but only 1 claims", errors[0])
 
     def test_critic_unit_mismatch(self):
         units = checks.split_units("a\n\nb")
