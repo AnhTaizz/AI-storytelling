@@ -223,6 +223,26 @@ Changes:
 - **Closing hook.** Briefs record a `closing_hook` with a verbatim quote and its evidence; the quote is checked. When the last chapter has one, the plan must say in `closing_hook` how the final beat lands it (hard check), and the script ends on it.
 - **Script prompt.** Keep each character's pronoun consistent, and vary repeated phrasing.
 
+**2026-11-13, run 5 (fresh run with all fixes, 8 keys).**
+
+The run COMPLETED in 10 calls and 519 s. Every 503 and 429 was recorded per attempt and absorbed.
+
+- **Brief:** passed on its second attempt; the first was rejected by the granularity check.
+- **Closing hook:** captured as 「改めて帰路に就いた周はそう思っていた。その時は。」 and landed by the final beat.
+- **Strength audit:** 12 findings in v1, 0 in v2. Guilt that eased "a little" is now rendered correctly.
+
+Manual check of v2 found two kinds of remaining defect:
+
+- **Errors that were already in the brief:**
+  - "called by the nickname Angel": 1.3–1.4 is the narrator's metaphor, not a nickname.
+  - "frequently receives confessions" stated as fact: 1.39 「受けているらしく」 is hearsay.
+
+  Run 3's brief had both right. The brief prompt asks for hearsay to be REPORTED, but the model did not comply this time. Because the audit measures the script against the brief, it cannot catch errors the brief already contains.
+- **Strengthening with words not on the marker list:** "full of wariness" against 「うっすらと警戒が滲んだ」 (faintly wary), and "firmly refused" against a soft refusal.
+- **Small invented details:** "a calm daily life", "tired face".
+
+Brief fidelity now varies more from run to run than the script stage does. The next step is to check briefs against the source, for example by flagging facts whose quoted sentence carries a hedging marker (らしい, そうだ, ように見え, 噂) when the fact text has no Vietnamese hedge.
+
 ## Known limits
 
 - Brief paraphrase quality is not measured against gold. Quotes pin the evidence, but a
