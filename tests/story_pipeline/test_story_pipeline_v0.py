@@ -490,8 +490,11 @@ class GeminiClientTests(unittest.TestCase):
 
             def generate(self, **kwargs):
                 self.calls.append(kwargs["model"])
-                if kwargs["model"] in self.failures:
-                    raise ProviderError(self.failures[kwargs["model"]])
+                failure = self.failures.get(kwargs["model"])
+                if isinstance(failure, list):  # a different status on each successive call
+                    failure = failure.pop(0) if failure else None
+                if failure:
+                    raise ProviderError(failure)
                 return FakeResponse()
 
         def client_for(sdk):
@@ -510,6 +513,8 @@ class GeminiClientTests(unittest.TestCase):
              ["busy-model", "busy-model", "spare-model"]),
             ("quota on first model falls back", {"busy-model": 429}, "ok", None),
             ("rejected request does not fall back", {"busy-model": 400}, "raise", ["busy-model"]),
+            ("unclassified error after a retry falls back", {"busy-model": [503, 400]}, "ok",
+             ["busy-model", "busy-model", "spare-model"]),
             ("every model down raises", {"busy-model": 503, "spare-model": 503}, "raise", None),
         ]
         for label, failures, outcome, expected_calls in cases:

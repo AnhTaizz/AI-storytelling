@@ -112,7 +112,11 @@ class GeminiLLMClient:
                     request_id=request_id,
                 )
             except self._transport_error as error:
-                if error.code not in FALLBACK_CODES or index == len(self.models) - 1:
+                # After a retry the model was already failing transiently, so whatever its last
+                # error was (live run 4: three 503s, then an unclassified failure), move on.
+                # A request refused on its first attempt is not sent to another model.
+                retried = error.attempts > 1
+                if (error.code not in FALLBACK_CODES and not retried) or index == len(self.models) - 1:
                     raise
                 failed.append({"model": model, "code": error.code, "attempts": error.attempts})
                 continue

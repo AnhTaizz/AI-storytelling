@@ -188,6 +188,8 @@ Replayed offline on the saved critic outputs:
 - **Run 2:** 6 flags, matching the manual findings ("utterly devastated", "freezing all over", "very often").
 - **Run 3:** 7 flags, covering all three items above. One flag is arguably strict: Mahiru "soaked all over" while sitting in the rain.
 
+A model that has already been retried (for example three 503s) now falls back whatever its final error is. In live run 4 the last attempt of an overloaded model ended in an unclassified provider failure, and the run stopped instead of moving on. A request refused on its first attempt is still not retried on another model.
+
 ## Known limits
 
 - Brief paraphrase quality is not measured against gold. Quotes pin the evidence, but a
