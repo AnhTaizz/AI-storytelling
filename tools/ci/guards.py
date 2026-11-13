@@ -162,6 +162,11 @@ def check_diff_coverage(base: str, coverage_file: Path,
     data = coverage_data(coverage_file)
     if data is None:
         return [], "diff coverage: SKIPPED (no coverage data; run tests with --coverage)"
+    return diff_coverage_findings(changes, data, threshold)
+
+
+def diff_coverage_findings(changes: Dict[str, Set[int]], data: Dict[str, Dict[str, Set[int]]],
+                           threshold: float = DIFF_COVERAGE_THRESHOLD) -> Tuple[List[Finding], str]:
     covered = total = 0
     uncovered: List[str] = []
     for path, lines in sorted(changes.items()):

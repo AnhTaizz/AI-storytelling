@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 7 — test files: 50 — test functions: 939
+Suites: 7 — test files: 50 — test functions: 947
 
 ## canonical_story
 
@@ -126,7 +126,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.canonical_story.view_v0`,
 
 ## ci
 
-### test_ci_tools_v0 (18)
+### test_ci_tools_v0 (26)
 Covers: `tools.canonical_story.conformance_v0`, `tools.ci.check`, `tools.ci.config`, `tools.ci.guards`, `tools.ci.run_tests`, `tools.ci.test_policy`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `TestPolicyTests.test_shadowed_test_name_detected`
@@ -134,11 +134,17 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.ci.check`, `tools.ci.conf
 - `TestPolicyTests.test_repository_policy_passes`
 - `TestPolicyTests.test_catalog_lists_this_file`
 - `GateTests.test_declared_gates_follow_policy`
+- `GateTests.test_gate_policy_violations`
+- `GateTests.test_untested_baseline_must_shrink`
 - `GateTests.test_unmet_requirements_reported`
 - `GateTests.test_gated_placeholder_skips_or_fails`
 - `RunnerTests.test_suites_discovered`
 - `RunnerTests.test_runs_one_suite_in_subprocess`
-- `RunnerTests.test_check_command_parses_options`
+- `RunnerTests.test_check_command_aggregates_steps`
+- `RunnerTests.test_runner_cli_and_json_output`
+- `RunnerTests.test_print_problems_lists_failures_and_gates`
+- `RunnerTests.test_import_failure_becomes_error`
+- `RunnerTests.test_policy_cli`
 - `RunnerTests.test_unknown_suite_rejected`
 - `GuardTests.test_protected_modification_needs_decision`
 - `GuardTests.test_additions_and_unprotected_changes_allowed`
@@ -146,6 +152,8 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.ci.check`, `tools.ci.conf
 - `GuardTests.test_secret_scan`
 - `GuardTests.test_repository_has_no_secrets_or_private_files`
 - `GuardTests.test_ranges`
+- `GuardTests.test_diff_coverage_threshold`
+- `GuardTests.test_git_diff_helpers_and_cli`
 - `GuardTests.test_protected_pattern_file_covers_frozen_layers`
 
 ## script_quality

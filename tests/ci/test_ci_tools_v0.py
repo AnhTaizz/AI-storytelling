@@ -3,11 +3,14 @@
 Fixtures are synthetic. Credential-looking strings are assembled at runtime so this file
 does not trip the secret scan it tests.
 """
+import io
+import json
 import sys
 import tempfile
 import textwrap
 import unittest
 from pathlib import Path
+from unittest import mock
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
@@ -81,6 +84,23 @@ class GateTests(unittest.TestCase):
             for path in gate.requires_paths:
                 self.assertTrue(is_git_ignored(path), path)
 
+    def test_gate_policy_violations(self):
+        bad = [Gate(("story_pipeline/test_story_pipeline_v0", "story_pipeline/test_nope"),
+                    ("numpy",), ("tools/ci/check.py",), "why")]
+        tests, _ = test_policy.collect_tests()
+        with mock.patch.object(test_policy, "load_gates", return_value=bad):
+            messages = [f.message for f in test_policy.check_gates(tests)]
+        self.assertEqual(len(messages), 3)
+        self.assertTrue(any("'numpy'" in m for m in messages))
+        self.assertTrue(any("not git-ignored" in m for m in messages))
+        self.assertTrue(any("story_pipeline/test_nope" in m for m in messages))
+
+    def test_untested_baseline_must_shrink(self):
+        with mock.patch.object(test_policy, "untested_modules", return_value=["tools.x.new"]), \
+                mock.patch.object(test_policy, "_read_list", return_value={"tools.x.old"}):
+            codes = sorted(f.code for f in test_policy.check_untested())
+        self.assertEqual(codes, ["BASELINE_STALE", "UNTESTED_MODULE"])
+
     def test_unmet_requirements_reported(self):
         gate = Gate(("s/t",), ("module_that_does_not_exist_xyz",), ("no/such/path",), "why")
         self.assertEqual(gate.unmet(), ["module module_that_does_not_exist_xyz", "path no/such/path"])
@@ -108,11 +128,50 @@ class RunnerTests(unittest.TestCase):
         self.assertGreater(report["suites"][0]["ran"], 0)
         self.assertIn("story_pipeline", lines[0])
 
-    def test_check_command_parses_options(self):
-        # Running the whole gate here would recurse into this suite; only the CLI is exercised.
-        with self.assertRaises(SystemExit) as ctx:
-            check.main(["--help"])
-        self.assertEqual(ctx.exception.code, 0)
+    def test_check_command_aggregates_steps(self):
+        # Running the real gate here would recurse into this suite, so the steps are stubbed.
+        ok_report = {"ok": True, "suites": []}
+        bad_report = {"ok": False, "suites": [{"failures": [{"test": "s/t", "detail": "boom"}],
+                                               "errors": [], "gated": []}]}
+        finding = test_policy.Finding("X", "y")
+        cases = [((ok_report, [], []), 0, "QUALITY GATE: PASS"),
+                 ((bad_report, [finding], [finding]), 1, "FAIL (test_policy, tests, guards)")]
+        for (report, policy, guard), code, text in cases:
+            with self.subTest(code=code), \
+                    mock.patch.object(check.run_tests, "run_all", return_value=report), \
+                    mock.patch.object(check.test_policy, "run_policy", return_value=policy), \
+                    mock.patch.object(check.guards, "run_guards", return_value=(guard, ["note"])), \
+                    mock.patch("sys.stdout", new_callable=io.StringIO) as out:
+                self.assertEqual(check.main(["--coverage"]), code)
+                self.assertIn(text, out.getvalue())
+
+    def test_runner_cli_and_json_output(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "report.json"
+            with mock.patch("sys.stdout", new_callable=io.StringIO) as out:
+                code = run_tests.main(["--suite", "story_pipeline", "--json-out", str(target)])
+            self.assertEqual(code, 0)
+            self.assertIn("RESULT: PASS", out.getvalue())
+            self.assertTrue(json.loads(target.read_text(encoding="utf-8"))["ok"])
+
+    def test_print_problems_lists_failures_and_gates(self):
+        lines = []
+        run_tests.print_problems({"suites": [{"failures": [{"test": "s/a", "detail": "trace"}], "errors": [],
+                                              "gated": [{"test": "s/b", "detail": "GATED: why"}]}]},
+                                 echo=lines.append)
+        text = "\n".join(lines)
+        self.assertIn("FAILURE: s/a", text)
+        self.assertIn("s/b: why", text)
+
+    def test_import_failure_becomes_error(self):
+        result = unittest.TestResult()
+        run_tests._ImportFailure("s/t", "ImportError: nope").run(result)
+        self.assertEqual(len(result.errors), 1)
+
+    def test_policy_cli(self):
+        with mock.patch("sys.stdout", new_callable=io.StringIO) as out:
+            self.assertEqual(test_policy.main([]), 0)
+        self.assertIn("Test policy: PASS", out.getvalue())
 
     def test_unknown_suite_rejected(self):
         with self.assertRaises(SystemExit):
@@ -167,6 +226,39 @@ class GuardTests(unittest.TestCase):
 
     def test_ranges(self):
         self.assertEqual(guards._ranges([1, 2, 3, 7, 9, 10]), "1-3,7,9-10")
+
+    def test_diff_coverage_threshold(self):
+        data = {"tools/a.py": {"executed": {1, 2, 3}, "missing": {4}}}
+        changes = {"tools/a.py": {1, 2, 3, 4, 50}}  # line 50 is not executable (comment/blank)
+        findings, summary = guards.diff_coverage_findings(changes, data, threshold=70)
+        self.assertEqual(findings, [])
+        self.assertIn("75.0% of 4", summary)
+        findings, _ = guards.diff_coverage_findings(changes, data, threshold=80)
+        self.assertEqual(findings[0].code, "DIFF_COVERAGE")
+        self.assertIn("tools/a.py: 4", findings[0].message)
+        # A changed file no test ever imported counts every changed line as missing.
+        findings, summary = guards.diff_coverage_findings({"tools/new.py": {1, 2}}, data)
+        self.assertIn("0.0% of 2", summary)
+        self.assertEqual(guards.diff_coverage_findings({"tools/a.py": {50}}, data)[1],
+                         "diff coverage: no executable changed lines")
+
+    def test_git_diff_helpers_and_cli(self):
+        self.assertIsNone(guards.resolve_base("no-such-ref-xyz"))
+        self.assertEqual(guards.resolve_base("HEAD"), "HEAD")
+        self.assertIsInstance(guards.changed_files("HEAD"), list)
+        self.assertEqual(guards.changed_lines("HEAD"), {})
+        lines = guards.changed_lines("HEAD~1")
+        self.assertTrue(all(path.startswith("tools/") and path.endswith(".py") for path in lines))
+        findings, notes = guards.run_guards("no-such-ref-xyz")
+        self.assertIn("SKIPPED", notes[-1])
+        with tempfile.TemporaryDirectory() as tmp:
+            findings, notes = guards.run_guards("HEAD", Path(tmp) / "missing.coverage")
+            self.assertTrue(any("diff coverage" in n for n in notes))
+            self.assertIsNone(guards.coverage_data(Path(tmp) / "missing.coverage"))
+        with mock.patch("sys.stdout", new_callable=io.StringIO) as out:
+            code = guards.main(["--base", "HEAD"])
+        self.assertIn("Repository guards:", out.getvalue())
+        self.assertIn(code, (0, 1))
 
     def test_protected_pattern_file_covers_frozen_layers(self):
         patterns = guards.read_patterns()
