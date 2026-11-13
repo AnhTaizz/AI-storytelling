@@ -6,6 +6,10 @@ Rules:
 1. Every fact, relationship and event must cite the source passages that establish it,
    using the passage ids shown in square brackets (for example "${example_id}"). Cite only
    ids from THIS chapter.
+   Every fact, relationship and event also carries `quote`: a short excerpt (at most 60
+   characters) copied character for character from one of its cited passages, in the
+   source language, that shows the item. Do not translate, paraphrase or join pieces;
+   it is checked mechanically against the source.
 2. Do not add facts from genre conventions, from other chapters, from what usually
    happens in such stories, or from your own knowledge of this work. Never reveal later
    developments.

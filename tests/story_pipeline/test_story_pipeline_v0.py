@@ -33,27 +33,34 @@ SECTION_2 = ("Cậu đưa chiếc ô của mình cho cô rồi đi thẳng về 
              "Bạn nghĩ sao về cách làm quen này?")
 
 
-def brief_json(order, evidence=None):
+_SAMPLE = load_scope(DEFAULT_MANIFEST, (1, 2))
+PASSAGE_TEXT = {p.passage_id: p.text for c in _SAMPLE.chapters for p in c.passages}
+
+
+def brief_json(order, evidence=None, quote=None):
     evidence = evidence or [f"{order}.2"]
+    if quote is None:
+        quote = PASSAGE_TEXT.get(evidence[0], "xx")[:12]
     return {
         "chapter_order": order,
         "chapter_summary": "Amane gặp Mahiru trong công viên lúc trời mưa.",
         "characters": [
             {"id": "CH1", "name": "藤宮周", "romanized_name": "Amane", "aliases": [],
-             "facts": [{"text": "Học sinh năm nhất", "evidence": evidence}]},
+             "facts": [{"text": "Học sinh năm nhất", "evidence": evidence, "quote": quote}]},
             {"id": "CH2", "name": "椎名真昼", "romanized_name": "Mahiru", "aliases": ["Thiên thần"],
              "facts": []},
         ],
-        "relationships": [{"between": ["CH1", "CH2"], "state": "Hàng xóm", "evidence": evidence}],
+        "relationships": [{"between": ["CH1", "CH2"], "state": "Hàng xóm", "evidence": evidence,
+                           "quote": quote}],
         "events": [
             {"id": "E1", "summary": "Amane thấy Mahiru trên xích đu", "participants": ["CH1", "CH2"],
              "location": "công viên", "importance": "CORE",
              "motivation": {"text": None, "status": "UNKNOWN"}, "consequence": None,
-             "evidence": evidence},
+             "evidence": evidence, "quote": quote},
             {"id": "E2", "summary": "Amane đưa ô cho Mahiru", "participants": ["CH1", "CH2"],
              "location": "công viên", "importance": "SUPPORTING",
              "motivation": {"text": None, "status": "UNKNOWN"}, "consequence": None,
-             "evidence": evidence},
+             "evidence": evidence, "quote": quote},
         ],
         "unknowns": ["Lý do Mahiru ngồi dưới mưa"],
         "forbidden_inferences": ["Mahiru thích Amane"],
@@ -207,6 +214,20 @@ class SemanticValidationTests(unittest.TestCase):
         self.assertTrue(any("not passages of chapter 1" in e for e in errors))
         self.assertEqual(stages.brief_semantic_errors(brief_json(1), self.chapter), [])
 
+    def test_brief_quote_must_be_verbatim_in_cited_passages(self):
+        passage = PASSAGE_TEXT["1.2"]
+        cases = [
+            (passage[3:15], True),                      # exact excerpt
+            (" " + passage[3:9] + "\n" + passage[9:15], True),  # whitespace and line breaks ignored
+            ("「" + passage[3:15] + "」", True),        # surrounding quote marks ignored
+            ("invented words", False),
+            (PASSAGE_TEXT["1.3"][:12], False),           # real text, but from a passage not cited
+        ]
+        for quote, ok in cases:
+            with self.subTest(quote=quote):
+                errors = stages.brief_semantic_errors(brief_json(1, ["1.2"], quote), self.chapter)
+                self.assertEqual(not any("does not appear verbatim" in e for e in errors), ok, errors)
+
     def test_plan_requires_core_coverage_and_length(self):
         profile = test_profile()
         plan = json.loads(json.dumps(PLAN))
@@ -253,6 +274,10 @@ class EndToEndTests(unittest.TestCase):
             self.assertEqual(report["gates"]["GATE_OUTPUT_INTEGRITY"]["status"], "PASS")
             self.assertEqual([v["problem_claims"] for v in manifest["versions"]], [1, 0])
             self.assertIn("ĐẠT", (out / "report.md").read_text(encoding="utf-8"))
+            self.assertTrue((out / "review_form.md").is_file())
+            coverage = report["gates"]["GATE_NECESSARY_COVERAGE"]
+            # The fake critic only cites c1.E1, so chapter 2's CORE event is reported as not cited.
+            self.assertEqual((coverage["status"], coverage["not_cited"]), ("FLAG", ["c2.E1"]))
 
             # Resume reuses every stage output: no new model calls.
             resumed_client = ScriptedLLMClient(FakeModel())
@@ -278,6 +303,14 @@ class EndToEndTests(unittest.TestCase):
         self.assertEqual(report["gates"]["GATE_FACTUAL_GROUNDING"]["status"], "FAIL")
         self.assertEqual(report["gates"]["GATE_EPISTEMIC_INTEGRITY"]["status"], "FLAG")
         self.assertEqual(len(report["undetermined"]), 1)
+        self.assertEqual(report["gates"]["GATE_NECESSARY_COVERAGE"]["status"], "PLAN_ONLY")
+        brief = [brief_json(1)]
+        uncited = gate_report(critic, checks.check_script(SCRIPT, 20, 200, "vi"), brief)
+        # Problem claims do not count as narrating an event; only supported claims do.
+        self.assertEqual(uncited["gates"]["GATE_NECESSARY_COVERAGE"]["not_cited"], ["c1.E1"])
+        critic["units"][0]["claims"].append(claim("SUPPORTED_FACT"))
+        covered = gate_report(critic, checks.check_script(SCRIPT, 20, 200, "vi"), brief)
+        self.assertEqual(covered["gates"]["GATE_NECESSARY_COVERAGE"]["status"], "PASS")
 
 
 class GeminiClientTests(unittest.TestCase):

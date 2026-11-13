@@ -1,0 +1,7 @@
+# Dependencies for the retrieval benchmark tooling (tools/story_benchmark, tests/story_benchmark)
+# that runs without the ML inference stack. Encoder/reranker experiments additionally need
+# torch, sentence-transformers and transformers; those tests are environment-gated
+# (tests/environment_gates.yaml) and run only where the stack is installed.
+#
+# Install:   python -m pip install -r requirements-story-benchmark.txt
+numpy>=2,<3

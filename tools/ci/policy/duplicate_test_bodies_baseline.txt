@@ -1,0 +1,5 @@
+# Existing gaps when the policy was adopted. This list may only shrink.
+story_benchmark/test_analyze_k_rank_transitions_v1.TestEndToEnd.test_source_sha_mismatch
+story_benchmark/test_bge_reranker_v2_m3_top30_v1.TestEndToEnd.test_source_sha_failure
+story_benchmark/test_bm25_lexical_v1.TestBM25LexicalV1.test_metrics
+story_benchmark/test_dense_e5_small_v1.TestDenseE5SmallV1.test_metrics

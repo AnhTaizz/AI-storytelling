@@ -1,0 +1,37 @@
+# Protected (append-only) paths. Adding new files is allowed. Modifying, deleting or
+# renaming an existing file requires a recorded decision: docs/DECISIONS.md must change in
+# the same branch. Patterns are fnmatch globs relative to the repository root.
+
+# M1 Script Quality Contract v0 (DEC-017)
+docs/contracts/*
+benchmarks/m1_script_quality/SCRIPT_QUALITY_CONTRACT_V0*
+
+# M2 Canonical Story Model v0 (DEC-016)
+schemas/canonical_story/*
+tools/canonical_story/*
+
+# M3 Light Novel Ingestion v0 (DEC-018)
+schemas/light_novel_ingestion/*
+tools/story_ingestion/light_novel_adapter_v0.py
+docs/research/m3/M3_LIGHT_NOVEL_INGESTION_CONTRACT_V0.md
+
+# M4 locked extraction interfaces and prompts (hash-bound by locked protocols)
+schemas/story_extraction/*
+tools/story_extraction/draft_compiler_v1.py
+tools/story_extraction/draft_compiler_v1_1.py
+tools/story_extraction/prompts/*
+
+# Recorded research results and fixtures are history: append, never rewrite
+benchmarks/*
+
+# Tracked source sample (hash-bound by manifests)
+data/sample/*
+
+# The gate rules themselves
+.gitattributes
+tests/environment_gates.yaml
+tools/ci/policy/*
+tools/ci/*
+.github/*
+.claude/*
+CLAUDE.md
