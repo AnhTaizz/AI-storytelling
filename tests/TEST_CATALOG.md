@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 7 — test files: 50 — test functions: 948
+Suites: 8 — test files: 51 — test functions: 958
 
 ## canonical_story
 
@@ -1143,10 +1143,23 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `TestParagraphPack.test_corpus_validator_cross_chapter`
 - `TestParagraphPack.test_aggregate_failure_returns_false`
 
+## story_memory
+
+### test_memory_v0 (7)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`
+
+- `StoreTests.test_put_get_and_invalidation`
+- `StoreTests.test_rejects_bad_ids_and_mismatched_brief`
+- `ViewTests.test_roster_merges_names_and_aliases_across_chapters`
+- `ViewTests.test_shared_alias_is_reported`
+- `ViewTests.test_relationship_timeline_follows_chapters`
+- `ViewTests.test_recap_never_contains_the_episode_or_later_chapters`
+- `ViewTests.test_as_of_orders_and_cuts`
+
 ## story_pipeline
 
-### test_story_pipeline_v0 (20)
-Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
+### test_story_pipeline_v0 (23)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
 
 - `test_profile`
 - `SourceTests.test_parse_range`
@@ -1165,6 +1178,9 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `SemanticValidationTests.test_critic_unit_mismatch`
 - `FactsTests.test_valid_and_invalid`
 - `EndToEndTests.test_full_pipeline_with_revision`
+- `EndToEndTests.test_episode_with_memory_recap`
+- `EndToEndTests.test_cli_episode_mode`
+- `EndToEndTests.test_plan_may_call_back_to_recap_but_must_cover_episode`
 - `EndToEndTests.test_stage_failure_is_recorded`
 - `EndToEndTests.test_gate_report_severity`
 - `GeminiClientTests.test_uses_existing_transport_with_fake_sdk`

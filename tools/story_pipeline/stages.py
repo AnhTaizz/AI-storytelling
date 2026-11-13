@@ -10,6 +10,7 @@ from pathlib import Path
 from string import Template
 from typing import Any, Dict, List, Optional, Sequence
 
+from tools.story_memory.memory_v0 import recap_event_refs
 from tools.story_pipeline import checks
 from tools.story_pipeline.facts import StoryFacts
 from tools.story_pipeline.llm import CallLog, LLMClient, run_json_stage
@@ -34,6 +35,16 @@ def load_prompt(name: str) -> str:
 
 def render(name: str, **values: Any) -> str:
     return Template(load_prompt(name)).substitute(**values)
+
+
+def brief_fingerprint(profile: NarrativeProfile) -> str:
+    """Identity of everything that shapes a chapter brief except the model and the source."""
+    digest = hashlib.sha256()
+    for path in (PROMPT_DIR / "brief_system.md", PROMPT_DIR / "brief_user.md",
+                 SCHEMA_DIR / "story_brief_v0.schema.json"):
+        digest.update(path.read_bytes())
+    digest.update(profile.brief_language.encode("utf-8"))
+    return digest.hexdigest()
 
 
 def prompt_fingerprints() -> Dict[str, str]:
@@ -154,6 +165,14 @@ def briefs_for_prompt(briefs: Sequence[Dict[str, Any]]) -> str:
     return dump(out)
 
 
+NO_BACKGROUND = "(none: this episode starts at the beginning of the story)"
+
+
+def background_text(recap: Optional[Dict[str, Any]]) -> str:
+    """Earlier-chapter memory for an episode, rendered for prompts (see tools/story_memory)."""
+    return dump(recap) if recap else NO_BACKGROUND
+
+
 def event_index(briefs: Sequence[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
     return {f"c{b['chapter_order']}.{e['id']}": e for b in briefs for e in b["events"]}
 
@@ -162,12 +181,15 @@ def event_index(briefs: Sequence[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
 
 
 def plan_semantic_errors(plan: Dict[str, Any], briefs: Sequence[Dict[str, Any]],
-                         profile: NarrativeProfile) -> List[str]:
+                         profile: NarrativeProfile, recap: Optional[Dict[str, Any]] = None) -> List[str]:
+    """`briefs` are the episode's chapters; earlier CORE events in `recap` may be referenced
+    (recap, callbacks) but only the episode's own CORE events must be covered."""
     errors: List[str] = []
     events = event_index(briefs)
+    known = set(events) | recap_event_refs(recap)
 
     def check_refs(where: str, refs: Sequence[str]) -> None:
-        bad = [r for r in refs if r not in events]
+        bad = [r for r in refs if r not in known]
         if bad:
             errors.append(f"{where}: unknown event refs {bad}")
 
@@ -198,14 +220,15 @@ def plan_semantic_errors(plan: Dict[str, Any], briefs: Sequence[Dict[str, Any]],
 
 
 def run_plan(client: LLMClient, scope: StoryScope, briefs: Sequence[Dict[str, Any]],
-             profile: NarrativeProfile, log: CallLog, max_repairs: int) -> Dict[str, Any]:
+             profile: NarrativeProfile, log: CallLog, max_repairs: int,
+             recap: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     schema = load_schema("narrative_plan_v0")
     system = render("plan_system", min_words=profile.min_words, max_words=profile.max_words,
                     target_language_name=profile.target_language_name, schema=dump(schema))
     user = render("plan_user", scope_label=scope.label(), profile=profile.render(),
-                  briefs=briefs_for_prompt(briefs))
+                  briefs=briefs_for_prompt(briefs), background=background_text(recap))
     return run_json_stage(client, stage="plan", system=system, user=user, schema=schema,
-                          semantic_check=lambda p: plan_semantic_errors(p, briefs, profile),
+                          semantic_check=lambda p: plan_semantic_errors(p, briefs, profile, recap),
                           max_repairs=max_repairs, log=log)
 
 
@@ -235,9 +258,9 @@ def _script_system(profile: NarrativeProfile) -> str:
 
 def run_script(client: LLMClient, scope: StoryScope, briefs: Sequence[Dict[str, Any]],
                plan: Dict[str, Any], profile: NarrativeProfile, log: CallLog,
-               max_repairs: int) -> Dict[str, Any]:
+               max_repairs: int, recap: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     user = render("script_user", scope_label=scope.label(), profile=profile.render(),
-                  briefs=briefs_for_prompt(briefs), plan=dump(plan))
+                  briefs=briefs_for_prompt(briefs), plan=dump(plan), background=background_text(recap))
     return run_json_stage(client, stage="script", system=_script_system(profile), user=user,
                           schema=load_schema("script_v0"),
                           semantic_check=lambda s: script_structure_errors(s, plan),
@@ -258,7 +281,7 @@ def findings_for_revision(critic: Dict[str, Any], severities: Sequence[str]) -> 
 def run_revision(client: LLMClient, scope: StoryScope, briefs: Sequence[Dict[str, Any]],
                  plan: Dict[str, Any], script: Dict[str, Any], findings: List[Dict[str, Any]],
                  units: List[Dict[str, str]], profile: NarrativeProfile, log: CallLog,
-                 max_repairs: int, version: int) -> Dict[str, Any]:
+                 max_repairs: int, version: int, recap: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     unit_text = {u["unit_id"]: u["text"] for u in units}
     lines = []
     for f in findings:
@@ -266,7 +289,8 @@ def run_revision(client: LLMClient, scope: StoryScope, briefs: Sequence[Dict[str
                      f"\"{unit_text.get(f['unit_id'], '')[:300]}\"\n  claim: {f['claim']}\n"
                      f"  why: {f['explanation']}\n  suggested fix: {f['suggested_fix']}")
     user = render("revise_user", scope_label=scope.label(), profile=profile.render(),
-                  briefs=briefs_for_prompt(briefs), plan=dump(plan), script=dump(script),
+                  briefs=briefs_for_prompt(briefs), background=background_text(recap),
+                  plan=dump(plan), script=dump(script),
                   min_words=profile.min_words, max_words=profile.max_words,
                   findings="\n".join(lines))
     return run_json_stage(client, stage="revise", system=_script_system(profile), user=user,
@@ -306,12 +330,13 @@ def normalize_critic(critic: Dict[str, Any]) -> Dict[str, Any]:
 
 def run_critic(client: LLMClient, scope: StoryScope, briefs: Sequence[Dict[str, Any]],
                units: List[Dict[str, str]], profile: NarrativeProfile, log: CallLog,
-               max_repairs: int, version: int) -> Dict[str, Any]:
+               max_repairs: int, version: int, recap: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     schema = load_schema("critic_v0")
     system = render("critic_system", target_language_name=profile.target_language_name,
                     schema=dump(schema))
     unit_lines = "\n\n".join(f"<{u['unit_id']}>\n{u['text']}\n</{u['unit_id']}>" for u in units)
     user = render("critic_user", scope_label=scope.label(), briefs=briefs_for_prompt(briefs),
+                  background=background_text(recap),
                   unit_count=len(units), units=unit_lines)
     critic = run_json_stage(client, stage="critic", system=system, user=user, schema=schema,
                             semantic_check=lambda c: critic_semantic_errors(c, units),

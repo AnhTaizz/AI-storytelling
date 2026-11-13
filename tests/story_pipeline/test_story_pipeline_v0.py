@@ -3,12 +3,14 @@
 No model, API or network is used: a scripted client returns canned JSON. One test reads
 the tracked sample chapter 1 through the frozen M3 adapter.
 """
+import io
 import json
 import re
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
@@ -24,8 +26,10 @@ from tools.story_pipeline.llm import (  # noqa: E402
     run_json_stage,
 )
 from tools.story_pipeline.profile import load_profile  # noqa: E402
+from tools.story_pipeline import run_pipeline  # noqa: E402
 from tools.story_pipeline.run_pipeline import DEFAULT_MANIFEST, gate_report, run  # noqa: E402
-from tools.story_pipeline.source import load_scope, parse_range  # noqa: E402
+from tools.story_memory.memory_v0 import StoryMemory  # noqa: E402
+from tools.story_pipeline.source import StoryScope, load_scope, parse_range  # noqa: E402
 
 SECTION_1 = ("Một buổi chiều mưa, Amane đi ngang qua công viên và thấy Mahiru ngồi một mình "
              "trên xích đu, người ướt sũng.")
@@ -33,7 +37,7 @@ SECTION_2 = ("Cậu đưa chiếc ô của mình cho cô rồi đi thẳng về 
              "Bạn nghĩ sao về cách làm quen này?")
 
 
-_SAMPLE = load_scope(DEFAULT_MANIFEST, (1, 2))
+_SAMPLE = load_scope(DEFAULT_MANIFEST, (1, 5))
 PASSAGE_TEXT = {p.passage_id: p.text for c in _SAMPLE.chapters for p in c.passages}
 
 
@@ -106,15 +110,20 @@ class FakeModel:
 
     def __init__(self):
         self.critic_calls = 0
+        self.plan_prompts = []
 
     def __call__(self, stage, system, user):
         if stage == "brief":
             order = int(re.search(r"Chapter order: (\d+)", user).group(1))
             return json.dumps(brief_json(order), ensure_ascii=False)
         if stage == "plan":
+            # Use exactly the event refs the prompt offers (episode briefs and recap memory).
+            self.plan_prompts.append(user)
+            refs = list(dict.fromkeys(re.findall(r'"ref": "(c\d+\.E\d+)"', user)))
             plan = json.loads(json.dumps(PLAN))
-            for ref in sorted(set(re.findall(r'"ref": "(c[2-9]\.E\d+)"', user))):
-                plan["beats"][1]["event_refs"].append(ref)
+            plan["hook"]["event_refs"] = refs[:1]
+            plan["beats"][0]["event_refs"] = refs[:1]
+            plan["beats"][1]["event_refs"] = refs[1:]
             return json.dumps(plan, ensure_ascii=False)
         if stage in ("script", "revise"):
             return "```json\n" + json.dumps(SCRIPT, ensure_ascii=False) + "\n```"
@@ -284,6 +293,64 @@ class EndToEndTests(unittest.TestCase):
             resumed = run(resumed_client, scope, test_profile(), out, resume=True)
             self.assertEqual(resumed["status"], "COMPLETED")
             self.assertEqual(resumed_client.calls, [])
+
+    def test_episode_with_memory_recap(self):
+        full = load_scope(DEFAULT_MANIFEST, (1, 3))
+        background = list(full.chapters[:2])
+        episode = StoryScope(full.story_id, full.source_language, (full.chapters[2],))
+        chapter_4_text = load_scope(DEFAULT_MANIFEST, (4, 4)).chapters[0].passages[3].text
+        with tempfile.TemporaryDirectory() as tmp:
+            memory = StoryMemory(Path(tmp) / "memory", full.story_id)
+            model = FakeModel()
+            client = ScriptedLLMClient(model)
+            manifest = run(client, episode, test_profile(), Path(tmp) / "ep1", background=background,
+                           memory=memory)
+            self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
+            self.assertEqual(manifest["background_chapters"], [1, 2])
+            self.assertEqual(manifest["brief_sources"], {"1": "model", "2": "model", "3": "model"})
+            self.assertEqual(memory.stored_chapters(), [1, 2, 3])
+            recap = json.loads((Path(tmp) / "ep1" / "memory_recap.json").read_text(encoding="utf-8"))
+            self.assertEqual(recap["covers_chapters"], [1, 2])
+            plan_prompt = model.plan_prompts[0]
+            self.assertIn('"ref": "c1.E1"', plan_prompt)      # callback material from memory
+            self.assertNotIn(chapter_4_text, plan_prompt)     # nothing past the episode
+            report = json.loads((Path(tmp) / "ep1" / "report.json").read_text(encoding="utf-8"))
+            # Coverage is required for the episode's chapter only, not for recapped chapters.
+            self.assertEqual(report["gates"]["GATE_NECESSARY_COVERAGE"]["core_events"], 1)
+
+            # A second run reuses every brief from memory: no brief calls at all.
+            again = ScriptedLLMClient(FakeModel())
+            second = run(again, episode, test_profile(), Path(tmp) / "ep2", background=background,
+                         memory=memory)
+            self.assertEqual(second["brief_sources"], {"1": "memory", "2": "memory", "3": "memory"})
+            self.assertNotIn("brief", [c["stage"] for c in again.calls])
+
+    def test_cli_episode_mode(self):
+        with tempfile.TemporaryDirectory() as tmp, \
+                mock.patch("tools.story_pipeline.llm.GeminiLLMClient",
+                           lambda *a, **k: ScriptedLLMClient(FakeModel())), \
+                mock.patch("sys.stdout", new_callable=io.StringIO) as out:
+            code = run_pipeline.main(["--chapters", "2", "--recap", "--memory", str(Path(tmp) / "mem"),
+                                      "--out", str(Path(tmp) / "run"), "--min-words", "20", "--max-words", "200"])
+            self.assertEqual(code, 0, out.getvalue())
+            manifest = json.loads((Path(tmp) / "run" / "run_manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual((manifest["scope"]["chapters"], manifest["background_chapters"]), ([2], [1]))
+            self.assertTrue((Path(tmp) / "run" / "memory_recap.json").is_file())
+            self.assertTrue(any((Path(tmp) / "mem").rglob("chapter_002.json")))
+
+    def test_plan_may_call_back_to_recap_but_must_cover_episode(self):
+        profile = test_profile()
+        recap = {"chapters": [{"core_events": [{"ref": "c1.E1", "summary": "x"}]}]}
+        plan = json.loads(json.dumps(PLAN))
+        plan["beats"][0]["event_refs"] = ["c1.E1"]          # callback to an earlier chapter
+        plan["beats"][1]["event_refs"] = ["c2.E1", "c2.E2"]
+        plan["hook"]["event_refs"] = ["c2.E1"]
+        self.assertEqual(stages.plan_semantic_errors(plan, [brief_json(2)], profile, recap), [])
+        errors = stages.plan_semantic_errors(plan, [brief_json(2)], profile)
+        self.assertTrue(any("unknown event refs ['c1.E1']" in e for e in errors))
+        plan["beats"][1]["event_refs"] = ["c2.E2"]
+        errors = stages.plan_semantic_errors(plan, [brief_json(2)], profile, recap)
+        self.assertTrue(any("CORE events not covered" in e and "c2.E1" in e for e in errors))
 
     def test_stage_failure_is_recorded(self):
         scope = load_scope(DEFAULT_MANIFEST, (1, 1))

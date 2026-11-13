@@ -54,6 +54,35 @@ M3 ingestion (frozen adapter, chapters in scope only)
 - **Provider.** Uses the existing M4 Gemini transport and key pool (`.env`). The model is
   a run parameter, so stronger models can be compared directly.
 
+## Story memory and episodes (M5 spike)
+
+`tools/story_memory/memory_v0.py` is a minimal persistent story memory, built so a long
+story can be told as a series of episodes. It is a prototype and does not complete M5.
+
+- **Store.** One JSON record per chapter brief under `.local/story_memory/<story_id>/`
+  (`--memory`, disable with `--no-memory`). A record is reused only while the chapter's
+  exact source bytes (M3 document version) and the brief setup (brief prompts, schema,
+  brief language) are unchanged, so later episodes do not pay for earlier chapters again.
+- **Roster.** Chapter-local characters are merged across chapters when they share a name,
+  romanization or alias; a character matching several entries is reported, not guessed.
+- **Relationship timeline** per character pair, chapter by chapter.
+- **Recap.** For an episode starting at chapter N, `recap_context` summarises chapters
+  `< N` only: chapter summaries, ending states, CORE events with refs, roster and the
+  latest relationship states. It is passed to Plan, Script, Revision and Critic as
+  background that is part of the truth boundary.
+- **Episode mode.** `--chapters 3-5 --recap` tells chapters 3–5 and may open with a short
+  recap of 1–2 and call back to their CORE events. Only the episode's own CORE events must
+  be covered; nothing after chapter 5 is loaded.
+
+```
+python -m tools.story_pipeline.run_pipeline --chapters 1-2
+python -m tools.story_pipeline.run_pipeline --chapters 3-5 --recap   # reuses briefs 1-2 from memory
+```
+
+Limits: the roster merge is name-based (two people with the same name would merge; one
+person with no shared name across chapters would split); memory stores briefs, not
+canonical assertions, until M4 output can be projected in through `story_facts/v0`.
+
 ## Integration seam for M4: `story_facts/v0`
 
 `tools/story_pipeline/facts.py` defines a small format (facts with kind, epistemic status
@@ -79,7 +108,7 @@ Useful flags: `--stop-after brief|plan|script|critic`, `--revision-rounds N`,
 Each run writes to `.local/story_pipeline_runs/<run id>/` (git-ignored): `briefs/`,
 `plan.json`, `script_v*.json|md`, `critic_v*.json`, `script_final.md`, `report.md`,
 `report.json`, `review_form.md`, `calls.jsonl` (every model call with raw output and validation errors) and
-`run_manifest.json` (scope, profile, model, prompt/schema sha256, status).
+`run_manifest.json` (scope, background chapters, where each brief came from — memory or model —, profile, model, prompt/schema sha256, status). Episode runs also write `memory_recap.json`.
 
 ## Known limits
 

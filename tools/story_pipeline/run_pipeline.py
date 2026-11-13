@@ -22,14 +22,16 @@ REPO = Path(__file__).resolve().parents[2]
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
+from tools.story_memory.memory_v0 import StoryMemory, recap_context  # noqa: E402
 from tools.story_pipeline import PIPELINE_VERSION, checks, stages  # noqa: E402
 from tools.story_pipeline.facts import StoryFacts  # noqa: E402
 from tools.story_pipeline.llm import CallLog, LLMClient, StageFailed  # noqa: E402
 from tools.story_pipeline.profile import DEFAULT_PROFILE_PATH, NarrativeProfile, load_profile  # noqa: E402
-from tools.story_pipeline.source import StoryScope, load_scope, parse_range  # noqa: E402
+from tools.story_pipeline.source import Chapter, StoryScope, load_scope, parse_range  # noqa: E402
 
 DEFAULT_MANIFEST = REPO / "data/sample/otonari_no_tenshi/wn_jp/LIGHT_NOVEL_SOURCE_MANIFEST_SAMPLE_V0.yaml"
 DEFAULT_OUT_ROOT = REPO / ".local" / "story_pipeline_runs"
+DEFAULT_MEMORY_ROOT = REPO / ".local" / "story_memory"
 STAGES = ("brief", "plan", "script", "critic", "revise")
 
 GATES = {
@@ -201,7 +203,10 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         facts: Optional[StoryFacts] = None, max_repairs: int = 2, revision_rounds: int = 1,
         revise_severities: Sequence[str] = ("CRITICAL", "HIGH", "MEDIUM"),
         stop_after: str = "revise", resume: bool = False,
+        background: Sequence[Chapter] = (), memory: Optional[StoryMemory] = None,
         progress: Callable[[str], None] = lambda message: None) -> Dict[str, Any]:
+    """`scope` is the episode. `background` are earlier chapters, summarised from memory as a
+    recap (never later chapters). With `memory`, chapter briefs are reused across runs."""
     out_dir.mkdir(parents=True, exist_ok=True)
     log = CallLog()
     started = time.time()
@@ -215,6 +220,9 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                   "document_ids": [c.document_id for c in scope.chapters]},
         "profile": profile.to_dict(),
         "facts_supplied": facts is not None,
+        "background_chapters": [c.order for c in background],
+        "memory": str(memory.directory) if memory else None,
+        "brief_sources": {},
         "settings": {"max_repairs": max_repairs, "revision_rounds": revision_rounds,
                      "revise_severities": list(revise_severities), "stop_after": stop_after},
         "prompt_fingerprints": stages.prompt_fingerprints(),
@@ -238,24 +246,42 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         return manifest
 
     try:
-        briefs: List[Dict[str, Any]] = []
-        for chapter in scope.chapters:
+        fingerprint = stages.brief_fingerprint(profile)
+        all_briefs: List[Dict[str, Any]] = []
+        for chapter in sorted([*background, *scope.chapters], key=lambda c: c.order):
             progress(f"brief: chapter {chapter.order}")
-            briefs.append(cached(out_dir / "briefs" / f"chapter_{chapter.order:03d}.json", resume,
-                                 lambda: stages.run_brief(client, scope, chapter, profile, briefs,
-                                                          facts, log, max_repairs)))
+
+            def produce(chapter: Chapter = chapter) -> Dict[str, Any]:
+                if memory is not None:
+                    stored = memory.get_brief(chapter.order, chapter.version, fingerprint)
+                    if stored is not None:
+                        manifest["brief_sources"][str(chapter.order)] = "memory"
+                        return stored
+                brief = stages.run_brief(client, scope, chapter, profile, all_briefs, facts, log, max_repairs)
+                manifest["brief_sources"][str(chapter.order)] = "model"
+                if memory is not None:
+                    memory.put_brief(chapter.order, chapter.version, fingerprint, brief,
+                                     getattr(client, "name", "unknown"))
+                return brief
+
+            all_briefs.append(cached(out_dir / "briefs" / f"chapter_{chapter.order:03d}.json", resume, produce))
+        briefs = [b for b in all_briefs if b["chapter_order"] >= scope.first]
+        recap = recap_context(all_briefs, scope.first) if background else None
+        if recap is not None:
+            write_json(out_dir / "memory_recap.json", recap)
         if stop_after == "brief":
             return finish("STOPPED_AFTER_BRIEF")
 
         progress("plan")
         plan = cached(out_dir / "plan.json", resume,
-                      lambda: stages.run_plan(client, scope, briefs, profile, log, max_repairs))
+                      lambda: stages.run_plan(client, scope, briefs, profile, log, max_repairs, recap))
         if stop_after == "plan":
             return finish("STOPPED_AFTER_PLAN")
 
         progress("script v1")
         script = cached(out_dir / "script_v1.json", resume,
-                        lambda: stages.run_script(client, scope, briefs, plan, profile, log, max_repairs))
+                        lambda: stages.run_script(client, scope, briefs, plan, profile, log, max_repairs,
+                                                  recap))
         (out_dir / "script_v1.md").write_text(script_markdown(script, "v1"), encoding="utf-8")
         critic: Optional[Dict[str, Any]] = None
         version = 1
@@ -265,7 +291,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                 progress(f"critic v{version}")
                 critic = cached(out_dir / f"critic_v{version}.json", resume,
                                 lambda: stages.run_critic(client, scope, briefs, units, profile,
-                                                          log, max_repairs, version))
+                                                          log, max_repairs, version, recap))
                 problems = stages.findings_for_revision(critic, SEVERITY_ORDER)
                 check = checks.check_script(script, profile.min_words, profile.max_words,
                                             profile.target_language)
@@ -282,7 +308,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                 script = cached(out_dir / f"script_v{version}.json", resume,
                                 lambda: stages.run_revision(client, scope, briefs, plan, previous,
                                                             to_fix, previous_units, profile, log,
-                                                            max_repairs, version))
+                                                            max_repairs, version, recap))
                 (out_dir / f"script_v{version}.md").write_text(script_markdown(script, f"v{version}"),
                                                               encoding="utf-8")
         final_check = checks.check_script(script, profile.min_words, profile.max_words,
@@ -313,6 +339,11 @@ def build_parser() -> argparse.ArgumentParser:
                         help="LIGHT_NOVEL_INGESTION/v0 manifest (default: tracked sample, chapters 1-5)")
     parser.add_argument("--source-root", default=None, help="directory holding the manifest paths")
     parser.add_argument("--chapters", default="1", help="chapter range, e.g. 1 or 1-5 (also the spoiler boundary)")
+    parser.add_argument("--recap", action="store_true",
+                        help="episode mode: chapters before --chapters become recap/callback background")
+    parser.add_argument("--memory", default=str(DEFAULT_MEMORY_ROOT),
+                        help="story memory directory; chapter briefs are reused across runs")
+    parser.add_argument("--no-memory", action="store_true", help="do not read or write story memory")
     parser.add_argument("--profile", default=str(DEFAULT_PROFILE_PATH), help="Narrative Profile YAML")
     parser.add_argument("--min-words", type=int, default=None, help="override profile minimum length")
     parser.add_argument("--max-words", type=int, default=None, help="override profile maximum length")
@@ -332,7 +363,15 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: Optional[List[str]] = None) -> int:
     args = build_parser().parse_args(argv)
-    scope = load_scope(args.manifest, parse_range(args.chapters), args.source_root)
+    start, end = parse_range(args.chapters)
+    background: List[Chapter] = []
+    if args.recap and start > 1:
+        full = load_scope(args.manifest, (1, end), args.source_root)
+        background = [c for c in full.chapters if c.order < start]
+        scope = StoryScope(full.story_id, full.source_language, tuple(c for c in full.chapters if c.order >= start))
+    else:
+        scope = load_scope(args.manifest, (start, end), args.source_root)
+    memory = None if args.no_memory else StoryMemory(args.memory, scope.story_id)
     profile = load_profile(args.profile).with_length(args.min_words, args.max_words)
     facts = StoryFacts.load(args.facts) if args.facts else None
 
@@ -355,7 +394,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     manifest = run(client, scope, profile, out_dir, facts=facts, max_repairs=args.max_repairs,
                    revision_rounds=args.revision_rounds,
                    revise_severities=[s.strip() for s in args.revise_severities.split(",") if s.strip()],
-                   stop_after=args.stop_after, resume=resume,
+                   stop_after=args.stop_after, resume=resume, background=background, memory=memory,
                    progress=lambda message: print(f"  ... {message}", flush=True))
     print(f"status: {manifest['status']}  calls: {manifest['model_calls']}  seconds: {manifest['seconds']}")
     if manifest.get("error"):
