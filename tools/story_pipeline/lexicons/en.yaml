@@ -1,6 +1,7 @@
 # English lexicon (for English sources, briefs or scripts).
 language: en
 word_boundaries: true
+chars_per_event: 1600
 strength:
   degree_extreme: [extremely, incredibly, utterly]
   completeness: [completely, totally, entirely, from head to toe]

@@ -105,6 +105,18 @@ Replay on the saved live briefs (ja → vi):
 - Run 2's and run 5's hearsay facts are flagged: 「らしく」 for the confessions and 「…そうだ」 for the PE performance.
 - Run 3's brief is clean. Its only candidate was a 「だろう」 inside Amane's own line, which the dialogue rule excludes.
 
+### Korean readiness (prepared without a Korean sample)
+
+| Area | State |
+|---|---|
+| M3 ingestion | Accepts any language tag (`source_language: ko`). It splits paragraphs on blank lines. **Risk:** a file that separates lines with single newlines only becomes one segment per chapter. The adapter is frozen, so that case needs a new versioned adapter and a decision. Check this on the first real Korean chapter. |
+| Lexicon `ko.yaml` | Substring matching, because particles and endings attach to words. Reported speech is caught through endings such as ‑다고 한다 and ‑라던데, appearance through ‑것 같다 and ‑듯했다, speculation through ‑지도 모른다 and 아마, and metaphor through 마치 and ‑처럼. Ambiguous stems are excluded, for example 늘 (it matches inside 늘어나다) and 것이다. |
+| Event minimum | Now counts source characters divided by the lexicon's `chars_per_event` (ja 550, ko 700, vi 1500, en 1600; rough, tunable) instead of counting passages. Korean web novels often put every sentence on its own line: 200 one-line passages now need 9 events instead of 14. |
+| Foreign script check | Driven by the target language's allowed writing systems. **Hangul was previously not detected**, so Korean left in a Vietnamese script passed. Languages written without spaces (ja, zh, th) count length in characters. |
+| Dialogue | ‘…’ is added to the quote characters; Korean novels use it for inner speech. |
+| Names | The profile's name policy is now script-neutral: standard romanization, no original script. |
+| Embeddings | The pipeline uses none. The M1 retrieval models (multilingual-e5, bge-reranker-v2-m3) are multilingual but were only benchmarked on Japanese. Measure them on a Korean probe set before relying on retrieval. |
+
 ## Integration seam for M4: `story_facts/v0`
 
 `tools/story_pipeline/facts.py` defines a small format (facts with kind, epistemic status

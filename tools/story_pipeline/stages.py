@@ -109,9 +109,10 @@ def brief_semantic_errors(brief: Dict[str, Any], chapter: Chapter, source_langua
             check_evidence("closing_hook", hook["evidence"], hook["quote"])
     if source_language and brief_language:
         errors += brief_hedge_errors(brief, chapter, source_language, brief_language)
-    needed = min_events(len(chapter.passages))
+    needed = min_events(chapter, source_language)
     if len(brief["events"]) < needed:
-        errors.append(f"events: a chapter of {len(chapter.passages)} passages needs at least {needed} events "
+        errors.append(f"events: a chapter of {len(chapter.passages)} passages "
+                      f"({chapter_length(chapter)} characters) needs at least {needed} events "
                       f"at the level of single actions and dialogue turns; you listed {len(brief['events'])}. "
                       f"Split merged events: each refusal, offer, decision, reveal or change of place is "
                       f"its own event")
@@ -120,7 +121,7 @@ def brief_semantic_errors(brief: Dict[str, Any], chapter: Chapter, source_langua
 
 _SOURCE_SENTENCE = re.compile(r"[^.!?。！？]+[.!?。！？]*")
 # Quoted speech in common scripts: Japanese brackets, curly and straight quotes, guillemets.
-_DIALOGUE = re.compile(r"「[^」]*」|『[^』]*』|“[^”]*”|\"[^\"]*\"|«[^»]*»")
+_DIALOGUE = re.compile(r"「[^」]*」|『[^』]*』|“[^”]*”|‘[^’]*’|\"[^\"]*\"|«[^»]*»")
 
 
 def _quoted_sentences(quote: str, passages: Sequence[str]) -> str:
@@ -181,11 +182,23 @@ def brief_hedge_errors(brief: Dict[str, Any], chapter: Chapter, source_language:
 PASSAGES_PER_EVENT = 15
 
 
-def min_events(passage_count: int) -> int:
-    """Lower bound on brief events for a chapter. The first live run compressed 61 passages
-    into 2 events, folding a character's refusal into "they talked briefly", and the script
-    then left the refusal out entirely."""
-    return max(2, -(-passage_count // PASSAGES_PER_EVENT))
+def chapter_length(chapter: Chapter) -> int:
+    return sum(len(_squash(p.text)) for p in chapter.passages)
+
+
+def min_events(chapter: Chapter, source_language: Optional[str] = None) -> int:
+    """Lower bound on brief events for a chapter.
+
+    The first live run compressed 61 passages into 2 events, folding a character's refusal
+    into "they talked briefly". The bound is measured in source characters with a density
+    from the source language's lexicon (`chars_per_event`), because paragraphing differs
+    across languages (Korean web novels often put every sentence on its own line). Without a
+    lexicon it falls back to one event per 15 passages.
+    """
+    lex = lexicon.load(source_language) if source_language else None
+    if lex is None:
+        return max(2, -(-len(chapter.passages) // PASSAGES_PER_EVENT))
+    return max(2, -(-chapter_length(chapter) // lex.chars_per_event))
 
 
 _SPACE = re.compile(r"\s+")

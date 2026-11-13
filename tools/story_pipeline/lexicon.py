@@ -37,6 +37,7 @@ class LexiconError(ValueError):
 class Lexicon:
     language: str
     word_boundaries: bool
+    chars_per_event: int  # source text length per expected brief event (scripts differ in density)
     phrases: Dict[str, Dict[str, Tuple[str, ...]]]  # kind -> concept -> phrases
 
     def find(self, text: str, kind: str) -> List[Tuple[str, str]]:
@@ -69,6 +70,9 @@ def validate(data: dict, expected_language: str) -> List[str]:
         problems.append(f"language must be {expected_language!r}")
     if not isinstance(data.get("word_boundaries"), bool):
         problems.append("word_boundaries must be true or false")
+    cpe = data.get("chars_per_event")
+    if not isinstance(cpe, int) or isinstance(cpe, bool) or cpe <= 0:
+        problems.append("chars_per_event must be a positive integer")
     seen: Dict[str, str] = {}
     for kind, allowed in KINDS.items():
         section = data.get(kind)
@@ -95,18 +99,24 @@ def validate(data: dict, expected_language: str) -> List[str]:
     return problems
 
 
+def lexicon_code(language: str) -> str:
+    """Primary subtag of a language tag: "zh-Hant" -> "zh", "KO" -> "ko"."""
+    return language.split("-")[0].strip().lower()
+
+
 @lru_cache(maxsize=None)
 def load(language: str) -> Optional[Lexicon]:
-    """The lexicon for an ISO language code, or None when that language has none yet."""
+    """The lexicon for a language tag (by its primary subtag), or None when there is none yet."""
+    language = lexicon_code(language)
     path = LEXICON_DIR / f"{language}.yaml"
-    if not path.is_file():
+    if not language or not path.is_file():
         return None
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
     problems = validate(data, language)
     if problems:
         raise LexiconError(f"{path.name}: " + "; ".join(problems))
     phrases = {kind: {concept: tuple(values) for concept, values in data[kind].items()} for kind in KINDS}
-    return Lexicon(language, data["word_boundaries"], phrases)
+    return Lexicon(language, data["word_boundaries"], data["chars_per_event"], phrases)
 
 
 def missing_languages(*languages: str) -> FrozenSet[str]:

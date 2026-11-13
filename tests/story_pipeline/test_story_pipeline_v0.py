@@ -41,14 +41,20 @@ _SAMPLE = load_scope(DEFAULT_MANIFEST, (1, 5))
 PASSAGE_TEXT = {p.passage_id: p.text for c in _SAMPLE.chapters for p in c.passages}
 
 
-PASSAGE_COUNT = {c.order: len(c.passages) for c in _SAMPLE.chapters}
+SAMPLE_CHAPTERS = {c.order: c for c in _SAMPLE.chapters}
+
+
+def needed_events(order):
+    """Events a valid fixture needs, with or without the source-language density rule."""
+    chapter = SAMPLE_CHAPTERS.get(order)
+    return max(stages.min_events(chapter), stages.min_events(chapter, "ja")) if chapter else 2
 
 
 def brief_json(order, evidence=None, quote=None):
     """A valid brief: two named events plus MINOR filler up to the chapter's event minimum."""
     brief = _base_brief(order, evidence, quote)
     template = brief["events"][-1]
-    for n in range(len(brief["events"]) + 1, stages.min_events(PASSAGE_COUNT.get(order, 0)) + 1):
+    for n in range(len(brief["events"]) + 1, needed_events(order) + 1):
         brief["events"].append({**template, "id": f"E{n}", "summary": f"Chi tiết phụ {n}", "importance": "MINOR"})
     return brief
 
@@ -177,6 +183,22 @@ class ChecksTests(unittest.TestCase):
         self.assertTrue(report["length_ok"] and report["language_ok"] and report["clean_ok"])
         self.assertEqual(report["word_count"], checks.count_words(checks.script_text(SCRIPT)))
 
+    def test_foreign_script_depends_on_target_language(self):
+        cases = [
+            ("vi", "Amane gặp 마히루", ["마", "히", "루"]),       # Hangul in a Vietnamese script
+            ("vi", "Amane (周) đi về", ["周"]),
+            ("ko", "아마네는 周를 봤다", []),                      # Hangul and hanja are Korean
+            ("ja", "周はアマネを見た", []),
+            ("ja", "周は마히루を見た", ["마", "히", "루"]),
+            ("en", "Привет Amane", list("Привет")),
+            ("zh-Hant", "周看見了雨", []),                         # tag normalised to its base
+        ]
+        for language, text, expected in cases:
+            with self.subTest(language=language, text=text):
+                self.assertEqual(checks.foreign_script_characters(text, language), expected)
+        self.assertEqual(checks.count_length("周は 雨の中", "ja"), 5)       # characters
+        self.assertEqual(checks.count_length("Amane đi về", "vi"), 3)       # words
+
     def test_contamination_and_artifacts_detected(self):
         bad = {"title_idea": "t", "sections": [{"beat_id": "B1", "text": "## Mở đầu\nAmane (周) [nhạc nền]"}]}
         report = checks.check_script(bad, 1, 100, "vi")
@@ -262,7 +284,21 @@ class SemanticValidationTests(unittest.TestCase):
         self.assertEqual(stages.plan_semantic_errors(PLAN, [brief_json(1)], profile), [])
 
     def test_brief_must_be_fine_grained_enough(self):
-        self.assertEqual([stages.min_events(n) for n in (0, 15, 16, 61)], [2, 2, 2, 5])
+        def synthetic(passages, chars_each):
+            return Chapter(9, "doc", "t", tuple(Passage(f"9.{i}", "가" * chars_each) for i in range(passages)))
+
+        cases = [
+            ("sample chapter 1, no language: per passage", self.chapter, None, 5),
+            ("sample chapter 1, Japanese density", self.chapter, "ja", 5),
+            ("tiny chapter", synthetic(3, 10), "ja", 2),
+            # Korean web novels put each sentence on its own line: 200 short passages are one
+            # ordinary chapter, not 14 events' worth.
+            ("Korean one-sentence paragraphs", synthetic(200, 30), "ko", 9),
+            ("same text, no lexicon: per passage", synthetic(200, 30), "xx", 14),
+        ]
+        for label, chapter, language, expected in cases:
+            with self.subTest(label):
+                self.assertEqual(stages.min_events(chapter, language), expected)
         coarse = brief_json(1)
         coarse["events"] = coarse["events"][:2]  # the first live run: 61 passages in 2 events
         errors = stages.brief_semantic_errors(coarse, self.chapter)
@@ -314,6 +350,11 @@ class SemanticValidationTests(unittest.TestCase):
             ("metaphor needs a metaphor", metaphor, "Cô có vẻ là thiên thần", "ja", "vi", 1),
             ("metaphor kept", metaphor, "Cô được ví như thiên thần", "ja", "vi", 0),
             ("no lexicon: not checked", hearsay, "Cô nhận lời tỏ tình", "xx", "vi", 0),
+            ("Korean hearsay stated as fact", "그녀는 고백을 자주 받는다고 한다.", "Cô thường nhận lời tỏ tình",
+             "ko", "vi", 1),
+            ("Korean hearsay kept", "그녀는 고백을 자주 받는다고 한다.", "Nghe nói cô thường nhận lời tỏ tình",
+             "ko", "vi", 0),
+            ("Korean hedge inside dialogue", "“아마 괜찮겠지.” 그가 말했다.", "Cậu nói sẽ ổn thôi", "ko", "vi", 0),
         ]
         for label, source, fact, src_lang, brief_lang, expected in cases:
             with self.subTest(label):

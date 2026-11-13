@@ -3,6 +3,7 @@
 # lowercase phrases. Matching is case-insensitive and respects word boundaries.
 language: vi
 word_boundaries: true
+chars_per_event: 1500
 strength:
   degree_extreme: [vô cùng, cực kỳ, cực kì, tột độ, hết sức]
   completeness: [hoàn toàn, tuyệt đối, toàn thân, từ đầu đến chân]

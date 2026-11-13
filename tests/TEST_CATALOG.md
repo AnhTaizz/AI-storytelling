@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 8 — test files: 52 — test functions: 969
+Suites: 8 — test files: 52 — test functions: 970
 
 ## canonical_story
 
@@ -1166,7 +1166,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `LexiconFileTests.test_unknown_language_has_no_lexicon`
 - `MatchingTests.test_concepts_found_per_language`
 
-### test_story_pipeline_v0 (30)
+### test_story_pipeline_v0 (31)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
 
 - `test_profile`
@@ -1174,6 +1174,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `SourceTests.test_sample_chapter_scope`
 - `SourceTests.test_chapters_outside_manifest_rejected`
 - `ChecksTests.test_word_count_and_language`
+- `ChecksTests.test_foreign_script_depends_on_target_language`
 - `ChecksTests.test_contamination_and_artifacts_detected`
 - `ChecksTests.test_split_units`
 - `JsonLoopTests.test_fenced_json`

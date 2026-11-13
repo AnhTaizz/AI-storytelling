@@ -116,7 +116,7 @@ def gate_report(critic: Optional[Dict[str, Any]], check: Dict[str, Any],
                        "findings": {s: sum(1 for f in hits if f["severity"] == s) for s in SEVERITY_ORDER}}
     gates["GATE_OUTPUT_INTEGRITY"] = {
         "status": "PASS" if check["language_ok"] and check["clean_ok"] else "FAIL",
-        "cjk_count": check["cjk_count"], "artifacts": check["artifacts"]}
+        "foreign_script_count": check["foreign_script_count"], "artifacts": check["artifacts"]}
     gates["GATE_REQUEST_COMPLIANCE"] = {
         "status": "PASS" if check["length_ok"] else "FLAG",
         "word_count": check["word_count"], "length_target": check["length_target"]}
