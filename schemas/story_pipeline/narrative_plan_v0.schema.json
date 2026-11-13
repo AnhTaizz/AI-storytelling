@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "story_pipeline/narrative_plan_v0",
+  "title": "Narrative Plan v0",
+  "type": "object",
+  "required": [
+    "logline",
+    "hook",
+    "beats",
+    "callbacks",
+    "omitted_events"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "logline": {
+      "type": "string",
+      "minLength": 1
+    },
+    "hook": {
+      "type": "object",
+      "required": [
+        "idea",
+        "event_refs"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "idea": {
+          "type": "string",
+          "minLength": 1
+        },
+        "event_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^c\\d+\\.E\\d+$",
+            "description": "Event reference: c<chapter>.E<n>"
+          }
+        }
+      }
+    },
+    "beats": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "purpose",
+          "event_refs",
+          "emotional_note",
+          "commentary_idea",
+          "target_words"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^B\\d+$"
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1
+          },
+          "event_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^c\\d+\\.E\\d+$",
+              "description": "Event reference: c<chapter>.E<n>"
+            }
+          },
+          "emotional_note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "commentary_idea": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "target_words": {
+            "type": "integer",
+            "minimum": 20
+          }
+        }
+      }
+    },
+    "callbacks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "setup_ref",
+          "payoff_ref",
+          "note"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "setup_ref": {
+            "type": "string",
+            "pattern": "^c\\d+\\.E\\d+$",
+            "description": "Event reference: c<chapter>.E<n>"
+          },
+          "payoff_ref": {
+            "type": "string",
+            "pattern": "^c\\d+\\.E\\d+$",
+            "description": "Event reference: c<chapter>.E<n>"
+          },
+          "note": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "omitted_events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "ref",
+          "reason"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "ref": {
+            "type": "string",
+            "pattern": "^c\\d+\\.E\\d+$",
+            "description": "Event reference: c<chapter>.E<n>"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}
