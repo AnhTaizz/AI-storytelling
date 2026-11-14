@@ -29,7 +29,9 @@ from tools.story_pipeline.profile import load_profile  # noqa: E402
 from tools.story_pipeline import run_pipeline  # noqa: E402
 from tools.story_pipeline.run_pipeline import DEFAULT_MANIFEST, gate_report, run  # noqa: E402
 from tools.story_memory.memory_v0 import StoryMemory  # noqa: E402
-from tools.story_pipeline.source import Chapter, Passage, StoryScope, load_scope, parse_range  # noqa: E402
+from tools.story_pipeline.source import (  # noqa: E402
+    Chapter, Passage, StoryScope, layout_warnings, load_scope, parse_range,
+)
 
 SECTION_1 = ("Một buổi chiều mưa, Amane đi ngang qua công viên và thấy Mahiru ngồi một mình "
              "trên xích đu, người ướt sũng.")
@@ -176,6 +178,21 @@ class SourceTests(unittest.TestCase):
     def test_chapters_outside_manifest_rejected(self):
         with self.assertRaises(ValueError):
             load_scope(DEFAULT_MANIFEST, (5, 6))
+
+
+    def test_chapter_packed_into_one_passage_is_reported(self):
+        """A source with single line breaks reaches the pipeline as one huge passage."""
+        packed = Chapter(2, "doc", "t", (Passage("2.1", "\n".join(f"문장 {n}." for n in range(8))),))
+        normal = load_scope(DEFAULT_MANIFEST, (1, 1)).chapters[0]
+        warnings = layout_warnings([normal, packed])
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("chapter 2: 8 lines in 1 passage(s)", warnings[0])
+        report = run_pipeline.report_markdown(
+            {"run_id": "r", "scope": {"label": "chapter 2", "story_id": "s"}, "client": "c",
+             "profile": {"profile_id": "p", "min_words": 1, "max_words": 2}, "model_calls": 0, "seconds": 0,
+             "status": "COMPLETED", "source_warnings": warnings, "versions": []},
+            {"gates": {}, "claim_counts": {}, "findings": [], "undetermined": []})
+        self.assertIn("Cảnh báo nguồn", report)
 
 
 class ChecksTests(unittest.TestCase):

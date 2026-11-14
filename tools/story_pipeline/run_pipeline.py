@@ -27,7 +27,7 @@ from tools.story_pipeline import PIPELINE_VERSION, checks, stages  # noqa: E402
 from tools.story_pipeline.facts import StoryFacts  # noqa: E402
 from tools.story_pipeline.llm import CallLog, LLMClient, StageFailed  # noqa: E402
 from tools.story_pipeline.profile import DEFAULT_PROFILE_PATH, NarrativeProfile, load_profile  # noqa: E402
-from tools.story_pipeline.source import Chapter, StoryScope, load_scope, parse_range  # noqa: E402
+from tools.story_pipeline.source import Chapter, StoryScope, layout_warnings, load_scope, parse_range  # noqa: E402
 
 DEFAULT_MANIFEST = REPO / "data/sample/otonari_no_tenshi/wn_jp/LIGHT_NOVEL_SOURCE_MANIFEST_SAMPLE_V0.yaml"
 DEFAULT_OUT_ROOT = REPO / ".local" / "story_pipeline_runs"
@@ -150,6 +150,7 @@ def report_markdown(manifest: Dict[str, Any], report: Dict[str, Any]) -> str:
         f"- Số lần gọi mô hình: {manifest['model_calls']} — thời gian: {manifest['seconds']} giây",
         f"- Trạng thái: **{manifest['status']}**",
         _language_line(manifest.get("language_checks")),
+        *[f"- **Cảnh báo nguồn:** {warning}" for warning in manifest.get("source_warnings", [])],
         "",
         "> Đây là kiểm tra tự động sơ bộ, không phải verdict chính thức theo "
         "`SCRIPT_QUALITY_CONTRACT/v0`. Critic là một mô hình và có thể bỏ sót lỗi.",
@@ -248,6 +249,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         "prompt_fingerprints": stages.prompt_fingerprints(),
         "language_checks": stages.audit_coverage(profile.target_language, profile.brief_language,
                                                  scope.source_language),
+        "source_warnings": layout_warnings([*background, *scope.chapters]),
         "versions": [],
         "status": "RUNNING",
     }
@@ -437,6 +439,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         out_dir = Path(args.out) if args.out else DEFAULT_OUT_ROOT / f"{stamp}_ch{scope.first}-{scope.last}"
         resume = False
     print(f"run dir: {out_dir}", flush=True)
+    for warning in layout_warnings([*background, *scope.chapters]):
+        print(f"warning: {warning}", flush=True)
     manifest = run(client, scope, profile, out_dir, facts=facts, max_repairs=args.max_repairs,
                    revision_rounds=args.revision_rounds,
                    revise_severities=[s.strip() for s in args.revise_severities.split(",") if s.strip()],

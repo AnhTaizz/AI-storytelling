@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 8 — test files: 52 — test functions: 976
+Suites: 8 — test files: 53 — test functions: 982
 
 ## canonical_story
 
@@ -1168,13 +1168,23 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `ClauseTests.test_clauses_split_on_punctuation_and_conjunctions`
 - `ClauseTests.test_contrast_parts_split_only_at_a_contrast`
 
-### test_story_pipeline_v0 (35)
+### test_prepare_source (5)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.prepare_source`, `tools.story_pipeline.source`
+
+- `LayoutTests.test_layout_decision`
+- `LayoutTests.test_split_keeps_every_line_as_its_own_paragraph`
+- `PrepareTests.test_prepared_korean_chapters_load_through_m3_as_separate_passages`
+- `PrepareTests.test_invalid_input_is_rejected`
+- `PrepareTests.test_cli_reports_each_chapter`
+
+### test_story_pipeline_v0 (36)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
 
 - `test_profile`
 - `SourceTests.test_parse_range`
 - `SourceTests.test_sample_chapter_scope`
 - `SourceTests.test_chapters_outside_manifest_rejected`
+- `SourceTests.test_chapter_packed_into_one_passage_is_reported` — A source with single line breaks reaches the pipeline as one huge passage.
 - `ChecksTests.test_word_count_and_language`
 - `ChecksTests.test_foreign_script_depends_on_target_language`
 - `ChecksTests.test_contamination_and_artifacts_detected`
