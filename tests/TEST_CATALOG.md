@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 8 — test files: 52 — test functions: 980
+Suites: 8 — test files: 52 — test functions: 982
 
 ## canonical_story
 
@@ -1168,7 +1168,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `ClauseTests.test_clauses_split_on_punctuation_and_conjunctions`
 - `ClauseTests.test_contrast_parts_split_only_at_a_contrast`
 
-### test_story_pipeline_v0 (39)
+### test_story_pipeline_v0 (41)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
 
 - `test_profile`
@@ -1204,6 +1204,8 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `EndToEndTests.test_resume_rechecks_legacy_critic_and_changed_upstream_artifacts`
 - `EndToEndTests.test_episode_with_memory_recap`
 - `EndToEndTests.test_memory_brief_failing_current_checks_is_regenerated`
+- `EndToEndTests.test_recap_budget_and_missing_core_revision`
+- `EndToEndTests.test_ratio_uses_episode_only_and_preserves_absolute_override`
 - `EndToEndTests.test_cli_episode_mode`
 - `EndToEndTests.test_plan_may_call_back_to_recap_but_must_cover_episode`
 - `EndToEndTests.test_stage_failure_is_recorded`

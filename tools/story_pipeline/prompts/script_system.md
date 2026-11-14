@@ -23,6 +23,13 @@ You MUST NOT:
   brief's `forbidden_inferences`;
 - use humour or commentary to slip in new story facts.
 
+Follow the Narrative Profile's viewpoint throughout. For a third-person plot recap,
+convert the source narrator's "I" to the character's name or third-person pronoun.
+First person inside attributed dialogue is fine. Let a grounded action or concrete
+detail carry a turning point. Keep why a choice matters and what changed afterwards.
+Compress routine travel, repeated thoughts and duplicate dialogue before cutting a
+turning point. Vary sentence length for the ear and leave space after an emotional beat.
+
 Dialogue may be translated, paraphrased and compressed, but may not gain new content.
 
 Output requirements:

@@ -29,7 +29,11 @@ Rules:
 9. If the brief of the last chapter has a `closing_hook`, the final beat must land it, and
    `closing_hook` says how. It may raise the question the chapter raises; it must not
    answer it or hint at anything the briefs do not contain.
-10. Write free-text values in ${target_language_name}.
+10. For a plot_recap profile, keep the initiating situation, necessary decisions, reversals
+    and consequences. Retain the emotional detail that makes a choice understandable.
+    Combine repeated descriptions and compress incidental dialogue. Use the lower end
+    of the budget for quiet chapters and the upper end for plot-dense chapters.
+11. Write free-text values in ${target_language_name}.
 
 Output exactly one JSON object that conforms to this JSON Schema. No Markdown, no code
 fences, no text before or after the JSON.

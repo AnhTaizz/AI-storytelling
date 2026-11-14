@@ -37,13 +37,15 @@ def render(name: str, **values: Any) -> str:
     return Template(load_prompt(name)).substitute(**values)
 
 
-def brief_fingerprint(profile: NarrativeProfile) -> str:
+def brief_fingerprint(profile: NarrativeProfile, estimate_language: str | None = None) -> str:
     """Identity of everything that shapes a chapter brief except the model and the source."""
     digest = hashlib.sha256()
     for path in (PROMPT_DIR / "brief_system.md", PROMPT_DIR / "brief_user.md",
                  SCHEMA_DIR / "story_brief_v0.schema.json"):
         digest.update(path.read_bytes())
     digest.update(profile.brief_language.encode("utf-8"))
+    if estimate_language:
+        digest.update(estimate_language.encode("utf-8"))
     return digest.hexdigest()
 
 
@@ -56,7 +58,7 @@ def prompt_fingerprints() -> Dict[str, str]:
 
 
 def dump(obj: Any) -> str:
-    return json.dumps(obj, ensure_ascii=False, indent=1)
+    return json.dumps(obj, ensure_ascii=False, separators=(",", ":"))
 
 
 # --------------------------------------------------------------------------- briefs
@@ -292,8 +294,16 @@ def known_characters_text(briefs: Sequence[Dict[str, Any]]) -> str:
 
 def run_brief(client: LLMClient, scope: StoryScope, chapter: Chapter, profile: NarrativeProfile,
               earlier_briefs: Sequence[Dict[str, Any]], facts: Optional[StoryFacts],
-              log: CallLog, max_repairs: int) -> Dict[str, Any]:
+              log: CallLog, max_repairs: int, estimate_language: str | None = None) -> Dict[str, Any]:
     schema = load_schema("story_brief_v0")
+    if estimate_language:
+        schema["properties"]["full_target_units_estimate"]["description"] = (
+            f"Estimate the length of a full, unabridged translation of this chapter into {estimate_language}. "
+            "Count whitespace-separated units (Vietnamese: separated syllables) or nonspace characters "
+            "for ja/zh/th. Return the number only, without writing the translation.")
+        schema["required"].append("full_target_units_estimate")
+    else:
+        del schema["properties"]["full_target_units_estimate"]
     facts_block = ""
     if facts is not None:
         rendered = facts.render_for_chapter(chapter.order)
@@ -316,7 +326,7 @@ def run_brief(client: LLMClient, scope: StoryScope, chapter: Chapter, profile: N
                           max_repairs=max_repairs, log=log, request_suffix=f"ch{chapter.order}")
 
 
-def briefs_for_prompt(briefs: Sequence[Dict[str, Any]]) -> str:
+def briefs_for_prompt(briefs: Sequence[Dict[str, Any]], *, include_evidence: bool = False) -> str:
     """Add global refs (c1.E3, c1.CH2) so later stages can cite brief items unambiguously."""
     out = []
     for brief in briefs:
@@ -330,6 +340,15 @@ def briefs_for_prompt(briefs: Sequence[Dict[str, Any]]) -> str:
             relationship["ref"] = f"c{n}.R{i}"
         if item["closing_hook"]["text"]:
             item["closing_hook"]["ref"] = f"c{n}.END"
+        # Keep per-fact evidence for the critic, especially when several character facts
+        # share one character ref. Presentation stages receive the same factual text.
+        if not include_evidence:
+            evidence_items = [f for c in item["characters"] for f in c["facts"]]
+            evidence_items += [*item["events"], *item["relationships"], item["closing_hook"]]
+            for fact in evidence_items:
+                fact.pop("quote", None)
+                fact.pop("evidence", None)
+        item.pop("full_target_units_estimate", None)
         out.append(item)
     return dump(out)
 
@@ -399,6 +418,11 @@ def run_plan(client: LLMClient, scope: StoryScope, briefs: Sequence[Dict[str, An
              profile: NarrativeProfile, log: CallLog, max_repairs: int,
              recap: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     schema = load_schema("narrative_plan_v0")
+    if profile.max_words < 40:
+        # The v0 two-beat, 20-word minimum is impossible for very short summaries.
+        beats = schema["properties"]["beats"]
+        beats["minItems"] = 1
+        beats["items"]["properties"]["target_words"]["minimum"] = 1
     system = render("plan_system", min_words=profile.min_words, max_words=profile.max_words,
                     target_language_name=profile.target_language_name, schema=dump(schema))
     user = render("plan_user", scope_label=scope.label(), profile=profile.render(),
@@ -457,7 +481,8 @@ def findings_for_revision(critic: Dict[str, Any], severities: Sequence[str]) -> 
 def run_revision(client: LLMClient, scope: StoryScope, briefs: Sequence[Dict[str, Any]],
                  plan: Dict[str, Any], script: Dict[str, Any], findings: List[Dict[str, Any]],
                  units: List[Dict[str, str]], profile: NarrativeProfile, log: CallLog,
-                 max_repairs: int, version: int, recap: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+                 max_repairs: int, version: int, recap: Optional[Dict[str, Any]] = None,
+                 missing_core: Sequence[str] = ()) -> Dict[str, Any]:
     unit_text = {u["unit_id"]: u["text"] for u in units}
     lines = []
     for f in findings:
@@ -465,6 +490,11 @@ def run_revision(client: LLMClient, scope: StoryScope, briefs: Sequence[Dict[str
                      f"\"{unit_text.get(f['unit_id'], '')[:300]}\"\n  claim: {f['claim']}\n"
                      f"  why: {f['explanation']}\n  suggested fix: {f['suggested_fix']}"
                      f"\n  original evidence: {dump(f.get('source_evidence', []))}")
+    events = event_index(briefs)
+    for ref in missing_core:
+        lines.append(f"- CORE coverage {ref}: {events[ref]['summary']}. Check the allotted beat. "
+                     "If already narrated, keep it once. Otherwise restore its causal role in a short sentence "
+                     "and cut lower-priority detail to stay in budget.")
     user = render("revise_user", scope_label=scope.label(), profile=profile.render(),
                   briefs=briefs_for_prompt(briefs), background=background_text(recap),
                   plan=dump(plan), script=dump(script),
@@ -832,7 +862,7 @@ def run_critic(client: LLMClient, scope: StoryScope, briefs: Sequence[Dict[str, 
     system = render("critic_system", target_language_name=profile.target_language_name,
                     schema=dump(schema))
     unit_lines = "\n\n".join(f"<{u['unit_id']}>\n{u['text']}\n</{u['unit_id']}>" for u in units)
-    user = render("critic_user", scope_label=scope.label(), briefs=briefs_for_prompt(briefs),
+    user = render("critic_user", scope_label=scope.label(), briefs=briefs_for_prompt(briefs, include_evidence=True),
                   background=background_text(recap),
                   evidence_refs=dump(refs), passages=dump(passages),
                   unit_count=len(units), units=unit_lines)

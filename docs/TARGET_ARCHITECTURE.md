@@ -188,6 +188,23 @@ the reading order and conceal branch names from the reviewer.
 Implementation, CLI and artifact details are in the
 [prototype notes](research/pipeline/STORY_PIPELINE_PROTOTYPE_V0.md#source-backed-review-and-existing-runs).
 
+### 5.3 Extending the channel to manga
+
+The current output profile is a third-person light-novel recap. Viewpoint, pacing,
+compression and commentary belong to a channel profile. A different output profile
+can use the same underlying story facts. Choose Gemini model routes independently of
+that profile to compare runs without changing the editorial instructions.
+
+For a future manga adapter, identify panels by edition, chapter, page and reading order.
+Extract dialogue, speaker (or unknown) and directly visible actions once. Cache each
+extraction against the image content, crop/layout, extractor model and prompt version.
+Use a visual model for ambiguous speakers, panel transitions and silent actions; send
+adjacent panels only when they resolve ambiguity. Keep low-confidence observations and
+their panel IDs. The writer can consume textual events; a critic or editor can request
+the cited panel when necessary. This requires an image-capable adapter and visual
+evidence checks before enabling manga. A manga episode should set its own duration or
+word budget since page count has no direct mapping to full prose length.
+
 ## 6. Implementation Stages & MVP
 
 ### 6.1 Current Research / M1

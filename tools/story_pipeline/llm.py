@@ -96,6 +96,7 @@ class GeminiLLMClient:
         self,
         model: Optional[str] = None,
         *,
+        stage_models: Optional[Dict[str, str]] = None,
         dotenv_path: Path | str = Path(".env"),
         temperature: float = 0.4,
         max_transport_retries: int = 3,
@@ -122,6 +123,12 @@ class GeminiLLMClient:
         if not self.models:
             raise GeminiConfigError(
                 "No Gemini model: pass --model or set GEMINI_MODEL in .env")
+        self.stage_models = {}
+        for stage, chain in (stage_models or {}).items():
+            models = [m.strip() for m in chain.split(",")]
+            if stage not in ("brief", "plan", "script", "critic", "revise") or not all(models):
+                raise GeminiConfigError(f"invalid stage or model chain for {stage!r}")
+            self.stage_models[stage] = models
         self.model = self.models[0]
         self.temperature = temperature
         self.name = "gemini:" + ",".join(self.models)
@@ -141,9 +148,10 @@ class GeminiLLMClient:
         )
 
     def complete(self, *, system: str, user: str, request_id: str) -> Dict[str, Any]:
+        models = self.stage_models.get(request_id.partition(":")[0], self.models)
         failed: List[Dict[str, Any]] = []
         self.attempt_failures.clear()
-        for index, model in enumerate(self.models):
+        for index, model in enumerate(models):
             try:
                 record = self._transport.generate(
                     system_instruction=system,
@@ -157,7 +165,7 @@ class GeminiLLMClient:
                 # error was (live run 4: three 503s, then an unclassified failure), move on.
                 # A request refused on its first attempt is not sent to another model.
                 retried = error.attempts > 1
-                if (error.code not in FALLBACK_CODES and not retried) or index == len(self.models) - 1:
+                if (error.code not in FALLBACK_CODES and not retried) or index == len(models) - 1:
                     seen = "; ".join(f"{f['model']}: {f['type']} status={f['status']}" for f in self.attempt_failures)
                     raise RuntimeError(f"{error} [attempt errors: {seen or 'none recorded'}]") from error
                 failed.append({"model": model, "code": error.code, "attempts": error.attempts})
@@ -228,6 +236,20 @@ class CallLog:
     """Collects every model call of a run so it can be written to disk."""
 
     entries: List[Dict[str, Any]] = field(default_factory=list)
+
+    def usage_summary(self) -> Dict[str, Any]:
+        """Provider-reported usage for this invocation, including JSON repairs."""
+        summary = {}
+        for entry in self.entries:
+            stage = summary.setdefault(entry["stage"], {})
+            stats = stage.setdefault(entry.get("model") or "unknown", {"calls": 0, "calls_with_total": 0})
+            stats["calls"] += 1
+            usage = entry.get("usage") or {}
+            stats["calls_with_total"] += int("total_token_count" in usage)
+            for field, count in usage.items():
+                if isinstance(count, int):
+                    stats[field] = stats.get(field, 0) + count
+        return summary
 
     def add(self, entry: Dict[str, Any]) -> None:
         self.entries.append(entry)

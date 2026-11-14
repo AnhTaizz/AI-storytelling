@@ -137,11 +137,14 @@ class FakeModel:
     def __call__(self, stage, system, user):
         if stage == "brief":
             order = int(re.search(r"Chapter order: (\d+)", user).group(1))
-            return json.dumps(brief_json(order), ensure_ascii=False)
+            brief = brief_json(order)
+            if "full_target_units_estimate" in system:
+                brief["full_target_units_estimate"] = 120
+            return json.dumps(brief, ensure_ascii=False)
         if stage == "plan":
             # Use exactly the event refs the prompt offers (episode briefs and recap memory).
             self.plan_prompts.append(user)
-            refs = list(dict.fromkeys(re.findall(r'"ref": "(c\d+\.E\d+)"', user)))
+            refs = list(dict.fromkeys(re.findall(r'"ref":\s*"(c\d+\.E\d+)"', user)))
             plan = json.loads(json.dumps(PLAN))
             plan["hook"]["event_refs"] = refs[:1]
             plan["beats"][0]["event_refs"] = refs[:1]
@@ -156,7 +159,7 @@ class FakeModel:
 
 
 def test_profile():
-    return load_profile().with_length(20, 200)
+    return load_profile(REPO / "tools/story_pipeline/profiles/vi_youtube_casual_v0.yaml").with_length(20, 200)
 
 
 class SourceTests(unittest.TestCase):
@@ -700,7 +703,7 @@ class EndToEndTests(unittest.TestCase):
             recap = json.loads((Path(tmp) / "ep1" / "memory_recap.json").read_text(encoding="utf-8"))
             self.assertEqual(recap["covers_chapters"], [1, 2])
             plan_prompt = model.plan_prompts[0]
-            self.assertIn('"ref": "c1.E1"', plan_prompt)      # callback material from memory
+            self.assertRegex(plan_prompt, r'"ref":\s*"c1\.E1"')      # callback material from memory
             self.assertNotIn(chapter_4_text, plan_prompt)     # nothing past the episode
             report = json.loads((Path(tmp) / "ep1" / "report.json").read_text(encoding="utf-8"))
             # Coverage is required for the episode's chapter only, not for recapped chapters.
@@ -734,6 +737,61 @@ class EndToEndTests(unittest.TestCase):
             again = ScriptedLLMClient(FakeModel())  # the regenerated brief is valid and reused
             reused = run(again, scope, test_profile(), Path(tmp) / "run2", memory=memory)
             self.assertEqual(reused["brief_sources"], {"1": "memory"})
+
+    def test_recap_budget_and_missing_core_revision(self):
+        scope = load_scope(DEFAULT_MANIFEST, (1, 1))
+        fallback = FakeModel()
+        repairs = []
+        critic_calls = []
+
+        def respond(stage, system, user):
+            if stage in ("plan", "script", "revise"):
+                self.assertIn("ngôi thứ ba", user.lower())
+                self.assertNotIn('"evidence":', user)
+            if stage == "critic":
+                self.assertIn(PASSAGE_TEXT["1.2"], user)
+                audit = critic_json(user, False)
+                if not critic_calls:
+                    for unit in audit["units"][1:]:
+                        unit["claims"][0]["brief_refs"] = ["c1.E2"]
+                critic_calls.append(user)
+                return json.dumps(audit)
+            if stage == "revise":
+                repairs.append(user)
+            return fallback(stage, system, user)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            client = ScriptedLLMClient(respond)
+            manifest = run(client, scope, load_profile(), out)
+            self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
+            self.assertEqual([c["stage"] for c in client.calls],
+                             ["brief", "plan", "script", "critic", "revise", "critic"])
+            self.assertIn("CORE coverage c1.E1", repairs[0])
+            report = json.loads((out / "report.json").read_text(encoding="utf-8"))
+            self.assertEqual(report["final_check"]["length_target"], [48, 60])
+            self.assertEqual(report["compression"]["basis"], "estimated_translation")
+            self.assertAlmostEqual(report["compression"]["actual_ratio"], checks.count_words(checks.script_text(SCRIPT)) / 120)
+            self.assertEqual(report["gates"]["GATE_NECESSARY_COVERAGE"]["status"], "PASS")
+            self.assertEqual(manifest["usage_by_stage_model"]["critic"]["unknown"], {"calls": 2, "calls_with_total": 0})
+
+    def test_ratio_uses_episode_only_and_preserves_absolute_override(self):
+        scope = load_scope(DEFAULT_MANIFEST, (2, 2))
+        cases = [
+            (scope, None, "estimated_translation", 120),
+            (scope, 2000, "user_supplied", 2000),
+            (StoryScope(scope.story_id, "vi", scope.chapters), None, "source_count",
+             sum(checks.count_length(p.text, "vi") for p in scope.chapters[0].passages)),
+        ]
+        for episode, units, basis, denominator in cases:
+            with self.subTest(basis=basis), tempfile.TemporaryDirectory() as tmp:
+                manifest = run(ScriptedLLMClient(FakeModel()), episode, load_profile(), Path(tmp),
+                               background=[SAMPLE_CHAPTERS[1]], full_target_units=units, stop_after="brief")
+                self.assertEqual(manifest["status"], "STOPPED_AFTER_BRIEF", manifest.get("error"))
+                self.assertEqual(manifest["compression"]["basis"], basis)
+                self.assertEqual(manifest["compression"]["full_target_units"], denominator)
+        with self.assertRaises(ValueError):
+            run(ScriptedLLMClient(FakeModel()), scope, test_profile(), Path("unused"), full_target_units=20)
 
     def test_cli_episode_mode(self):
         with tempfile.TemporaryDirectory() as tmp, \
@@ -814,6 +872,18 @@ class GeminiClientTests(unittest.TestCase):
         self.assertEqual(sdk.kwargs["model"], "fake-model")
         self.assertEqual(client.name, "gemini:fake-model")
         self.assertEqual(record["fallback_from"], [])
+        routed = GeminiLLMClient("base", stage_models={"critic": "checker,backup"},
+                                 client_factory=lambda key: sdk, dotenv_path=REPO / "unused",
+                                 environ={"GEMINI_API_KEY_1": "test-key-not-real"})
+        for stage, model in (("plan", "base"), ("critic", "checker"), ("revise", "base")):
+            with self.subTest(stage=stage):
+                record = routed.complete(system="s", user="u", request_id=f"{stage}:v1:attempt2")
+                self.assertEqual(record["model_requested"], model)
+        log = CallLog()
+        for usage in ({"total_token_count": 8, "thoughts_token_count": 2}, {"total_token_count": 4}, None):
+            log.add({"stage": "critic", "model": "checker", "usage": usage})
+        self.assertEqual(log.usage_summary()["critic"]["checker"],
+                         {"calls": 3, "calls_with_total": 2, "total_token_count": 12, "thoughts_token_count": 2})
 
     def test_model_fallback_chain(self):
         class ProviderError(Exception):

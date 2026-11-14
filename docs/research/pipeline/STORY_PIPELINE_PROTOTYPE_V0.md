@@ -144,6 +144,46 @@ Each run writes to `.local/story_pipeline_runs/<run id>/` (git-ignored): `briefs
 `report.json`, `review_form.md`, `calls.jsonl` (every model call with raw output and validation errors) and
 `run_manifest.json` (scope, background chapters, where each brief came from — memory or model —, profile, model, prompt/schema sha256, status). Episode runs also write `memory_recap.json`.
 
+### Episode budgets and model routing
+
+The default channel profile is `vi_light_novel_recap.yaml`. Count only the selected
+episode in the denominator. Earlier recap chapters can supply context. All spoken
+recap words count towards the resulting budget. A 4,000-unit Vietnamese full text
+gives a 1,600–2,000-unit narration. Vietnamese units follow the existing whitespace
+counter, so "học sinh" counts as two. This is a text-length target, independent of
+speech rate. Same-language input is counted from the episode passages. For Japanese
+input, the brief call estimates the length of a full Vietnamese rendering per chapter
+without generating one. For an exact baseline pass `--full-target-units N` from a
+complete Vietnamese version of the same chapters. The report labels the basis and
+actual ratio. Manual word limits take precedence. The earlier casual profile remains
+available at `tools/story_pipeline/profiles/vi_youtube_casual_v0.yaml`.
+
+Use one default model to begin. If measured results justify specialization, each stage
+accepts an override. In this shell example the variables hold Gemini model IDs from
+the operator's account:
+
+```bash
+python -m tools.story_pipeline.run_pipeline --chapters 1 --model "$FAST_MODEL" \
+    --stage-model brief="$SOURCE_MODEL" --stage-model script="$WRITER_MODEL" \
+    --stage-model revise="$WRITER_MODEL" --stage-model critic="$CHECKER_MODEL"
+```
+
+A stage can take a comma-separated fallback chain. All stages share the existing Gemini
+transport and credential pool. `run_manifest.json` records configured routes and provider
+usage by stage and answering model for this invocation (including JSON repairs).
+`calls_with_total` identifies missing usage. A resumed invocation counts only new calls.
+Provider totals already include component counts. Keep the same project label on keys
+belonging to the same project.
+[Gemini rate limits](https://ai.google.dev/gemini-api/docs/rate-limits)
+
+For the plot recap, the planner keeps decisions and consequences and gives extra room to
+a dense chapter. A missing CORE citation in narration triggers a bounded revision even
+when factual checks pass. The writer checks whether the event is already present before
+adding it. The critic checks the resulting version. Any remaining omissions stay visible
+in `GATE_NECESSARY_COVERAGE`. The source-aware critic gets linked passages, while the
+planner and writer receive compact brief text, reference IDs and epistemic labels.
+The full original brief stays available for review.
+
 ### Source-backed review and existing runs
 
 The critic reads the original text of each distinct passage cited by episode events,
