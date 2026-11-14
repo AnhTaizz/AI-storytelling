@@ -39,6 +39,16 @@ class Lexicon:
     word_boundaries: bool
     chars_per_event: int  # source text length per expected brief event (scripts differ in density)
     phrases: Dict[str, Dict[str, Tuple[str, ...]]]  # kind -> concept -> phrases
+    clause_markers: Tuple[str, ...] = ()  # conjunctions that start a new clause
+
+    def clauses(self, text: str) -> List[str]:
+        """Split at punctuation and at this language's clause conjunctions."""
+        parts = re.split(r"[,;.!?、。，；()（）]+", text)
+        if self.clause_markers:
+            alternatives = "|".join(re.escape(m) for m in sorted(self.clause_markers, key=len, reverse=True))
+            pattern = rf"(?<!\w)(?:{alternatives})(?!\w)" if self.word_boundaries else f"(?:{alternatives})"
+            parts = [piece for part in parts for piece in re.split(pattern, part, flags=re.IGNORECASE)]
+        return [p.strip() for p in parts if p and p.strip()]
 
     def find(self, text: str, kind: str) -> List[Tuple[str, str]]:
         """(concept, phrase) for every phrase of `kind` that occurs in `text`."""
@@ -70,6 +80,9 @@ def validate(data: dict, expected_language: str) -> List[str]:
         problems.append(f"language must be {expected_language!r}")
     if not isinstance(data.get("word_boundaries"), bool):
         problems.append("word_boundaries must be true or false")
+    markers = data.get("clause_markers", [])
+    if not isinstance(markers, list) or not all(isinstance(m, str) and m.strip() for m in markers):
+        problems.append("clause_markers must be a list of non-empty phrases")
     cpe = data.get("chars_per_event")
     if not isinstance(cpe, int) or isinstance(cpe, bool) or cpe <= 0:
         problems.append("chars_per_event must be a positive integer")
@@ -116,7 +129,8 @@ def load(language: str) -> Optional[Lexicon]:
     if problems:
         raise LexiconError(f"{path.name}: " + "; ".join(problems))
     phrases = {kind: {concept: tuple(values) for concept, values in data[kind].items()} for kind in KINDS}
-    return Lexicon(language, data["word_boundaries"], data["chars_per_event"], phrases)
+    return Lexicon(language, data["word_boundaries"], data["chars_per_event"], phrases,
+                   tuple(data.get("clause_markers", [])))
 
 
 def missing_languages(*languages: str) -> FrozenSet[str]:

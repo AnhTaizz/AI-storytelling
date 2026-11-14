@@ -301,6 +301,27 @@ Manual check of the final script against the two defects that had persisted sinc
 
 The closing hook is rendered faithfully ("Nhưng đó chỉ là những gì cậu nghĩ vào lúc ấy mà thôi"), and Amane is addressed with one pronoun throughout. Remaining small issue: Mahiru's hair is rendered as chestnut, where 亜麻色 means flaxen.
 
+**Review of run 7's final script, and hedge checks for the script.**
+
+Manual reading found three medium defects:
+- "not waiting for anyone" is presented as Mahiru's words, but in 1.22 it is the narrator's 「なさそう」 ("seems not to").
+- Wariness towards "the opposite sex" is stated as fact, but in 1.39 it is Amane's guess 「かもしれない」.
+- "a pained expression" is stated as fact, but 1.26 has 「ように見えて」 ("seemed").
+
+There were two small ones as well: hair rendered as chestnut instead of 亜麻色 (flaxen), and "on a whim" applied to the umbrella rather than to speaking to her (1.45).
+
+Tracing showed that none of the three medium defects is hedged in the brief. They entered at the brief stage, through passages the brief cited but did not quote.
+
+Two additions:
+
+- **Script hedge audit (feeds revision).** For each paragraph, the hedged *clauses* of the brief items its claims cite are compared with the paragraph's own sentences. Clauses are split at punctuation and at each language's conjunctions, listed in the lexicons as `clause_markers`. A sentence that retells such a clause (bigram similarity >= 0.5) without a hedge becomes a MEDIUM finding.
+  - The first, item-level version flagged sentences that retold the *unhedged* half of a joined statement.
+  - On the saved scripts of runs 2, 3, 4, 5 and 7 the final version has no false positives, and also no catches, because the writers kept every hedge the briefs had.
+  - It needs the brief and the script in one language.
+- **Source hedge review (advisory, in report.md).** It lists brief items with no hedge although a *cited* passage carries one outside dialogue. Over runs 2–7 roughly half of these were real: a metaphor turned into a nickname, 「そうだ」 hearsay, 「ように見え」 dropped. The rest were hedges about something else in the same passage; for run 7 it was 1 of 4. Because forcing hedges onto true facts would distort them, this list is shown to a person and never sent back to the model.
+
+The remaining gap is brief items that summarise several passages. A deterministic check cannot tell which passage a clause came from across languages. The next step would be per-clause evidence and an explicit epistemic label in the brief schema.
+
 ## Known limits
 
 - Brief paraphrase quality is not measured against gold. Quotes pin the evidence, but a

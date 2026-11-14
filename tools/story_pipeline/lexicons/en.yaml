@@ -2,6 +2,7 @@
 language: en
 word_boundaries: true
 chars_per_event: 1600
+clause_markers: [and, but, after, before, when, if, because, then, while]
 strength:
   degree_extreme: [extremely, incredibly, utterly]
   completeness: [completely, totally, entirely, from head to toe]

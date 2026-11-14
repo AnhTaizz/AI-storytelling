@@ -172,6 +172,14 @@ def report_markdown(manifest: Dict[str, Any], report: Dict[str, Any]) -> str:
     for f in report["findings"]:
         lines.append(f"- **{f['severity']}** {f['claim_type']} / {f['failure_category']} ({f['unit_id']}): "
                      f"{f['claim']}\n  - Lý do: {f['explanation']}\n  - Gợi ý: {f['suggested_fix']}")
+    if report.get("source_hedge_review"):
+        lines += ["", "## Cần người xem: brief có thể đã bỏ mất rào đón của nguồn", "",
+                  "Đoạn nguồn được trích có từ rào đón (lời đồn, vẻ bề ngoài, phỏng đoán, ẩn dụ) "
+                  "nhưng mục brief viết như sự thật. Khoảng một nửa là đúng; phần còn lại là rào đón "
+                  "nói về chuyện khác trong cùng đoạn. Không tự động sửa.", ""]
+        for item in report["source_hedge_review"]:
+            marks = ", ".join(f"{phrase} ({pid})" for _, phrase, pid in item["source_hedges"])
+            lines.append(f"- {item['ref']}: {item['text'][:160]} — nguồn: {marks}")
     if report["undetermined"]:
         lines += ["", "## Cần người xem (UNDETERMINED)", ""]
         for f in report["undetermined"]:
@@ -315,6 +323,8 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                                                           log, max_repairs, version, recap))
                 audit = stages.strength_audit(critic, briefs, recap, units, profile.target_language,
                                               profile.brief_language)
+                audit += stages.hedge_audit(critic, briefs, recap, units, profile.target_language,
+                                            profile.brief_language)
                 write_json(out_dir / f"strength_audit_v{version}.json", audit)
                 problems = stages.findings_for_revision(critic, SEVERITY_ORDER) + audit
                 check = checks.check_script(script, profile.min_words, profile.max_words,
@@ -342,8 +352,14 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                                                  encoding="utf-8")
         final_units = checks.split_units(checks.script_text(script))
         final_audit = (stages.strength_audit(critic, briefs, recap, final_units, profile.target_language,
-                                             profile.brief_language) if critic is not None else [])
+                                             profile.brief_language)
+                       + stages.hedge_audit(critic, briefs, recap, final_units, profile.target_language,
+                                            profile.brief_language) if critic is not None else [])
         report = gate_report(critic, final_check, briefs, final_audit)
+        report["source_hedge_review"] = [
+            item for chapter, brief in zip(sorted([*background, *scope.chapters], key=lambda c: c.order), all_briefs)
+            if chapter.order >= scope.first
+            for item in stages.source_hedge_review(brief, chapter, scope.source_language, profile.brief_language)]
         report["final_version"] = version
         report["final_check"] = final_check
         write_json(out_dir / "report.json", report)

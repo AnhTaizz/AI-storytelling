@@ -366,6 +366,58 @@ class SemanticValidationTests(unittest.TestCase):
         self.assertFalse(stages.audit_coverage("vi", "vi", "xx")["brief_hedge_check"])
         self.assertTrue(stages.audit_coverage("vi", "vi", "xx")["strength_audit"])
 
+    def test_script_must_keep_the_hedges_of_the_brief_clause_it_retells(self):
+        brief = brief_json(1)
+        brief["characters"][1]["facts"] = [{"text": "Khiêm tốn, và nghe nói rất được các nam sinh tỏ tình",
+                                            "evidence": ["1.39"], "quote": "x"}]
+        brief["events"][0]["summary"] = "Amane hỏi cô đang làm gì sau khi nhìn thấy nét mặt như sắp khóc"
+
+        def run_case(paragraph, refs):
+            units = [{"unit_id": "P001", "sha256": "x", "text": paragraph}]
+            critic = {"units": [{"unit_id": "P001", "no_claim_reason": None, "claims": [
+                {"claim": "x", "claim_type": "SUPPORTED_FACT", "failure_category": None, "severity": None,
+                 "brief_refs": refs, "explanation": "e", "suggested_fix": None}]}]}
+            return stages.hedge_audit(critic, [brief], None, units)
+
+        cases = [
+            ("hedge dropped", "Cô rất được các nam sinh tỏ tình.", ["c1.CH2"], 1),
+            ("hedge kept", "Nghe nói cô rất được các nam sinh tỏ tình.", ["c1.CH2"], 0),
+            ("unhedged clause of the same fact", "Cô rất khiêm tốn.", ["c1.CH2"], 0),
+            # The brief splits at "sau khi": asking what she is doing is not the hedged part.
+            ("other clause of a joined statement", "Amane hỏi cô đang làm gì.", ["c1.E1"], 0),
+            ("appearance dropped", "Cậu nhìn thấy nét mặt cô sắp khóc.", ["c1.E1"], 1),
+            ("paragraph cites nothing", "Cô rất được các nam sinh tỏ tình.", [], 0),
+        ]
+        for label, paragraph, refs, expected in cases:
+            with self.subTest(label):
+                findings = run_case(paragraph, refs)
+                self.assertEqual(len(findings), expected, findings)
+                for finding in findings:
+                    self.assertEqual(finding["source"], "hedge_audit")
+        units = [{"unit_id": "P001", "sha256": "x", "text": "Cô rất được các nam sinh tỏ tình."}]
+        critic = {"units": [{"unit_id": "P001", "no_claim_reason": None, "claims": [
+            {"claim": "x", "claim_type": "SUPPORTED_FACT", "failure_category": None, "severity": None,
+             "brief_refs": ["c1.CH2"], "explanation": "e", "suggested_fix": None}]}]}
+        self.assertEqual(stages.hedge_audit(critic, [brief], None, units, "vi", "en"), [])  # needs one language
+        self.assertEqual(stages.hedge_audit(critic, [brief], None, None), [])
+        self.assertFalse(stages.audit_coverage("vi", "en", "ja")["script_hedge_audit"])
+
+    def test_source_hedge_review_lists_items_for_a_person(self):
+        chapter = Chapter(1, "doc", "t", (Passage("1.1", "彼女は告白を受けているらしい。"),
+                                          Passage("1.2", "「雨だろう」と彼は言った。")))
+        brief = brief_json(1, ["1.1"], "告白を受けている")
+        brief["characters"][1]["facts"] = [
+            {"text": "Cô được tỏ tình", "evidence": ["1.1"], "quote": "告白を受けている"},
+            {"text": "Nghe nói cô được tỏ tình", "evidence": ["1.1"], "quote": "告白を受けている"},
+            {"text": "Trời mưa", "evidence": ["1.2"], "quote": "雨"},  # hedge only inside dialogue
+        ]
+        brief["events"] = []
+        brief["characters"][0]["facts"] = []
+        review = stages.source_hedge_review(brief, chapter, "ja", "vi")
+        self.assertEqual([(r["ref"], r["text"]) for r in review], [("c1.CH2", "Cô được tỏ tình")])
+        self.assertEqual(review[0]["source_hedges"], [["reported", "らしい", "1.1"]])
+        self.assertEqual(stages.source_hedge_review(brief, chapter, "xx", "vi"), [])
+
     def test_critic_must_extract_claims_at_paragraph_density(self):
         paragraph = " ".join(["từ"] * 95)  # 95 words -> at least 3 claims
         units = checks.split_units(paragraph + "\n\nNgắn thôi.")

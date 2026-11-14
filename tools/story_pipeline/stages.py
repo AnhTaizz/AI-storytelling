@@ -8,7 +8,7 @@ import json
 import re
 from pathlib import Path
 from string import Template
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple
 
 from tools.story_memory.memory_v0 import recap_event_refs
 from tools.story_pipeline import checks, lexicon
@@ -512,12 +512,132 @@ def strength_audit(critic: Dict[str, Any], briefs: Sequence[Dict[str, Any]],
     return findings
 
 
+def brief_items(briefs: Sequence[Dict[str, Any]], recap: Optional[Dict[str, Any]] = None) -> Dict[str, List[str]]:
+    """Ref -> its individual statements (each character fact separately), for matching a
+    script sentence to the one brief statement it retells."""
+    items: Dict[str, List[str]] = {}
+    for brief in briefs:
+        n = brief["chapter_order"]
+        for character in brief["characters"]:
+            items[f"c{n}.{character['id']}"] = [f["text"] for f in character["facts"]]
+        for event in brief["events"]:
+            items[f"c{n}.{event['id']}"] = [" ".join([event["summary"], event.get("consequence") or "",
+                                                      event["motivation"].get("text") or ""])]
+    for chapter in (recap or {}).get("chapters", []):
+        for event in chapter["core_events"]:
+            items[event["ref"]] = [event["summary"]]
+    return items
+
+
+def _bigrams(text: str) -> set:
+    squashed = _squash(text.casefold())
+    return {squashed[i:i + 2] for i in range(len(squashed) - 1)}
+
+
+def similarity(a: str, b: str) -> float:
+    """Dice overlap of character bigrams: script-agnostic, needs no tokenizer."""
+    x, y = _bigrams(a), _bigrams(b)
+    return 2 * len(x & y) / (len(x) + len(y)) if x and y else 0.0
+
+
+HEDGE_MATCH = 0.5  # minimum similarity for a script sentence to retell a hedged brief clause
+
+
+def _hedged_clauses(statements: Sequence[str], lex: "lexicon.Lexicon") -> List[Tuple[str, Set[str]]]:
+    """Clauses of brief statements that carry a hedge. A brief statement often joins several
+    facts ("modest, and reportedly popular with the boys"); only the hedged clause counts."""
+    out = []
+    for statement in statements:
+        for clause in lex.clauses(statement):
+            concepts = lex.concepts(clause, "hedge")
+            if concepts and len(_squash(clause)) >= 8:
+                out.append((clause.strip(), concepts))
+    return out
+
+
+def hedge_audit(critic: Dict[str, Any], briefs: Sequence[Dict[str, Any]],
+                recap: Optional[Dict[str, Any]] = None, units: Optional[Sequence[Dict[str, str]]] = None,
+                script_language: str = "vi", brief_language: Optional[str] = None) -> List[Dict[str, Any]]:
+    """The script must keep the brief's hedges.
+
+    For every paragraph, the hedged clauses of the brief items its claims cite are compared
+    with the paragraph's own sentences. A sentence that retells such a clause (character-
+    bigram similarity >= HEDGE_MATCH) but carries no hedge becomes a MEDIUM finding for
+    revision. Matching needs the brief and the script in one language; otherwise nothing is
+    checked and `audit_coverage` reports it. A first item-level version flagged sentences that
+    retold the unhedged half of a statement; on live runs 4, 5 and 7 this version has no false
+    positives.
+    """
+    brief_language = brief_language or script_language
+    script_lex, brief_lex = lexicon.load(script_language), lexicon.load(brief_language)
+    if script_lex is None or brief_lex is None or units is None:
+        return []
+    if lexicon.lexicon_code(script_language) != lexicon.lexicon_code(brief_language):
+        return []
+    items = brief_items(briefs, recap)
+    unit_text = {u["unit_id"]: u["text"] for u in units}
+    findings = []
+    for unit in critic["units"]:
+        refs = sorted({ref for claim in unit["claims"] for ref in claim["brief_refs"]})
+        clauses = [(ref, clause, concepts) for ref in refs
+                   for clause, concepts in _hedged_clauses(items.get(ref, []), brief_lex)]
+        if not clauses:
+            continue
+        for match in _SENTENCE.finditer(unit_text.get(unit["unit_id"], "")):
+            sentence = match.group(0).strip()
+            if not sentence or script_lex.concepts(sentence, "hedge"):
+                continue
+            score, ref, clause, concepts = max((similarity(sentence, c), r, c, k) for r, c, k in clauses)
+            if score < HEDGE_MATCH:
+                continue
+            examples = [p for c in sorted(concepts) for p in script_lex.phrases["hedge"][c][:2]]
+            findings.append({
+                "unit_id": unit["unit_id"], "claim": sentence,
+                "claim_type": "STRENGTHENED_STORY_CLAIM", "failure_category": "EPISTEMIC_ERROR",
+                "severity": "MEDIUM", "brief_refs": [ref], "source": "hedge_audit",
+                "concepts": sorted(concepts), "phrases": [],
+                "explanation": f"Brief ({ref}) ghi có rào đón {sorted(concepts)}: \"{clause[:120]}\"; "
+                               f"câu kịch bản kể lại mà bỏ mất rào đón.",
+                "suggested_fix": "Giữ lại sắc thái rào đón, ví dụ: " + ", ".join(examples),
+            })
+    return findings
+
+
+def source_hedge_review(brief: Dict[str, Any], chapter: Chapter, source_language: str,
+                        brief_language: str) -> List[Dict[str, Any]]:
+    """Advisory list for a person: brief items with no hedge although a cited passage hedges.
+
+    Wider than `brief_hedge_errors`, which only reads the sentence of the item's quote. Over
+    live runs 2-7 about half of these were real (a metaphor stated as a nickname, 「そうだ」
+    hearsay, 「ように見え」 dropped) and half were hedges about something else in the same
+    passage, so they are reported, never sent back to the model.
+    """
+    src, dst = lexicon.load(source_language), lexicon.load(brief_language)
+    if src is None or dst is None:
+        return []
+    texts = {p.passage_id: p.text for p in chapter.passages}
+    items = [(f"c{brief['chapter_order']}.{c['id']}", f["text"], f["evidence"])
+             for c in brief["characters"] for f in c["facts"]]
+    items += [(f"c{brief['chapter_order']}.{e['id']}", e["summary"], e["evidence"]) for e in brief["events"]]
+    review = []
+    for ref, text, evidence in items:
+        if dst.concepts(text, "hedge"):
+            continue
+        hedges = sorted({(concept, phrase, pid) for pid in evidence
+                         for concept, phrase in src.find(_DIALOGUE.sub(" ", texts.get(pid, "")), "hedge")})
+        if hedges:
+            review.append({"ref": ref, "text": text, "source_hedges": [list(h) for h in hedges]})
+    return review
+
+
 def audit_coverage(script_language: str, brief_language: str, source_language: str) -> Dict[str, Any]:
     """Which deterministic language checks can run, so a missing lexicon is reported, not silent."""
     missing = sorted(lexicon.missing_languages(script_language, brief_language, source_language))
     return {
         "strength_audit": not ({script_language, brief_language} & set(missing)),
         "brief_hedge_check": not ({brief_language, source_language} & set(missing)),
+        "script_hedge_audit": (not ({script_language, brief_language} & set(missing))
+                               and lexicon.lexicon_code(script_language) == lexicon.lexicon_code(brief_language)),
         "missing_lexicons": missing,
         "available_lexicons": lexicon.available_languages(),
     }

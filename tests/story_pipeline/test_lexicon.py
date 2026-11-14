@@ -38,6 +38,7 @@ class LexiconFileTests(unittest.TestCase):
             "empty concept": (lambda d: d["hedge"].update(metaphor=[]), "at least one phrase"),
             "bad flag": (lambda d: d.update(word_boundaries="yes"), "word_boundaries"),
             "bad density": (lambda d: d.update(chars_per_event=0), "chars_per_event"),
+            "bad clause markers": (lambda d: d.update(clause_markers=["and", ""]), "clause_markers"),
         }
         for label, (mutate, message) in cases.items():
             with self.subTest(label):
@@ -74,6 +75,21 @@ class MatchingTests(unittest.TestCase):
         for language, text, kind, expected in cases:
             with self.subTest(language=language, text=text, kind=kind):
                 self.assertEqual(lexicon.load(language).concepts(text, kind), expected)
+
+
+class ClauseTests(unittest.TestCase):
+    def test_clauses_split_on_punctuation_and_conjunctions(self):
+        cases = [
+            ("vi", "Amane hỏi cô đang làm gì sau khi nhìn thấy nét mặt như sắp khóc",
+             ["Amane hỏi cô đang làm gì", "nhìn thấy nét mặt như sắp khóc"]),
+            ("vi", "Khiêm tốn, và nghe nói rất được tỏ tình", ["Khiêm tốn", "nghe nói rất được tỏ tình"]),
+            ("vi", "Mahiru vàng", ["Mahiru vàng"]),  # "và" inside a word is not a conjunction
+            ("en", "She smiled but he left", ["She smiled", "he left"]),
+            ("ja", "雨が降った。しかし彼女はいた", ["雨が降った", "彼女はいた"]),
+        ]
+        for language, text, expected in cases:
+            with self.subTest(language=language, text=text):
+                self.assertEqual(lexicon.load(language).clauses(text), expected)
 
 
 if __name__ == "__main__":

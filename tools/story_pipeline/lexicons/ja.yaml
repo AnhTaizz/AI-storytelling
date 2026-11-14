@@ -3,6 +3,7 @@
 language: ja
 word_boundaries: false
 chars_per_event: 550
+clause_markers: [けれど, けど, しかし, そして]
 strength:
   degree_extreme: [非常に, とても, 極めて, すごく]
   completeness: [完全に, 全く, 全身]
