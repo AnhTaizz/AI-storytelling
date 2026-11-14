@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 7 — test files: 50 — test functions: 948
+Suites: 8 — test files: 52 — test functions: 964
 
 ## canonical_story
 
@@ -1168,3 +1168,29 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `EndToEndTests.test_stage_failure_is_recorded`
 - `EndToEndTests.test_gate_report_severity`
 - `GeminiClientTests.test_uses_existing_transport_with_fake_sdk`
+
+## story_retrieval
+
+### test_evaluate_v0 (4)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_retrieval.evaluate_v0`, `tools.story_retrieval.retrieval_v0`, `tools.story_retrieval.retrieve`
+
+- `EvaluateV0Tests.test_dev_fixture_validity` — DEV gold is grounded in public passages within each varied cutoff.
+- `EvaluateV0Tests.test_dev_metrics_and_safe_per_probe_rows` — Evaluation reports overall/language means and ranks without source text.
+- `EvaluateV0Tests.test_private_synthetic_mapping_cutoff_and_missing_files` — Chunk IDs map back correctly and future-only lexical evidence cannot be returned.
+- `EvaluateV0Tests.test_cli_aggregate_output_and_errors` — CLI emits aggregate-only JSON/text and handles dependency/argument errors.
+
+### test_retrieval_v0 (12)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_benchmark.bm25_lexical_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.source`, `tools.story_retrieval.retrieval_v0`, `tools.story_retrieval.retrieve`
+
+- `RetrievalV0Tests.test_spoiler_boundary_and_narrower_window` — All retrievers filter a later exact match, even with an over-broad corpus.
+- `RetrievalV0Tests.test_invalid_requests` — Invalid query, cutoff, depth and windows fail before search.
+- `RetrievalV0Tests.test_corpus_loading_and_explicit_boundary_check` — The real loader bounds chapters; an invalid loader result fails explicitly.
+- `RetrievalV0Tests.test_natural_order_determinism_and_zero_scores` — Tie-breaking happens before truncation; repeated indexing preserves scores.
+- `RetrievalV0Tests.test_defensive_filter_and_ranking` — Untrusted candidates cannot bypass eligibility, positive scores, or ordering.
+- `RetrievalV0Tests.test_tokenizer_scripts_and_sample_japanese_retrieval` — Frozen tokenizer keeps Vietnamese and Hangul words, and Japanese character ngrams.
+- `RetrievalV0Tests.test_schema_and_cli_json_match_api` — JSON request echo, metadata and hits round-trip and validate against the schema.
+- `RetrievalV0Tests.test_cli_text_errors_help_and_windows_utf8` — Text snippets are single lines, errors return 2, and native stdout uses UTF-8.
+- `RetrievalV0Tests.test_dense_prefixes_cosine_and_index_reuse` — Injected encoders see E5 prefixes; cosine normalizes and excludes zero/negative scores.
+- `RetrievalV0Tests.test_invalid_encoder_outputs` — Bad vector counts, dimensions and non-finite values fail clearly.
+- `RetrievalV0Tests.test_rrf_hand_computed_ranks_depth_and_reindexing` — RRF K=60 fuses component ranks with natural ties and indexes each corpus once.
+- `RetrievalV0Tests.test_factory_and_lightweight_import` — Construction and import do not require or import the optional model stack.

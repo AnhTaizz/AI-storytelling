@@ -918,3 +918,11 @@ M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02 are ACCEPTED. M4-03 is `FR
 ## Next Candidate
 
 Author and seal a new independent fresh validation set for Draft V1.1 under separate authorization. Do not reuse DEV2 as fresh validation, open DEV2 gold, rerun predictions, access the holdout, begin M4-04C, or begin M5 without a separately authorized task.
+
+## M6 Retrieval Baseline v0 (spike) — IMPLEMENTED, PR pending owner review
+
+- Added versioned source-passage retrieval, schema, CLI and DEV/private evaluation with inclusive cutoff checks. This spike does not complete M6.
+- Public DEV BM25 Hit@10: 50% overall, 100% Japanese, 0% Vietnamese; MRR 0.4000 overall; spoiler violation 0.
+- Private CUTOFF_FILTERED BM25 reproduces BM25_LEXICAL_V1: Hit@10 20%, Recall@10 8.8889%, Full Evidence Success@10 0%, MRR 0.1333333333; spoiler violation 0.
+- Dense E5 and hybrid are implemented and tested with injected encoders; real models were not run because torch/sentence-transformers are absent. No protected environment gate was added; that requires an owner decision.
+- Design, results and limits: `docs/research/retrieval/M6_RETRIEVAL_BASELINE_V0.md`. Phase 2 is not started.

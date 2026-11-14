@@ -1,0 +1,62 @@
+# DEV set authored during implementation, not a sealed benchmark.
+probes:
+  - probe_id: dev_ja_01
+    language: ja
+    query: 雨の日、真昼はどこのブランコに座っていた？
+    cutoff_chapter: 1
+    gold_evidence_sets: [['1.18']]
+    note: Mahiru sits on a swing in the park between school and the apartment.
+  - probe_id: dev_vi_01
+    language: vi
+    query: Cô hàng xóm ngồi ở đâu giữa cơn mưa trên đường từ trường về nhà?
+    cutoff_chapter: 1
+    gold_evidence_sets: [['1.18']]
+    note: The location is a park on the route between school and home.
+  - probe_id: dev_ja_02
+    language: ja
+    query: 周は普段どんな食事をしていて、部屋の整理整頓は得意か？
+    cutoff_chapter: 2
+    gold_evidence_sets: [['2.31']]
+    note: His room is messy and meals are convenience food, supplements, or eating out.
+  - probe_id: dev_vi_02
+    language: vi
+    query: Tóm tắt thói quen ăn uống và tình trạng căn phòng của chàng trai sống một mình.
+    cutoff_chapter: 2
+    gold_evidence_sets: [['2.31']]
+    note: The passage describes poor housekeeping and reliance on ready-made meals.
+  - probe_id: dev_ja_03
+    language: ja
+    query: 看病の時、真昼が用意したお粥には何が入っていて水分量はどうだった？
+    cutoff_chapter: 3
+    gold_evidence_sets: [['3.79']]
+    note: The porridge contains plum and has extra water for easier digestion.
+  - probe_id: dev_vi_03
+    language: vi
+    query: Khi chăm người ốm, cô gái nấu món gì, thêm nguyên liệu nào và điều chỉnh độ loãng ra sao?
+    cutoff_chapter: 3
+    gold_evidence_sets: [['3.79']]
+    note: The meal is watery plum porridge intended to be gentle on the stomach.
+  - probe_id: dev_ja_04
+    language: ja
+    query: 食後、真昼はスポーツドリンクのほかにどんな看病用品を用意した？
+    cutoff_chapter: 4
+    gold_evidence_sets: [['4.3']]
+    note: She leaves a sports drink, basin of water, towel, and spare cooling sheets.
+  - probe_id: dev_vi_04
+    language: vi
+    query: Liệt kê những đồ dùng cô gái để cạnh giường sau bữa ăn để người bệnh tự chăm sóc.
+    cutoff_chapter: 4
+    gold_evidence_sets: [['4.3']]
+    note: Supplies include a drink and items for wiping sweat and cooling the patient.
+  - probe_id: dev_ja_05
+    language: ja
+    query: 樹の彼女の名前と愛称は？
+    cutoff_chapter: 5
+    gold_evidence_sets: [['5.27']]
+    note: Itsuki calls his girlfriend Chii; her full given name is Chitose.
+  - probe_id: dev_vi_05
+    language: vi
+    query: Người bạn cùng lớp của nam chính gọi bạn gái bằng biệt danh nào, tên thật của cô ấy là gì?
+    cutoff_chapter: 5
+    gold_evidence_sets: [['5.27']]
+    note: The classmate has a girlfriend with a nickname distinct from her given name.
