@@ -1,0 +1,25 @@
+# Korean lexicon. Particles and endings attach to words (모두가, 완전히, -다고 한다), so
+# phrases are matched as substrings, like Japanese; keep them specific enough to avoid
+# matching inside unrelated words.
+language: ko
+word_boundaries: false
+chars_per_event: 700
+clause_markers: [그리고, 하지만, 그러나]
+# A hedge does not reach across a contrast. Endings close such a part; openers start one.
+contrast_endings: [지만, 는데]
+contrast_openers: [하지만, 그러나]
+strength:
+  degree_extreme: [극도로, 엄청나게, 매우, 몹시, 너무나]
+  completeness: [완전히, 전혀, 온몸]
+  quantity_large: [수많은, 무수한, 엄청난 수]
+  universality: [모두가, 누구나, 모든 사람]
+  frequency_always: [항상, 언제나, 결코]
+  certainty: [분명히, 반드시, 틀림없이]
+  firmness: [단호하게, 단호히, 딱 잘라]
+  reputation: [별명, 유명한]
+  intensity_fill: [가득한, 가득 찬]
+hedge:
+  reported: [다고 한다, 라고 한다, 다던데, 소문, 라던데, 다고 하던데]
+  appearance: [것 같다, 것 같았다, 듯했다, 듯이, 보였다]
+  speculation: [지도 모른다, 아마, 겠지]
+  metaphor: [비유, 마치, 처럼]

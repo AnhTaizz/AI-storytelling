@@ -25,6 +25,7 @@ class Chapter:
     document_id: str
     title: str
     passages: Tuple[Passage, ...]
+    version: str = ""  # sha256 of the exact source bytes (M3 document version)
 
     @property
     def passage_ids(self) -> frozenset:
@@ -85,7 +86,7 @@ def load_scope(manifest_path: Path | str, chapter_range: Tuple[int, int],
             if text:
                 passages.append(Passage(seg["position"]["display"], text))
         title = passages[0].text.splitlines()[0] if passages else f"chapter {doc.order}"
-        chapters.append(Chapter(doc.order, doc.document_id, title, tuple(passages)))
+        chapters.append(Chapter(doc.order, doc.document_id, title, tuple(passages), doc.version))
     found = {c.order for c in chapters}
     missing = [n for n in range(start, end + 1) if n not in found]
     if missing:

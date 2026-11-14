@@ -1,0 +1,27 @@
+# Japanese lexicon (source language of the sample corpus). Japanese has no spaces, so
+# phrases are matched as substrings.
+language: ja
+word_boundaries: false
+chars_per_event: 550
+clause_markers: [けれど, けど, しかし, そして]
+# A hedge does not reach across a contrast: in 「クラスが違うので詳しくは知らないが、噂通りなら…」
+# the rumour is only in the part after が. Endings close such a part; openers start one.
+# Conjunctive が follows a predicate (知らないが, 見たが); a bare が after a noun is the
+# subject particle, so only predicate endings are listed.
+contrast_endings: [るが, たが, いが, だが, すが, うが, けど, けれど, けれども, のに]
+contrast_openers: [しかし, だが]
+strength:
+  degree_extreme: [非常に, とても, 極めて, すごく]
+  completeness: [完全に, 全く, 全身]
+  quantity_large: [無数, たくさん]
+  universality: [誰もが, 皆, みんな]
+  frequency_always: [いつも, 常に, 決して]
+  certainty: [絶対, 必ず, 間違いなく]
+  firmness: [きっぱり, 断固]
+  reputation: [あだ名, 有名]
+  intensity_fill: [満ちた, あふれ]
+hedge:
+  reported: [らしい, らしく, らしかった, そうだ, そうで, 噂, と言われ, とのこと]
+  appearance: [ように見え, ようだ, みたいだ, 気がする]
+  speculation: [かもしれない, だろう, はずだ, 恐らく, おそらく, 多分]
+  metaphor: [比喩, まるで, のような]

@@ -10,8 +10,29 @@ import hashlib
 import re
 from typing import Any, Dict, List
 
-# Hiragana, katakana, CJK ideographs, half-width katakana, CJK punctuation.
-_CJK = re.compile(r"[　-〿぀-ヿ㐀-䶿一-鿿ｦ-ﾟ]")
+# Writing systems a script may contain only when its target language uses them. A name left
+# in the source's own script (kanji, kana, Hangul, ...) is contamination in a Latin-script
+# script (SQ-INV-15). Hangul was missing before; it was found while preparing Korean sources.
+SCRIPTS = {
+    "cjk_punctuation": "\u3000-\u303f",
+    "han": "\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff",
+    "kana": "\u3040-\u30ff\u31f0-\u31ff\uff66-\uff9f",
+    "hangul": "\u1100-\u11ff\u3130-\u318f\uac00-\ud7af",
+    "thai": "\u0e00-\u0e7f",
+    "cyrillic": "\u0400-\u04ff",
+    "arabic": "\u0600-\u06ff",
+}
+LANGUAGE_SCRIPTS = {
+    "ja": {"han", "kana", "cjk_punctuation"},
+    "zh": {"han", "cjk_punctuation"},
+    "ko": {"hangul", "han", "cjk_punctuation"},
+    "th": {"thai"},
+    "ru": {"cyrillic"},
+    "uk": {"cyrillic"},
+    "ar": {"arabic"},
+}
+# Languages written without spaces between words: length is counted in characters.
+SPACELESS_LANGUAGES = {"ja", "zh", "th"}
 _WORD = re.compile(r"\w", re.UNICODE)
 _ARTIFACTS = [
     (re.compile(r"```"), "code fence"),
@@ -30,8 +51,22 @@ def count_words(text: str) -> int:
     return sum(1 for token in text.split() if _WORD.search(token))
 
 
-def cjk_characters(text: str) -> List[str]:
-    return _CJK.findall(text)
+def _base(language: str) -> str:
+    return language.split("-")[0].strip().lower()
+
+
+def foreign_script_characters(text: str, target_language: str) -> List[str]:
+    """Characters from writing systems the target language does not use."""
+    allowed = LANGUAGE_SCRIPTS.get(_base(target_language), set())
+    ranges = "".join(r for name, r in SCRIPTS.items() if name not in allowed)
+    return re.findall(f"[{ranges}]", text) if ranges else []
+
+
+def count_length(text: str, target_language: str) -> int:
+    """Words for languages that separate words with spaces; characters for the others."""
+    if _base(target_language) in SPACELESS_LANGUAGES:
+        return sum(1 for ch in text if not ch.isspace())
+    return count_words(text)
 
 
 def find_artifacts(text: str) -> List[str]:
@@ -63,16 +98,16 @@ def split_units(text: str) -> List[Dict[str, str]]:
 def check_script(script: Dict[str, Any], min_words: int, max_words: int,
                  target_language: str) -> Dict[str, Any]:
     text = script_text(script)
-    words = count_words(text)
-    cjk = cjk_characters(text) if target_language != "ja" else []
+    words = count_length(text, target_language)
+    foreign = foreign_script_characters(text, target_language)
     artifacts = find_artifacts(text)
     return {
         "word_count": words,
         "length_ok": min_words <= words <= max_words,
         "length_target": [min_words, max_words],
-        "cjk_count": len(cjk),
-        "cjk_sample": "".join(cjk[:20]),
-        "language_ok": not cjk,
+        "foreign_script_count": len(foreign),
+        "foreign_script_sample": "".join(foreign[:20]),
+        "language_ok": not foreign,
         "artifacts": artifacts,
         "clean_ok": not artifacts,
     }
@@ -87,8 +122,9 @@ def script_check_errors(report: Dict[str, Any]) -> List[str]:
             f"(counted as whitespace-separated tokens across all sections)")
     if not report["language_ok"]:
         errors.append(
-            f"language: script contains {report['cjk_count']} Japanese/Chinese characters "
-            f"(e.g. {report['cjk_sample']!r}); write every name and word in the target language "
+            f"language: script contains {report['foreign_script_count']} characters from a writing system "
+            f"the target language does not use (e.g. {report['foreign_script_sample']!r}); write every "
+            f"name and word in the target language "
             f"using Latin romanization")
     for artifact in report["artifacts"]:
         errors.append(f"clean deliverable: remove {artifact}; sections must be plain spoken narration")

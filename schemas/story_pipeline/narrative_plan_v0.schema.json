@@ -8,7 +8,8 @@
     "hook",
     "beats",
     "callbacks",
-    "omitted_events"
+    "omitted_events",
+    "closing_hook"
   ],
   "additionalProperties": false,
   "properties": {
@@ -137,6 +138,13 @@
           }
         }
       }
+    },
+    "closing_hook": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "How the final beat lands the last chapter's closing hook from its brief; null only when that brief has none."
     }
   }
 }

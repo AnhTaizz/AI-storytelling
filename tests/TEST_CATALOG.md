@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 7 — test files: 50 — test functions: 948
+Suites: 8 — test files: 52 — test functions: 976
 
 ## canonical_story
 
@@ -1143,28 +1143,66 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `TestParagraphPack.test_corpus_validator_cross_chapter`
 - `TestParagraphPack.test_aggregate_failure_returns_false`
 
+## story_memory
+
+### test_memory_v0 (7)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`
+
+- `StoreTests.test_put_get_and_invalidation`
+- `StoreTests.test_rejects_bad_ids_and_mismatched_brief`
+- `ViewTests.test_roster_merges_names_and_aliases_across_chapters`
+- `ViewTests.test_shared_alias_is_reported`
+- `ViewTests.test_relationship_timeline_follows_chapters`
+- `ViewTests.test_recap_never_contains_the_episode_or_later_chapters`
+- `ViewTests.test_as_of_orders_and_cuts`
+
 ## story_pipeline
 
-### test_story_pipeline_v0 (20)
-Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
+### test_lexicon (6)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.lexicon`
+
+- `LexiconFileTests.test_every_lexicon_file_is_complete_and_loads`
+- `LexiconFileTests.test_validation_reports_each_kind_of_problem`
+- `LexiconFileTests.test_unknown_language_has_no_lexicon`
+- `MatchingTests.test_concepts_found_per_language`
+- `ClauseTests.test_clauses_split_on_punctuation_and_conjunctions`
+- `ClauseTests.test_contrast_parts_split_only_at_a_contrast`
+
+### test_story_pipeline_v0 (35)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
 
 - `test_profile`
 - `SourceTests.test_parse_range`
 - `SourceTests.test_sample_chapter_scope`
 - `SourceTests.test_chapters_outside_manifest_rejected`
 - `ChecksTests.test_word_count_and_language`
+- `ChecksTests.test_foreign_script_depends_on_target_language`
 - `ChecksTests.test_contamination_and_artifacts_detected`
 - `ChecksTests.test_split_units`
 - `JsonLoopTests.test_fenced_json`
 - `JsonLoopTests.test_repair_with_error_feedback`
 - `JsonLoopTests.test_exhausted_repairs_raise`
 - `JsonLoopTests.test_soft_errors_accepted_on_last_attempt`
+- `JsonLoopTests.test_regressed_repair_falls_back_to_last_soft_only_result` — Live run 8: a repair for a soft error introduced a hard one on the last attempt.
 - `SemanticValidationTests.test_brief_rejects_out_of_scope_evidence`
 - `SemanticValidationTests.test_brief_quote_must_be_verbatim_in_cited_passages`
 - `SemanticValidationTests.test_plan_requires_core_coverage_and_length`
+- `SemanticValidationTests.test_brief_must_be_fine_grained_enough`
+- `SemanticValidationTests.test_closing_hook_is_quoted_and_landed_by_the_plan`
+- `SemanticValidationTests.test_brief_keeps_source_hedging_in_any_language_pair` — Labels and text of a brief item must keep the hedging of what it quotes.
+- `SemanticValidationTests.test_script_must_keep_the_hedges_of_the_brief_clause_it_retells`
+- `SemanticValidationTests.test_brief_facts_should_be_atomic`
+- `SemanticValidationTests.test_source_hedge_review_lists_items_for_a_person`
+- `SemanticValidationTests.test_critic_must_extract_claims_at_paragraph_density`
+- `SemanticValidationTests.test_strength_audit_flags_intensifiers_missing_from_cited_brief`
 - `SemanticValidationTests.test_critic_unit_mismatch`
 - `FactsTests.test_valid_and_invalid`
 - `EndToEndTests.test_full_pipeline_with_revision`
+- `EndToEndTests.test_episode_with_memory_recap`
+- `EndToEndTests.test_memory_brief_failing_current_checks_is_regenerated`
+- `EndToEndTests.test_cli_episode_mode`
+- `EndToEndTests.test_plan_may_call_back_to_recap_but_must_cover_episode`
 - `EndToEndTests.test_stage_failure_is_recorded`
 - `EndToEndTests.test_gate_report_severity`
 - `GeminiClientTests.test_uses_existing_transport_with_fake_sdk`
+- `GeminiClientTests.test_model_fallback_chain`

@@ -40,8 +40,57 @@ class StageFailed(RuntimeError):
 # --------------------------------------------------------------------------- clients
 
 
+# Transport failures after which the next model in the chain is tried. Overload (503) and
+# per-model quota (429) are model-specific; a request the provider rejects is not.
+FALLBACK_CODES = frozenset({"SERVER_FAILURE", "RATE_LIMIT", "TIMEOUT", "NETWORK_FAILURE", "POOL_EXHAUSTED"})
+
+
+_NETWORK_MODULES = ("httpx", "httpcore", "h11", "h2", "ssl", "socket", "urllib3", "aiohttp")
+
+
+class TransientProviderError(RuntimeError):
+    """A dropped connection or client-side timeout, re-raised with a 503 so the existing M4
+    transport classifies it as a retryable server failure instead of an unknown one."""
+
+    code = 503
+
+    def __init__(self, original: BaseException) -> None:
+        super().__init__(f"transient network failure: {type(original).__module__}.{type(original).__name__}")
+
+
+def _describe(error: BaseException) -> Dict[str, Any]:
+    from tools.story_extraction.gemini_errors_v1 import status_code
+
+    return {"type": f"{type(error).__module__}.{type(error).__name__}", "status": status_code(error)}
+
+
+class _ObservedClient:
+    """Wraps one SDK client: records every failure's type and status (never its message,
+    which may echo request data) and turns network-level failures into retryable ones."""
+
+    def __init__(self, inner: Any, failures: List[Dict[str, Any]]) -> None:
+        self._inner = inner
+        self._failures = failures
+
+    def generate(self, **kwargs: Any) -> Any:
+        try:
+            return self._inner.generate(**kwargs)
+        except Exception as error:  # noqa: BLE001 - re-raised below
+            self._failures.append({"model": kwargs.get("model"), **_describe(error)})
+            module = type(error).__module__.split(".")[0]
+            if module in _NETWORK_MODULES or isinstance(error, (TimeoutError, ConnectionError)):
+                raise TransientProviderError(error) from error
+            raise
+
+
 class GeminiLLMClient:
-    """Wraps the existing M4 Gemini transport and key pool (reads `.env`)."""
+    """Wraps the existing M4 Gemini transport and key pool (reads `.env` and the environment).
+
+    `model` may be a comma-separated chain, e.g. "gemini-3.6-flash,gemini-3.5-flash": each
+    call uses the first model and moves to the next only after the transport has exhausted
+    its retries with an overload, quota or network failure. Every record says which model
+    served it and which ones failed first.
+    """
 
     def __init__(
         self,
@@ -50,8 +99,11 @@ class GeminiLLMClient:
         dotenv_path: Path | str = Path(".env"),
         temperature: float = 0.4,
         max_transport_retries: int = 3,
+        base_backoff_seconds: float = 5.0,
         client_factory: Optional[Callable[[str], Any]] = None,
         environ: Optional[Dict[str, str]] = None,
+        sleep: Callable[[float], None] = time.sleep,
+        clock: Callable[[], float] = time.time,
     ) -> None:
         from tools.story_extraction.gemini_key_pool_v1 import (
             GeminiConfigError,
@@ -63,30 +115,57 @@ class GeminiLLMClient:
             official_client_factory,
         )
 
+        from tools.story_extraction.gemini_transport_v1 import GeminiTransportError
+
         config = load_runtime_config(dotenv_path, environ)
-        self.model = (model or config.model or "").strip()
-        if not self.model:
+        self.models = [m.strip() for m in (model or config.model or "").split(",") if m.strip()]
+        if not self.models:
             raise GeminiConfigError(
                 "No Gemini model: pass --model or set GEMINI_MODEL in .env")
+        self.model = self.models[0]
         self.temperature = temperature
-        self.name = f"gemini:{self.model}"
-        pool = GeminiKeyPool(config.credentials)
+        self.name = "gemini:" + ",".join(self.models)
+        self._transport_error = GeminiTransportError
+        # A 429 cools the whole credential, not just the model, so a fallback model may first
+        # wait out that cooldown; pool and transport share one clock for that reason.
+        pool = GeminiKeyPool(config.credentials, clock=clock)
+        factory = client_factory or official_client_factory
+        self.attempt_failures: List[Dict[str, Any]] = []
         self._transport = GeminiTransport(
             pool,
-            client_factory or official_client_factory,
+            lambda api_key: _ObservedClient(factory(api_key), self.attempt_failures),
             max_transport_retries=max_transport_retries,
-            base_backoff_seconds=2.0,
+            base_backoff_seconds=base_backoff_seconds,
+            sleep=sleep,
+            clock=clock,
         )
 
     def complete(self, *, system: str, user: str, request_id: str) -> Dict[str, Any]:
-        record = self._transport.generate(
-            system_instruction=system,
-            user_content=user,
-            model=self.model,
-            generation_config={"temperature": self.temperature},
-            request_id=request_id,
-        )
-        return record
+        failed: List[Dict[str, Any]] = []
+        self.attempt_failures.clear()
+        for index, model in enumerate(self.models):
+            try:
+                record = self._transport.generate(
+                    system_instruction=system,
+                    user_content=user,
+                    model=model,
+                    generation_config={"temperature": self.temperature},
+                    request_id=request_id,
+                )
+            except self._transport_error as error:
+                # After a retry the model was already failing transiently, so whatever its last
+                # error was (live run 4: three 503s, then an unclassified failure), move on.
+                # A request refused on its first attempt is not sent to another model.
+                retried = error.attempts > 1
+                if (error.code not in FALLBACK_CODES and not retried) or index == len(self.models) - 1:
+                    seen = "; ".join(f"{f['model']}: {f['type']} status={f['status']}" for f in self.attempt_failures)
+                    raise RuntimeError(f"{error} [attempt errors: {seen or 'none recorded'}]") from error
+                failed.append({"model": model, "code": error.code, "attempts": error.attempts})
+                continue
+            record["fallback_from"] = failed
+            record["attempt_failures"] = list(self.attempt_failures)
+            return record
+        raise AssertionError("unreachable: the loop returns or raises")
 
 
 class ScriptedLLMClient:
@@ -172,10 +251,13 @@ def run_json_stage(
     `semantic_check` errors are hard: the stage fails if they survive every repair.
     `soft_check` errors (for example a missed word count) also trigger repairs, but
     if only soft errors remain after the last attempt the object is returned anyway;
-    the caller re-checks and reports them.
+    the caller re-checks and reports them. A repair can also make things worse (live run 8:
+    splitting facts for the soft check introduced a hard error), so when the last attempt
+    has hard errors, the latest attempt that had only soft errors is returned instead.
     """
     prompt = user
     errors: List[str] = []
+    best_soft: Any = None
     last_attempt = max_repairs + 1
     for attempt in range(1, last_attempt + 1):
         request_id = f"{stage}:{request_suffix}:attempt{attempt}"
@@ -202,6 +284,9 @@ def run_json_stage(
                 "request_id": request_id,
                 "attempt": attempt,
                 "client": getattr(client, "name", "unknown"),
+                "model": record.get("model_requested"),
+                "fallback_from": record.get("fallback_from") or [],
+                "attempt_failures": record.get("attempt_failures") or [],
                 "seconds": round(time.time() - started, 3),
                 "usage": record.get("usage_metadata"),
                 "valid": not errors,
@@ -209,8 +294,12 @@ def run_json_stage(
                 "errors": errors,
                 "raw_content": raw,
             })
-        if not errors or (soft_only and attempt == last_attempt):
+        if soft_only:
+            best_soft = obj
+        if not errors:
             return obj
+        if attempt == last_attempt and best_soft is not None:
+            return best_soft
         prompt = REPAIR_TEMPLATE.format(
             original=user,
             previous=raw[:60000],
