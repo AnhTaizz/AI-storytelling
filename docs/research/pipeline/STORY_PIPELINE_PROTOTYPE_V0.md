@@ -21,16 +21,16 @@ M3 ingestion (frozen adapter, chapters in scope only)
   └─ per chapter: Story Brief  ──(optional story_facts/v0 hints from M4)
        └─ Narrative Plan (beats, hook, callbacks, word budget)
             └─ Script v1 (one section per beat)
-                 └─ Claim-level Critic (paragraph units, contract claim types)
+                 └─ Source-backed Critic (title + narration paragraphs)
                       └─ Revision (MEDIUM+ findings) → Critic again → final script + report
 ```
 
 | Stage | Input | Output | Deterministic checks |
 |---|---|---|---|
 | Brief | one chapter's passages (`[1.12] ...`), names known from earlier briefs | `story_brief_v0` | evidence ids exist in **this** chapter; every fact/relationship/event carries a `quote` that must occur verbatim (whitespace-insensitive) in its cited passages; character/event ids unique and resolvable; ≥1 CORE event |
-| Plan | all briefs (with global refs `c1.E3`), profile | `narrative_plan_v0` | refs exist; every CORE event in some beat; CORE never omitted; beat word budgets sum within profile range |
+| Plan | all briefs (with global refs `c1.E3`), profile | `narrative_plan_v0` | refs exist; the hook cites events assigned to spoken beats; every CORE event in some beat; CORE never omitted; beat word budgets sum within profile range |
 | Script / Revise | briefs, plan, profile (+ findings) | `script_v0` | sections follow plan beats in order; length (SQ-INV-14), no CJK characters (SQ-INV-15), no Markdown/placeholders/meta text (SQ-INV-16) |
-| Critic | briefs, paragraph units P001… | `critic_v0` | exactly one entry per unit, in order; problem claims carry severity and category |
+| Critic | briefs, linked M3 passages, TITLE, then narration units P001… | `critic_v1` | unit order, known brief refs, and matching excerpts from linked passages for each supported claim |
 
 ## Design decisions
 
@@ -48,7 +48,7 @@ M3 ingestion (frozen adapter, chapters in scope only)
   (`brief_refs`); an event narrated without being cited can be a false flag.
 - **Verbatim quotes.** Brief items must quote their cited passage exactly, so evidence ids
   cannot be invented or attached to the wrong passage. The quote does not prove the
-  paraphrase is faithful; it proves the cited passage is the right one.
+  paraphrase is faithful. It establishes where the excerpt occurs.
 - **Human review sheet.** Each completed run writes `review_form.md` (Vietnamese, 1–5
   scores per contract dimension) for the project owner.
 - **Provider.** Uses the existing M4 Gemini transport and key pool (`.env`). The model is
@@ -62,7 +62,7 @@ story can be told as a series of episodes. It is a prototype and does not comple
 - **Store.** One JSON record per chapter brief under `.local/story_memory/<story_id>/`
   (`--memory`, disable with `--no-memory`). A record is reused only while the chapter's
   exact source bytes (M3 document version) and the brief setup (brief prompts, schema,
-  brief language) are unchanged, so later episodes do not pay for earlier chapters again.
+  brief language, source language, upstream fact hints and previously seen character names) are unchanged, so later episodes do not pay for earlier chapters again.
 - **Roster.** Chapter-local characters are merged across chapters when they share a name,
   romanization or alias; a character matching several entries is reported, not guessed.
 - **Relationship timeline** per character pair, chapter by chapter.
@@ -143,6 +143,63 @@ Each run writes to `.local/story_pipeline_runs/<run id>/` (git-ignored): `briefs
 `plan.json`, `script_v*.json|md`, `critic_v*.json`, `script_final.md`, `report.md`,
 `report.json`, `review_form.md`, `calls.jsonl` (every model call with raw output and validation errors) and
 `run_manifest.json` (scope, background chapters, where each brief came from — memory or model —, profile, model, prompt/schema sha256, status). Episode runs also write `memory_recap.json`.
+
+### Episode budgets and model routing
+
+The default channel profile is `vi_light_novel_recap.yaml`. Count only the selected
+episode in the denominator. Earlier recap chapters can supply context. All spoken
+recap words count towards the resulting budget. A 4,000-unit Vietnamese full text
+gives a 1,600–2,000-unit narration. Vietnamese units follow the existing whitespace
+counter, so "học sinh" counts as two. This is a text-length target, independent of
+speech rate. Same-language input is counted from the episode passages. For Japanese
+input, the brief call estimates the length of a full Vietnamese rendering per chapter
+without generating one. For an exact baseline pass `--full-target-units N` from a
+complete Vietnamese version of the same chapters. The report labels the basis and
+actual ratio. Manual word limits take precedence. The earlier casual profile remains
+available at `tools/story_pipeline/profiles/vi_youtube_casual_v0.yaml`.
+
+Use one default model to begin. If measured results justify specialization, each stage
+accepts an override. In this shell example the variables hold Gemini model IDs from
+the operator's account:
+
+```bash
+python -m tools.story_pipeline.run_pipeline --chapters 1 --model "$FAST_MODEL" \
+    --stage-model brief="$SOURCE_MODEL" --stage-model script="$WRITER_MODEL" \
+    --stage-model revise="$WRITER_MODEL" --stage-model critic="$CHECKER_MODEL"
+```
+
+A stage can take a comma-separated fallback chain. All stages share the existing Gemini
+transport and credential pool. `run_manifest.json` records configured routes and provider
+usage by stage and answering model for this invocation (including JSON repairs).
+`calls_with_total` identifies missing usage. A resumed invocation counts only new calls.
+Provider totals already include component counts. Keep the same project label on keys
+belonging to the same project.
+[Gemini rate limits](https://ai.google.dev/gemini-api/docs/rate-limits)
+
+For the plot recap, the planner keeps decisions and consequences and gives extra room to
+a dense chapter. A missing CORE citation in narration triggers a bounded revision even
+when factual checks pass. The writer checks whether the event is already present before
+adding it. The critic checks the resulting version. Any remaining omissions stay visible
+in `GATE_NECESSARY_COVERAGE`. The source-aware critic gets linked passages, while the
+planner and writer receive compact brief text, reference IDs and epistemic labels.
+The full original brief stays available for review.
+
+### Source-backed review and existing runs
+
+The critic reads the original text of each distinct passage cited by episode events,
+character facts, relationships or the chapter ending. Earlier CORE events eligible for a
+recap carry their evidence IDs and epistemic labels forward. Each accepted factual claim
+cites a brief item and an excerpt from a linked passage. A disagreement with the source
+can trigger the existing revision loop. `UNDETERMINED` flags its gate for a person.
+The title is audited in the same request and can be revised separately. Only spoken
+paragraphs count towards CORE coverage. The review sheet puts the actual title, planned
+hook and first paragraph together for a read-aloud check.
+
+Each stage now writes a `.cache.json` receipt beside the normal JSON. Resume checks the
+inputs, upstream artifacts and output checksum. Legacy runs without receipts regenerate
+affected outputs on first use. Start a fresh output directory to keep an old run for an
+A/B comparison. Source-aware review uses the existing critic calls with longer inputs
+and outputs. Measure token usage, latency and repairs on the intended episode length.
 
 ## Live runs
 
@@ -367,8 +424,8 @@ The LLM critic again reported no problems with the final script.
 ## Known limits
 
 - Brief paraphrase quality is not measured against gold. Quotes pin the evidence, but a
-  wrong paraphrase of a correctly quoted passage still reaches the writer; the critic
-  judges the script only against the briefs.
+  wrong paraphrase of a correctly quoted passage can still reach the writer. The critic
+  now sees the cited passage, but can misinterpret it or miss relevant uncited material.
 - The critic is a model and is known (H6/H6b) to miss violations; its PASS is weak evidence.
 - Word count is whitespace tokens (Vietnamese syllables), matching the M1 runs.
-- No human-review workflow yet; `UNDETERMINED` claims are listed in the report for a person.
+- Human review is file-based. Use the review sheet and the report for unresolved claims.

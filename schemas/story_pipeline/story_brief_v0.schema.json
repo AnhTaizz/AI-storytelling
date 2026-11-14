@@ -311,6 +311,11 @@
           }
         }
       }
+    },
+    "full_target_units_estimate": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Optional estimate of the unabridged chapter length in the requested output language."
     }
   }
 }

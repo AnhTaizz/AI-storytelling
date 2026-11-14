@@ -157,7 +157,8 @@ def recap_context(briefs: Sequence[Dict[str, Any]], before: int) -> Optional[Dic
             "chapter": n,
             "summary": brief["chapter_summary"],
             "ending_state": brief["ending_state"],
-            "core_events": [{"ref": f"c{n}.{e['id']}", "summary": e["summary"]}
+            "core_events": [{"ref": f"c{n}.{e['id']}", "summary": e["summary"],
+                             "evidence": e["evidence"], "epistemic": e.get("epistemic", "EXPLICIT")}
                             for e in brief["events"] if e["importance"] == "CORE"],
             "unknowns": brief["unknowns"],
         })

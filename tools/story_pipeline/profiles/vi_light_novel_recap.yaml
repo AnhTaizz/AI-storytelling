@@ -1,0 +1,15 @@
+profile_id: VI_LIGHT_NOVEL_RECAP
+target_language: vi
+brief_language: vi
+audience: "Người nghe muốn theo được cốt truyện light novel bằng tiếng Việt."
+narration: "Kể ở ngôi thứ ba. Nếu nguyên tác xưng tôi, gọi nhân vật bằng tên hoặc đại từ ngôi ba. Có thể giữ ngôi xưng của nhân vật trong lời thoại được dẫn rõ."
+tone: "Như đang kể cho bạn nghe. Dành chỗ cho một lựa chọn khó, một chi tiết gợi hình hoặc một khoảng lặng có thật trong truyện."
+humor_level: low
+commentary_intensity: low
+hook_style: "Mở ngay ở tình thế cụ thể của tập. Giữ thứ tự nguyên nhân, lựa chọn, hệ quả. Bỏ lời chào và câu hỏi tương tác chung chung."
+plot_recap: true
+length_ratio: [0.4, 0.5]
+# Initial placeholders before the episode-specific range is resolved, or for manual overrides.
+length_words: {min: 900, max: 1100}
+call_to_action: false
+name_policy: "Nhất quán tên phiên âm Latin và cách xưng hô. Giữ rõ ai thấy, ai nghĩ, ai chỉ nghe kể."

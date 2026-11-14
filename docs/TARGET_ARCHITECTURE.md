@@ -20,6 +20,7 @@ flowchart TD
     Brief --> Plan[Narrative Plan]
     Plan --> Writer[Script Writer]
     Writer --> Valid[Validation / Critic]
+    ECP --> Valid
     Valid --> HR[Human Review / Output]
 ```
 
@@ -144,6 +145,65 @@ Validation inputs are task-dependent, but factual validation must have access to
 And, where needed:
 - Evidence Context Package / provenance references
 - Narrative Plan / output contract
+
+### 5.2 Grounded YouTube script pilot
+
+The vertical prototype exercises a narrower version of this flow. The M3 passage IDs
+already carried by each chapter brief let the critic retrieve the original wording
+independently of the writer's paraphrase. No new service is required. The narrator-facing
+script stays clean. The editor receives the title, hook, opening narration, findings
+and evidence separately. The evidence is bounded by the episode and any earlier CORE
+recap events. The target M6 retrieval backend remains an open decision.
+
+| Boundary | Observation motivating the design | Pilot change |
+|---|---|---|
+| Brief to critic | In chapter 1, run 9, the critic accepted several changes in meaning, including a narrator's metaphor attributed to classmates. | Compare each supported claim with a cited source passage. The deterministic check verifies the quote and its link. A person judges ambiguous readings. |
+| Script to viewer | The writer generated a title, but the critic received only spoken paragraphs. A title could promise an event or relationship the episode never establishes. | Audit title premises alongside the narration. Ask the writer to introduce the same tension early and return to it in the episode. Keep title-only mentions out of event coverage. |
+| Episode to episode | The original recap kept a CORE event summary while dropping its epistemic label and passage IDs. | Carry the earlier event's label and evidence into the next episode so hearsay can retain attribution. |
+| Evaluation to release | Repeated runs on chapter 1 reveal concrete defects. Their results alone cannot estimate performance on new arcs or a channel's viewers. | Compare anonymized scripts on fresh episodes before changing the channel default. |
+
+**Pilot evaluation.** Choose unused, authorized development material for three conditions:
+an introductory chapter, a dialogue-heavy chapter containing a rumor, and a multi-chapter
+episode with a recap. Keep the sealed M4 holdout separate. On each, run the previous and
+proposed branches with identical sources, profile, model, temperature and revision budget
+in separate directories. Record the actual provider model after any fallback. Randomize
+the reading order and conceal branch names from the reviewer.
+
+1. Read the title and first 30 seconds aloud. Write down the question a viewer would
+   expect the video to answer. Identify the spoken beat that pays it off, or the point
+   where the source deliberately leaves it open.
+2. Compare both versions with the source. Count unsupported or strengthened claims and
+   missed CORE events, note the worst severity, and time the edits needed before recording.
+   Record voice preference and one concrete line explaining it. Use the same text length
+   and count convention when comparing error rates.
+3. Compare calls, tokens and elapsed time from the run logs. Record unresolved claims
+   and false alarms alongside errors caught. Prioritize a pilot version with no new
+   major factual or spoiler errors and lower editing effort at comparable voice quality.
+4. After publication, an editor can record intro retention at 30 seconds and inspect the
+   first substantial dip against the actual recording. Compare videos of similar length
+   and note topic and packaging differences. Treat these as observations about published
+   videos. A blind script preference and an offline test measure different outcomes.
+   [YouTube's audience retention guide](https://support.google.com/youtube/answer/9314415?hl=en)
+
+Implementation, CLI and artifact details are in the
+[prototype notes](research/pipeline/STORY_PIPELINE_PROTOTYPE_V0.md#source-backed-review-and-existing-runs).
+
+### 5.3 Extending the channel to manga
+
+The current output profile is a third-person light-novel recap. Viewpoint, pacing,
+compression and commentary belong to a channel profile. A different output profile
+can use the same underlying story facts. Choose Gemini model routes independently of
+that profile to compare runs without changing the editorial instructions.
+
+For a future manga adapter, identify panels by edition, chapter, page and reading order.
+Extract dialogue, speaker (or unknown) and directly visible actions once. Cache each
+extraction against the image content, crop/layout, extractor model and prompt version.
+Use a visual model for ambiguous speakers, panel transitions and silent actions; send
+adjacent panels only when they resolve ambiguity. Keep low-confidence observations and
+their panel IDs. The writer can consume textual events; a critic or editor can request
+the cited panel when necessary. This requires an image-capable adapter and visual
+evidence checks before enabling manga. A manga episode should set its own duration or
+word budget since page count has no direct mapping to full prose length.
 
 ## 6. Implementation Stages & MVP
 

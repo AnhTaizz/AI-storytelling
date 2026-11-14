@@ -112,11 +112,12 @@ SCRIPT = {"title_idea": "Chiếc ô", "sections": [{"beat_id": "B1", "text": SEC
 
 def claim(claim_type, severity=None, category=None):
     return {"claim": "x", "claim_type": claim_type, "failure_category": category, "severity": severity,
-            "brief_refs": ["c1.E1"], "explanation": "y", "suggested_fix": "z" if severity else None}
+            "brief_refs": ["c1.E1"], "source_evidence": [{"passage_id": "1.2", "quote": PASSAGE_TEXT["1.2"][:12]}],
+            "explanation": "y", "suggested_fix": "z" if severity else None}
 
 
 def critic_json(user, with_problem):
-    unit_ids = re.findall(r"^<(P\d{3})>$", user, re.MULTILINE)
+    unit_ids = re.findall(r"^<(TITLE|P\d{3})>$", user, re.MULTILINE)
     units = []
     for index, unit_id in enumerate(unit_ids):
         claims = [claim("SUPPORTED_FACT")]
@@ -136,11 +137,14 @@ class FakeModel:
     def __call__(self, stage, system, user):
         if stage == "brief":
             order = int(re.search(r"Chapter order: (\d+)", user).group(1))
-            return json.dumps(brief_json(order), ensure_ascii=False)
+            brief = brief_json(order)
+            if "full_target_units_estimate" in system:
+                brief["full_target_units_estimate"] = 120
+            return json.dumps(brief, ensure_ascii=False)
         if stage == "plan":
             # Use exactly the event refs the prompt offers (episode briefs and recap memory).
             self.plan_prompts.append(user)
-            refs = list(dict.fromkeys(re.findall(r'"ref": "(c\d+\.E\d+)"', user)))
+            refs = list(dict.fromkeys(re.findall(r'"ref":\s*"(c\d+\.E\d+)"', user)))
             plan = json.loads(json.dumps(PLAN))
             plan["hook"]["event_refs"] = refs[:1]
             plan["beats"][0]["event_refs"] = refs[:1]
@@ -155,7 +159,7 @@ class FakeModel:
 
 
 def test_profile():
-    return load_profile().with_length(20, 200)
+    return load_profile(REPO / "tools/story_pipeline/profiles/vi_youtube_casual_v0.yaml").with_length(20, 200)
 
 
 class SourceTests(unittest.TestCase):
@@ -293,6 +297,11 @@ class SemanticValidationTests(unittest.TestCase):
         self.assertTrue(any("CORE events not covered" in e for e in errors))
         self.assertTrue(any("target_words sum" in e for e in errors))
         self.assertEqual(stages.plan_semantic_errors(PLAN, [brief_json(1)], profile), [])
+        for hook_refs in ([], ["c1.E3"]):  # existing but omitted E3 cannot anchor a title promise
+            with self.subTest(hook_refs=hook_refs):
+                stranded = {**PLAN, "hook": {"idea": "opening", "event_refs": hook_refs}}
+                errors = stages.plan_semantic_errors(stranded, [brief_json(1)], profile)
+                self.assertTrue(any("anchor the opening" in e for e in errors))
 
     def test_brief_must_be_fine_grained_enough(self):
         def synthetic(passages, chars_each):
@@ -532,7 +541,47 @@ class SemanticValidationTests(unittest.TestCase):
     def test_critic_unit_mismatch(self):
         units = checks.split_units("a\n\nb")
         critic = {"units": [{"unit_id": "P001", "claims": [], "no_claim_reason": "none"}]}
-        self.assertTrue(stages.critic_semantic_errors(critic, units))
+        self.assertTrue(stages.critic_semantic_errors(critic, units, {}, {}))
+
+
+    def test_source_citations_resolve_for_each_supported_brief_ref(self):
+        refs = {"c1.E1": ["1.1"], "c1.CH1": ["1.2"]}
+        passages = {"1.1": "a quiet day", "1.2": "it seemed to rain"}
+        units = [{"unit_id": "TITLE", "text": "a quiet day"}]
+        cases = [
+            (["c1.E1"], [("1.1", "quiet day")], True),
+            (["c1.E1", "c1.CH1"], [("1.1", "quiet day"), ("1.2", "seemed")], True),
+            ([], [], False),
+            (["c1.E1"], [], False),
+            (["c1.E1"], [("1.1", "storm")], False),
+            (["c1.E1"], [("1.2", "rain")], False),
+            (["c1.E1", "c1.CH1"], [("1.1", "quiet day")], False),
+            (["c2.E1"], [("2.1", "spoiler")], False),
+        ]
+        for brief_refs, excerpts, valid in cases:
+            with self.subTest(brief_refs=brief_refs, excerpts=excerpts):
+                c = {**claim("SUPPORTED_FACT"), "brief_refs": brief_refs, "source_evidence": [
+                    {"passage_id": pid, "quote": quote} for pid, quote in excerpts]}
+                audit = {"units": [{"unit_id": "TITLE", "claims": [c], "no_claim_reason": None}]}
+                self.assertEqual(not stages.critic_semantic_errors(audit, units, refs, passages), valid)
+
+    def test_evidence_packet_keeps_only_cited_episode_and_recap_passages(self):
+        episode = StoryScope("s", "ja", (SAMPLE_CHAPTERS[2],))
+        brief = brief_json(2)
+        brief["events"][0]["evidence"] = ["2.3", "2.4"]
+        brief["closing_hook"] = {"text": "open", "quote": "q", "evidence": ["2.5"]}
+        recap = {"chapters": [{"chapter": 1, "core_events": [
+            {"ref": "c1.E1", "summary": "earlier", "epistemic": "REPORTED", "evidence": ["1.2"]}]}]}
+        refs, passages = stages.critic_evidence(episode, [brief], recap, [SAMPLE_CHAPTERS[1]])
+        self.assertEqual(set(passages), {"1.2", "2.2", "2.3", "2.4", "2.5"})
+        self.assertEqual(passages["2.3"], PASSAGE_TEXT["2.3"])
+        self.assertEqual(refs["c2.R1"], ["2.2"])
+        self.assertEqual(refs["c2.END"], ["2.5"])
+        self.assertIn("2.4", refs["c2.CH2"])
+        self.assertEqual(stages.labelled_statements([brief], recap)["c1.E1"], [("earlier", "REPORTED")])
+        with self.assertRaisesRegex(ValueError, "precede"):
+            run(ScriptedLLMClient(FakeModel()), episode, test_profile(), Path("unused"),
+                background=[SAMPLE_CHAPTERS[3]])
 
 
 class FactsTests(unittest.TestCase):
@@ -576,6 +625,66 @@ class EndToEndTests(unittest.TestCase):
             self.assertEqual(resumed["status"], "COMPLETED")
             self.assertEqual(resumed_client.calls, [])
 
+    def test_title_finding_reaches_revision_with_source_and_stays_out_of_coverage(self):
+        scope = load_scope(DEFAULT_MANIFEST, (1, 1))
+        fallback = FakeModel()
+        fixed = {**SCRIPT, "title_idea": "Một chiếc ô giữa trời mưa"}
+        title_prompts = []
+
+        def respond(stage, system, user):
+            if stage == "critic":
+                self.assertIn(PASSAGE_TEXT["1.2"], user)
+                self.assertNotIn(PASSAGE_TEXT["2.28"], user)
+                audit = critic_json(user, False)
+                title = audit["units"][0]
+                self.assertEqual(title["unit_id"], "TITLE")
+                title_prompts.append(user)
+                for unit in audit["units"][1:]:
+                    unit.update(claims=[], no_claim_reason="editorial aside")
+                if len(title_prompts) == 1:
+                    title["claims"] = [claim("STRENGTHENED_STORY_CLAIM", "MEDIUM", "EPISTEMIC_ERROR")]
+                else:
+                    self.assertIn(fixed["title_idea"], user)
+                return json.dumps(audit)
+            if stage == "script":
+                return json.dumps({**SCRIPT, "title_idea": "Cơn bão định mệnh"})
+            if stage == "revise":
+                self.assertIn("in TITLE", user)
+                self.assertIn(PASSAGE_TEXT["1.2"][:12], user)
+                return json.dumps(fixed)
+            return fallback(stage, system, user)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            manifest = run(ScriptedLLMClient(respond), scope, test_profile(), out)
+            self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
+            self.assertEqual(len(title_prompts), 2)
+            review = (out / "review_form.md").read_text(encoding="utf-8")
+            self.assertIn(fixed["title_idea"], review)
+            self.assertIn(SECTION_1, review)
+            report = json.loads((out / "report.json").read_text(encoding="utf-8"))
+            self.assertEqual(report["gates"]["GATE_NECESSARY_COVERAGE"]["not_cited"], ["c1.E1"])
+            self.assertEqual(manifest["versions"][1]["problem_claims"], 0)
+
+    def test_resume_rechecks_legacy_critic_and_changed_upstream_artifacts(self):
+        scope = load_scope(DEFAULT_MANIFEST, (1, 1))
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            run(ScriptedLLMClient(FakeModel()), scope, test_profile(), out, stop_after="critic")
+            (out / "critic_v1.cache.json").unlink()  # no receipt on an old audit
+            (out / "critic_v1.json").write_text('{"units":[]}', encoding="utf-8")
+            client = ScriptedLLMClient(FakeModel())
+            run(client, scope, test_profile(), out, resume=True, stop_after="critic")
+            self.assertEqual([c["stage"] for c in client.calls], ["critic"])
+            (out / "script_v1.json").write_text("{broken", encoding="utf-8")
+            client = ScriptedLLMClient(FakeModel())
+            run(client, scope, test_profile(), out, resume=True, stop_after="critic")
+            self.assertEqual([c["stage"] for c in client.calls], ["script"])
+            client = ScriptedLLMClient(FakeModel())
+            changed = test_profile().with_length(21, 201)
+            run(client, scope, changed, out, resume=True, stop_after="critic")
+            self.assertEqual([c["stage"] for c in client.calls], ["brief", "plan", "script", "critic"])
+
     def test_episode_with_memory_recap(self):
         full = load_scope(DEFAULT_MANIFEST, (1, 3))
         background = list(full.chapters[:2])
@@ -594,7 +703,7 @@ class EndToEndTests(unittest.TestCase):
             recap = json.loads((Path(tmp) / "ep1" / "memory_recap.json").read_text(encoding="utf-8"))
             self.assertEqual(recap["covers_chapters"], [1, 2])
             plan_prompt = model.plan_prompts[0]
-            self.assertIn('"ref": "c1.E1"', plan_prompt)      # callback material from memory
+            self.assertRegex(plan_prompt, r'"ref":\s*"c1\.E1"')      # callback material from memory
             self.assertNotIn(chapter_4_text, plan_prompt)     # nothing past the episode
             report = json.loads((Path(tmp) / "ep1" / "report.json").read_text(encoding="utf-8"))
             # Coverage is required for the episode's chapter only, not for recapped chapters.
@@ -614,7 +723,11 @@ class EndToEndTests(unittest.TestCase):
             memory = StoryMemory(Path(tmp) / "memory", scope.story_id)
             stale = brief_json(1)
             stale["events"] = stale["events"][:2]  # written before the granularity rule existed
-            memory.put_brief(1, chapter.version, stages.brief_fingerprint(test_profile()), stale, "old-model")
+            first = run(ScriptedLLMClient(FakeModel()), scope, test_profile(), Path(tmp) / "seed",
+                        memory=memory, stop_after="brief")
+            self.assertEqual(first["status"], "STOPPED_AFTER_BRIEF")
+            record = json.loads(next(memory.directory.glob("chapter_*.json")).read_text(encoding="utf-8"))
+            memory.put_brief(1, chapter.version, record["brief_fingerprint"], stale, "old-model")
             client = ScriptedLLMClient(FakeModel())
             manifest = run(client, scope, test_profile(), Path(tmp) / "run", memory=memory)
             self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
@@ -624,6 +737,61 @@ class EndToEndTests(unittest.TestCase):
             again = ScriptedLLMClient(FakeModel())  # the regenerated brief is valid and reused
             reused = run(again, scope, test_profile(), Path(tmp) / "run2", memory=memory)
             self.assertEqual(reused["brief_sources"], {"1": "memory"})
+
+    def test_recap_budget_and_missing_core_revision(self):
+        scope = load_scope(DEFAULT_MANIFEST, (1, 1))
+        fallback = FakeModel()
+        repairs = []
+        critic_calls = []
+
+        def respond(stage, system, user):
+            if stage in ("plan", "script", "revise"):
+                self.assertIn("ngôi thứ ba", user.lower())
+                self.assertNotIn('"evidence":', user)
+            if stage == "critic":
+                self.assertIn(PASSAGE_TEXT["1.2"], user)
+                audit = critic_json(user, False)
+                if not critic_calls:
+                    for unit in audit["units"][1:]:
+                        unit["claims"][0]["brief_refs"] = ["c1.E2"]
+                critic_calls.append(user)
+                return json.dumps(audit)
+            if stage == "revise":
+                repairs.append(user)
+            return fallback(stage, system, user)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            client = ScriptedLLMClient(respond)
+            manifest = run(client, scope, load_profile(), out)
+            self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
+            self.assertEqual([c["stage"] for c in client.calls],
+                             ["brief", "plan", "script", "critic", "revise", "critic"])
+            self.assertIn("CORE coverage c1.E1", repairs[0])
+            report = json.loads((out / "report.json").read_text(encoding="utf-8"))
+            self.assertEqual(report["final_check"]["length_target"], [48, 60])
+            self.assertEqual(report["compression"]["basis"], "estimated_translation")
+            self.assertAlmostEqual(report["compression"]["actual_ratio"], checks.count_words(checks.script_text(SCRIPT)) / 120)
+            self.assertEqual(report["gates"]["GATE_NECESSARY_COVERAGE"]["status"], "PASS")
+            self.assertEqual(manifest["usage_by_stage_model"]["critic"]["unknown"], {"calls": 2, "calls_with_total": 0})
+
+    def test_ratio_uses_episode_only_and_preserves_absolute_override(self):
+        scope = load_scope(DEFAULT_MANIFEST, (2, 2))
+        cases = [
+            (scope, None, "estimated_translation", 120),
+            (scope, 2000, "user_supplied", 2000),
+            (StoryScope(scope.story_id, "vi", scope.chapters), None, "source_count",
+             sum(checks.count_length(p.text, "vi") for p in scope.chapters[0].passages)),
+        ]
+        for episode, units, basis, denominator in cases:
+            with self.subTest(basis=basis), tempfile.TemporaryDirectory() as tmp:
+                manifest = run(ScriptedLLMClient(FakeModel()), episode, load_profile(), Path(tmp),
+                               background=[SAMPLE_CHAPTERS[1]], full_target_units=units, stop_after="brief")
+                self.assertEqual(manifest["status"], "STOPPED_AFTER_BRIEF", manifest.get("error"))
+                self.assertEqual(manifest["compression"]["basis"], basis)
+                self.assertEqual(manifest["compression"]["full_target_units"], denominator)
+        with self.assertRaises(ValueError):
+            run(ScriptedLLMClient(FakeModel()), scope, test_profile(), Path("unused"), full_target_units=20)
 
     def test_cli_episode_mode(self):
         with tempfile.TemporaryDirectory() as tmp, \
@@ -670,6 +838,9 @@ class EndToEndTests(unittest.TestCase):
         self.assertEqual(report["gates"]["GATE_FACTUAL_GROUNDING"]["status"], "FAIL")
         self.assertEqual(report["gates"]["GATE_EPISTEMIC_INTEGRITY"]["status"], "FLAG")
         self.assertEqual(len(report["undetermined"]), 1)
+        unresolved = {"units": [{"unit_id": "TITLE", "claims": [claim("UNDETERMINED")]}]}
+        flags = gate_report(unresolved, checks.check_script(SCRIPT, 20, 200, "vi"))
+        self.assertEqual(flags["gates"]["GATE_FACTUAL_GROUNDING"]["status"], "FLAG")
         self.assertEqual(report["gates"]["GATE_NECESSARY_COVERAGE"]["status"], "PLAN_ONLY")
         brief = [brief_json(1)]
         uncited = gate_report(critic, checks.check_script(SCRIPT, 20, 200, "vi"), brief)
@@ -701,6 +872,18 @@ class GeminiClientTests(unittest.TestCase):
         self.assertEqual(sdk.kwargs["model"], "fake-model")
         self.assertEqual(client.name, "gemini:fake-model")
         self.assertEqual(record["fallback_from"], [])
+        routed = GeminiLLMClient("base", stage_models={"critic": "checker,backup"},
+                                 client_factory=lambda key: sdk, dotenv_path=REPO / "unused",
+                                 environ={"GEMINI_API_KEY_1": "test-key-not-real"})
+        for stage, model in (("plan", "base"), ("critic", "checker"), ("revise", "base")):
+            with self.subTest(stage=stage):
+                record = routed.complete(system="s", user="u", request_id=f"{stage}:v1:attempt2")
+                self.assertEqual(record["model_requested"], model)
+        log = CallLog()
+        for usage in ({"total_token_count": 8, "thoughts_token_count": 2}, {"total_token_count": 4}, None):
+            log.add({"stage": "critic", "model": "checker", "usage": usage})
+        self.assertEqual(log.usage_summary()["critic"]["checker"],
+                         {"calls": 3, "calls_with_total": 2, "total_token_count": 12, "thoughts_token_count": 2})
 
     def test_model_fallback_chain(self):
         class ProviderError(Exception):
