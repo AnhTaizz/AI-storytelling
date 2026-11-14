@@ -251,6 +251,16 @@ class JsonLoopTests(unittest.TestCase):
         self.assertEqual(len(client.calls), 2)
 
 
+    def test_regressed_repair_falls_back_to_last_soft_only_result(self):
+        """Live run 8: a repair for a soft error introduced a hard one on the last attempt."""
+        replies = iter(['{"n": 1}', '{"n": 2}', '{"n": "x"}'])
+        client = ScriptedLLMClient(lambda *a: next(replies))
+        obj = run_json_stage(client, stage="t", system="s", user="u", schema=self.SCHEMA,
+                             soft_check=lambda o: ["too short"], max_repairs=2)
+        self.assertEqual(obj, {"n": 2})
+        self.assertEqual(len(client.calls), 3)
+
+
 class SemanticValidationTests(unittest.TestCase):
     def setUp(self):
         self.chapter = load_scope(DEFAULT_MANIFEST, (1, 1)).chapters[0]
@@ -345,6 +355,9 @@ class SemanticValidationTests(unittest.TestCase):
         metaphor = "天使というのは勿論比喩である。"
         plain = "彼は傘を渡した。"
         korean = "그녀는 고백을 자주 받는다고 한다."
+        # Live run 8: the rumour (噂) is on the far side of 「…知らないが、」.
+        contrast = "周はクラスが違うので詳しくは知らないが、噂通りなら完璧超人なんじゃないかと思うほどである。"
+        across = "噂では完璧らしいが、彼はクラスが違う。"
         cases = [
             # label, text hedge -> expected problems: label wrong / text unhedged
             ("hearsay as fact", hearsay, "Cô thường nhận lời tỏ tình", "EXPLICIT", "ja", "vi", ["label", "text"]),
@@ -360,6 +373,9 @@ class SemanticValidationTests(unittest.TestCase):
             ("no source lexicon: label still binds text", hearsay, "Cô nhận lời tỏ tình", "REPORTED", "xx", "vi", ["text"]),
             ("no source lexicon, plain", hearsay, "Cô nhận lời tỏ tình", "EXPLICIT", "xx", "vi", []),
             ("Korean hearsay as fact", korean, "Cô thường nhận lời tỏ tình", "EXPLICIT", "ko", "vi", ["label", "text"]),
+            ("hedge on the other side of a contrast", contrast, "Amane khác lớp", "EXPLICIT", "ja", "vi", []),
+            ("quote spanning a contrast", across, "Cô hoàn hảo, cậu khác lớp", "EXPLICIT", "ja", "vi",
+             ["label", "text"]),
             ("Korean hearsay kept", korean, "Nghe nói cô thường nhận lời tỏ tình", "REPORTED", "ko", "vi", []),
         ]
         for label_text, source, fact, label, src_lang, brief_lang, expected in cases:

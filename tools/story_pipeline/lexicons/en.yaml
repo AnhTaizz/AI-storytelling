@@ -3,6 +3,9 @@ language: en
 word_boundaries: true
 chars_per_event: 1600
 clause_markers: [and, but, after, before, when, if, because, then, while]
+# A hedge does not reach across a contrast: in "I don't know her, but rumour says she is
+# perfect" the rumour is only in the second part. Openers start such a part.
+contrast_openers: [but, although, though, yet]
 strength:
   degree_extreme: [extremely, incredibly, utterly]
   completeness: [completely, totally, entirely, from head to toe]

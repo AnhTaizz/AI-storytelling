@@ -5,6 +5,8 @@ language: vi
 word_boundaries: true
 chars_per_event: 1500
 clause_markers: [và, nhưng, sau khi, trước khi, khi, nếu, vì, rồi, mà, để]
+# A hedge does not reach across a contrast. Openers start such a part.
+contrast_openers: [nhưng, tuy nhiên, song]
 strength:
   degree_extreme: [vô cùng, cực kỳ, cực kì, tột độ, hết sức]
   completeness: [hoàn toàn, tuyệt đối, toàn thân, từ đầu đến chân]

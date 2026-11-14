@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 8 — test files: 52 — test functions: 974
+Suites: 8 — test files: 52 — test functions: 976
 
 ## canonical_story
 
@@ -1158,7 +1158,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 
 ## story_pipeline
 
-### test_lexicon (5)
+### test_lexicon (6)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.lexicon`
 
 - `LexiconFileTests.test_every_lexicon_file_is_complete_and_loads`
@@ -1166,8 +1166,9 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `LexiconFileTests.test_unknown_language_has_no_lexicon`
 - `MatchingTests.test_concepts_found_per_language`
 - `ClauseTests.test_clauses_split_on_punctuation_and_conjunctions`
+- `ClauseTests.test_contrast_parts_split_only_at_a_contrast`
 
-### test_story_pipeline_v0 (34)
+### test_story_pipeline_v0 (35)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
 
 - `test_profile`
@@ -1182,6 +1183,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `JsonLoopTests.test_repair_with_error_feedback`
 - `JsonLoopTests.test_exhausted_repairs_raise`
 - `JsonLoopTests.test_soft_errors_accepted_on_last_attempt`
+- `JsonLoopTests.test_regressed_repair_falls_back_to_last_soft_only_result` — Live run 8: a repair for a soft error introduced a hard one on the last attempt.
 - `SemanticValidationTests.test_brief_rejects_out_of_scope_evidence`
 - `SemanticValidationTests.test_brief_quote_must_be_verbatim_in_cited_passages`
 - `SemanticValidationTests.test_plan_requires_core_coverage_and_length`

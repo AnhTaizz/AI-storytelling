@@ -5,6 +5,9 @@ language: ko
 word_boundaries: false
 chars_per_event: 700
 clause_markers: [그리고, 하지만, 그러나]
+# A hedge does not reach across a contrast. Endings close such a part; openers start one.
+contrast_endings: [지만, 는데]
+contrast_openers: [하지만, 그러나]
 strength:
   degree_extreme: [극도로, 엄청나게, 매우, 몹시, 너무나]
   completeness: [완전히, 전혀, 온몸]

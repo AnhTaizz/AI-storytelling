@@ -251,10 +251,13 @@ def run_json_stage(
     `semantic_check` errors are hard: the stage fails if they survive every repair.
     `soft_check` errors (for example a missed word count) also trigger repairs, but
     if only soft errors remain after the last attempt the object is returned anyway;
-    the caller re-checks and reports them.
+    the caller re-checks and reports them. A repair can also make things worse (live run 8:
+    splitting facts for the soft check introduced a hard error), so when the last attempt
+    has hard errors, the latest attempt that had only soft errors is returned instead.
     """
     prompt = user
     errors: List[str] = []
+    best_soft: Any = None
     last_attempt = max_repairs + 1
     for attempt in range(1, last_attempt + 1):
         request_id = f"{stage}:{request_suffix}:attempt{attempt}"
@@ -291,8 +294,12 @@ def run_json_stage(
                 "errors": errors,
                 "raw_content": raw,
             })
-        if not errors or (soft_only and attempt == last_attempt):
+        if soft_only:
+            best_soft = obj
+        if not errors:
             return obj
+        if attempt == last_attempt and best_soft is not None:
+            return best_soft
         prompt = REPAIR_TEMPLATE.format(
             original=user,
             previous=raw[:60000],

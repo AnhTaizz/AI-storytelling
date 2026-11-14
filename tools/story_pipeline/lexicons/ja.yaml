@@ -4,6 +4,12 @@ language: ja
 word_boundaries: false
 chars_per_event: 550
 clause_markers: [けれど, けど, しかし, そして]
+# A hedge does not reach across a contrast: in 「クラスが違うので詳しくは知らないが、噂通りなら…」
+# the rumour is only in the part after が. Endings close such a part; openers start one.
+# Conjunctive が follows a predicate (知らないが, 見たが); a bare が after a noun is the
+# subject particle, so only predicate endings are listed.
+contrast_endings: [るが, たが, いが, だが, すが, うが, けど, けれど, けれども, のに]
+contrast_openers: [しかし, だが]
 strength:
   degree_extreme: [非常に, とても, 極めて, すごく]
   completeness: [完全に, 全く, 全身]

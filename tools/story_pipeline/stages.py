@@ -135,6 +135,25 @@ def _quoted_sentences(quote: str, passages: Sequence[str]) -> str:
     return ""
 
 
+def _quote_scope(quote: str, sentence: str, lex: lexicon.Lexicon) -> str:
+    """The parts of `sentence`, split at contrasts, that the quote overlaps.
+
+    Hedges reach across a whole sentence but not across a contrast ("I don't know her well,
+    but rumour says..."), so only those parts can hedge the quoted item.
+    """
+    needle = _squash(quote).strip("「」『』\"'")
+    start = _squash(sentence).find(needle) if needle else -1
+    if start < 0:
+        return sentence
+    end, offset, kept = start + len(needle), 0, []
+    for part in lex.contrast_parts(sentence):
+        length = len(_squash(part))
+        if offset < end and offset + length > start:
+            kept.append(part)
+        offset += length
+    return "".join(kept)
+
+
 EPISTEMIC_LABELS = ("EXPLICIT", "REPORTED", "APPEARANCE", "SPECULATION", "FIGURATIVE")
 LABEL_CONCEPT = {"REPORTED": "reported", "APPEARANCE": "appearance", "SPECULATION": "speculation",
                  "FIGURATIVE": "metaphor"}
@@ -161,7 +180,8 @@ def brief_hedge_errors(brief: Dict[str, Any], chapter: Chapter, source_language:
                        brief_language: str) -> List[str]:
     """Brief items must keep the source's hedging, and their epistemic label must agree.
 
-    1. When the sentence an item quotes marks it as reported, apparent, guessed or figurative
+    1. When the sentence an item quotes (on the quote's side of any contrast, see
+       `_quote_scope`) marks it as reported, apparent, guessed or figurative
        (for example 「受けているらしく」), its `epistemic` label must not be EXPLICIT and its
        text must carry a hedge of that kind in the brief language. Live run 5's brief turned
        that hearsay into "frequently receives confessions".
@@ -178,7 +198,8 @@ def brief_hedge_errors(brief: Dict[str, Any], chapter: Chapter, source_language:
         rendered = dst.concepts(text, "hedge") if dst else set()
         kinds: Set[str] = set()
         if src is not None and dst is not None:
-            sentence = _quoted_sentences(quote, [texts[e] for e in evidence if e in texts])
+            sentence = _quote_scope(quote, _quoted_sentences(quote, [texts[e] for e in evidence if e in texts]),
+                                    src)
             # Hedges inside dialogue are the character's way of speaking, not the narrator's
             # uncertainty (run 3: 「…気になるだろう」), so quoted speech is ignored.
             source_hedges = src.find(_DIALOGUE.sub(" ", sentence), "hedge")

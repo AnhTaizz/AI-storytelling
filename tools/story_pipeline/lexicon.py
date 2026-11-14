@@ -40,6 +40,8 @@ class Lexicon:
     chars_per_event: int  # source text length per expected brief event (scripts differ in density)
     phrases: Dict[str, Dict[str, Tuple[str, ...]]]  # kind -> concept -> phrases
     clause_markers: Tuple[str, ...] = ()  # conjunctions that start a new clause
+    contrast_endings: Tuple[str, ...] = ()  # clause-final connectives that close a contrast ("…が、")
+    contrast_openers: Tuple[str, ...] = ()  # words that open a contrasting part ("but …")
 
     def clauses(self, text: str) -> List[str]:
         """Split at punctuation and at this language's clause conjunctions."""
@@ -49,6 +51,29 @@ class Lexicon:
             pattern = rf"(?<!\w)(?:{alternatives})(?!\w)" if self.word_boundaries else f"(?:{alternatives})"
             parts = [piece for part in parts for piece in re.split(pattern, part, flags=re.IGNORECASE)]
         return [p.strip() for p in parts if p and p.strip()]
+
+    def contrast_parts(self, text: str) -> List[str]:
+        """Split text where a contrast starts or ends; joined, the parts give back `text`.
+
+        A hedge belongs to its side of a contrast: in 「クラスが違うので詳しくは知らないが、
+        噂通りなら…」 the rumour marker does not reach "different class" (live run 8).
+        Text with no contrast stays one part, so hedges keep their whole-sentence reach.
+        """
+        parts: List[str] = []
+        closed = True  # the previous piece ended a contrasting part
+        for piece in (p for p in re.split(r"(?<=[,;、，；])", text) if p):
+            if closed or self._opens_contrast(piece):
+                parts.append(piece)
+            else:
+                parts[-1] += piece
+            tail = re.sub(r"[\s,;、，；]+$", "", piece).casefold()
+            closed = any(tail.endswith(e) for e in self.contrast_endings)
+        return parts
+
+    def _opens_contrast(self, piece: str) -> bool:
+        head = piece.lstrip().casefold()
+        return any(head.startswith(o) and not (self.word_boundaries and head[len(o):len(o) + 1].isalnum())
+                   for o in self.contrast_openers)
 
     def find(self, text: str, kind: str) -> List[Tuple[str, str]]:
         """(concept, phrase) for every phrase of `kind` that occurs in `text`."""
@@ -80,9 +105,11 @@ def validate(data: dict, expected_language: str) -> List[str]:
         problems.append(f"language must be {expected_language!r}")
     if not isinstance(data.get("word_boundaries"), bool):
         problems.append("word_boundaries must be true or false")
-    markers = data.get("clause_markers", [])
-    if not isinstance(markers, list) or not all(isinstance(m, str) and m.strip() for m in markers):
-        problems.append("clause_markers must be a list of non-empty phrases")
+    for field in ("clause_markers", "contrast_endings", "contrast_openers"):
+        markers = data.get(field, [])
+        if not isinstance(markers, list) or not all(
+                isinstance(m, str) and m.strip() and m == m.casefold().strip() for m in markers):
+            problems.append(f"{field} must be a list of non-empty, trimmed lowercase phrases")
     cpe = data.get("chars_per_event")
     if not isinstance(cpe, int) or isinstance(cpe, bool) or cpe <= 0:
         problems.append("chars_per_event must be a positive integer")
@@ -130,7 +157,8 @@ def load(language: str) -> Optional[Lexicon]:
         raise LexiconError(f"{path.name}: " + "; ".join(problems))
     phrases = {kind: {concept: tuple(values) for concept, values in data[kind].items()} for kind in KINDS}
     return Lexicon(language, data["word_boundaries"], data["chars_per_event"], phrases,
-                   tuple(data.get("clause_markers", [])))
+                   tuple(data.get("clause_markers", [])), tuple(data.get("contrast_endings", [])),
+                   tuple(data.get("contrast_openers", [])))
 
 
 def missing_languages(*languages: str) -> FrozenSet[str]:
