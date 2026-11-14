@@ -322,6 +322,48 @@ Two additions:
 
 The remaining gap is brief items that summarise several passages. A deterministic check cannot tell which passage a clause came from across languages. The next step would be per-clause evidence and an explicit epistemic label in the brief schema.
 
+**Epistemic labels and atomic facts in the brief.**
+
+Every fact, relationship and event now carries `epistemic`: EXPLICIT, REPORTED, APPEARANCE, SPECULATION or FIGURATIVE. The model sets it from every cited passage, quoted or not, and the checks bind it in two directions:
+- A quoted sentence with a hedge cannot be labelled EXPLICIT (hard).
+- A non-EXPLICIT label requires a hedge of that kind in the item's text, with FIGURATIVE requiring a metaphor (hard). This direction needs only the brief language's lexicon.
+
+The script hedge audit reads the labels too, so a labelled item that the script tells as plain fact is a MEDIUM finding. A soft check asks for one fact per item: at most 2 clauses (`MAX_FACT_CLAUSES`), so that each fact has its own quote and label.
+
+**2026-11-14, run 8 (labels, live): FAILED at the brief, a false positive.**
+
+The first repair produced a brief with only soft (atomicity) errors. The second split the joined facts as asked, and one of them, "Amane is in a different class", quoted the start of 1.8:
+
+> 周はクラスが違うので詳しくは知らないが、噂通りなら完璧超人なんじゃないかと思うほどである。
+
+The 噂 (rumour) belongs to the part after 「知らないが、」, but the check looked at the whole sentence, so it demanded REPORTED. Two fixes:
+- **Hedges stop at a contrast.** Lexicons list `contrast_endings` (ja が after a predicate as in 知らないが, けど, のに; ko 지만, 는데) and `contrast_openers` (en but, although; vi nhưng; ja しかし). The brief check only looks at the parts of the sentence the quote overlaps. A sentence without a contrast keeps its whole-sentence reach, because Japanese hedges are usually sentence-final. A bare が after a noun (「真昼が、」) is the subject particle and does not split.
+- **A regressed repair no longer loses a usable result.** When the last attempt has hard errors, `run_json_stage` returns the latest attempt that had only soft errors.
+
+**2026-11-14, run 9 (same code plus the fixes, live).**
+
+The run COMPLETED in 10 calls and 976 s. The brief passed on its third attempt; the earlier ones failed on an `unknowns` schema error and on having 4 events where 5 are required. It kept 3 soft atomicity errors. One script call fell back from the first model after 4 server failures. The strength audit found 15 findings in v1 and 1 in v2. All gates passed except GATE_EPISTEMIC_INTEGRITY (one MEDIUM, see the minor issues below).
+
+The brief's labels:
+- the angel image is FIGURATIVE ("được ví như");
+- the three reputation facts (grades and sport, temperament, confessions) are REPORTED ("nghe nói");
+- everything else is EXPLICIT.
+
+Manual check of the final script against run 7's defects:
+- "not waiting for anyone" as Mahiru's words (1.22 「なさそう」): gone.
+- Wariness towards the opposite sex as fact (1.39 「かもしれない」): gone. The wariness the script mentions is 1.35's explicit 「警戒が滲んだ」, and the confessions remain "nghe nói".
+- "a pained expression" (1.26 「ように見えて」): now "trông như sắp khóc" (looked about to cry).
+- Hair: now "màu lanh" (flaxen) for 亜麻色.
+
+New minor issues:
+- "sự đề phòng lộ rõ" (clearly visible) for 「うっすらと」 (faintly).
+- "mưa bão" (storm) for 雨.
+- "bạn bè ví như" attributes the narrator's metaphor to classmates.
+- "hết sức bình lặng" (an unsourced intensifier, flagged by the strength audit but not fixed in the single revision round).
+- The closing line says Amane's belief "did not match what was about to happen". The source's 「その時は。」 only implies this; run 7's "đó chỉ là những gì cậu nghĩ vào lúc ấy" was more faithful.
+
+The LLM critic again reported no problems with the final script.
+
 ## Known limits
 
 - Brief paraphrase quality is not measured against gold. Quotes pin the evidence, but a
