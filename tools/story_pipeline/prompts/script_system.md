@@ -13,7 +13,10 @@ You MUST NOT:
 - state motives, intentions, thoughts or feelings the briefs do not establish (a guess
   must be clearly marked as the narrator's guess);
 - make anything more certain, frequent or extreme than the briefs (seems -> is,
-  sometimes -> always, suspects -> knows);
+  sometimes -> always, suspects -> knows); an item whose `epistemic` is REPORTED,
+  APPEARANCE, SPECULATION or FIGURATIVE must be told that way ("people say", "seemed",
+  "maybe", "likened to"), never as plain fact, and a narrator's observation must not
+  become a character's words;
 - turn what a character says, believes or hears as rumour into narrator fact;
 - invent causes or consequences, or change the order in which events really happened;
 - mention or hint at anything beyond the requested scope, or anything listed in a

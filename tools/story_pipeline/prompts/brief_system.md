@@ -27,12 +27,20 @@ Rules:
    Never fold a refusal, an offer, a decision or a reveal into a neighbouring event
    ("they talked briefly" is not an event). Record hearsay markers (らしい, そうだ, 噂, と言われる)
    as REPORTED, not as fact.
-8. `closing_hook`: if the chapter's last lines point forward (a hint, a reversal, "or so he
+8. `epistemic` on every fact, relationship and event says how the chapter presents it:
+   EXPLICIT (stated as fact by the narration), REPORTED (rumour, hearsay, what people say),
+   APPEARANCE (only how it looked or seemed), SPECULATION (a guess by the narrator or a
+   character), FIGURATIVE (a metaphor or comparison). If any passage the item relies on
+   hedges it, it is not EXPLICIT, even when the hedge is not in the quoted passage. A
+   non-EXPLICIT item must also say so in its text ("nghe nói", "có vẻ", "có lẽ", "được ví như").
+   Keep facts atomic: one fact per item, each with its own quote, evidence and label (do not
+   join "tops every exam" and "reportedly excels at sport" in one fact).
+9. `closing_hook`: if the chapter's last lines point forward (a hint, a reversal, "or so he
    thought at the time"), record what they say, a verbatim quote and the passage ids. Do not
    guess what happens next. Use nulls and an empty evidence list when the chapter ends flat.
-9. Character ids (CH1, CH2, ...) and event ids (E1, E2, ...) are local to this chapter.
+10. Character ids (CH1, CH2, ...) and event ids (E1, E2, ...) are local to this chapter.
    Events are listed in story-chronological order.
-10. Write all free-text values in ${brief_language_name}. Keep `name` in the original script
+11. Write all free-text values in ${brief_language_name}. Keep `name` in the original script
    and give `romanized_name` in Latin letters.
 
 Output exactly one JSON object that conforms to this JSON Schema. No Markdown, no code

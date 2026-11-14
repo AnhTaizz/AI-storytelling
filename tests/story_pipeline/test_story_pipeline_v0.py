@@ -68,21 +68,22 @@ def _base_brief(order, evidence=None, quote=None):
         "chapter_summary": "Amane gặp Mahiru trong công viên lúc trời mưa.",
         "characters": [
             {"id": "CH1", "name": "藤宮周", "romanized_name": "Amane", "aliases": [],
-             "facts": [{"text": "Học sinh năm nhất", "evidence": evidence, "quote": quote}]},
+             "facts": [{"text": "Học sinh năm nhất", "evidence": evidence, "quote": quote,
+                        "epistemic": "EXPLICIT"}]},
             {"id": "CH2", "name": "椎名真昼", "romanized_name": "Mahiru", "aliases": ["Thiên thần"],
              "facts": []},
         ],
         "relationships": [{"between": ["CH1", "CH2"], "state": "Hàng xóm", "evidence": evidence,
-                           "quote": quote}],
+                           "quote": quote, "epistemic": "EXPLICIT"}],
         "events": [
             {"id": "E1", "summary": "Amane thấy Mahiru trên xích đu", "participants": ["CH1", "CH2"],
              "location": "công viên", "importance": "CORE",
              "motivation": {"text": None, "status": "UNKNOWN"}, "consequence": None,
-             "evidence": evidence, "quote": quote},
+             "evidence": evidence, "quote": quote, "epistemic": "EXPLICIT"},
             {"id": "E2", "summary": "Amane đưa ô cho Mahiru", "participants": ["CH1", "CH2"],
              "location": "công viên", "importance": "SUPPORTING",
              "motivation": {"text": None, "status": "UNKNOWN"}, "consequence": None,
-             "evidence": evidence, "quote": quote},
+             "evidence": evidence, "quote": quote, "epistemic": "EXPLICIT"},
         ],
         "unknowns": ["Lý do Mahiru ngồi dưới mưa"],
         "forbidden_inferences": ["Mahiru thích Amane"],
@@ -327,41 +328,48 @@ class SemanticValidationTests(unittest.TestCase):
         self.assertEqual(stages.plan_semantic_errors(plan, [hooked], test_profile()), [])
 
     def test_brief_keeps_source_hedging_in_any_language_pair(self):
-        """A brief item quoting hearsay, appearance, guesswork or a metaphor must keep it."""
+        """Labels and text of a brief item must keep the hedging of what it quotes."""
         def chapter_with(text):
-            passage = Passage("1.1", text)
-            return Chapter(1, "doc", "t", (passage,) * 1)
+            return Chapter(1, "doc", "t", (Passage("1.1", text),))
 
-        def brief_with(fact_text, quote):
+        def brief_with(fact_text, quote, label):
             brief = brief_json(1, ["1.1"], quote)
-            brief["characters"][0]["facts"] = [{"text": fact_text, "evidence": ["1.1"], "quote": quote}]
+            brief["characters"][0]["facts"] = [{"text": fact_text, "evidence": ["1.1"], "quote": quote,
+                                                "epistemic": label}]
             brief["relationships"] = []
-            brief["events"] = [dict(e, quote=quote, evidence=["1.1"], summary="Gặp nhau") for e in brief["events"]]
+            brief["events"] = [dict(e, quote="x", evidence=["1.1"], summary="Gặp nhau") for e in brief["events"]]
             return brief
 
         hearsay = "彼女は学年問わず告白を受けているらしく、困っている。"
         dialogue = "「この雨の中なら気になるだろう」と彼は言った。"
         metaphor = "天使というのは勿論比喩である。"
+        plain = "彼は傘を渡した。"
+        korean = "그녀는 고백을 자주 받는다고 한다."
         cases = [
-            ("hearsay stated as fact", hearsay, "Cô thường xuyên nhận lời tỏ tình", "ja", "vi", 1),
-            ("hearsay kept", hearsay, "Nghe nói cô nhận nhiều lời tỏ tình", "ja", "vi", 0),
-            ("hearsay kept in an English brief", hearsay, "She reportedly gets confessions", "ja", "en", 0),
-            ("hedge only inside dialogue", dialogue, "Amane nói ai cũng sẽ lo", "ja", "vi", 0),
-            ("metaphor needs a metaphor", metaphor, "Cô có vẻ là thiên thần", "ja", "vi", 1),
-            ("metaphor kept", metaphor, "Cô được ví như thiên thần", "ja", "vi", 0),
-            ("no lexicon: not checked", hearsay, "Cô nhận lời tỏ tình", "xx", "vi", 0),
-            ("Korean hearsay stated as fact", "그녀는 고백을 자주 받는다고 한다.", "Cô thường nhận lời tỏ tình",
-             "ko", "vi", 1),
-            ("Korean hearsay kept", "그녀는 고백을 자주 받는다고 한다.", "Nghe nói cô thường nhận lời tỏ tình",
-             "ko", "vi", 0),
-            ("Korean hedge inside dialogue", "“아마 괜찮겠지.” 그가 말했다.", "Cậu nói sẽ ổn thôi", "ko", "vi", 0),
+            # label, text hedge -> expected problems: label wrong / text unhedged
+            ("hearsay as fact", hearsay, "Cô thường nhận lời tỏ tình", "EXPLICIT", "ja", "vi", ["label", "text"]),
+            ("hearsay labelled but text plain", hearsay, "Cô thường nhận lời tỏ tình", "REPORTED", "ja", "vi", ["text"]),
+            ("hearsay kept", hearsay, "Nghe nói cô nhận nhiều lời tỏ tình", "REPORTED", "ja", "vi", []),
+            ("hearsay kept, English brief", hearsay, "She reportedly gets confessions", "REPORTED", "ja", "en", []),
+            ("hedge only in dialogue", dialogue, "Amane nói ai cũng sẽ lo", "EXPLICIT", "ja", "vi", []),
+            ("metaphor needs a metaphor", metaphor, "Cô có vẻ là thiên thần", "FIGURATIVE", "ja", "vi", ["text"]),
+            ("metaphor kept", metaphor, "Cô được ví như thiên thần", "FIGURATIVE", "ja", "vi", []),
+            # A hedge from an unquoted passage: the label carries it, the text must follow.
+            ("label from another passage", plain, "Cô có vẻ đang chờ ai", "APPEARANCE", "ja", "vi", []),
+            ("label without a text hedge", plain, "Cô đang chờ ai", "APPEARANCE", "ja", "vi", ["text"]),
+            ("no source lexicon: label still binds text", hearsay, "Cô nhận lời tỏ tình", "REPORTED", "xx", "vi", ["text"]),
+            ("no source lexicon, plain", hearsay, "Cô nhận lời tỏ tình", "EXPLICIT", "xx", "vi", []),
+            ("Korean hearsay as fact", korean, "Cô thường nhận lời tỏ tình", "EXPLICIT", "ko", "vi", ["label", "text"]),
+            ("Korean hearsay kept", korean, "Nghe nói cô thường nhận lời tỏ tình", "REPORTED", "ko", "vi", []),
         ]
-        for label, source, fact, src_lang, brief_lang, expected in cases:
-            with self.subTest(label):
+        for label_text, source, fact, label, src_lang, brief_lang, expected in cases:
+            with self.subTest(label_text):
                 quote = source[2:12]
-                errors = stages.brief_hedge_errors(brief_with(fact, quote), chapter_with(source), src_lang, brief_lang)
+                errors = stages.brief_hedge_errors(brief_with(fact, quote, label), chapter_with(source),
+                                                   src_lang, brief_lang)
                 fact_errors = [e for e in errors if e.startswith("characters")]
-                self.assertEqual(len(fact_errors), expected, errors)
+                kinds = sorted("label" if "epistemic is EXPLICIT" in e else "text" for e in fact_errors)
+                self.assertEqual(kinds, expected, errors)
         self.assertEqual(stages.audit_coverage("vi", "vi", "xx")["missing_lexicons"], ["xx"])
         self.assertFalse(stages.audit_coverage("vi", "vi", "xx")["brief_hedge_check"])
         self.assertTrue(stages.audit_coverage("vi", "vi", "xx")["strength_audit"])
@@ -371,6 +379,8 @@ class SemanticValidationTests(unittest.TestCase):
         brief["characters"][1]["facts"] = [{"text": "Khiêm tốn, và nghe nói rất được các nam sinh tỏ tình",
                                             "evidence": ["1.39"], "quote": "x"}]
         brief["events"][0]["summary"] = "Amane hỏi cô đang làm gì sau khi nhìn thấy nét mặt như sắp khóc"
+        brief["characters"][0]["facts"] = [{"text": "Cô không chờ một ai cả", "evidence": ["1.22"], "quote": "x",
+                                            "epistemic": "APPEARANCE"}]  # run 7: narrator's 「なさそう」
 
         def run_case(paragraph, refs):
             units = [{"unit_id": "P001", "sha256": "x", "text": paragraph}]
@@ -387,6 +397,9 @@ class SemanticValidationTests(unittest.TestCase):
             ("other clause of a joined statement", "Amane hỏi cô đang làm gì.", ["c1.E1"], 0),
             ("appearance dropped", "Cậu nhìn thấy nét mặt cô sắp khóc.", ["c1.E1"], 1),
             ("paragraph cites nothing", "Cô rất được các nam sinh tỏ tình.", [], 0),
+            # Labelled APPEARANCE in the brief: the label alone makes it hedged.
+            ("labelled appearance told as fact", "Cô ngồi đó, không chờ một ai cả.", ["c1.CH1"], 1),
+            ("labelled appearance kept", "Cô có vẻ không chờ một ai cả.", ["c1.CH1"], 0),
         ]
         for label, paragraph, refs, expected in cases:
             with self.subTest(label):
@@ -401,6 +414,18 @@ class SemanticValidationTests(unittest.TestCase):
         self.assertEqual(stages.hedge_audit(critic, [brief], None, units, "vi", "en"), [])  # needs one language
         self.assertEqual(stages.hedge_audit(critic, [brief], None, None), [])
         self.assertFalse(stages.audit_coverage("vi", "en", "ja")["script_hedge_audit"])
+
+    def test_brief_facts_should_be_atomic(self):
+        brief = brief_json(1)
+        brief["characters"][1]["facts"] = [
+            {"text": "Luôn đứng đầu các kỳ thi, và nghe nói giỏi thể dục, và rất khiêm tốn",
+             "evidence": ["1.7"], "quote": "x", "epistemic": "REPORTED"},
+            {"text": "Luôn đứng đầu các kỳ thi", "evidence": ["1.7"], "quote": "x", "epistemic": "EXPLICIT"},
+        ]
+        errors = stages.brief_atomicity_errors(brief, "vi")
+        self.assertEqual(len(errors), 1)
+        self.assertIn("CH2 facts[0]: joins 3 clauses", errors[0])
+        self.assertEqual(stages.brief_atomicity_errors(brief, "xx"), [])  # no lexicon: not judged
 
     def test_source_hedge_review_lists_items_for_a_person(self):
         chapter = Chapter(1, "doc", "t", (Passage("1.1", "彼女は告白を受けているらしい。"),

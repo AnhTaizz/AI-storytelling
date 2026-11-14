@@ -135,47 +135,91 @@ def _quoted_sentences(quote: str, passages: Sequence[str]) -> str:
     return ""
 
 
-def brief_hedge_errors(brief: Dict[str, Any], chapter: Chapter, source_language: str,
-                       brief_language: str) -> List[str]:
-    """Brief items must keep the source's hedging.
+EPISTEMIC_LABELS = ("EXPLICIT", "REPORTED", "APPEARANCE", "SPECULATION", "FIGURATIVE")
+LABEL_CONCEPT = {"REPORTED": "reported", "APPEARANCE": "appearance", "SPECULATION": "speculation",
+                 "FIGURATIVE": "metaphor"}
 
-    When the sentence a brief item quotes marks its content as reported, apparent, guessed or
-    figurative (for example 「受けているらしく」), the item must carry a hedge of the same kind in
-    the brief language. Live run 5's brief turned that hearsay into "frequently receives
-    confessions", and every later stage treated it as fact. Language-specific phrases live in
-    the lexicons; when either language has none, nothing is checked (see audit_coverage).
-    """
-    src, dst = lexicon.load(source_language), lexicon.load(brief_language)
-    if src is None or dst is None:
-        return []
-    texts = {p.passage_id: p.text for p in chapter.passages}
+
+def _labelled_items(brief: Dict[str, Any]) -> List[Tuple[str, str, str, List[str], str]]:
+    """(where, text, quote, evidence, epistemic) for every fact, relationship and event."""
     items = []
     for character in brief["characters"]:
         for index, fact in enumerate(character["facts"]):
             items.append((f"characters {character['id']} facts[{index}]", fact["text"], fact["quote"],
-                          fact["evidence"]))
+                          fact["evidence"], fact.get("epistemic", "EXPLICIT")))
     for index, rel in enumerate(brief["relationships"]):
-        items.append((f"relationships[{index}]", rel["state"], rel["quote"], rel["evidence"]))
+        items.append((f"relationships[{index}]", rel["state"], rel["quote"], rel["evidence"],
+                      rel.get("epistemic", "EXPLICIT")))
     for event in brief["events"]:
         text = " ".join([event["summary"], event.get("consequence") or "", event["motivation"].get("text") or ""])
-        items.append((f"event {event['id']}", text, event["quote"], event["evidence"]))
+        items.append((f"event {event['id']}", text, event["quote"], event["evidence"],
+                      event.get("epistemic", "EXPLICIT")))
+    return items
+
+
+def brief_hedge_errors(brief: Dict[str, Any], chapter: Chapter, source_language: str,
+                       brief_language: str) -> List[str]:
+    """Brief items must keep the source's hedging, and their epistemic label must agree.
+
+    1. When the sentence an item quotes marks it as reported, apparent, guessed or figurative
+       (for example 「受けているらしく」), its `epistemic` label must not be EXPLICIT and its
+       text must carry a hedge of that kind in the brief language. Live run 5's brief turned
+       that hearsay into "frequently receives confessions".
+    2. An item labelled anything but EXPLICIT must carry such a hedge in its text, whichever
+       passage the hedge came from. This is what lets the model report hedges from cited
+       passages it did not quote (live run 7) in a way the next stages can rely on.
+    Phrases come from the lexicons; part 1 needs both languages' lexicons, part 2 only the
+    brief language's (see audit_coverage).
+    """
+    src, dst = lexicon.load(source_language), lexicon.load(brief_language)
+    texts = {p.passage_id: p.text for p in chapter.passages}
     errors = []
-    for where, text, quote, evidence in items:
-        sentence = _quoted_sentences(quote, [texts[e] for e in evidence if e in texts])
-        # Hedges inside dialogue are the character's way of speaking, not the narrator's
-        # uncertainty (run 3: 「…気になるだろう」), so quoted speech is ignored.
-        source_hedges = src.find(_DIALOGUE.sub(" ", sentence), "hedge")
-        if not source_hedges:
+    for where, text, quote, evidence, label in _labelled_items(brief):
+        rendered = dst.concepts(text, "hedge") if dst else set()
+        kinds: Set[str] = set()
+        if src is not None and dst is not None:
+            sentence = _quoted_sentences(quote, [texts[e] for e in evidence if e in texts])
+            # Hedges inside dialogue are the character's way of speaking, not the narrator's
+            # uncertainty (run 3: 「…気になるだろう」), so quoted speech is ignored.
+            source_hedges = src.find(_DIALOGUE.sub(" ", sentence), "hedge")
+            kinds = {concept for concept, _ in source_hedges}
+            if kinds and label == "EXPLICIT":
+                errors.append(f"{where}: the quoted source marks this as {sorted(kinds)} "
+                              f"({', '.join(sorted({p for _, p in source_hedges}))}) but epistemic is EXPLICIT; "
+                              f"set epistemic to "
+                              f"{'FIGURATIVE' if 'metaphor' in kinds else 'REPORTED, APPEARANCE or SPECULATION'}")
+        if dst is None:
             continue
-        kinds = {concept for concept, _ in source_hedges}
-        rendered = dst.concepts(text, "hedge")
-        required = {"metaphor"} if "metaphor" in kinds else set(lexicon.HEDGE_CONCEPTS)
+        wanted = set(kinds)
+        if label != "EXPLICIT":
+            wanted.add(LABEL_CONCEPT[label])
+        if not wanted:
+            continue
+        required = {"metaphor"} if "metaphor" in wanted else set(lexicon.HEDGE_CONCEPTS)
         if rendered & required:
             continue
-        examples = [p for c in sorted(kinds) for p in dst.phrases["hedge"].get(c, ())[:2]]
-        errors.append(f"{where}: the quoted source marks this as {sorted(kinds)} "
-                      f"({', '.join(sorted({p for _, p in source_hedges}))}); keep that in the brief text "
-                      f"(for example: {', '.join(examples)}) instead of stating it as plain fact")
+        examples = [p for c in sorted(wanted) for p in dst.phrases["hedge"].get(c, ())[:2]]
+        errors.append(f"{where}: it is {label if label != 'EXPLICIT' else sorted(kinds)} but the text states it "
+                      f"as plain fact; keep the hedge in the text (for example: {', '.join(examples)})")
+    return errors
+
+
+MAX_FACT_CLAUSES = 2
+
+
+def brief_atomicity_errors(brief: Dict[str, Any], brief_language: Optional[str]) -> List[str]:
+    """Soft check: one fact per item. A fact that joins several clauses ("tops every exam
+    and, reportedly, excels at sport") cannot carry one quote and one epistemic label."""
+    lex = lexicon.load(brief_language) if brief_language else None
+    if lex is None:
+        return []
+    errors = []
+    for character in brief["characters"]:
+        for index, fact in enumerate(character["facts"]):
+            clauses = lex.clauses(fact["text"])
+            if len(clauses) > MAX_FACT_CLAUSES:
+                errors.append(f"characters {character['id']} facts[{index}]: joins {len(clauses)} clauses; "
+                              f"split it into separate facts, each with its own quote, evidence and epistemic")
     return errors
 
 
@@ -247,6 +291,7 @@ def run_brief(client: LLMClient, scope: StoryScope, chapter: Chapter, profile: N
     return run_json_stage(client, stage="brief", system=system, user=user, schema=schema,
                           semantic_check=lambda b: brief_semantic_errors(b, chapter, scope.source_language,
                                                                          profile.brief_language),
+                          soft_check=lambda b: brief_atomicity_errors(b, profile.brief_language),
                           max_repairs=max_repairs, log=log, request_suffix=f"ch{chapter.order}")
 
 
@@ -515,17 +560,24 @@ def strength_audit(critic: Dict[str, Any], briefs: Sequence[Dict[str, Any]],
 def brief_items(briefs: Sequence[Dict[str, Any]], recap: Optional[Dict[str, Any]] = None) -> Dict[str, List[str]]:
     """Ref -> its individual statements (each character fact separately), for matching a
     script sentence to the one brief statement it retells."""
-    items: Dict[str, List[str]] = {}
+    return {ref: [text for text, _ in statements] for ref, statements in labelled_statements(briefs, recap).items()}
+
+
+def labelled_statements(briefs: Sequence[Dict[str, Any]],
+                        recap: Optional[Dict[str, Any]] = None) -> Dict[str, List[Tuple[str, str]]]:
+    """Ref -> (statement, epistemic label) pairs; recap events count as EXPLICIT."""
+    items: Dict[str, List[Tuple[str, str]]] = {}
     for brief in briefs:
         n = brief["chapter_order"]
         for character in brief["characters"]:
-            items[f"c{n}.{character['id']}"] = [f["text"] for f in character["facts"]]
+            items[f"c{n}.{character['id']}"] = [(f["text"], f.get("epistemic", "EXPLICIT"))
+                                                for f in character["facts"]]
         for event in brief["events"]:
-            items[f"c{n}.{event['id']}"] = [" ".join([event["summary"], event.get("consequence") or "",
-                                                      event["motivation"].get("text") or ""])]
+            text = " ".join([event["summary"], event.get("consequence") or "", event["motivation"].get("text") or ""])
+            items[f"c{n}.{event['id']}"] = [(text, event.get("epistemic", "EXPLICIT"))]
     for chapter in (recap or {}).get("chapters", []):
         for event in chapter["core_events"]:
-            items[event["ref"]] = [event["summary"]]
+            items[event["ref"]] = [(event["summary"], "EXPLICIT")]
     return items
 
 
@@ -543,13 +595,16 @@ def similarity(a: str, b: str) -> float:
 HEDGE_MATCH = 0.5  # minimum similarity for a script sentence to retell a hedged brief clause
 
 
-def _hedged_clauses(statements: Sequence[str], lex: "lexicon.Lexicon") -> List[Tuple[str, Set[str]]]:
-    """Clauses of brief statements that carry a hedge. A brief statement often joins several
-    facts ("modest, and reportedly popular with the boys"); only the hedged clause counts."""
+def _hedged_clauses(statements: Sequence[Tuple[str, str]], lex: "lexicon.Lexicon") -> List[Tuple[str, Set[str]]]:
+    """Clauses of brief statements that are hedged. A statement often joins several facts
+    ("modest, and reportedly popular with the boys"); only a hedged clause counts. A statement
+    labelled anything but EXPLICIT is hedged as a whole, since facts are meant to be atomic."""
     out = []
-    for statement in statements:
+    for statement, label in statements:
         for clause in lex.clauses(statement):
             concepts = lex.concepts(clause, "hedge")
+            if label != "EXPLICIT":
+                concepts = concepts | {LABEL_CONCEPT[label]}
             if concepts and len(_squash(clause)) >= 8:
                 out.append((clause.strip(), concepts))
     return out
@@ -574,7 +629,7 @@ def hedge_audit(critic: Dict[str, Any], briefs: Sequence[Dict[str, Any]],
         return []
     if lexicon.lexicon_code(script_language) != lexicon.lexicon_code(brief_language):
         return []
-    items = brief_items(briefs, recap)
+    items = labelled_statements(briefs, recap)
     unit_text = {u["unit_id"]: u["text"] for u in units}
     findings = []
     for unit in critic["units"]:

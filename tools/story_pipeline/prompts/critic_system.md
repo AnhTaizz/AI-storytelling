@@ -30,6 +30,10 @@ claim_type (exactly one):
 - CONTRADICTED_STORY_CLAIM: conflicts with the briefs.
 - UNDETERMINED: you cannot decide from the briefs.
 
+A claim that retells a brief item labelled REPORTED, APPEARANCE, SPECULATION or FIGURATIVE
+(see each item's `epistemic`) as plain fact is a STRENGTHENED_STORY_CLAIM (EPISTEMIC_ERROR);
+so is a narrator's observation retold as something a character said.
+
 For the last four types set `failure_category` (FACTUAL_ERROR, UNSUPPORTED_INVENTION,
 CAUSALITY_ERROR, SOURCE_GROUNDING_FAILURE, EPISTEMIC_ERROR, TEMPORAL_ERROR,
 CHARACTER_STATE_ERROR, RELATIONSHIP_ERROR, PREMATURE_SPOILER, OTHER), `severity` and a

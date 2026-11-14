@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 8 — test files: 52 — test functions: 973
+Suites: 8 — test files: 52 — test functions: 974
 
 ## canonical_story
 
@@ -1167,7 +1167,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `MatchingTests.test_concepts_found_per_language`
 - `ClauseTests.test_clauses_split_on_punctuation_and_conjunctions`
 
-### test_story_pipeline_v0 (33)
+### test_story_pipeline_v0 (34)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
 
 - `test_profile`
@@ -1187,8 +1187,9 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `SemanticValidationTests.test_plan_requires_core_coverage_and_length`
 - `SemanticValidationTests.test_brief_must_be_fine_grained_enough`
 - `SemanticValidationTests.test_closing_hook_is_quoted_and_landed_by_the_plan`
-- `SemanticValidationTests.test_brief_keeps_source_hedging_in_any_language_pair` — A brief item quoting hearsay, appearance, guesswork or a metaphor must keep it.
+- `SemanticValidationTests.test_brief_keeps_source_hedging_in_any_language_pair` — Labels and text of a brief item must keep the hedging of what it quotes.
 - `SemanticValidationTests.test_script_must_keep_the_hedges_of_the_brief_clause_it_retells`
+- `SemanticValidationTests.test_brief_facts_should_be_atomic`
 - `SemanticValidationTests.test_source_hedge_review_lists_items_for_a_person`
 - `SemanticValidationTests.test_critic_must_extract_claims_at_paragraph_density`
 - `SemanticValidationTests.test_strength_audit_flags_intensifiers_missing_from_cited_brief`
