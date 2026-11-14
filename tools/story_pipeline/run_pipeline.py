@@ -11,6 +11,7 @@ to reuse stage outputs already written there (saves API calls after a failure).
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 import time
@@ -52,12 +53,29 @@ def write_json(path: Path, obj: Any) -> None:
     path.write_text(json.dumps(obj, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
-def cached(path: Path, resume: bool, produce: Callable[[], Any]) -> Any:
-    if resume and path.is_file():
-        return json.loads(path.read_text(encoding="utf-8"))
+def digest(value: Any) -> str:
+    return hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
+
+
+def cached(path: Path, resume: bool, inputs: Any, produce: Callable[[], Any]) -> Any:
+    """Only reuse an artifact for the same inputs, including its upstream dependencies."""
+    key = digest(inputs)
+    receipt = path.with_suffix(".cache.json")
+    if resume and path.is_file() and receipt.is_file():
+        try:
+            obj = json.loads(path.read_text(encoding="utf-8"))
+            if json.loads(receipt.read_text(encoding="utf-8")) == [key, digest(obj)]:
+                return obj
+        except (ValueError, OSError):
+            pass  # rebuild an incomplete checkpoint
     obj = produce()
     write_json(path, obj)
+    write_json(receipt, [key, digest(obj)])
     return obj
+
+
+def review_units(script: Dict[str, Any]) -> List[Dict[str, str]]:
+    return [{"unit_id": "TITLE", "text": script["title_idea"]}, *checks.split_units(checks.script_text(script))]
 
 
 def script_markdown(script: Dict[str, Any], label: str) -> str:
@@ -67,9 +85,6 @@ def script_markdown(script: Dict[str, Any], label: str) -> str:
 # --------------------------------------------------------------------------- report
 
 
-SUPPORTED_TYPES = {"SUPPORTED_FACT", "SUPPORTED_INFERENCE", "ATTRIBUTED_REPORT"}
-
-
 def coverage_gate(critic: Optional[Dict[str, Any]], briefs: Optional[Sequence[Dict[str, Any]]]) -> Dict[str, Any]:
     """CORE brief events that no supported script claim cites (critic brief_refs)."""
     if critic is None or not briefs:
@@ -77,8 +92,9 @@ def coverage_gate(critic: Optional[Dict[str, Any]], briefs: Optional[Sequence[Di
                 "note": "Every CORE brief event is assigned to a plan beat (checked). Script-level "
                         "coverage needs a critic run."}
     core = [ref for ref, event in stages.event_index(briefs).items() if event["importance"] == "CORE"]
-    cited = {ref for unit in critic["units"] for claim in unit["claims"]
-             if claim["claim_type"] in SUPPORTED_TYPES for ref in claim["brief_refs"]}
+    cited = {ref for unit in critic["units"] if unit["unit_id"] != "TITLE"
+             for claim in unit["claims"] if claim["claim_type"] in stages.SUPPORTED_CLAIM_TYPES
+             for ref in claim["brief_refs"]}
     missing = [ref for ref in core if ref not in cited]
     return {"status": "FLAG" if missing else "PASS", "core_events": len(core), "not_cited": missing,
             "note": "Based on the brief items the critic cites for supported claims; a missing "
@@ -104,15 +120,16 @@ def gate_report(critic: Optional[Dict[str, Any]], check: Dict[str, Any],
     gates: Dict[str, Dict[str, Any]] = {}
     for gate, categories in GATES.items():
         hits = [f for f in findings if (f["failure_category"] or "OTHER") in categories]
+        unresolved = [u for u in undetermined if (u["failure_category"] or "OTHER") in categories]
         if critic is None:
             status = "NOT_CHECKED"
         elif any(f["severity"] in ("CRITICAL", "HIGH") for f in hits):
             status = "FAIL"
-        elif hits:
+        elif hits or unresolved:
             status = "FLAG"
         else:
             status = "PASS"
-        gates[gate] = {"status": status,
+        gates[gate] = {"status": status, "undetermined": len(unresolved),
                        "findings": {s: sum(1 for f in hits if f["severity"] == s) for s in SEVERITY_ORDER}}
     gates["GATE_OUTPUT_INTEGRITY"] = {
         "status": "PASS" if check["language_ok"] and check["clean_ok"] else "FAIL",
@@ -172,6 +189,8 @@ def report_markdown(manifest: Dict[str, Any], report: Dict[str, Any]) -> str:
     for f in report["findings"]:
         lines.append(f"- **{f['severity']}** {f['claim_type']} / {f['failure_category']} ({f['unit_id']}): "
                      f"{f['claim']}\n  - Lý do: {f['explanation']}\n  - Gợi ý: {f['suggested_fix']}")
+        for evidence in f.get("source_evidence", []):
+            lines.append(f"  - [{evidence['passage_id']}] {evidence['quote']}")
     if report.get("source_hedge_review"):
         lines += ["", "## Cần người xem: brief có thể đã bỏ mất rào đón của nguồn", "",
                   "Đoạn nguồn được trích có từ rào đón (lời đồn, vẻ bề ngoài, phỏng đoán, ẩn dụ) "
@@ -199,14 +218,21 @@ REVIEW_QUESTIONS = [
     ("hook", "Mở đầu có khiến bạn muốn nghe tiếp không?"),
     ("flow", "Mạch kể và nhịp độ có hợp lý không?"),
     ("voice", "Đọc thành tiếng có tự nhiên, đúng giọng kênh không?"),
+    ("payoff", "Đoạn nào trả lời điều tiêu đề gợi ra? Nếu kết mở, kịch bản dừng đúng ở đâu trong truyện?"),
     ("usable", "Có dùng được làm kịch bản không? Cần sửa bao nhiêu phút?"),
 ]
 
 
-def review_form(manifest: Dict[str, Any]) -> str:
+def review_form(manifest: Dict[str, Any], plan: Dict[str, Any], script: Dict[str, Any]) -> str:
     """A short human review sheet for the project owner, saved next to the script."""
+    opening = checks.split_units(checks.script_text(script))
     lines = [f"# Phiếu chấm kịch bản — {manifest['run_id']}", "",
              f"Phạm vi: {manifest['scope']['label']} — mô hình: `{manifest['client']}`", "",
+             f"**Tiêu đề dự kiến** — {script['title_idea']}", "",
+             f"**Ý mở theo dàn ý** — {plan['hook']['idea']}", "",
+             "**Đoạn mở thực tế**", "", opening[0]["text"] if opening else "(trống)", "",
+             "Đọc thành tiếng 30 giây đầu. Người xem chờ điều gì sau khi đọc tiêu đề? "
+             "Ghi câu đầu tiên thực hiện lời hứa đó và đánh dấu đoạn trả lời ở phần sau.", "",
              "Chấm mỗi mục 1–5 (5 = tốt nhất) và ghi chú ngắn. Đọc `script_final.md` trước, "
              "đối chiếu `report.md` nếu cần.", "",
              "| Mục | Câu hỏi | Điểm (1–5) | Ghi chú |", "|---|---|---|---|"]
@@ -227,6 +253,8 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         progress: Callable[[str], None] = lambda message: None) -> Dict[str, Any]:
     """`scope` is the episode. `background` are earlier chapters, summarised from memory as a
     recap (never later chapters). With `memory`, chapter briefs are reused across runs."""
+    if any(c.order >= scope.first for c in background):
+        raise ValueError("recap chapters must precede the episode")
     out_dir.mkdir(parents=True, exist_ok=True)
     log = CallLog()
     started = time.time()
@@ -268,15 +296,26 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         return manifest
 
     try:
+        # Keep stage outputs as plain JSON. The adjacent receipts bind them to this
+        # run context and to the actual upstream artifacts each stage consumed.
+        context = digest([manifest["pipeline_version"], manifest["prompt_fingerprints"],
+                          scope.story_id, scope.source_language, profile.to_dict(),
+                          [(c.order, c.document_id, c.version, c.title, c.render())
+                           for c in [*background, *scope.chapters]], manifest["scope"],
+                          manifest["client"], getattr(client, "temperature", None), max_repairs])
         fingerprint = stages.brief_fingerprint(profile)
         all_briefs: List[Dict[str, Any]] = []
         for chapter in sorted([*background, *scope.chapters], key=lambda c: c.order):
             progress(f"brief: chapter {chapter.order}")
 
+            chapter_facts = facts.for_chapter(chapter.order) if facts else []
+            brief_setup = digest([fingerprint, scope.source_language, chapter_facts,
+                                  stages.known_characters_text(all_briefs)])
+
             def produce(chapter: Chapter = chapter) -> Dict[str, Any]:
                 stale: List[str] = []
                 if memory is not None:
-                    stored = memory.get_brief(chapter.order, chapter.version, fingerprint)
+                    stored = memory.get_brief(chapter.order, chapter.version, brief_setup)
                     # A stored brief must still pass today's checks: validators added after it
                     # was written (live run 6 reused a brief the new hedge check would reject).
                     stale = stages.brief_semantic_errors(stored, chapter, scope.source_language,
@@ -289,11 +328,12 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                 brief = stages.run_brief(client, scope, chapter, profile, all_briefs, facts, log, max_repairs)
                 manifest["brief_sources"][str(chapter.order)] = "model (memory stale)" if stale else "model"
                 if memory is not None:
-                    memory.put_brief(chapter.order, chapter.version, fingerprint, brief,
+                    memory.put_brief(chapter.order, chapter.version, brief_setup, brief,
                                      getattr(client, "name", "unknown"))
                 return brief
 
-            all_briefs.append(cached(out_dir / "briefs" / f"chapter_{chapter.order:03d}.json", resume, produce))
+            all_briefs.append(cached(out_dir / "briefs" / f"chapter_{chapter.order:03d}.json", resume,
+                                     [context, brief_setup], produce))
         briefs = [b for b in all_briefs if b["chapter_order"] >= scope.first]
         recap = recap_context(all_briefs, scope.first) if background else None
         if recap is not None:
@@ -302,13 +342,15 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
             return finish("STOPPED_AFTER_BRIEF")
 
         progress("plan")
-        plan = cached(out_dir / "plan.json", resume,
+        plan_inputs = [context, briefs, recap]
+        plan = cached(out_dir / "plan.json", resume, plan_inputs,
                       lambda: stages.run_plan(client, scope, briefs, profile, log, max_repairs, recap))
         if stop_after == "plan":
             return finish("STOPPED_AFTER_PLAN")
 
         progress("script v1")
-        script = cached(out_dir / "script_v1.json", resume,
+        script_inputs = [plan_inputs, plan]
+        script = cached(out_dir / "script_v1.json", resume, script_inputs,
                         lambda: stages.run_script(client, scope, briefs, plan, profile, log, max_repairs,
                                                   recap))
         (out_dir / "script_v1.md").write_text(script_markdown(script, "v1"), encoding="utf-8")
@@ -316,11 +358,11 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         version = 1
         if stop_after != "script":
             while True:
-                units = checks.split_units(checks.script_text(script))
+                units = review_units(script)
                 progress(f"critic v{version}")
-                critic = cached(out_dir / f"critic_v{version}.json", resume,
+                critic = cached(out_dir / f"critic_v{version}.json", resume, [plan_inputs, script],
                                 lambda: stages.run_critic(client, scope, briefs, units, profile,
-                                                          log, max_repairs, version, recap))
+                                                          log, max_repairs, version, recap, background))
                 audit = stages.strength_audit(critic, briefs, recap, units, profile.target_language,
                                               profile.brief_language)
                 audit += stages.hedge_audit(critic, briefs, recap, units, profile.target_language,
@@ -341,6 +383,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                 progress(f"revise -> v{version} ({len(to_fix)} findings)")
                 previous, previous_units = script, units
                 script = cached(out_dir / f"script_v{version}.json", resume,
+                                [script_inputs, previous, to_fix],
                                 lambda: stages.run_revision(client, scope, briefs, plan, previous,
                                                             to_fix, previous_units, profile, log,
                                                             max_repairs, version, recap))
@@ -350,7 +393,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                                           profile.target_language)
         (out_dir / "script_final.md").write_text(script_markdown(script, f"final v{version}"),
                                                  encoding="utf-8")
-        final_units = checks.split_units(checks.script_text(script))
+        final_units = review_units(script)
         final_audit = (stages.strength_audit(critic, briefs, recap, final_units, profile.target_language,
                                              profile.brief_language)
                        + stages.hedge_audit(critic, briefs, recap, final_units, profile.target_language,
@@ -366,7 +409,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         status = "COMPLETED" if critic is not None else "STOPPED_AFTER_SCRIPT"
         finish(status)
         (out_dir / "report.md").write_text(report_markdown(manifest, report), encoding="utf-8")
-        (out_dir / "review_form.md").write_text(review_form(manifest), encoding="utf-8")
+        (out_dir / "review_form.md").write_text(review_form(manifest, plan, script), encoding="utf-8")
         return manifest
     except StageFailed as exc:
         return finish("FAILED", str(exc))

@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 8 — test files: 52 — test functions: 976
+Suites: 8 — test files: 52 — test functions: 980
 
 ## canonical_story
 
@@ -1168,7 +1168,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `ClauseTests.test_clauses_split_on_punctuation_and_conjunctions`
 - `ClauseTests.test_contrast_parts_split_only_at_a_contrast`
 
-### test_story_pipeline_v0 (35)
+### test_story_pipeline_v0 (39)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
 
 - `test_profile`
@@ -1196,8 +1196,12 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `SemanticValidationTests.test_critic_must_extract_claims_at_paragraph_density`
 - `SemanticValidationTests.test_strength_audit_flags_intensifiers_missing_from_cited_brief`
 - `SemanticValidationTests.test_critic_unit_mismatch`
+- `SemanticValidationTests.test_source_citations_resolve_for_each_supported_brief_ref`
+- `SemanticValidationTests.test_evidence_packet_keeps_only_cited_episode_and_recap_passages`
 - `FactsTests.test_valid_and_invalid`
 - `EndToEndTests.test_full_pipeline_with_revision`
+- `EndToEndTests.test_title_finding_reaches_revision_with_source_and_stays_out_of_coverage`
+- `EndToEndTests.test_resume_rechecks_legacy_critic_and_changed_upstream_artifacts`
 - `EndToEndTests.test_episode_with_memory_recap`
 - `EndToEndTests.test_memory_brief_failing_current_checks_is_regenerated`
 - `EndToEndTests.test_cli_episode_mode`

@@ -10,7 +10,9 @@ Rules:
    `omitted_events`. SUPPORTING and MINOR events may be omitted with a short reason.
 3. The hook may present a later moment first (curiosity-first), but it must stay inside
    the requested scope and must not misrepresent what happens. A listener must still be
-   able to recover the true chronology.
+   able to recover the true chronology. Anchor the hook in at least one cited event.
+   Place each hook event in a spoken beat so the episode delivers on its opening.
+   For a deliberately open ending, promise only what the chapter actually reveals.
 4. Do not plan any content beyond the requested scope. Do not foreshadow events that are
    not in the briefs.
 5. `target_words` per beat must add up to between ${min_words} and ${max_words} words in

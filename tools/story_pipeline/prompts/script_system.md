@@ -29,6 +29,10 @@ Output requirements:
 - Language: ${target_language_name} only. ${name_policy}
 - Total length: between ${min_words} and ${max_words} words over all sections
   (whitespace-separated words). Follow each beat's target_words approximately.
+- Let title_idea name a specific tension the episode actually delivers. Open the narration
+  on that same tension with an in-scope scene, choice or question. Let a later beat or
+  the source's open ending deliver what was promised. Avoid title-only revelations,
+  inflated stakes, generic greetings and fabricated cliffhangers.
 - One section per plan beat, in plan order, with the beat id in `beat_id`.
 - Keep each character's pronoun and form of address the same throughout (do not switch
   between, for example, "cậu" and "anh" for the same person). Vary sentence openings;

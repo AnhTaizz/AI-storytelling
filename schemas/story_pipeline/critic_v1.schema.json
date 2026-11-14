@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "story_pipeline/critic_v1",
+  "title": "Source-backed title and narration audit v1",
+  "type": "object",
+  "required": [
+    "units"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "units": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "unit_id",
+          "claims",
+          "no_claim_reason"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "unit_id": {
+            "type": "string",
+            "pattern": "^(TITLE|P\\d{3,})$"
+          },
+          "no_claim_reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "claims": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "claim",
+                "claim_type",
+                "failure_category",
+                "severity",
+                "brief_refs",
+                "explanation",
+                "suggested_fix",
+                "source_evidence"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "claim": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "claim_type": {
+                  "enum": [
+                    "SUPPORTED_FACT",
+                    "SUPPORTED_INFERENCE",
+                    "ATTRIBUTED_REPORT",
+                    "COMMENTARY_RHETORIC",
+                    "UNSUPPORTED_STORY_CLAIM",
+                    "STRENGTHENED_STORY_CLAIM",
+                    "CONTRADICTED_STORY_CLAIM",
+                    "UNDETERMINED"
+                  ]
+                },
+                "failure_category": {
+                  "enum": [
+                    "FACTUAL_ERROR",
+                    "UNSUPPORTED_INVENTION",
+                    "CAUSALITY_ERROR",
+                    "SOURCE_GROUNDING_FAILURE",
+                    "EPISTEMIC_ERROR",
+                    "TEMPORAL_ERROR",
+                    "CHARACTER_STATE_ERROR",
+                    "RELATIONSHIP_ERROR",
+                    "PREMATURE_SPOILER",
+                    "OTHER",
+                    null
+                  ]
+                },
+                "severity": {
+                  "enum": [
+                    "CRITICAL",
+                    "HIGH",
+                    "MEDIUM",
+                    "LOW",
+                    null
+                  ]
+                },
+                "brief_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "explanation": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "suggested_fix": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "source_evidence": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "passage_id",
+                      "quote"
+                    ],
+                    "properties": {
+                      "passage_id": {
+                        "type": "string"
+                      },
+                      "quote": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

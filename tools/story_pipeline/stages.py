@@ -326,6 +326,10 @@ def briefs_for_prompt(briefs: Sequence[Dict[str, Any]]) -> str:
             character["ref"] = f"c{n}.{character['id']}"
         for event in item["events"]:
             event["ref"] = f"c{n}.{event['id']}"
+        for i, relationship in enumerate(item["relationships"], 1):
+            relationship["ref"] = f"c{n}.R{i}"
+        if item["closing_hook"]["text"]:
+            item["closing_hook"]["ref"] = f"c{n}.END"
         out.append(item)
     return dump(out)
 
@@ -366,6 +370,9 @@ def plan_semantic_errors(plan: Dict[str, Any], briefs: Sequence[Dict[str, Any]],
     for beat in plan["beats"]:
         check_refs(f"beat {beat['id']}", beat["event_refs"])
         covered.update(beat["event_refs"])
+    hook_refs = plan["hook"]["event_refs"]
+    if not hook_refs or not set(hook_refs).issubset(covered):
+        errors.append("hook: anchor the opening in at least one event and assign each hook event to a beat")
     for index, cb in enumerate(plan["callbacks"]):
         check_refs(f"callbacks[{index}]", [cb["setup_ref"], cb["payoff_ref"]])
     omitted = [o["ref"] for o in plan["omitted_events"]]
@@ -454,9 +461,10 @@ def run_revision(client: LLMClient, scope: StoryScope, briefs: Sequence[Dict[str
     unit_text = {u["unit_id"]: u["text"] for u in units}
     lines = []
     for f in findings:
-        lines.append(f"- [{f['severity']}] {f['claim_type']} ({f['failure_category']}) in paragraph: "
+        lines.append(f"- [{f['severity']}] {f['claim_type']} ({f['failure_category']}) in {f['unit_id']}: "
                      f"\"{unit_text.get(f['unit_id'], '')[:300]}\"\n  claim: {f['claim']}\n"
-                     f"  why: {f['explanation']}\n  suggested fix: {f['suggested_fix']}")
+                     f"  why: {f['explanation']}\n  suggested fix: {f['suggested_fix']}"
+                     f"\n  original evidence: {dump(f.get('source_evidence', []))}")
     user = render("revise_user", scope_label=scope.label(), profile=profile.render(),
                   briefs=briefs_for_prompt(briefs), background=background_text(recap),
                   plan=dump(plan), script=dump(script),
@@ -472,14 +480,63 @@ def run_revision(client: LLMClient, scope: StoryScope, briefs: Sequence[Dict[str
 # --------------------------------------------------------------------------- critic
 
 
-def critic_semantic_errors(critic: Dict[str, Any], units: List[Dict[str, str]]) -> List[str]:
+def critic_evidence(scope: StoryScope, briefs: Sequence[Dict[str, Any]],
+                    recap: Optional[Dict[str, Any]], background: Sequence[Chapter]) -> Tuple[Dict[str, List[str]], Dict[str, str]]:
+    """Resolve brief refs to original M3 passages. Earlier chapters expose only recap CORE evidence."""
+    refs = {}
+    for brief in briefs:
+        n = brief["chapter_order"]
+        for event in brief["events"]:
+            refs[f"c{n}.{event['id']}"] = event["evidence"]
+        for character in brief["characters"]:
+            # A named participant can be established by the event even if they have no fact card.
+            sources = [f["evidence"] for f in character["facts"]]
+            sources.extend(e["evidence"] for e in brief["events"] if character["id"] in e["participants"])
+            refs[f"c{n}.{character['id']}"] = sorted({pid for ids in sources for pid in ids})
+        for i, rel in enumerate(brief["relationships"], 1):
+            refs[f"c{n}.R{i}"] = rel["evidence"]
+        if brief["closing_hook"]["text"]:
+            refs[f"c{n}.END"] = brief["closing_hook"]["evidence"]
+    for chapter in (recap or {}).get("chapters", []):
+        if chapter["chapter"] < scope.first:
+            refs.update({e["ref"]: e.get("evidence", []) for e in chapter["core_events"]})
+    needed = {pid for ids in refs.values() for pid in ids}
+    chapters = [c for c in background if c.order < scope.first] + list(scope.chapters)
+    passages = {p.passage_id: p.text for c in chapters for p in c.passages if p.passage_id in needed}
+    return refs, passages
+
+
+def critic_semantic_errors(critic: Dict[str, Any], units: List[Dict[str, str]],
+                           refs: Dict[str, List[str]], passages: Dict[str, str]) -> List[str]:
     errors: List[str] = []
     expected = [u["unit_id"] for u in units]
     actual = [u["unit_id"] for u in critic["units"]]
     if actual != expected:
         errors.append(f"units must be exactly {expected} in order; got {actual}")
     for unit in critic["units"]:
+        if unit["claims"] and unit["no_claim_reason"] is not None:
+            errors.append(f"{unit['unit_id']}: use null for no_claim_reason when claims are present")
+        if not unit["claims"] and not (unit["no_claim_reason"] or "").strip():
+            errors.append(f"{unit['unit_id']}: explain why there is no story claim")
         for index, claim in enumerate(unit["claims"]):
+            where = f"{unit['unit_id']} claims[{index}]"
+            cited = claim["brief_refs"]
+            if any(ref not in refs for ref in cited):
+                errors.append(f"{where}: unknown brief reference in {cited}")
+            evidence = claim["source_evidence"]
+            supported = claim["claim_type"] in SUPPORTED_CLAIM_TYPES
+            if supported and not (cited and evidence):
+                errors.append(f"{where}: a supported claim needs a brief ref and a verbatim source excerpt")
+            quoted_ids = {excerpt["passage_id"] for excerpt in evidence}
+            if supported and any(ref in refs and quoted_ids.isdisjoint(refs[ref]) for ref in cited):
+                errors.append(f"{where}: cite source evidence for each supported brief reference")
+            linked = {pid for ref in cited for pid in refs.get(ref, [])}
+            for excerpt in evidence:
+                pid = excerpt["passage_id"]
+                if pid not in passages or not quote_in_passages(excerpt["quote"], [passages[pid]]):
+                    errors.append(f"{where}: quote must be copied from the supplied passage {pid}")
+                elif supported and pid not in linked:
+                    errors.append(f"{where}: passage {pid} is not evidence for the cited brief refs")
             if claim["claim_type"] in PROBLEM_TYPES and claim["claim_type"] != "UNDETERMINED":
                 if claim["severity"] is None or claim["failure_category"] is None:
                     errors.append(f"{unit['unit_id']} claims[{index}]: {claim['claim_type']} needs "
@@ -522,6 +579,10 @@ def brief_item_texts(briefs: Sequence[Dict[str, Any]], recap: Optional[Dict[str,
         for event in brief["events"]:
             parts = [event["summary"], event.get("consequence") or "", event["motivation"].get("text") or ""]
             texts[f"c{n}.{event['id']}"] = " ".join(parts)
+        for i, rel in enumerate(brief["relationships"], 1):
+            texts[f"c{n}.R{i}"] = rel["state"]
+        if brief["closing_hook"]["text"]:
+            texts[f"c{n}.END"] = brief["closing_hook"]["text"]
     for chapter in (recap or {}).get("chapters", []):
         for event in chapter["core_events"]:
             texts[event["ref"]] = event["summary"]
@@ -586,7 +647,7 @@ def brief_items(briefs: Sequence[Dict[str, Any]], recap: Optional[Dict[str, Any]
 
 def labelled_statements(briefs: Sequence[Dict[str, Any]],
                         recap: Optional[Dict[str, Any]] = None) -> Dict[str, List[Tuple[str, str]]]:
-    """Ref -> (statement, epistemic label) pairs; recap events count as EXPLICIT."""
+    """Ref -> (statement, epistemic label) pairs, including earlier CORE events."""
     items: Dict[str, List[Tuple[str, str]]] = {}
     for brief in briefs:
         n = brief["chapter_order"]
@@ -596,9 +657,11 @@ def labelled_statements(briefs: Sequence[Dict[str, Any]],
         for event in brief["events"]:
             text = " ".join([event["summary"], event.get("consequence") or "", event["motivation"].get("text") or ""])
             items[f"c{n}.{event['id']}"] = [(text, event.get("epistemic", "EXPLICIT"))]
+        for i, rel in enumerate(brief["relationships"], 1):
+            items[f"c{n}.R{i}"] = [(rel["state"], rel.get("epistemic", "EXPLICIT"))]
     for chapter in (recap or {}).get("chapters", []):
         for event in chapter["core_events"]:
-            items[event["ref"]] = [(event["summary"], "EXPLICIT")]
+            items[event["ref"]] = [(event["summary"], event.get("epistemic", "EXPLICIT"))]
     return items
 
 
@@ -762,16 +825,19 @@ def normalize_critic(critic: Dict[str, Any]) -> Dict[str, Any]:
 
 def run_critic(client: LLMClient, scope: StoryScope, briefs: Sequence[Dict[str, Any]],
                units: List[Dict[str, str]], profile: NarrativeProfile, log: CallLog,
-               max_repairs: int, version: int, recap: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    schema = load_schema("critic_v0")
+               max_repairs: int, version: int, recap: Optional[Dict[str, Any]] = None,
+               background: Sequence[Chapter] = ()) -> Dict[str, Any]:
+    schema = load_schema("critic_v1")
+    refs, passages = critic_evidence(scope, briefs, recap, background)
     system = render("critic_system", target_language_name=profile.target_language_name,
                     schema=dump(schema))
     unit_lines = "\n\n".join(f"<{u['unit_id']}>\n{u['text']}\n</{u['unit_id']}>" for u in units)
     user = render("critic_user", scope_label=scope.label(), briefs=briefs_for_prompt(briefs),
                   background=background_text(recap),
+                  evidence_refs=dump(refs), passages=dump(passages),
                   unit_count=len(units), units=unit_lines)
     critic = run_json_stage(client, stage="critic", system=system, user=user, schema=schema,
-                            semantic_check=lambda c: critic_semantic_errors(c, units),
+                            semantic_check=lambda c: critic_semantic_errors(c, units, refs, passages),
                             soft_check=lambda c: critic_density_errors(c, units),
                             max_repairs=max_repairs, log=log, request_suffix=f"v{version}")
     return normalize_critic(critic)
