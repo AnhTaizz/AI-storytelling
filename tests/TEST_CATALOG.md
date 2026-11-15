@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 62 — test functions: 1054
+Suites: 9 — test files: 63 — test functions: 1059
 
 ## canonical_story
 
@@ -1006,6 +1006,15 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `M404B3B2Dev2ProtocolTests.test_protocol_validation_fails_closed_on_mutation`
 - `M404B3B2Dev2ProtocolTests.test_canonical_private_protocol_hash_and_bytes_are_locked`
 - `M404B3B2Dev2ProtocolTests.test_unknown_case_and_non_draft_input_are_rejected`
+
+### test_m4_04b3f_fv1_protocol_v1 (5)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.m4_04b3f_fv1_protocol_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `M404B3FProtocolTests.test_protocol_binds_the_locked_values_and_validates`
+- `M404B3FProtocolTests.test_public_lock_record_matches_the_canonical_protocol_and_prompts`
+- `M404B3FProtocolTests.test_prompts_teach_the_v1_1_mention_contract_and_keep_p2_discipline`
+- `M404B3FProtocolTests.test_requests_are_exact_and_only_structural_repairs_are_constructible`
+- `M404B3FProtocolTests.test_bindings_packages_and_the_written_protocol_are_checked`
 
 ### test_run_m4_04b3c_dev2_predictions_v1 (8)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.run_m4_04b3c_dev2_predictions_v1`, `tools.story_ingestion.light_novel_adapter_v0`
