@@ -16,6 +16,12 @@ from typing import AbstractSet, Protocol
 from tools.story_benchmark.bm25_lexical_v1 import BM25LexicalV1
 from tools.story_pipeline.source import Passage, load_scope
 
+E5_SMALL_MODEL = 'intfloat/multilingual-e5-small'
+E5_SMALL_REVISION = '614241f622f53c4eeff9890bdc4f31cfecc418b3'
+E5_LARGE_MODEL = 'intfloat/multilingual-e5-large'
+E5_LARGE_REVISION = '3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3'
+RETRIEVER_NAMES = ('bm25', 'dense_e5', 'dense_e5_large', 'hybrid', 'hybrid_large')
+
 
 @dataclass(frozen=True)
 class RetrievalRequest:
@@ -134,13 +140,17 @@ class Bm25RetrieverV0:
 Encoder = Callable[[Sequence[str]], Sequence[Sequence[float]]]
 
 
-def _default_encoder(model_name: str) -> Encoder:
+def _default_encoder(model_name: str, revision: str, batch_size: int) -> Encoder:
+    import torch
     from sentence_transformers import SentenceTransformer
 
-    model = SentenceTransformer(model_name, device='cpu')
+    torch.manual_seed(42)
+    torch.use_deterministic_algorithms(True, warn_only=True)
+    model = SentenceTransformer(model_name, revision=revision, device='cpu')
+    model.max_seq_length = 512
     model.eval()
     return lambda texts: model.encode(list(texts), normalize_embeddings=True,
-                                      show_progress_bar=False)
+                                      batch_size=batch_size, show_progress_bar=False)
 
 
 def _unit(vector: Sequence[float]) -> tuple[float, ...]:
@@ -152,19 +162,27 @@ def _unit(vector: Sequence[float]) -> tuple[float, ...]:
 
 
 class DenseE5RetrieverV0:
-    name = 'dense_e5_small_v0'
-    version = '0'
+    """Pinned E5; unknown model IDs use dense_e5_custom_v0 and require a revision."""
 
     def __init__(self, encoder: Encoder | None = None,
-                 model_name: str = 'intfloat/multilingual-e5-small'):
+                 model_name: str = E5_SMALL_MODEL, revision: str | None = None,
+                 batch_size: int = 32):
+        models = {E5_SMALL_MODEL: ('dense_e5_small_v0', E5_SMALL_REVISION),
+                  E5_LARGE_MODEL: ('dense_e5_large_v0', E5_LARGE_REVISION)}
+        self.name, default_revision = models.get(model_name, ('dense_e5_custom_v0', None))
+        self.revision = revision if revision is not None else default_revision
+        if not self.revision or batch_size < 1:
+            raise ValueError('a model revision and positive batch_size are required')
+        self.version = '0+' + self.revision[:7]
         self.model_name = model_name
+        self.batch_size = batch_size
         self._encoder = encoder
         self._passages = None
         self._vectors = {}
 
     def _encode(self, texts: Sequence[str]) -> list[tuple[float, ...]]:
         if self._encoder is None:
-            self._encoder = _default_encoder(self.model_name)
+            self._encoder = _default_encoder(self.model_name, self.revision, self.batch_size)
         vectors = [_unit(row) for row in self._encoder(texts)]
         if len(vectors) != len(texts) or len({len(row) for row in vectors}) > 1:
             raise ValueError('encoder returned inconsistent vector count or dimensions')
@@ -193,10 +211,13 @@ class HybridRrfRetrieverV0:
     name = 'hybrid_rrf_v0'
     version = '0'
 
-    def __init__(self, retrievers: Sequence[Retriever], rrf_k: int = 60):
+    def __init__(self, retrievers: Sequence[Retriever], rrf_k: int = 60,
+                 name: str = 'hybrid_rrf_v0'):
         if rrf_k < 1 or not retrievers:
             raise ValueError('RRF requires components and a positive rrf_k')
         self.retrievers = tuple(retrievers)
+        self.name = name
+        self.version = '0[' + ','.join(f'{r.name}:{r.version}' for r in retrievers) + ']'
         self.rrf_k = rrf_k
         self._passages = None
 
@@ -220,8 +241,12 @@ class HybridRrfRetrieverV0:
 def make_retriever(name: str) -> Retriever:
     if name == 'bm25':
         return Bm25RetrieverV0()
-    if name == 'dense_e5':
-        return DenseE5RetrieverV0()
-    if name == 'hybrid':
-        return HybridRrfRetrieverV0([Bm25RetrieverV0(), DenseE5RetrieverV0()])
-    raise ValueError(f'unknown retriever: {name}')
+    if name not in RETRIEVER_NAMES:
+        raise ValueError(f'unknown retriever: {name}')
+    large = name in ('dense_e5_large', 'hybrid_large')
+    dense = (DenseE5RetrieverV0(model_name=E5_LARGE_MODEL, batch_size=4)
+             if large else DenseE5RetrieverV0())
+    if name in ('dense_e5', 'dense_e5_large'):
+        return dense
+    return HybridRrfRetrieverV0([Bm25RetrieverV0(), dense],
+                               name='hybrid_rrf_large_v0' if large else 'hybrid_rrf_v0')

@@ -10,7 +10,7 @@ from pathlib import Path
 from tools.story_ingestion.light_novel_adapter_v0 import IngestionError
 from tools.story_pipeline.source import parse_range
 from tools.story_retrieval.retrieval_v0 import (
-    RetrievalRequest, build_corpus, make_retriever, result_to_dict, retrieve,
+    RETRIEVER_NAMES, RetrievalRequest, build_corpus, make_retriever, result_to_dict, retrieve,
 )
 
 REPO = Path(__file__).resolve().parents[2]
@@ -29,7 +29,7 @@ def main(argv=None) -> int:
     parser.add_argument('--cutoff', type=int, required=True)
     parser.add_argument('--query', required=True)
     parser.add_argument('--k', type=int, default=10)
-    parser.add_argument('--retriever', choices=('bm25', 'dense_e5', 'hybrid'), default='bm25')
+    parser.add_argument('--retriever', choices=RETRIEVER_NAMES, default='bm25')
     parser.add_argument('--chapters')
     parser.add_argument('--manifest', type=Path, default=DEFAULT_MANIFEST)
     parser.add_argument('--source-root', type=Path)

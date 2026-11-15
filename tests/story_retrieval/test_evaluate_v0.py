@@ -11,7 +11,9 @@ from unittest.mock import patch
 import yaml
 
 from tools.story_retrieval.evaluate_v0 import DEFAULT_PROBES, evaluate_dev, evaluate_private, main
-from tools.story_retrieval.retrieval_v0 import Bm25RetrieverV0, build_corpus, passage_chapter
+from tools.story_retrieval.retrieval_v0 import (
+    RETRIEVER_NAMES, Bm25RetrieverV0, build_corpus, passage_chapter,
+)
 from tools.story_retrieval.retrieve import DEFAULT_MANIFEST
 
 
@@ -41,6 +43,7 @@ class EvaluateV0Tests(unittest.TestCase):
         result = evaluate_dev(DEFAULT_PROBES, DEFAULT_MANIFEST, [Bm25RetrieverV0()])
         self.assertEqual(result['probe_count'], 10)
         values = result['retrievers']['bm25_v0']
+        self.assertEqual(values['version'], '0')
         expected = {'mrr'} | {f'{metric}@{k}' for metric in ['hit', 'recall', 'success', 'spoiler_violation']
                               for k in [1, 5, 10]}
         for metrics in [values['overall'], *values['per_language'].values()]:
@@ -77,6 +80,8 @@ class EvaluateV0Tests(unittest.TestCase):
             self.assertEqual(result['mode'], 'CUTOFF_FILTERED')
             self.assertEqual(result['probe_count'], 2)
             metrics = result['retrievers']['bm25_v0']
+            self.assertEqual(result['retriever_versions'], {'bm25_v0': '0'})
+            self.assertTrue({'hit@20', 'recall@20', 'success@20', 'mrr@10'} <= metrics.keys())
             for key, value in metrics.items():
                 with self.subTest(metric=key):
                     self.assertEqual(value, 0 if key.startswith('spoiler_violation') else .5)
@@ -91,9 +96,29 @@ class EvaluateV0Tests(unittest.TestCase):
             self.assertEqual(partial['hit@10'], .5)
             self.assertEqual(partial['recall@10'], .25)
             self.assertEqual(partial['success@10'], 0)
+            # Full MRR sees late gold; depth-20 metrics stop exactly at rank 20.
+            late_chunks = [dict(chunk_id=f'chunk{i}', chapter_number=1, chunk_index=i, text='x')
+                           for i in range(1, 22)]
+            late_probe = dict(probe_id='late', question='x', cutoff_chapter=1,
+                              required_evidence_chunk_ids=['chunk21'])
+            for gold_rank in [11, 20, 21]:
+                with self.subTest(first_gold_rank=gold_rank):
+                    late_probe['required_evidence_chunk_ids'] = [f'chunk{gold_rank}']
+                    (root / 'LONG_RANGE_PROBE_V1/probes.yaml').write_text(
+                        yaml.safe_dump([late_probe]), encoding='utf-8')
+                    path.write_text('\n'.join(json.dumps(row) for row in late_chunks), encoding='utf-8')
+                    late = evaluate_private(root, [Bm25RetrieverV0()])['retrievers']['bm25_v0']
+                    self.assertAlmostEqual(late['mrr'], 1 / gold_rank)
+                    self.assertEqual(late['mrr@10'], 0)
+                    for metric in ['hit', 'recall', 'success']:
+                        self.assertEqual(late[f'{metric}@20'], int(gold_rank <= 20))
+                    self.assertEqual(late['spoiler_violation@20'], 0)
             path.write_text('\n'.join(json.dumps(row) for row in chunks + [chunks[0]]), encoding='utf-8')
             with self.assertRaises(ValueError):
                 evaluate_private(root)
+            path.write_text('', encoding='utf-8')
+            empty = evaluate_private(root)['retrievers']['bm25_v0']
+            self.assertTrue(all(value == 0 for value in empty.values()))
 
     def test_cli_aggregate_output_and_errors(self):
         """CLI emits aggregate-only JSON/text and handles dependency/argument errors."""
@@ -116,6 +141,14 @@ class EvaluateV0Tests(unittest.TestCase):
             self.assertEqual(main(['--retriever', 'unknown']), 2)
         with redirect_stdout(io.StringIO()):
             self.assertEqual(main(['--help']), 0)
+        with tempfile.TemporaryDirectory() as tmp:
+            for name in RETRIEVER_NAMES:
+                with self.subTest(retriever=name), patch(
+                        'tools.story_retrieval.evaluate_v0.make_retriever', return_value=Bm25RetrieverV0()) as factory:
+                    with redirect_stdout(io.StringIO()) as output:
+                        self.assertEqual(main(['--retriever', name, '--private-root', tmp, '--json']), 0)
+                    factory.assert_called_once_with(name)
+                    self.assertEqual(json.loads(output.getvalue())['dev']['retrievers']['bm25_v0']['version'], '0')
 
 
 if __name__ == '__main__':

@@ -40,15 +40,30 @@ independently of a narrower search window; both bounds are null for an empty cor
 
 - `bm25` / `bm25_v0`, version `0`: wraps the unchanged `BM25LexicalV1`, k1=1.2,
   b=0.75, tokenizer `jp_simple_lexical_v1`.
-- `dense_e5` / `dense_e5_small_v0`, version `0`: defaults to
+- `dense_e5` / `dense_e5_small_v0`, version `0+614241f`: defaults to
   `intfloat/multilingual-e5-small` on CPU with normalized embeddings. It applies
   `query: ` and `passage: ` prefixes and computes cosine similarity in Python.
   An optional encoder callable enables offline tests. Sentence-transformers is
   imported inside the lazy loader on first encoding, never at module import or
   retriever construction. Invalid embedding counts/dimensions/values fail clearly.
-- `hybrid` / `hybrid_rrf_v0`, version `0`: combines BM25 and dense rankings with
+- `dense_e5_large` / `dense_e5_large_v0`, version `0+3d7cfbd`: uses
+  `intfloat/multilingual-e5-large` with the same encoding and ranking contract.
+  The factory uses batch size 4 for large and 32 for small. The constructor accepts
+  `model_name`, `revision` and `batch_size`; a known model selects its pinned
+  revision by default. An unknown model requires an explicit revision and uses
+  the stable name `dense_e5_custom_v0`. Versions contain the first seven revision
+  characters; the full default revisions are listed below.
+- `hybrid` / `hybrid_rrf_v0`: combines BM25 and e5-small rankings with
   `sum(1 / (60 + rank))`, searching each component to depth `max(k, 100)` and
-  applying the same deterministic tie-break. Components can also be supplied directly.
+  applying the same deterministic tie-break. `hybrid_large` /
+  `hybrid_rrf_large_v0` substitutes e5-large. Hybrid versions include the component
+  names and versions. Components can also be supplied directly.
+
+`RETRIEVER_NAMES` supplies the choices for both CLIs and the factory. Dense loaders
+set `max_seq_length = 512`, call `eval()`, seed torch with 42 and enable deterministic
+algorithms (`warn_only=True`). Encoding requests normalized embeddings, the configured
+batch size and no progress bar. Python normalizes the vectors again and computes
+cosine scores; no GPU, translation, reranker or LLM is used.
 
 The frozen tokenizer applies Unicode NFKC and casefold. Hiragana, Katakana and CJK
 emit unigrams and adjacent bigrams. Every other alphanumeric run, including Latin
@@ -73,86 +88,195 @@ contains one rank, passage ID, score and short single-line snippet per hit.
 Invalid arguments/windows and missing optional dependencies report stderr and
 return exit code 2. Both modules expose `main(argv=None)`.
 
+### Real-model environment
+
+The 2026-11-15 runs used a separate Python 3.13 environment with CPU inference:
+torch `2.15.0+cpu`, sentence-transformers `6.3.0`, transformers `5.23.0`. Both
+snapshots were already in the local HuggingFace cache; no downloads were made.
+
+| Model | Pinned revision |
+|---|---|
+| `intfloat/multilingual-e5-small` | `614241f622f53c4eeff9890bdc4f31cfecc418b3` |
+| `intfloat/multilingual-e5-large` | `3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3` |
+
+With torch and sentence-transformers installed (they are not CI requirements) and the
+models cached, run offline from the repository root:
+
+```
+HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 python -m tools.story_retrieval.evaluate_v0 --retriever bm25 dense_e5 dense_e5_large hybrid hybrid_large --json
+```
+
+Tests and the quality gate run in an environment without torch, as in CI, so the dense
+code is exercised there only through injected encoders. Raw JSON and logs of these runs
+stay in the git-ignored `.local/` directory.
+
 ## Public DEV evaluation (2026-11-15)
 
 The fixture contains 10 implementer-authored probes: five Japanese and five
-Vietnamese, with cutoffs varying across chapters 1–5. Gold was selected by reading
-the actual `load_scope` passages. Each probe has one gold passage. This is a small
-DEV set, not a sealed benchmark; the paired facts and authoring process limit
-independence and generalization.
+Vietnamese, with cutoffs varying across chapters 1-5. Gold was selected by reading
+the actual `load_scope` passages. Each probe has one gold passage, so Hit, Recall
+and Full Evidence Success coincide at every reported depth. This is a tiny, paired
+DEV set, not a sealed benchmark. One probe changes a language score by 20 percentage
+points (10 points overall); the results do not establish general multilingual quality.
 
-These are the real `evaluate_v0 --retriever bm25 --json` results. Because each
-probe has a single gold passage, Hit, Recall and Full Evidence Success coincide
-at every reported depth.
+All five retrievers below ran on the actual public passages. MRR in this DEV table
+is through rank 10 (`mrr` in the public JSON). Spoiler violation is zero at every
+reported depth for every retriever and language.
 
-| bm25_v0 group | Probes | Hit/Recall/Success@1 | @5 | @10 | MRR through 10 | Spoiler violation@1/5/10 |
-|---|---:|---:|---:|---:|---:|---:|
-| Overall | 10 | 30% | 50% | 50% | 0.4000 | 0 |
-| Japanese | 5 | 60% | 100% | 100% | 0.8000 | 0 |
-| Vietnamese | 5 | 0% | 0% | 0% | 0.0000 | 0 |
+| Retriever | Group (probes) | Hit/Recall/Success@1 | @5 | @10 | MRR@10 |
+|---|---|---:|---:|---:|---:|
+| `bm25_v0` | Overall (10) | 30.00% | 50.00% | 50.00% | 0.4000 |
+| `bm25_v0` | ja (5) | 60.00% | 100.00% | 100.00% | 0.8000 |
+| `bm25_v0` | vi (5) | 0.00% | 0.00% | 0.00% | 0.0000 |
+| `dense_e5_small_v0` | Overall (10) | 60.00% | 80.00% | 80.00% | 0.6750 |
+| `dense_e5_small_v0` | ja (5) | 100.00% | 100.00% | 100.00% | 1.0000 |
+| `dense_e5_small_v0` | vi (5) | 20.00% | 60.00% | 60.00% | 0.3500 |
+| `dense_e5_large_v0` | Overall (10) | 60.00% | 90.00% | 100.00% | 0.7200 |
+| `dense_e5_large_v0` | ja (5) | 80.00% | 100.00% | 100.00% | 0.8667 |
+| `dense_e5_large_v0` | vi (5) | 40.00% | 80.00% | 100.00% | 0.5733 |
+| `hybrid_rrf_v0` | Overall (10) | 50.00% | 80.00% | 80.00% | 0.6250 |
+| `hybrid_rrf_v0` | ja (5) | 80.00% | 100.00% | 100.00% | 0.9000 |
+| `hybrid_rrf_v0` | vi (5) | 20.00% | 60.00% | 60.00% | 0.3500 |
+| `hybrid_rrf_large_v0` | Overall (10) | 60.00% | 90.00% | 100.00% | 0.7367 |
+| `hybrid_rrf_large_v0` | ja (5) | 80.00% | 100.00% | 100.00% | 0.9000 |
+| `hybrid_rrf_large_v0` | vi (5) | 40.00% | 80.00% | 100.00% | 0.5733 |
 
-Evaluation indexes all five public chapters once and filters IDs for each probe's
-cutoff. BM25 corpus statistics therefore use the full public pack, while returned
-evidence always respects the cutoff. The API returns overall and per-language
-means plus per-probe IDs/ranks/metrics without source text. The CLI prints aggregates.
-
-| Retriever | Real-model dev/private evaluation here |
-|---|---|
-| bm25_v0 | Run; numbers above and below |
-| dense_e5_small_v0 | Not run: torch and sentence-transformers are not installed |
-| hybrid_rrf_v0 | Not run: its dense component requires the same absent dependencies |
+Evaluation indexes all 353 public passages once per retriever and filters eligible
+IDs at each probe cutoff. BM25 statistics use the full public pack. The API returns
+overall/language means and public per-probe IDs/ranks without source text; the CLI
+outputs aggregates and retriever versions only.
 
 ## Private CUTOFF_FILTERED comparison
 
-The local comparison was run over 15 probes under
-`.local/story_integration/otonari_30ch/`, using only
-`LONG_RANGE_PROBE_V1/probes.yaml` and `PARAGRAPH_PACK_V1/chunks.jsonl`.
-Chunks are converted to pipeline passage IDs internally, then ranked IDs are
-mapped back to the original chunk IDs for the canonical multi-gold metrics.
-All chunks are indexed for frozen BM25 statistics; eligibility is restricted per
-probe cutoff. No private text, queries, IDs or per-probe output is written to
-tracked artifacts. `evaluate_private` returns aggregates only and returns `None`
-when either input file is absent.
+The local comparison uses 15 probes and 97 original parent chunks under
+`.local/story_integration/otonari_30ch/`: `LONG_RANGE_PROBE_V1/probes.yaml` and
+`PARAGRAPH_PACK_V1/chunks.jsonl`. Both files match the input SHA-256 values in
+both recorded M1 dense result artifacts. Chunk text is used unchanged; internal
+pipeline passage IDs map back to the original chunk IDs for canonical multi-gold
+metrics. The full pack is indexed and candidates are filtered by inclusive cutoff.
+Only aggregates and retriever versions leave `evaluate_private`; no private text,
+queries, IDs or per-probe results are written to tracked files. Missing input files
+return `None`, and an empty chunk pack yields zero metrics.
 
-| bm25_v0 depth | Hit | Recall | Full Evidence Success | Spoiler violation |
-|---|---:|---:|---:|---:|
-| 1 | 6.6667% | 3.3333% | 0% | 0 |
-| 3 | 20% | 8.8889% | 0% | 0 |
-| 5 | 20% | 8.8889% | 0% | 0 |
-| 10 | 20% | 8.8889% | 0% | 0 |
+Private `mrr` now uses the full positive eligible ranking, matching the M1 depth
+convention. `mrr@10` explicitly preserves the former truncated measurement. Hit,
+Recall, Success and spoiler violation are reported at 1, 3, 5, 10 and 20. All
+spoiler violations are zero.
 
-MRR through depth 10: **0.1333333333**. These aggregates reproduce the recorded
-`BM25_LEXICAL_V1` CUTOFF_FILTERED overall results, including all reported depths,
-recall, completion, MRR and spoiler violation. The natural tie-break change does
-not alter these aggregate results on this pack.
+| Retriever / recorded M1 baseline | Hit@10 | Recall@10 | Full Evidence Success@10 | MRR (full) | MRR@10 |
+|---|---:|---:|---:|---:|---:|
+| `bm25_v0` (this run) | 20.00% | 8.89% | 0.00% | 0.1333333333 | 0.1333333333 |
+| `BM25_LEXICAL_V1` (recorded) | 20.00% | 8.89% | 0.00% | 0.1333333333 | - |
+| `dense_e5_small_v0` (this run) | 93.33% | 56.67% | 20.00% | 0.3446296296 | 0.3429629630 |
+| `DENSE_E5_SMALL_V1` (recorded) | 93.33% | 56.67% | 20.00% | 0.3446296296 | - |
+| `dense_e5_large_v0` (this run) | 80.00% | 57.78% | 26.67% | 0.4208559277 | 0.4077777778 |
+| `DENSE_E5_LARGE_V1` (recorded) | 80.00% | 57.78% | 26.67% | 0.4208559277 | - |
+| `hybrid_rrf_v0` (this run) | 93.33% | 56.67% | 20.00% | 0.3646296296 | 0.3629629630 |
+| `hybrid_rrf_large_v0` (this run) | 80.00% | 57.78% | 26.67% | 0.4373471558 | 0.4244444444 |
 
-| M1-30CH comparison | Hit@10 | Full Evidence Success@10 |
-|---|---:|---:|
-| bm25_v0 (this run) | 20% | 0% |
-| BM25_LEXICAL_V1 (recorded) | 20% | 0% |
-| e5-small (spec's historical baseline) | 93.3% | 20% |
-| e5-large (spec's historical baseline) | — | 26.7% |
+| Retriever | Hit@20 | Recall@20 | Full Evidence Success@20 |
+|---|---:|---:|---:|
+| `bm25_v0` | 20.00% | 8.89% | 0.00% |
+| `dense_e5_small_v0` | 93.33% | 73.33% | 53.33% |
+| `dense_e5_large_v0` | 100.00% | 82.22% | 60.00% |
+| `hybrid_rrf_v0` | 93.33% | 73.33% | 53.33% |
+| `hybrid_rrf_large_v0` | 100.00% | 82.22% | 60.00% |
 
-The dense historical values are comparison figures from the task specification,
-not reruns in this environment. MRR here is truncated to the requested maximum
-depth, so comparisons on other packs must use the same depth convention.
+**Reproduction: PASS for both dense variants.** Hit@10, Recall@10, Success@10 and
+full MRR are exactly equal as parsed floats to the recorded M1 results, not merely
+equal after rounding. BM25 also reproduces its recorded comparison metrics. No
+private-probe tuning was performed.
+
+The V1 modules were checked: both use the same pinned revisions, `query: ` /
+`passage: ` prefixes, max length 512, original parent-chunk text, normalized cosine
+and cutoff eligibility. V1 uses NumPy float32 dot products and chunk-ID ties; v0
+renormalizes in Python and uses natural passage-ID ties. These implementation
+differences do not change the reported comparison aggregates here; exact ranking
+or score identity with V1 was not claimed or tested. The older large run used
+sentence-transformers 6.0.1, transformers 5.17.0 and torch 2.14.0+cpu; the current
+versions still reproduce its aggregates. Using depth-10 MRR instead of full MRR
+would incorrectly suggest a mismatch, especially for large (0.4077777778 versus
+0.4208559277).
+
+### Determinism and runtime
+
+The full five-retriever DEV + private command completed successfully in
+**1373.231 seconds (22m 53.2s)**. A separate fresh-process e5-small-only command
+(`--retriever dense_e5 --json`) completed successfully in **207.732 seconds
+(3m 27.7s)**. All e5-small DEV overall/per-language aggregates, private aggregates
+and versions are identical across those two runs (exact JSON value equality).
+E5-large and both hybrids were evaluated once; no repeat-determinism claim is
+made for them. The automatically queued second full run was cancelled and is
+not used as evidence.
+
+These are end-to-end wall times including model loading, both corpora and query
+encoding. Validation and the small repeat overlapped the full CPU evaluation, so
+they are reproducibility timings, not controlled throughput measurements. No
+per-model timing was instrumented. Raw aggregate JSON: `run1.json` and
+`small_repeat.json`; versions/timings, aggregate comparison checks and logs remain
+under `.local/m6_dense_followup/` only.
+
+BM25 cannot bridge the five Vietnamese queries to Japanese source evidence.
+E5-small retrieves three of five Vietnamese gold passages by rank 10 (MRR@10
+0.3500), and e5-large retrieves all five (MRR@10 0.5733). On Vietnamese probes the
+hybrids match their respective dense components; on the private probes, hybrid
+fusion changes MRR but leaves Hit/Recall/Success@10 and @20 unchanged. Larger
+capacity therefore does not dominate every metric: private small has higher
+Hit@10, while private large has higher full-evidence completion and MRR.
 
 ## Verification and limits
+
+In CI (Linux, PR #5) `python -m tools.ci.check --coverage` passes; for the first
+version it reported diff coverage of 97.5% of 281 changed executable `tools/` lines.
+On the Windows development machine the same gate passes compile, test policy and all
+suites (886 tests, zero failures/skips, seven declared environment gates), but the
+protected diff-coverage guard reports 0%: coverage JSON keys there are relative paths
+with backslashes, which the guard does not normalise. The guard was not changed or
+bypassed; the figures below were computed with its own functions on normalised keys.
+The final gate run took 255.3 seconds while CPU model evaluation was also active.
+
+Suite counts: canonical_story 99, ci 26, script_quality 64, story_benchmark 193
+(six gates), story_extraction 362, story_ingestion 79 (one gate), story_memory 7,
+story_pipeline 40, story_retrieval 16. The dense V1 tests remain gated exactly as
+in CI because the gate environment has no ML stack.
+
+Direct coverage from `.local/ci/coverage/.coverage`:
+
+| Module | Statements covered | Coverage report (including branches) |
+|---|---:|---:|
+| `retrieval_v0.py` | 161/170 | 95% |
+| `evaluate_v0.py` | 89/90 | 98% |
+| `retrieve.py` | 42/43 | 96% |
+| `__init__.py` | 0/0 | 100% |
+| Total | 292/303 (96.4%) | 96% |
+
+An independent read-only calculation normalizing coverage paths and including
+working-tree changes gives **33/38 = 86.8%** executable-line coverage for this
+follow-up (`git diff HEAD`) and **292/303 = 96.4%** for the branch plus working
+tree (`git diff origin/main`). Only the real loader body is uncovered among this
+follow-up's changed executable lines. Raw gate and direct-coverage logs are under
+`.local/m6_dense_followup/`.
 
 The retrieval tests cover real public loading/Japanese retrieval, cutoff/window
 validation, defensive filtering, natural ties, positive-score policy, Unicode
 JSON/schema and CLI output/errors, dense cosine/prefixes, RRF arithmetic, index
-reuse/replacement and import isolation. Evaluation tests validate public gold and
-exercise the private adapter using a tiny synthetic temporary pack only.
+reuse/replacement and import isolation. They check each model's name, revision,
+batch size, lazy loader arguments and both CLIs' shared choices without torch.
+Evaluation tests validate public gold and exercise the private adapter using a
+tiny synthetic temporary pack only, including first-gold ranks 11, 20 and 21 to
+separate full MRR, mrr@10 and the depth-20 boundary.
 
 Dense and hybrid tests use deterministic injected encoders without torch. No
 real-model gated test was added: `tests/environment_gates.yaml` is protected and
 adding such a gate requires an owner decision. The actual dense model and its
-multilingual retrieval quality remain unexercised here. No new dependencies,
-network access, Gemini or other LLM calls are involved in this implementation.
+multilingual retrieval quality are evaluated separately in the ML environment.
+No new dependencies, network access, Gemini or other LLM calls are involved in
+this implementation.
 
 BM25 cannot bridge Vietnamese queries to Japanese evidence: all five Vietnamese
 DEV probes score zero on Hit/Recall/Success and MRR. Hangul remains word-level.
-The dev set is small, paired and authored by the implementer, not sealed. Dense
-model truncation and model/revision reproducibility require a later real-model
-evaluation. There is no reranker or Story Brief integration; phase 2 is not started.
+The dev set is small, paired and authored by the implementer, not sealed. There
+are only five probes per language: a difference of one probe is 20 percentage
+points in that language (10 points overall). Dense models truncate at 512 tokens;
+the historical private pack has 77/97 passages above that limit. There is no
+reranker or Story Brief integration; phase 2 is not started.

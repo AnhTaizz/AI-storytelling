@@ -923,8 +923,9 @@ Author and seal a new independent fresh validation set for Draft V1.1 under sepa
 
 ## M6 Retrieval Baseline v0 (spike) — IMPLEMENTED, PR pending owner review
 
-- Added versioned source-passage retrieval, schema, CLI and DEV/private evaluation with inclusive cutoff checks. This spike does not complete M6.
-- Public DEV BM25 Hit@10: 50% overall, 100% Japanese, 0% Vietnamese; MRR 0.4000 overall; spoiler violation 0.
-- Private CUTOFF_FILTERED BM25 reproduces BM25_LEXICAL_V1: Hit@10 20%, Recall@10 8.8889%, Full Evidence Success@10 0%, MRR 0.1333333333; spoiler violation 0.
-- Dense E5 and hybrid are implemented and tested with injected encoders; real models were not run because torch/sentence-transformers are absent. No protected environment gate was added; that requires an owner decision.
-- Design, results and limits: `docs/research/retrieval/M6_RETRIEVAL_BASELINE_V0.md`. Phase 2 is not started.
+- Pinned CPU E5 small/large and BM25+dense RRF variants now run offline with inclusive cutoff checks. Spoiler violations remain zero. This spike does not complete M6.
+- DEV Hit@10 (overall / ja / vi): BM25 50% / 100% / 0%; small and hybrid-small 80% / 100% / 60%; large and hybrid-large 100% / 100% / 100%. Five probes/language: one probe is 20 points.
+- Private CUTOFF_FILTERED exactly reproduces M1: small Hit/Recall/Success@10 = 93.33% / 56.67% / 20%, full MRR 0.3446; large = 80% / 57.78% / 26.67%, full MRR 0.4209. BM25 also reproduces; hybrids change MRR but preserve depth-10/20 hit/recall/success.
+- Private metrics now include full MRR, mrr@10 and depth 20. Small DEV/private aggregates are identical across two fresh-process runs. Full evaluation: 1373.2s; small repeat: 207.7s. Raw artifacts stay under ignored `.local/`.
+- Quality gate passes in CI (PR #5, Linux): all suites green, diff coverage of changed `tools/` lines 97.5% for the first version. Real-model tests are not gated into CI; adding a gate in the protected `tests/environment_gates.yaml` needs an owner decision.
+- Environment, tables and limits: `docs/research/retrieval/M6_RETRIEVAL_BASELINE_V0.md`. Phase 2 is not started.

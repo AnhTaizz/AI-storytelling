@@ -13,7 +13,7 @@ import yaml
 from tools.story_benchmark.multi_gold_metrics import calculate_probe_metrics
 from tools.story_pipeline.source import Passage
 from tools.story_retrieval.retrieval_v0 import (
-    Bm25RetrieverV0, RetrievalRequest, build_corpus, make_retriever, retrieve,
+    RETRIEVER_NAMES, Bm25RetrieverV0, RetrievalRequest, build_corpus, make_retriever, retrieve,
 )
 from tools.story_retrieval.retrieve import DEFAULT_MANIFEST, REPO, write_stdout
 
@@ -58,6 +58,7 @@ def evaluate_dev(probes_path, manifest_path, retrievers, k_values=(1, 5, 10)) ->
                          'ranking': [{'passage_id': h.passage_id, 'rank': h.rank} for h in hits]})
             by_language[probe['language']].append(metrics)
         result[retriever.name] = {
+            'version': retriever.version,
             'overall': _means([row['metrics'] for row in rows]),
             'per_language': {lang: _means(values) for lang, values in sorted(by_language.items())},
             'per_probe': rows,
@@ -69,7 +70,8 @@ def evaluate_private(root, retrievers=None) -> dict | None:
     """Return aggregates only; private queries, evidence IDs and text never leave this function.
 
     Index the entire pack for the frozen BM25 corpus statistics, then restrict the
-    eligible IDs for each cutoff. MRR is measured through the comparison depth (10).
+    eligible IDs for each cutoff. MRR covers the full positive eligible ranking;
+    mrr@10 retains the old truncated value for comparison. No per-probe data is returned.
     """
     root = Path(root)
     probes_path = root / 'LONG_RANGE_PROBE_V1/probes.yaml'
@@ -85,20 +87,25 @@ def evaluate_private(root, retrievers=None) -> dict | None:
         raise ValueError('private pack contains duplicate chapter/chunk indices')
     probes = _read_probes(probes_path)
     result = {}
+    versions = {}
     for retriever in retrievers if retrievers is not None else [Bm25RetrieverV0()]:
         rows = []
         for probe in probes:
-            hits = retrieve(RetrievalRequest(probe['question'], probe['cutoff_chapter'], 10),
+            hits = retrieve(RetrievalRequest(probe['question'], probe['cutoff_chapter'], max(1, len(passages))),
                             retriever, passages)
             ranked_ids = [chunk_ids[h.passage_id] for h in hits]
-            rows.append(_metrics(probe, ranked_ids, hits, (1, 3, 5, 10)))
+            metrics = _metrics(probe, ranked_ids, hits, (1, 3, 5, 10, 20))
+            metrics['mrr@10'] = calculate_probe_metrics(probe, ranked_ids[:10], k_values=())['mrr']
+            rows.append(metrics)
         result[retriever.name] = _means(rows)
-    return {'mode': 'CUTOFF_FILTERED', 'probe_count': len(probes), 'retrievers': result}
+        versions[retriever.name] = retriever.version
+    return {'mode': 'CUTOFF_FILTERED', 'probe_count': len(probes),
+            'retriever_versions': versions, 'retrievers': result}
 
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--retriever', nargs='+', choices=('bm25', 'dense_e5', 'hybrid'), default=['bm25'])
+    parser.add_argument('--retriever', nargs='+', choices=RETRIEVER_NAMES, default=['bm25'])
     parser.add_argument('--private-root', type=Path, default=DEFAULT_PRIVATE_ROOT)
     parser.add_argument('--json', action='store_true')
     try:

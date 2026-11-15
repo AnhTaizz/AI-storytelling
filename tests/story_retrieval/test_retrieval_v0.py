@@ -14,6 +14,7 @@ from jsonschema import Draft202012Validator
 from tools.story_benchmark.bm25_lexical_v1 import jp_simple_lexical_v1
 from tools.story_pipeline.source import Chapter, Passage, StoryScope
 from tools.story_retrieval.retrieval_v0 import (
+    E5_LARGE_MODEL, E5_LARGE_REVISION, E5_SMALL_MODEL, E5_SMALL_REVISION, RETRIEVER_NAMES,
     Bm25RetrieverV0, DenseE5RetrieverV0, HybridRrfRetrieverV0, RetrievalRequest,
     build_corpus, make_retriever, natural_key, passage_chapter, result_to_dict, retrieve,
 )
@@ -209,15 +210,27 @@ class RetrievalV0Tests(unittest.TestCase):
         self.assertEqual([h.passage_id for h in retrieve(request, retriever, replacement)], ['1.9'])
         retriever.index([])
         self.assertEqual(retriever.search('q', set(), 10), [])
-        with patch('tools.story_retrieval.retrieval_v0._default_encoder', return_value=encoder) as loader:
-            lazy = DenseE5RetrieverV0(model_name='local-test')
-            loader.assert_not_called()
-            lazy.index(replacement)
-            loader.assert_called_once_with('local-test')
-            self.assertEqual(lazy.search('q', set(), 10), [])
+        for model, revision, name, batch in [
+                (E5_SMALL_MODEL, E5_SMALL_REVISION, 'dense_e5_small_v0', 32),
+                (E5_LARGE_MODEL, E5_LARGE_REVISION, 'dense_e5_large_v0', 4),
+                ('local-test', 'abcdef123456', 'dense_e5_custom_v0', 2)]:
+            with self.subTest(model=model), patch(
+                    'tools.story_retrieval.retrieval_v0._default_encoder', return_value=encoder) as loader:
+                options = {} if model in (E5_SMALL_MODEL, E5_LARGE_MODEL) else {'revision': revision}
+                lazy = DenseE5RetrieverV0(model_name=model, batch_size=batch, **options)
+                self.assertEqual((lazy.name, lazy.version), (name, '0+' + revision[:7]))
+                loader.assert_not_called()
+                lazy.index(replacement)
+                loader.assert_called_once_with(model, revision, batch)
+                self.assertEqual(lazy.search('q', set(), 10), [])
+                metadata = result_to_dict(request, lazy, replacement, [])['retriever']
+                self.assertEqual(metadata, {'name': name, 'version': '0+' + revision[:7]})
 
     def test_invalid_encoder_outputs(self):
         """Bad vector counts, dimensions and non-finite values fail clearly."""
+        for options in [{'batch_size': 0}, {'model_name': 'custom'}, {'revision': ''}]:
+            with self.subTest(options=options), self.assertRaises(ValueError):
+                DenseE5RetrieverV0(**options)
         passages = [Passage('1.1', 'a'), Passage('1.2', 'b')]
         for encoded in [[], [[1], [1, 2]], [[], []], [[float('nan')], [1]]]:
             with self.subTest(encoded=encoded), self.assertRaises(ValueError):
@@ -253,10 +266,25 @@ class RetrievalV0Tests(unittest.TestCase):
 
     def test_factory_and_lightweight_import(self):
         """Construction and import do not require or import the optional model stack."""
-        for name, expected in [('bm25', 'bm25_v0'), ('dense_e5', 'dense_e5_small_v0'),
-                               ('hybrid', 'hybrid_rrf_v0')]:
+        expected_names = ['bm25_v0', 'dense_e5_small_v0', 'dense_e5_large_v0',
+                          'hybrid_rrf_v0', 'hybrid_rrf_large_v0']
+        for name, expected in zip(RETRIEVER_NAMES, expected_names):
             with self.subTest(name=name):
-                self.assertEqual(make_retriever(name).name, expected)
+                retriever = make_retriever(name)
+                self.assertEqual(retriever.name, expected)
+                if name != 'bm25':
+                    dense = retriever.retrievers[1] if name.startswith('hybrid') else retriever
+                    large = name.endswith('large')
+                    self.assertEqual(dense.model_name, E5_LARGE_MODEL if large else E5_SMALL_MODEL)
+                    self.assertEqual(dense.revision, E5_LARGE_REVISION if large else E5_SMALL_REVISION)
+                    self.assertEqual(dense.batch_size, 4 if large else 32)
+                    self.assertIn(dense.version, retriever.version)
+                with patch('tools.story_retrieval.retrieve.make_retriever', return_value=Bm25RetrieverV0()) as factory:
+                    with redirect_stdout(io.StringIO()):
+                        self.assertEqual(main(['--cutoff', '1', '--query', 'q', '--retriever', name]), 0)
+                    factory.assert_called_once_with(name)
+        overridden = DenseE5RetrieverV0(revision='123456789')
+        self.assertEqual(overridden.version, '0+1234567')
         with self.assertRaises(ValueError):
             make_retriever('unknown')
         code = ('import sys; import tools.story_retrieval.retrieval_v0; '
