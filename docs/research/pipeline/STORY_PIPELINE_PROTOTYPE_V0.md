@@ -587,6 +587,23 @@ The run COMPLETED in 17 calls, 323,269 tokens and 636 s. Findings went 17 → 4 
   - The brief had labelled "seemed to stop, then bowed" APPEARANCE as one event.
   - The one-statement rule for labelled facts now covers events. 5 of the 6 events it flags on saved briefs mix a plain action with a hedge.
 
+**2026-11-15, season S2 (chapters 1–5, the same episodes as S1, fresh briefs, every check added today).**
+
+The season COMPLETED in three invocations; the season runner resumed episode 3 twice. The first two invocations each stopped on a robustness defect that the live free-tier conditions exposed:
+
+- **First stop:** `gemini-3.6-flash` and `gemini-3.5-flash` were rate-limited (429) by then, so the critic ran on `gemini-3-flash-preview`. That model spent about 63,000 tokens thinking and cut its JSON off on all three attempts. Fix: a MAX_TOKENS finish now moves to the next model, and finish reasons are logged.
+- **Second stop:** the next fallback model wrote paragraph ids as `<P001>`, so every source-check answer was rejected. Fix: tag brackets are tolerated, and a source check that fails after its repairs is recorded (`source_check_failed`) instead of failing the episode.
+
+| Episode | Calls | Tokens | Findings by version | Left |
+|---|---|---|---|---|
+| 1 (ch. 1) | 14 | 207,947 | 14 → 0 | — |
+| 2 (ch. 2–3) | 31 | 653,295 | 11 → 7 → 3 → 4 | 4 LOW critic findings, all true to the source (2.34, 3.18, 3.65–3.69): the details were missing from the briefs, the critic's truth boundary |
+| 3 (ch. 4–5) | 10 (this invocation) | 378,520 | 14 → 6 → 9 → 4 | 2 source-check findings (a smile, "fruit jelly"), 1 critic MEDIUM, 1 critic LOW |
+
+- **Pronouns:** Amane is "cậu" 51 times and "anh" once across the season, against "anh" 13 times in S1's episode 3. Episode 2 also recorded Itsuki's pronoun ("cậu") from the writer's declaration.
+- **Not seen in this season:** invented steam, "đỏ bừng", "dữ dội" or the lost-child speech.
+- **Limit — critic false positives:** a LOW critic finding can be a faithful detail that the brief left out. The source check, which reads the source, did not flag these four.
+
 ## Known limits
 
 - Brief paraphrase quality is not measured against gold. Quotes pin the evidence, but a
