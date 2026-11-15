@@ -11,6 +11,7 @@ from pathlib import Path
 import yaml
 
 from tools.story_benchmark.multi_gold_metrics import calculate_probe_metrics
+from tools.story_ingestion.light_novel_adapter_v0 import IngestionError
 from tools.story_pipeline.source import Passage
 from tools.story_retrieval.retrieval_v0 import (
     RETRIEVER_NAMES, Bm25RetrieverV0, RetrievalRequest, build_corpus, make_retriever, retrieve,
@@ -50,12 +51,14 @@ def evaluate_dev(probes_path, manifest_path, retrievers, k_values=(1, 5, 10)) ->
         rows = []
         by_language = defaultdict(list)
         for probe in probes:
-            hits = retrieve(RetrievalRequest(probe['query'], probe['cutoff_chapter'], max(k_values)),
+            hits = retrieve(RetrievalRequest(probe['query'], probe['cutoff_chapter'], max(1, len(passages))),
                             retriever, passages)
-            metrics = _metrics(probe, [h.passage_id for h in hits], hits, k_values)
+            ranked_ids = [h.passage_id for h in hits]
+            metrics = _metrics(probe, ranked_ids, hits, k_values)
+            metrics['mrr@10'] = calculate_probe_metrics(probe, ranked_ids[:10], k_values=())['mrr']
             rows.append({'probe_id': probe['probe_id'], 'language': probe['language'],
                          'metrics': metrics,
-                         'ranking': [{'passage_id': h.passage_id, 'rank': h.rank} for h in hits]})
+                         'ranking': [{'passage_id': h.passage_id, 'rank': h.rank} for h in hits[:max(k_values)]]})
             by_language[probe['language']].append(metrics)
         result[retriever.name] = {
             'version': retriever.version,
@@ -126,7 +129,7 @@ def main(argv=None) -> int:
             for section, values in summary.items():
                 write_stdout(f'{section}: ' + (json.dumps(values, ensure_ascii=False) if values else 'not run'))
         return 0
-    except (ValueError, OSError, RuntimeError, ImportError) as exc:
+    except (ValueError, OSError, RuntimeError, ImportError, yaml.YAMLError, IngestionError) as exc:
         print(f'error: {exc}', file=sys.stderr)
         return 2
 

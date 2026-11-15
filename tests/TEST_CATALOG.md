@@ -1210,7 +1210,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 ## story_retrieval
 
 ### test_evaluate_v0 (4)
-Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_retrieval.evaluate_v0`, `tools.story_retrieval.retrieval_v0`, `tools.story_retrieval.retrieve`
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.source`, `tools.story_retrieval.evaluate_v0`, `tools.story_retrieval.retrieval_v0`, `tools.story_retrieval.retrieve`
 
 - `EvaluateV0Tests.test_dev_fixture_validity` — DEV gold is grounded in public passages within each varied cutoff.
 - `EvaluateV0Tests.test_dev_metrics_and_safe_per_probe_rows` — Evaluation reports overall/language means and ranks without source text.

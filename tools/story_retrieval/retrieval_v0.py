@@ -216,6 +216,9 @@ class DenseE5RetrieverV0:
                 vector = tuple(float(value) for value in row)
                 if len(vector) != dimension or not all(math.isfinite(v) for v in vector):
                     raise ValueError('inconsistent cache dimensions or values')
+                norm = math.sqrt(sum(v * v for v in vector))
+                if norm and abs(norm - 1.0) > 1e-6:
+                    raise ValueError('cache vector must be unit length or zero')
                 vectors[key] = vector
             return vectors
         except (OSError, ValueError, TypeError, OverflowError):
@@ -291,6 +294,8 @@ class HybridRrfRetrieverV0:
         snapshot = tuple(passages)
         if snapshot == self._passages:
             return
+        # A component failure must force the next attempt to re-index every component.
+        self._passages = None
         for retriever in self.retrievers:
             retriever.index(snapshot)
         self._passages = snapshot

@@ -334,6 +334,8 @@ class RetrievalV0Tests(unittest.TestCase):
                      json.dumps({'dimension': 1, 'vectors': {key: [10 ** 1000]}}).encode(),
                      json.dumps({'dimension': 2, 'vectors': {key: [1]}}).encode(),
                      json.dumps({'dimension': 1, 'vectors': {key: [float('inf')]}}).encode()]
+        bad_files.extend(json.dumps({'dimension': 2, 'vectors': {key: row}}).encode()
+                         for row in [[6, 8], [.3, .4], [1.000002, 0], [1e308, 1e308]])
         with tempfile.TemporaryDirectory() as tmp:
             cache = Path(tmp)
             DenseE5RetrieverV0(character_encoder, cache_dir=cache).index(passages)
@@ -344,6 +346,15 @@ class RetrievalV0Tests(unittest.TestCase):
                     encoder = CountingEncoder()
                     self.assertEqual(retrieve(request, DenseE5RetrieverV0(encoder, cache_dir=cache), passages), expected)
                     self.assertEqual(encoder.passages, ['passage: apple', 'passage: banana'])
+            for row in [[0, 0], [.6, .8], [1.0000005, 0]]:
+                with self.subTest(valid_cached_vector=row):
+                    path.write_text(json.dumps({'dimension': 2, 'vectors': {key: row}}),
+                                    encoding='utf-8')
+                    encoder = CountingEncoder()
+                    cached = DenseE5RetrieverV0(encoder, cache_dir=cache)
+                    cached.index(passages[:1])
+                    self.assertEqual(encoder.passages, [])
+                    self.assertEqual(cached._vectors['1.1'], tuple(row))
             # A structurally valid cache may have the wrong dimension for this encoder.
             # Exercise detection via a new passage batch and via a warm query.
             for cached_passages in [passages[:1], passages]:
@@ -384,6 +395,17 @@ class RetrievalV0Tests(unittest.TestCase):
         retrieve(RetrievalRequest('q', 1, k=101), hybrid, passages + [Passage('1.5', 'new')])
         self.assertEqual(first.index_calls, 2)
         self.assertEqual(second.depths, [100, 100, 101])
+        # A failed replacement leaves BM25 changed and dense on its original snapshot.
+        dense = DenseE5RetrieverV0(character_encoder)
+        hybrid = HybridRrfRetrieverV0([Bm25RetrieverV0(), dense])
+        original = [Passage('1.1', 'apple')]
+        apple_request = RetrievalRequest('apple', 1)
+        expected = retrieve(apple_request, hybrid, original)
+        self.assertAlmostEqual(expected[0].score, 2 / 61)
+        with patch.object(dense, '_encoder', side_effect=RuntimeError('encoding failed')):
+            with self.assertRaisesRegex(RuntimeError, 'encoding failed'):
+                hybrid.index([Passage('1.1', 'banana')])
+        self.assertEqual(retrieve(apple_request, hybrid, original), expected)
         bm25 = Bm25RetrieverV0()
         retrieve(RetrievalRequest('match', 1), bm25, passages)
         self.assertEqual(retrieve(RetrievalRequest('match', 1), bm25, [Passage('1.9', 'new')]), [])

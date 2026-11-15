@@ -10,6 +10,8 @@ from unittest.mock import patch
 
 import yaml
 
+from tools.story_ingestion.light_novel_adapter_v0 import IngestionError
+from tools.story_pipeline.source import Passage
 from tools.story_retrieval.evaluate_v0 import DEFAULT_PROBES, evaluate_dev, evaluate_private, main
 from tools.story_retrieval.retrieval_v0 import (
     RETRIEVER_NAMES, Bm25RetrieverV0, build_corpus, passage_chapter,
@@ -44,7 +46,7 @@ class EvaluateV0Tests(unittest.TestCase):
         self.assertEqual(result['probe_count'], 10)
         values = result['retrievers']['bm25_v0']
         self.assertEqual(values['version'], '0')
-        expected = {'mrr'} | {f'{metric}@{k}' for metric in ['hit', 'recall', 'success', 'spoiler_violation']
+        expected = {'mrr', 'mrr@10'} | {f'{metric}@{k}' for metric in ['hit', 'recall', 'success', 'spoiler_violation']
                               for k in [1, 5, 10]}
         for metrics in [values['overall'], *values['per_language'].values()]:
             with self.subTest(metrics=metrics):
@@ -54,6 +56,29 @@ class EvaluateV0Tests(unittest.TestCase):
         for row in values['per_probe']:
             self.assertEqual(set(row), {'probe_id', 'language', 'ranking', 'metrics'})
             self.assertTrue(all(set(hit) == {'passage_id', 'rank'} for hit in row['ranking']))
+        # Gold after rank ten must contribute to full MRR at every requested depth.
+        passages = [Passage(f'1.{i}', 'match') for i in range(1, 12)]
+        probe = dict(probe_id='late', language='ja', query='match', cutoff_chapter=1,
+                     gold_evidence_sets=[['1.11']])
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'probes.yaml'
+            path.write_text(yaml.safe_dump([probe]), encoding='utf-8')
+            for depths in [(1,), (1, 5, 10), (11,)]:
+                with self.subTest(depths=depths), patch(
+                        'tools.story_retrieval.evaluate_v0.build_corpus', return_value=passages):
+                    late = evaluate_dev(path, DEFAULT_MANIFEST, [Bm25RetrieverV0()], depths)
+                    values = late['retrievers']['bm25_v0']
+                    for metrics in [values['overall'], values['per_language']['ja'],
+                                    values['per_probe'][0]['metrics']]:
+                        self.assertAlmostEqual(metrics['mrr'], 1 / 11)
+                        self.assertEqual(metrics['mrr@10'], 0)
+                        for k in depths:
+                            for metric in ['hit', 'recall', 'success']:
+                                self.assertEqual(metrics[f'{metric}@{k}'], int(k >= 11))
+                            self.assertEqual(metrics[f'spoiler_violation@{k}'], 0)
+                    self.assertEqual(values['per_probe'][0]['ranking'],
+                                     [{'passage_id': p.passage_id, 'rank': i}
+                                      for i, p in enumerate(passages[:max(depths)], 1)])
         for k_values in [(), (0,), ('bad',)]:
             with self.subTest(k_values=k_values), self.assertRaises(ValueError):
                 evaluate_dev(DEFAULT_PROBES, DEFAULT_MANIFEST, [Bm25RetrieverV0()], k_values)
@@ -133,10 +158,24 @@ class EvaluateV0Tests(unittest.TestCase):
                         self.assertIsNone(json.loads(text)['private'])
                     else:
                         self.assertIn('private: not run', text)
-        with patch('tools.story_retrieval.evaluate_v0.make_retriever', side_effect=ImportError('missing encoder')):
-            with redirect_stderr(io.StringIO()) as error:
-                self.assertEqual(main([]), 2)
-                self.assertIn('missing encoder', error.getvalue())
+        for failure in [ImportError('missing encoder'), IngestionError('MANIFEST', 'invalid manifest')]:
+            with self.subTest(failure=failure), patch(
+                    'tools.story_retrieval.evaluate_v0.build_corpus', side_effect=failure):
+                with redirect_stderr(io.StringIO()) as error:
+                    self.assertEqual(main([]), 2)
+                    self.assertTrue(error.getvalue().startswith('error: '))
+                    self.assertIn(str(failure), error.getvalue())
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'LONG_RANGE_PROBE_V1').mkdir()
+            (root / 'PARAGRAPH_PACK_V1').mkdir()
+            (root / 'LONG_RANGE_PROBE_V1/probes.yaml').write_text('probes: [', encoding='utf-8')
+            (root / 'PARAGRAPH_PACK_V1/chunks.jsonl').write_text('', encoding='utf-8')
+            with redirect_stderr(io.StringIO()) as error, redirect_stdout(io.StringIO()) as output:
+                self.assertEqual(main(['--private-root', tmp]), 2)
+                self.assertTrue(error.getvalue().startswith('error: '))
+                self.assertIn('probes: [', error.getvalue())
+                self.assertEqual(output.getvalue(), '')
         with redirect_stderr(io.StringIO()):
             self.assertEqual(main(['--retriever', 'unknown']), 2)
         with redirect_stdout(io.StringIO()):

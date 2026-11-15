@@ -162,8 +162,11 @@ DEV set, not a sealed benchmark. One probe changes a language score by 20 percen
 points (10 points overall); the results do not establish general multilingual quality.
 
 All five retrievers below ran on the actual public passages. MRR in this DEV table
-is through rank 10 (`mrr` in the public JSON). Spoiler violation is zero at every
-reported depth for every retriever and language.
+is through rank 10 (`mrr@10` in the public JSON). The JSON now also reports
+full positive eligible-ranking `mrr`, independent of the requested metric depths;
+per-probe ranking rows remain limited to the largest requested depth. Full MRR
+for the dense retrievers has not been recomputed. Spoiler violation is zero at
+every reported depth for every retriever and language.
 
 | Retriever | Group (probes) | Hit/Recall/Success@1 | @5 | @10 | MRR@10 |
 |---|---|---:|---:|---:|---:|
