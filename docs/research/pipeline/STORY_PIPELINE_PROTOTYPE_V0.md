@@ -573,6 +573,20 @@ The run COMPLETED in 17 calls, 323,269 tokens and 636 s. Findings went 17 → 4 
 - **Invented details:** the writer still added some, such as Mahiru "about to step out of the door" and a "gentle smile". The source check caught them in v1 and the revision removed them.
 - **Left (flagged):** Mahiru's "phản ứng rất gay gắt". It survived three rounds; each rewrite kept a strong word for 4.32's flat, cold refusal.
 
+**2026-11-15, Korean seasons (original two-chapter text, prepared with `prepare_source`, 180–300 words an episode).**
+
+- **First season:** completed in 21 calls, with no flagged findings left.
+  - The story's memory and glossary live apart from the Japanese sample's, as intended.
+  - Names follow the glossary (Seo Ji-woo, Han So-yeon, Park Do-hyeon).
+  - 「…다고들 한다」 became "nghe nói".
+  - But Ji-woo was "cậu" in episode 1 and "anh" in episode 2.
+- **Pronoun adoption:** counting pronouns near names could not fix this; it picked "cậu" for Mahiru in the Japanese season, because in two-person scenes the pronoun is about the other character. Instead, the writer now declares its pronouns in the script (`pronouns`). After a run, the glossary records them for characters that have none; owner-set pronouns are never changed. Later episodes are told the pronoun, and the pronoun check flags drift.
+- **Pronoun check:** a sentence that names glossary characters who all have pronouns, and uses a third-person pronoun the glossary assigns to nobody, is a MEDIUM finding. Nouns such as "anh chàng" are excluded. On nine saved scripts it flags 13 sentences, all real.
+- **Second season (rerun from scratch):** episode 1 declared Ji-woo "cậu" and So-yeon "cô", and the glossary recorded them. Episode 2 used "cậu" 5 times and "anh" 0 times.
+- **Over-hedging:** the same episode hedged plain actions ("dường như cúi đầu chào").
+  - The brief had labelled "seemed to stop, then bowed" APPEARANCE as one event.
+  - The one-statement rule for labelled facts now covers events. 5 of the 6 events it flags on saved briefs mix a plain action with a hedge.
+
 ## Known limits
 
 - Brief paraphrase quality is not measured against gold. Quotes pin the evidence, but a
