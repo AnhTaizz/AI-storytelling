@@ -772,3 +772,23 @@ LIMITS:
 - Briefs keep selected facts. The M6 DEV probes found 20% of questions whose evidence no brief item cites.
 - The hedge check used to misread negated hearsay (「噂は聞いた事がない」) and a hedge after 「ので、」. Both are fixed: lexicons may list `negated_hedges`, and 「ので」 closes a hedge's scope. On the stored trial, 6 of 7 corrections now pass the brief checks; the last one waits for the reviewer.
 - Exhaustive extraction remains M4's.
+
+---
+
+## DEC-023 — M8 Narrative Planning: Checked, Reviewable Plan (Baseline)
+
+STATUS: ACCEPTED (decided by the agent on the Project Owner's instruction to plan and carry on after M7, 2026-11-15)
+
+DECISION:
+1. **The Narrative Plan decides presentation only.** It may cite episode events, recap CORE events and M6 callbacks (hard checks). A callback whose setup comes after its payoff is a soft error sent back to the planner. Pacing (a CORE beat starved of words, a MINOR-only beat taking over a quarter of the budget) and new names or numbers in free text are advisory findings for the reviewer (`plan_review.py`).
+2. **Optional owner review before writing.** `plan_review.html` shows each beat beside the brief items it tells. `plan_review_form.md` can drop, move, re-budget or annotate beats, and `--resume` applies the changes before the script stage. A beat holding a CORE event is never dropped. `plan.json` keeps the model's plan.
+
+ACCEPTANCE:
+Accepted as a baseline:
+- an offline scan of 28 saved plans found 1 real pacing problem and 11 name warnings, all false (the translated nickname "Thiên sứ" is stored only as 天使);
+- a live episode run wrote the review files;
+- the owner-edit path is covered by tests.
+
+LIMITS:
+- The free-text checks are heuristics and report only.
+- Plan quality (hook strength, pacing as felt by viewers) still needs the owner's review: it is part of the M1/M9 human verdict.

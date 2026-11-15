@@ -994,6 +994,13 @@ M4-04B3H: score the locked FV1 predictions.
 - Score the 9 compiled batches, and FV1_03 as a structural failure, with the frozen Snapshot V2 evaluator against the sealed gold.
 - No model call, repair or re-run after the gold opens. The holdout stays closed.
 
+## M8 Narrative Planning — ACCEPTED as a baseline (DEC-023, 2026-11-15)
+
+- **Plan checks (`plan_review.py`):** refs are hard checks; a callback in the wrong order is a soft error. Pacing and new names or numbers in free text are advisory.
+- **Owner review:** `plan_review.html` shows the plan, and `plan_review_form.md` edits are applied on `--resume` before writing.
+- **Offline scan of 28 plans:** 1 real pacing finding, and 11 false name warnings ("Thiên sứ").
+- **Open:** the judgement of hook and pacing quality stays with the owner's M1/M9 review.
+
 ## M7 Story Brief — ACCEPTED (DEC-022, 2026-11-15)
 
 - **Deliverable:** the episode Story Brief is written before planning: `story_brief.json/.md/.html`, built from evidence-quoted chapter briefs, the recap and the M6 callbacks.
