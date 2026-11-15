@@ -1011,6 +1011,27 @@ def run_critic(client: LLMClient, scope: StoryScope, briefs: Sequence[Dict[str, 
     return normalize_critic(critic)
 
 
+# --------------------------------------------------------------------------- owner review
+
+def locate_owner_errors(errors: Sequence[Dict[str, Optional[str]]], units: Sequence[Dict[str, str]]
+                        ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Optional[str]]]]:
+    """The reviewer's quoted errors as revision findings on the paragraph that contains the
+    quote (whitespace-insensitive), and the errors that could not be placed."""
+    located, unplaced = [], []
+    for error in errors:
+        quote = error.get("quote")
+        unit = next((u for u in units if quote and _squash(quote) in _squash(u["text"])), None)
+        if unit is None:
+            unplaced.append(dict(error))
+            continue
+        why = error.get("why") or "Người duyệt đánh dấu câu này là sai."
+        located.append({"unit_id": unit["unit_id"], "claim": quote, "claim_type": "OWNER_REVIEW",
+                        "failure_category": "OTHER", "severity": "HIGH", "brief_refs": [], "source": "owner",
+                        "concepts": [], "phrases": [], "explanation": why,
+                        "suggested_fix": f"Sửa theo góp ý của người duyệt: {why}"})
+    return located, unplaced
+
+
 # --------------------------------------------------------------------------- incremental checks
 
 def unchanged_units(units: Sequence[Dict[str, str]], previous: Sequence[Dict[str, str]]) -> Dict[str, str]:
@@ -1191,7 +1212,7 @@ def merge_source_findings(samples: Sequence[Sequence[Dict[str, Any]]]) -> List[D
 def run_source_check(client: LLMClient, scope: StoryScope, units: List[Dict[str, str]],
                      profile: NarrativeProfile, log: CallLog, max_repairs: int,
                      version: int, sample: int = 1,
-                     flags: Sequence[Dict[str, Any]] = ()) -> Optional[Dict[str, Any]]:
+                     flags: Sequence[Dict[str, Any]] = (), chunk: int = 0) -> Optional[Dict[str, Any]]:
     """Check the script against the episode's own source text, and answer for each critic
     flag (see critic_flags) whether the source says it. None when the episode is too long
     for one call (see SOURCE_CHECK_MAX_CHARS)."""
@@ -1209,5 +1230,6 @@ def run_source_check(client: LLMClient, scope: StoryScope, units: List[Dict[str,
     return run_json_stage(client, stage="source_check", system=system, user=user, schema=schema,
                           semantic_check=lambda c: source_check_errors(c, units, ids, flags),
                           max_repairs=max_repairs, log=log,
-                          request_suffix=f"v{version}" if sample == 1 else f"v{version}s{sample}")
+                          request_suffix=f"v{version}" + (f"c{chunk}" if chunk else "")
+                          + (f"s{sample}" if sample > 1 else ""))
 

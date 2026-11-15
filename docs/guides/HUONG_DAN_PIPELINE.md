@@ -57,6 +57,7 @@ Trong thư mục của lần chạy (`.local/story_pipeline_runs/<id>/` hoặc t
 | File | Dùng để |
 |---|---|
 | `script_final.md` | Kịch bản cuối |
+| `script_final.txt` | Chỉ lời dẫn, không tiêu đề hay ký hiệu: đưa thẳng vào công cụ đọc giọng (TTS). Cả mùa có thêm `season_script.md` ghép mọi tập |
 | `review.html` | **Trang chấm**: mỗi đoạn kịch bản đặt cạnh brief và nguyên văn nguồn, chỗ bị báo lỗi được tô vàng |
 | `report.md` | Báo cáo: các gate, lỗi còn lại, danh sách brief cần xem, số token |
 | `review_form.md` | Phiếu chấm dạng chữ |
@@ -82,6 +83,25 @@ Các bộ kiểm tra vẫn có thể bỏ sót, nên hãy đọc cả đoạn, k
    ```
 
 Chỉ phiếu của chủ dự án mới được tính. Phiếu agent chấm được tách riêng, chỉ để tham khảo.
+
+### Để pipeline sửa theo góp ý của bạn
+
+Trong mục "Lỗi cụ thể" của phiếu, mỗi lỗi một dòng: trích **nguyên văn** câu trong kịch bản trong ngoặc kép, rồi `→` và lý do.
+
+```
+- "Cậu dán miếng hạ nhiệt lên trán" → Mahiru dán lúc cậu đang ngủ
+```
+
+Sau đó chạy:
+
+```
+python -m tools.story_pipeline.run_pipeline --chapters <như lần trước> --recap --resume <thư mục lần chạy> --apply-review
+```
+
+- Pipeline sửa đúng các câu đó trong một vòng (chỉ sửa câu, không viết lại cả bài), rồi kiểm lại các đoạn vừa đổi.
+- `report.md` có mục "Góp ý của người duyệt" ghi từng lỗi: đã sửa, câu vẫn còn, hoặc không tìm thấy câu (thường do trích không đúng nguyên văn).
+- Phiếu bạn đã chấm được giữ lại thành `review_form_reviewed_1.md`, và một phiếu trống mới được tạo cho bản đã sửa.
+- Với cả mùa: chạy lại lệnh `run_story` cùng các tham số cũ, thêm `--apply-review`. Chỉ những tập có lỗi chưa sửa mới được chạy lại.
 
 ## 6. Tên nhân vật (bảng tên của truyện)
 

@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 8 — test files: 58 — test functions: 1018
+Suites: 8 — test files: 58 — test functions: 1021
 
 ## canonical_story
 
@@ -1209,22 +1209,24 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `ReviewPageTests.test_brief_items_for_a_person_are_listed`
 - `ReviewPageTests.test_page_without_a_critic_still_renders`
 
-### test_review_summary (1)
+### test_review_summary (2)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.review_summary`, `tools.story_pipeline.run_pipeline`
 
 - `ReviewSummaryTests.test_forms_are_parsed_and_owner_and_agent_kept_apart`
+- `ReviewSummaryTests.test_quoted_errors_are_read_from_the_form`
 
-### test_run_story (6)
+### test_run_story (7)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.llm`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.run_story`
 
 - `PlanTests.test_episodes_cover_the_range_in_order`
 - `SeasonTests.test_episodes_run_in_order_with_earlier_chapters_as_background`
 - `SeasonTests.test_rerun_skips_completed_episodes_and_resumes_the_rest`
+- `SeasonTests.test_apply_review_resumes_completed_episodes_with_unapplied_errors`
 - `SeasonTests.test_quota_pauses_and_failures_stop_unless_told_to_keep_going`
 - `SeasonTests.test_season_with_the_real_pipeline_and_shared_memory`
 - `CliTests.test_bad_episode_plan_is_rejected_before_any_call`
 
-### test_story_pipeline_v0 (45)
+### test_story_pipeline_v0 (46)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
 
 - `test_profile`
@@ -1263,6 +1265,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `EndToEndTests.test_critic_findings_the_source_supports_become_brief_gaps` — Season S2 episode 2: the critic flagged four details that the brief had left out
 - `EndToEndTests.test_source_check_answers_are_validated`
 - `EndToEndTests.test_later_revision_rounds_patch_only_the_sentences_at_fault` — Live run 13: a second full rewrite put new errors into correct text.
+- `EndToEndTests.test_owner_review_errors_are_fixed_in_a_patch_round` — The owner's quoted errors in review_form.md become one patch round (--apply-review).
 - `EndToEndTests.test_patch_edits_are_validated_and_applied_in_place`
 - `EndToEndTests.test_episode_with_memory_recap`
 - `EndToEndTests.test_memory_brief_failing_current_checks_is_regenerated`

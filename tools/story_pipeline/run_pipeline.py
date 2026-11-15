@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import dataclasses
 import json
+import re
 import sys
 import time
 from datetime import datetime, timezone
@@ -25,7 +26,7 @@ if str(REPO) not in sys.path:
 
 from tools.story_memory import glossary_v0  # noqa: E402
 from tools.story_memory.memory_v0 import StoryMemory, build_roster, recap_context  # noqa: E402
-from tools.story_pipeline import PIPELINE_VERSION, checks, lexicon, review_page, stages  # noqa: E402
+from tools.story_pipeline import PIPELINE_VERSION, checks, lexicon, review_page, review_summary, stages  # noqa: E402
 from tools.story_pipeline.facts import StoryFacts  # noqa: E402
 from tools.story_pipeline.llm import CallLog, LLMClient, StageFailed  # noqa: E402
 from tools.story_pipeline.profile import DEFAULT_PROFILE_PATH, NarrativeProfile, load_profile  # noqa: E402
@@ -192,6 +193,13 @@ def report_markdown(manifest: Dict[str, Any], report: Dict[str, Any]) -> str:
         for item in report["source_strength_review"]:
             lines.append(f"- {item['ref']}: {item['text'][:160]} — từ: {', '.join(item['phrases'])} "
                          f"(nguồn: {', '.join(item['evidence'])})")
+    if report.get("owner_review"):
+        status_vi = {"applied": "đã sửa", "still_present": "CÂU VẪN CÒN", "not_found": "KHÔNG TÌM THẤY câu này"}
+        lines += ["", "## Góp ý của người duyệt", "",
+                  "Các lỗi trong phiếu chấm được sửa bằng một vòng patch, rồi các đoạn đã đổi được kiểm lại.", ""]
+        for item in report["owner_review"]:
+            lines.append(f"- [{status_vi[item['status']]}] ({item['unit_id'] or '?'}) \"{item['quote']}\" → "
+                         f"{item['why'] or ''}")
     if report.get("brief_gaps"):
         lines += ["", "## Brief bỏ sót (critic báo nhầm, nguồn xác nhận)", "",
                   "Critic so kịch bản với brief nên báo các chi tiết này là bịa; bước đối chiếu nguồn tìm thấy "
@@ -274,6 +282,66 @@ def review_form(manifest: Dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+# --------------------------------------------------------------------------- owner review
+
+OWNER_REVIEW_FILE = "owner_review.json"
+
+
+def _form_path(out_dir: Path, form: Path | str) -> Path:
+    form = Path(form)
+    return form if form.is_absolute() or form.is_file() else out_dir / form
+
+
+def pending_owner_errors(out_dir: Path, form: Path | str = "review_form.md") -> List[Dict[str, Optional[str]]]:
+    """Quoted errors in the run's filled review form that no correction round has applied."""
+    path = _form_path(out_dir, form)
+    if not path.is_file():
+        return []
+    errors = [e for e in review_summary.parse_errors(path.read_text(encoding="utf-8")) if e["quote"]]
+    done = _owner_rounds(out_dir)
+    return [] if any(r["errors"] == errors for r in done) else errors
+
+
+def _owner_rounds(out_dir: Path) -> List[Dict[str, Any]]:
+    path = out_dir / OWNER_REVIEW_FILE
+    return json.loads(path.read_text(encoding="utf-8"))["rounds"] if path.is_file() else []
+
+
+def _last_version(out_dir: Path) -> int:
+    versions = [int(m.group(1)) for p in out_dir.glob("script_v*.json")
+                if (m := re.fullmatch(r"script_v(\d+)\.json", p.name))]
+    return max(versions, default=0)
+
+
+def plan_owner_rounds(out_dir: Path, form: Optional[Path | str]) -> List[Dict[str, Any]]:
+    """Correction rounds from the owner's review, recorded in owner_review.json so a later
+    resume replays them from the saved scripts. A new round starts after the last saved
+    version when the form holds quoted errors that no earlier round applied."""
+    rounds = _owner_rounds(out_dir)
+    if form is not None:
+        errors = pending_owner_errors(out_dir, form)
+        last = _last_version(out_dir)
+        if errors and last:
+            rounds.append({"after_version": last, "form": str(_form_path(out_dir, form)), "errors": errors})
+            write_json(out_dir / OWNER_REVIEW_FILE, {"rounds": rounds})
+    return rounds
+
+
+def write_review_form(out_dir: Path, text: str) -> None:
+    """Write a fresh review form, keeping a filled one as review_form_reviewed_N.md: a resumed
+    or corrected run must never erase the owner's scores."""
+    path = out_dir / "review_form.md"
+    if path.is_file():
+        old = path.read_text(encoding="utf-8")
+        parsed = review_summary.parse_form(old)
+        if old != text and (parsed["reviewer"] or any(e["quote"] for e in review_summary.parse_errors(old))):
+            index = 1
+            while (out_dir / f"review_form_reviewed_{index}.md").exists():
+                index += 1
+            path.rename(out_dir / f"review_form_reviewed_{index}.md")
+    path.write_text(text, encoding="utf-8")
+
+
 # --------------------------------------------------------------------------- orchestration
 
 
@@ -282,8 +350,8 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         revise_severities: Sequence[str] = ("CRITICAL", "HIGH", "MEDIUM"),
         stop_after: str = "revise", resume: bool = False,
         background: Sequence[Chapter] = (), memory: Optional[StoryMemory] = None,
-        source_check: bool = True, source_check_samples: int = 2, full_revision_rounds: int = 1,
-        full_recheck: bool = False, progress: Callable[[str], None] = lambda message: None) -> Dict[str, Any]:
+        source_check: bool = True, source_check_samples: int = 1, full_revision_rounds: int = 1,
+        full_recheck: bool = False, source_check_chunk: int = 4, owner_review: Optional[Path | str] = None, progress: Callable[[str], None] = lambda message: None) -> Dict[str, Any]:
     """`scope` is the episode. `background` are earlier chapters, summarised from memory as a
     recap (never later chapters). With `memory`, chapter briefs are reused across runs."""
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -305,7 +373,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         "settings": {"max_repairs": max_repairs, "revision_rounds": revision_rounds,
                      "revise_severities": list(revise_severities), "stop_after": stop_after,
                      "source_check": source_check, "source_check_samples": source_check_samples,
-                     "full_recheck": full_recheck,
+                     "full_recheck": full_recheck, "source_check_chunk": source_check_chunk,
                      "full_revision_rounds": full_revision_rounds},
         "prompt_fingerprints": stages.prompt_fingerprints(),
         "language_checks": stages.audit_coverage(profile.target_language, profile.brief_language,
@@ -394,6 +462,9 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         verified: List[Dict[str, Any]] = []
         passages = {p.passage_id: p.text for c in [*background, *scope.chapters] for p in c.passages}
         version = 1
+        owner_rounds = plan_owner_rounds(out_dir, owner_review) if resume else []
+        owner_findings: List[Dict[str, Any]] = []
+        owner_unplaced: List[Dict[str, Optional[str]]] = []
         brief_gaps: List[Dict[str, Any]] = []
         checked_units: List[Dict[str, str]] = []  # the previous version's paragraphs
         if stop_after != "script":
@@ -424,24 +495,38 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                     progress(f"source check v{version}")
                     flags = [f for f in stages.critic_flags(critic) if f["unit_id"] not in carried]
                     samples, results = [], []
-                    for sample in range(1, max(1, source_check_samples) + 1):
-                        name = f"source_check_v{version}.json" if sample == 1 else f"source_check_v{version}_s{sample}.json"
-                        try:
-                            result = cached(out_dir / name, resume,
-                                            lambda: stages.run_source_check(client, scope, fresh_units, profile,
-                                                                            log, max_repairs, version, sample, flags))
-                        except StageFailed as exc:
-                            # A second verifier that cannot answer must not sink the episode
-                            # (season S2): record it and go on with the other checks.
-                            manifest.setdefault("source_check_failed", []).append(
-                                {"version": version, "sample": sample, "error": str(exc)[:300]})
-                            continue
-                        if result is None:
-                            manifest["source_check_skipped"] = (f"episode source is longer than "
-                                                                f"{stages.SOURCE_CHECK_MAX_CHARS} characters")
+                    # A few paragraphs per call: whole-script calls missed most defects that
+                    # calls on four paragraphs found (run 17 v1: 2 against 7).
+                    size = source_check_chunk if source_check_chunk > 0 else len(fresh_units)
+                    chunks = [fresh_units[i:i + size] for i in range(0, len(fresh_units), size)]
+                    skipped = False
+                    for index, chunk in enumerate(chunks, start=1):
+                        ids = {u["unit_id"] for u in chunk}
+                        chunk_flags = [f for f in flags if f["unit_id"] in ids]
+                        part = index if len(chunks) > 1 else 0
+                        for sample in range(1, max(1, source_check_samples) + 1):
+                            name = (f"source_check_v{version}" + (f"_c{part}" if part else "")
+                                    + (f"_s{sample}" if sample > 1 else "") + ".json")
+                            try:
+                                result = cached(out_dir / name, resume,
+                                                lambda: stages.run_source_check(client, scope, chunk, profile, log,
+                                                                                max_repairs, version, sample,
+                                                                                chunk_flags, part))
+                            except StageFailed as exc:
+                                # A second verifier that cannot answer must not sink the episode
+                                # (season S2): record it and go on with the other checks.
+                                manifest.setdefault("source_check_failed", []).append(
+                                    {"version": version, "chunk": part, "sample": sample, "error": str(exc)[:300]})
+                                continue
+                            if result is None:
+                                manifest["source_check_skipped"] = (f"episode source is longer than "
+                                                                    f"{stages.SOURCE_CHECK_MAX_CHARS} characters")
+                                skipped = True
+                                break
+                            samples.append(stages.source_check_findings(result, passages))
+                            results.append(result)
+                        if skipped:
                             break
-                        samples.append(stages.source_check_findings(result, passages))
-                        results.append(result)
                     verified = stages.merge_source_findings(samples)
                     # Critic findings the source does support are gaps in the brief, not
                     # errors in the script: they leave revision and the gates.
@@ -463,13 +548,21 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                     "high_or_worse": sum(1 for p in problems if p["severity"] in ("CRITICAL", "HIGH"))})
                 to_fix = stages.findings_for_revision(critic, revise_severities) + \
                     [f for f in audit if f["severity"] in revise_severities]
-                if stop_after == "critic" or not to_fix or version > revision_rounds:
+                # The owner's quoted errors are fixed in a patch round after the version they reviewed.
+                owner_round = next((r for r in owner_rounds if r["after_version"] == version), None)
+                located: List[Dict[str, Any]] = []
+                if owner_round:
+                    located, unplaced = stages.locate_owner_errors(owner_round["errors"], units)
+                    owner_findings += located
+                    owner_unplaced += unplaced
+                    to_fix = located + to_fix
+                if stop_after == "critic" or not to_fix or (version > revision_rounds and not located):
                     break
                 version += 1
                 previous, previous_units = script, units
                 # Later rounds edit only the sentences at fault: a full rewrite to fix the last
                 # few findings put new errors into correct text (live run 13, v2).
-                patching = version - 1 > full_revision_rounds
+                patching = bool(located) or version - 1 > full_revision_rounds
                 progress(f"{'patch' if patching else 'revise'} -> v{version} ({len(to_fix)} findings)")
                 script = cached(out_dir / f"script_v{version}.json", resume,
                                 lambda: stages.run_patch(client, scope, briefs, previous, to_fix, previous_units,
@@ -483,6 +576,8 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                                           profile.target_language)
         (out_dir / "script_final.md").write_text(script_markdown(script, f"final v{version}"),
                                                  encoding="utf-8")
+        # The narration alone (no comment line, no Markdown), ready for a voice-over tool.
+        (out_dir / "script_final.txt").write_text(checks.script_text(script).strip() + "\n", encoding="utf-8")
         final_units = checks.split_units(checks.script_text(script))
         final_audit = (stages.strength_audit(critic, briefs, recap, final_units, profile.target_language,
                                              profile.brief_language)
@@ -509,13 +604,23 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
             for item in stages.source_strength_review(brief, chapter, scope.source_language, profile.brief_language)]
         report["brief_gaps"] = [{k: g[k] for k in ("unit_id", "claim", "claim_type", "explanation",
                                                     "source_explanation", "passage_ids")} for g in brief_gaps]
+        final_text = stages._squash(checks.script_text(script))
+        report["owner_review"] = [
+            {"quote": f["claim"], "why": f["explanation"], "unit_id": f["unit_id"],
+             "status": "still_present" if stages._squash(f["claim"]) in final_text else "applied"}
+            for f in owner_findings] + [{"quote": e["quote"], "why": e["why"], "unit_id": None,
+                                         "status": "not_found"} for e in owner_unplaced]
+        if owner_rounds:
+            manifest["owner_review"] = {"rounds": len(owner_rounds),
+                                        "applied": sum(1 for o in report["owner_review"] if o["status"] == "applied"),
+                                        "not_applied": sum(1 for o in report["owner_review"] if o["status"] != "applied")}
         report["final_version"] = version
         report["final_check"] = final_check
         write_json(out_dir / "report.json", report)
         status = "COMPLETED" if critic is not None else "STOPPED_AFTER_SCRIPT"
         finish(status)
         (out_dir / "report.md").write_text(report_markdown(manifest, report), encoding="utf-8")
-        (out_dir / "review_form.md").write_text(review_form(manifest), encoding="utf-8")
+        write_review_form(out_dir, review_form(manifest))
         (out_dir / "review.html").write_text(
             review_page.render_review_page(manifest, report, final_units, critic, all_briefs, passages,
                                            REVIEW_QUESTIONS), encoding="utf-8")
@@ -542,8 +647,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--no-memory", action="store_true", help="do not read or write story memory")
     parser.add_argument("--full-revision-rounds", type=int, default=1,
                         help="revision rounds that may rewrite the script; later rounds only patch sentences")
-    parser.add_argument("--source-check-samples", type=int, default=2,
-                        help="independent source-check calls per script version; their findings are pooled")
+    parser.add_argument("--source-check-samples", type=int, default=1,
+                        help="independent source-check calls per group of paragraphs; their findings are pooled")
+    parser.add_argument("--source-check-chunk", type=int, default=4,
+                        help="paragraphs per source-check call (0: the whole script in one call)")
+    parser.add_argument("--apply-review", nargs="?", const="review_form.md", default=None, metavar="FORM",
+                        help="with --resume: fix the quoted errors of a filled review form (default: the run's "
+                             "review_form.md) in one patch round, then recheck the changed paragraphs")
     parser.add_argument("--full-recheck", action="store_true",
                         help="send every paragraph to the critic and the source check in every version "
                              "(default: only paragraphs that changed since the previous version)")
@@ -596,8 +706,9 @@ def run_options(args: argparse.Namespace) -> Dict[str, Any]:
     return {"max_repairs": args.max_repairs, "revision_rounds": args.revision_rounds,
             "revise_severities": [s.strip() for s in args.revise_severities.split(",") if s.strip()],
             "stop_after": args.stop_after, "source_check": not args.no_source_check,
-            "source_check_samples": args.source_check_samples,
-            "full_revision_rounds": args.full_revision_rounds, "full_recheck": args.full_recheck}
+            "source_check_samples": args.source_check_samples, "source_check_chunk": args.source_check_chunk,
+            "full_revision_rounds": args.full_revision_rounds, "full_recheck": args.full_recheck,
+            "owner_review": args.apply_review}
 
 
 def main(argv: Optional[List[str]] = None) -> int:

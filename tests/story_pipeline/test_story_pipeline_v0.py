@@ -29,7 +29,7 @@ from tools.story_pipeline.llm import (  # noqa: E402
 )
 from tools.story_pipeline.profile import load_profile  # noqa: E402
 from tools.story_pipeline import run_pipeline  # noqa: E402
-from tools.story_pipeline.run_pipeline import DEFAULT_MANIFEST, gate_report, run  # noqa: E402
+from tools.story_pipeline.run_pipeline import DEFAULT_MANIFEST, gate_report, pending_owner_errors, run  # noqa: E402
 from tools.story_memory.memory_v0 import StoryMemory  # noqa: E402
 from tools.story_pipeline.source import (  # noqa: E402
     Chapter, Passage, StoryScope, layout_warnings, load_scope, parse_range,
@@ -718,12 +718,12 @@ class EndToEndTests(unittest.TestCase):
             manifest = run(client, scope, test_profile(), out)
             self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
             stages_called = [c["stage"] for c in client.calls]
-            # Two source-check calls per version by default; their findings are pooled.
+            # One source-check call per four paragraphs by default (this script has two).
             self.assertEqual(stages_called, ["brief", "brief", "plan", "script", "critic", "source_check",
-                                             "source_check", "revise", "critic", "source_check", "source_check"])
+                                             "revise", "critic", "source_check"])
             for name in ("briefs/chapter_001.json", "briefs/chapter_002.json", "plan.json", "script_v1.json",
-                         "critic_v1.json", "source_check_v1.json", "source_check_v1_s2.json", "script_v2.json",
-                         "critic_v2.json", "source_check_v2.json", "script_final.md",
+                         "critic_v1.json", "source_check_v1.json", "script_v2.json",
+                         "critic_v2.json", "source_check_v2.json", "script_final.md", "script_final.txt",
                          "report.json", "report.md", "calls.jsonl", "run_manifest.json"):
                 self.assertTrue((out / name).is_file(), name)
             report = json.loads((out / "report.json").read_text(encoding="utf-8"))
@@ -731,6 +731,8 @@ class EndToEndTests(unittest.TestCase):
             self.assertEqual(report["gates"]["GATE_OUTPUT_INTEGRITY"]["status"], "PASS")
             self.assertEqual([v["problem_claims"] for v in manifest["versions"]], [1, 0])
             self.assertIn("ĐẠT", (out / "report.md").read_text(encoding="utf-8"))
+            self.assertEqual((out / "script_final.txt").read_text(encoding="utf-8"),
+                             checks.script_text(REVISED).strip() + "\n")
             self.assertTrue((out / "review_form.md").is_file())
             self.assertIn("<form id='review'", (out / "review.html").read_text(encoding="utf-8"))
             coverage = report["gates"]["GATE_NECESSARY_COVERAGE"]
@@ -759,9 +761,9 @@ class EndToEndTests(unittest.TestCase):
                     return super().__call__(stage, system, user)
                 self.checks += 1
                 units = list(dict.fromkeys(re.findall(r"<(P\d{3})>", user)))
-                first = re.search(r"<P001>\n(.+?)\n</P001>", user, re.S).group(1)
-                findings = [{"script_quote": first[:12], "kind": "CONTRADICTS_SOURCE", "passage_ids": ["1.2"],
-                             "explanation": "the source says otherwise"}] if self.checks == 1 else []
+                first = re.search(r"<P001>\n(.+?)\n</P001>", user, re.S)
+                findings = [{"script_quote": first.group(1)[:12], "kind": "CONTRADICTS_SOURCE", "passage_ids": ["1.2"],
+                             "explanation": "the source says otherwise"}] if self.checks == 1 and first else []
                 return json.dumps({"paragraphs": [{"unit_id": u, "findings": findings if u == "P001" else []}
                                                   for u in units], "critic_reviews": []})
 
@@ -794,6 +796,18 @@ class EndToEndTests(unittest.TestCase):
                            source_check_samples=1)
             self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
             self.assertIn("list every paragraph", manifest["source_check_failed"][0]["error"])
+
+            # Smaller groups: one call per paragraph, each seeing only its own paragraph; pooled samples.
+            prompts = []
+            model = SourceCheckModel()
+            client = ScriptedLLMClient(lambda stage, system, user: (prompts.append((stage, user)),
+                                                                     model(stage, system, user))[1])
+            manifest = run(client, scope, test_profile(), Path(tmp) / "chunked", source_check_chunk=1,
+                           source_check_samples=2, stop_after="critic")
+            checks_seen = [re.findall(r"^<(P\d{3})>$", user, re.M) for stage, user in prompts if stage == "source_check"]
+            self.assertEqual(checks_seen, [["P001"], ["P001"], ["P002"], ["P002"]])
+            self.assertTrue((Path(tmp) / "chunked" / "source_check_v1_c2_s2.json").is_file())
+            self.assertEqual(manifest["versions"][0]["problem_claims"], 1)  # the first sample's finding on P001
 
             client = ScriptedLLMClient(SourceCheckModel())
             manifest = run(client, scope, test_profile(), Path(tmp) / "off", source_check=False)
@@ -991,6 +1005,52 @@ class EndToEndTests(unittest.TestCase):
             before, after = checks.split_units(checks.script_text(v2)), checks.split_units(checks.script_text(v3))
             self.assertTrue(after[0]["text"].startswith("Câu đã sửa."))
             self.assertEqual([u["text"] for u in before[1:]], [u["text"] for u in after[1:]])  # untouched
+
+    def test_owner_review_errors_are_fixed_in_a_patch_round(self):
+        """The owner's quoted errors in review_form.md become one patch round (--apply-review)."""
+        scope = load_scope(DEFAULT_MANIFEST, (1, 1))
+
+        class OwnerModel(FakeModel):
+            def __call__(self, stage, system, user):
+                if stage == "patch":
+                    self.patch_prompt = user
+                    return json.dumps({"edits": [{"unit_id": "P002", "old": "chẳng nói thêm gì nhiều",
+                                                  "new": "không nói một lời"}]}, ensure_ascii=False)
+                return super().__call__(stage, system, user)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "run"
+            model = OwnerModel()
+            self.assertEqual(run(ScriptedLLMClient(model), scope, test_profile(), out)["status"], "COMPLETED")
+            form = (out / "review_form.md").read_text(encoding="utf-8")
+            filled = form.replace("- \n", (
+                '- "chẳng nói thêm gì  nhiều" → nguồn: cậu không nói gì\n'
+                '- "câu không có trong kịch bản" → x\n- nhịp hơi chậm\n'), 1).replace("☐ Sửa nhẹ", "☑ Sửa nhẹ")
+            (out / "review_form.md").write_text(filled, encoding="utf-8")
+            self.assertEqual(len(pending_owner_errors(out)), 2)
+
+            client = ScriptedLLMClient(model)
+            manifest = run(client, scope, test_profile(), out, resume=True, owner_review="review_form.md")
+            self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
+            self.assertEqual([c["stage"] for c in client.calls], ["patch", "critic", "source_check"])
+            self.assertIn("nguồn: cậu không nói gì", model.patch_prompt)
+            self.assertTrue((out / "script_v3.json").is_file())
+            report = json.loads((out / "report.json").read_text(encoding="utf-8"))
+            self.assertEqual([(o["status"], o["unit_id"]) for o in report["owner_review"]],
+                             [("applied", "P002"), ("not_found", None)])
+            self.assertEqual(manifest["owner_review"], {"rounds": 1, "applied": 1, "not_applied": 1})
+            self.assertIn("## Góp ý của người duyệt", (out / "report.md").read_text(encoding="utf-8"))
+            # The filled form is kept; a fresh one is written for the corrected script.
+            self.assertEqual((out / "review_form_reviewed_1.md").read_text(encoding="utf-8"), filled)
+            self.assertNotIn("☑", (out / "review_form.md").read_text(encoding="utf-8"))
+            self.assertEqual(pending_owner_errors(out), [])
+
+            # A later resume replays the round from the saved files, with or without the flag.
+            for flag in (None, "review_form.md"):
+                again = ScriptedLLMClient(OwnerModel())
+                replay = run(again, scope, test_profile(), out, resume=True, owner_review=flag)
+                self.assertEqual((again.calls, replay["versions"][-1]["version"]), ([], 3))
+            self.assertFalse((out / "review_form_reviewed_2.md").exists())
 
     def test_patch_edits_are_validated_and_applied_in_place(self):
         script = {"title_idea": "t", "sections": [
