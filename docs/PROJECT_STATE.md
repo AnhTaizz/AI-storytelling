@@ -949,6 +949,24 @@ A concrete proposal for the next two M4 tasks is in `docs/research/m4/M4_04B3F_P
 
 Orchestrator review of the M4-04B3E seal. After that, and under separate authorization: lock a Draft V1.1 prompt and runtime protocol against the fresh validation input hash, then run blind predictions. Do not open the fresh validation gold before those predictions are locked and hashed. Do not reuse DEV2 as fresh validation, open DEV2 gold, access the holdout, begin M4-04C, or begin M5 without a separately authorized task.
 
+## M4-04B3F — DRAFT V1.1 EXTRACTOR AND FV1 BLIND-RUN PROTOCOL LOCK — COMPLETED — Status: M4_04B3F_FV1_DRAFT_V1_1_PROTOCOL_LOCKED
+
+- **Authorization.** The project owner delegated all pending approvals to the agent on 2026-11-15 ("Những gì tôi cần tôi duyệt thì bạn làm hộ tôi luôn nhé"). On that delegation the agent took the proposal's decisions: authorize B3F; one arm on `gemini-3.5-flash-lite` (comparable with DEV2; a `gemini-3.6-flash` arm is not locked); credential `gemini_slot_33`, because the B3B2 slot is not configured here.
+- **Prompts.** New `story_extraction_draft_p3_*_v1_1.txt` files are a mechanical V1.1 adaptation of the DEV1/DEV2-tuned P2 prompts; P2 is byte-identical. The changes: the V1.1 mention fields, the host-bound mention evidence (no `evidence_handle`), the V1.1 schema plus the V1 schema it references, and a repair that lists every structural blocker by phase, code and path without source text. No FV1 text was used.
+- **Protocol.** Temperature 0, provider JSON mode, concurrency 1, the M4-04B1D2 durable profile (6 operations per 60 s), at most one structural repair per case (JSON, schema or compiler failures only; a failed repair is terminal), and a prediction lock before the gold opens. It binds the FV1 input, gold and blindness-manifest hashes, the prompts, the V1.1 and V1 schemas and compilers, the predicate registry, the runtime and executor, and Snapshot V2. Private canonical protocol SHA-256 `b33d2c4d2ca9e1d6a482789b330ba151cd46c836c527b8245499586caa3c243a`.
+- **FV1 packages.** The input package and blindness manifest are in the git-ignored `.local/story_extraction/M4_04B3E_FRESH_VALIDATION_V1/`; both were hashed, not opened, and match the seal. The gold was not read.
+- **Boundaries.** No provider call, credential load, prediction, FV1 input opening, gold, DEV2-gold or holdout access, M4-04C or M5 work. The M4-04B3E seal had no separate content review, because that would need the gold.
+- **Records.** `benchmarks/m4_extraction/M4_04B3F_FV1_PROTOCOL_LOCK.yaml`; `tools/story_extraction/m4_04b3f_fv1_protocol_v1.py` with `tests/story_extraction/test_m4_04b3f_fv1_protocol_v1.py`.
+
+## Next Candidate
+
+M4-04B3G, the blind run under the M4-04B3F lock (authorized under the same owner delegation, but not started).
+
+- Before any FV1 call, verify the input package and blindness-manifest hashes and the locked protocol hash. Qualify `gemini_slot_33` with one M4-04B1K smoke call; stop if it does not qualify.
+- Run the 10 cases in order (10 primary jobs, at most 10 structural repairs: ≤ 20 semantic jobs), reading only the `prepared_draft_input.json` members.
+- Hash, commit and push the raw primary and repair outputs and the compiled batches or terminal structural failures before anyone opens the FV1 gold. Scoring is M4-04B3H.
+- Do not open the FV1 gold or the DEV2 gold, access the holdout, change the lock, add a model arm, begin M4-04C, or begin M5.
+
 ## M6 Retrieval Baseline v0 (spike) — IMPLEMENTED, PR pending owner review
 
 - Pinned CPU E5 small/large and BM25+dense RRF variants now run offline with inclusive cutoff checks. Spoiler violations remain zero. This spike does not complete M6.

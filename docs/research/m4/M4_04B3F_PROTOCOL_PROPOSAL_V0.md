@@ -1,7 +1,8 @@
 # M4-04B3F/G proposal: lock a Draft V1.1 protocol, then run it blind on Fresh Validation V1
 
-Status: PROPOSAL, not authorized. Date: 2026-11-15. Nothing below has been run. No prompt,
-protocol or prediction exists yet.
+Status: PROPOSAL, authorized on the owner's delegation of 2026-11-15. M4-04B3F is done:
+see `benchmarks/m4_extraction/M4_04B3F_FV1_PROTOCOL_LOCK.yaml` for the locked protocol and
+the decisions taken. M4-04B3G (the blind run) has not started.
 
 ## Why this is the next step
 

@@ -1,0 +1,206 @@
+task: M4-04B3F
+date: 2026-11-15
+status: M4_04B3F_FV1_DRAFT_V1_1_PROTOCOL_LOCKED
+scope: DRAFT_V1_1_EXTRACTOR_AND_FV1_BLIND_RUN_PROTOCOL_LOCK_ONLY
+base_commit: c9b24c72be953d58d386decd075d8f47f1328dba
+protocol_id: M4_04B3F_FV1_DRAFT_V1_1_PROTOCOL_V1
+protocol_schema_version: M4_04B3F_FV1_DRAFT_V1_1_PROTOCOL_SCHEMA_V1
+authorization: "project owner delegation, 2026-11-15: \"Những gì tôi cần tôi duyệt thì bạn làm hộ tôi luôn nhé\" (decisions taken by the agent on that delegation)"
+proposal: docs/research/m4/M4_04B3F_PROTOCOL_PROPOSAL_V0.md
+
+decisions_taken_on_delegation:
+  authorize_m4_04b3f: "yes, offline, zero calls"
+  primary_arm_model: "gemini-3.5-flash-lite (the recommended option; same model as DEV2, so results compare)"
+  second_arm_gemini_3_6_flash: "not locked; it would need its own task and lock"
+  credential: >-
+    gemini_slot_33. The B3B2 slot (gemini_slot_3) is not configured in the current environment
+    (configured slots: gemini_slot_33..gemini_slot_40). B3G qualifies gemini_slot_33 with one
+    M4-04B1K smoke call before any FV1 call; if it does not qualify, B3G stops and a new task
+    is required. No smoke call was made here.
+  storage: >-
+    the FV1 input package and blindness manifest are in the git-ignored
+    .local/story_extraction/M4_04B3E_FRESH_VALIDATION_V1/ of the cloud environment; both were
+    hashed (not opened) and match the seal. The gold package was not read or hashed.
+  orchestrator_review_of_m4_04b3e_seal: >-
+    not performed as a separate step: a content review needs the gold, which must stay closed
+    until B3G's predictions are locked. The seal's hashes and its public record were checked.
+
+boundaries:
+  provider_calls: 0
+  Gemini_or_other_API_used: false
+  credential_loaded: false
+  FV1_input_opened: false
+  FV1_input_hashed: true
+  FV1_gold_opened: false
+  FV1_gold_read_or_hashed: false
+  DEV2_gold_opened: false
+  holdout_input_opened: false
+  holdout_gold_opened: false
+  prediction_runs: 0
+  M4_04C_started: false
+  M5_started: false
+  draft_V1_modified: false
+  draft_V1_1_modified: false
+  deterministic_compilers_modified: false
+  snapshot_V1_modified: false
+  snapshot_V2_modified: false
+  P2_prompts_modified: false
+  prompt_tuning_material: "P3 is a mechanical V1.1 adaptation of P2 (DEV1/DEV2-tuned); no FV1 text was used"
+
+private_canonical_protocol:
+  name: M4_04B3F_FV1_CANONICAL_PROTOCOL_V1.json
+  sha256: b33d2c4d2ca9e1d6a482789b330ba151cd46c836c527b8245499586caa3c243a
+  validation_name: M4_04B3F_FV1_PROTOCOL_VALIDATION_V1.json
+  validation_sha256: 2ee8633539990472df4d69d21d6ab916df5232077f5ab287a3a6740e3564d638
+  committed_to_repository: false
+  reproducible_by: "python -m tools.story_extraction.m4_04b3f_fv1_protocol_v1 --protocol <path> --validation <path> --prompt-directory <dir> --fv1-directory .local/story_extraction/M4_04B3E_FRESH_VALIDATION_V1"
+
+fv1_bindings:
+  set_id: M4_04B3E_FRESH_VALIDATION_V1
+  input_package:
+    name: M4_04B3E_FRESH_VALIDATION_V1_INPUT.zip
+    sha256: 724041283cde55ccbce27844c9297cf66eed857c96cf18989dc97997fef55729
+    hash_verified_at_lock: true
+    opened_during_protocol_lock: false
+  blindness_manifest:
+    name: M4_04B3E_FRESH_VALIDATION_V1_BLINDNESS_MANIFEST.json
+    sha256: cdb8c0dcc62d12e776b0061201f3ec984289007f6e11450266474cfe52a75ea8
+    hash_verified_at_lock: true
+  gold_package:
+    name: M4_04B3E_FRESH_VALIDATION_V1_GOLD.zip
+    sha256: 732a3555717c6d3426e6e379e43061cd1fd6d11df8798ec859f37248202ddc73
+    source_of_hash: M4_04B3E seal record
+    opened_during_protocol_lock: false
+  case_count: 10
+  case_order: [FV1_01, FV1_02, FV1_03, FV1_04, FV1_05, FV1_06, FV1_07, FV1_08, FV1_09, FV1_10]
+
+extractor:
+  identity: P3_STORY_EXTRACTION_DRAFT_V1_1_GEMINI_3_5_FLASH_LITE_V1
+  model_output_only: STORY_EXTRACTION_DRAFT_V1_1
+  model: gemini-3.5-flash-lite
+  credential_slot: gemini_slot_33
+  credential_qualification: ONE_M4_04B1K_SMOKE_CALL_AT_B3G_START_BEFORE_ANY_FV1_CALL_ELSE_STOP
+  credential_topology: UNKNOWN
+  temperature: 0
+  max_output_tokens: 16384
+  provider_json_mode: true
+  response_mime_type: application/json
+  schema_response_mode: PROVIDER_JSON_MIME_STORY_EXTRACTION_DRAFT_V1_1
+  concurrency: 1
+  seed: NOT_SUPPORTED_NOT_USED
+  canonical_output_from_model: FORBIDDEN
+  mention_evidence_handle_from_model: FORBIDDEN
+
+prompt_sources:
+  system_preamble:
+    path: tools/story_extraction/prompts/story_extraction_draft_p3_system_v1_1.txt
+    sha256: 4d0989a6e017309b612d954f647d5f78567ab6be63ab5a843fde812880b87089
+  primary_user_template:
+    path: tools/story_extraction/prompts/story_extraction_draft_p3_user_v1_1.txt
+    sha256: 86336a230640f0ee96c41abcd6f15a160b313f3fb1bc6612cdaf0abb27b59b3e
+  repair_user_template:
+    path: tools/story_extraction/prompts/story_extraction_draft_p3_repair_user_v1_1.txt
+    sha256: 6daf67e7fb4b28755bc546123db1a24f5d33dcbe1a47326d1c9782564f9010c0
+  differences_from_p2:
+    - "header and output root name STORY_EXTRACTION_DRAFT_V1_1"
+    - "the mention field list (handle, passage_handle, quote, occurrence, role, surface_form) and that the host binds mention evidence; no evidence_handle"
+    - "the appended schemas: the V1.1 schema plus the V1 schema whose definitions it references by $ref"
+    - "repair: every V1.1 structural blocker by phase, code and path, without source text"
+    - "the DEV2 case label is dropped from the user and repair templates"
+
+materialized_prompt_hashes:
+  primary_system_sha256: db3a7b7e6cc9b4b72224c7f62546a0318f6af15da63150acf96bf59a1b7568fc
+  primary_user_template_sha256: 86336a230640f0ee96c41abcd6f15a160b313f3fb1bc6612cdaf0abb27b59b3e
+  primary_prompt_pair_sha256: 44ea57d57f49d4a318683143e482cb1c90feff495c6b70ef1355f4648a1713a7
+  repair_system_sha256: 87281bda12f98389f8745c4b0bb78e750a06d9b24c63e3d34807d5e23df7e0de
+  repair_user_template_sha256: 6daf67e7fb4b28755bc546123db1a24f5d33dcbe1a47326d1c9782564f9010c0
+  repair_prompt_pair_sha256: 11a4be66cc26a9dde4fa0525898afab921fa660443735642ff378ab341dd67ad
+  materialization: SYSTEM_PREAMBLE_PLUS_EXACT_V1_1_SCHEMA_PLUS_REFERENCED_V1_SCHEMA_PLUS_EXACT_PREDICATE_REGISTRY
+
+compiler_binding:
+  draft_version: STORY_EXTRACTION_DRAFT_V1_1
+  draft_schema_sha256: 6b5267319e2b6be42734254ad8efdb8fe6ab6843c5ba945ae4e8b524f11f78c0
+  referenced_v1_schema_sha256: 498edf8dba8d45b80380a180d1383787f5c0e4ecea5060254883cc27c7d83e80
+  compiler_entrypoint: tools.story_extraction.draft_compiler_v1_1.compile_story_extraction_draft_v1_1
+  compiler_sha256: c41730be4e661914faaf00dbf77b77f2dc46924543ee577de1e362b325e04166
+  delegated_v1_compiler_sha256: bcd15328cefafe86dd8e686fb35a155b2cb2c261b20017486ed106e85371d836
+  predicate_registry_sha256: 44f3eafc6982f84bcc74ccb91abe7cd467a453352ee96be147095f27559c5350
+  compiler_semantic_inference: false
+
+durable_execution:
+  profile_id: M4_DURABLE_RESEARCH_EXECUTION_PROFILE_V1
+  profile_sha256: c6c789f0f06d3fdabc2333c29b389252de853ffef0add536d4f06fb6b94e143e
+  runtime: GEMINI_TRANSPORT_RESILIENCE_V1_1
+  runtime_sha256: 8b84804f5c5b94e1b2ac2507d8b7bc39697b916bbdd889fc1f9040762bfc9213
+  durable_executor: DURABLE_RESEARCH_EXECUTOR_V1
+  durable_executor_sha256: cc9bd7a863ff906dea8fcd2f753c552881acd33f97a72b4af4e4e84eb1bfbe66
+  maximum_windows_per_job: 3
+  maximum_provider_attempts_per_window: 3
+  maximum_provider_attempts_per_job: 9
+  global_pacing: 6_PROVIDER_OPERATIONS_PER_ROLLING_60_SECONDS
+  concurrency: 1
+  first_success: IMMUTABLE_LOCK
+  output_aware_transport_retry: FORBIDDEN
+
+structural_repair:
+  maximum_per_case: 1
+  eligible_categories: [JSON_PARSE_FAILURE, DRAFT_SCHEMA_FAILURE, DRAFT_COMPILER_FAILURE]
+  only_after_successful_primary_response: true
+  feedback: ALL_V1_1_STRUCTURAL_BLOCKERS_AS_PHASE_CODE_PATH_WITHOUT_SOURCE_TEXT
+  semantic_reinterpretation: FORBIDDEN
+  missing_fact_or_coverage_retry: FORBIDDEN
+  quality_signal: FORBIDDEN
+  gold_signal: FORBIDDEN
+  repair_failure: TERMINAL
+
+call_budget_for_m4_04b3g:
+  credential_qualification_calls: 1
+  semantic_jobs_maximum: 20
+  primary_jobs: 10
+  repair_jobs_maximum: 10
+  transport_attempts: "bounded per job by the durable profile (3 windows x 3 attempts)"
+
+evaluation_snapshot:
+  identity: M4_EVALUATION_PROTOCOL_SNAPSHOT_V2
+  identity_sha256: 8dddbd0b9f3ea51af593c1fab0631b088b6f4e6b8c16833a1f11b8448088eee9
+  file_sha256: eef2db2ff2ba61f22a96d3a52ab64e07c6c9e9dbc9e9741e061f2893ba6283a8
+
+prediction_lock_before_gold:
+  required: true
+  raw_primary_and_repair_outputs_hashed: REQUIRED
+  compiled_or_terminal_structural_failure_hashed: REQUIRED
+  predictions_committed_and_pushed_before_gold_open: REQUIRED
+  model_or_repair_calls_after_gold_open: 0
+  protocol_change_after_lock: NEW_TASK_REQUIRED
+  scoring: "a third task (M4-04B3H) opens the gold, only after the B3G prediction lock is committed"
+
+tooling:
+  protocol_request_builder_and_preparer:
+    path: tools/story_extraction/m4_04b3f_fv1_protocol_v1.py
+  offline_protocol_tests:
+    path: tests/story_extraction/test_m4_04b3f_fv1_protocol_v1.py
+
+offline_protocol_validation:
+  semantic_consistency: PASS
+  prompt_hashes: PASS
+  case_list_and_order: PASS
+  fv1_hash_bindings: PASS
+  fv1_input_and_manifest_hash_check: PASS
+  execution_profile_binding: PASS
+  draft_compiler_binding: PASS
+  snapshot_v2_binding: PASS
+  repair_policy: PASS
+  prediction_lock_before_gold: PASS
+  holdout_prohibition: PASS
+
+limits:
+  - "A structurally valid FV1 result shows V1.1 is writable by this model. It does not show extraction accuracy; that is B3H's job, against agent-draft gold that is not human-confirmed."
+  - "The FV1 gold and this lock come from the same project session. P3 changes only what V1.1 requires and was not written against FV1 text."
+  - "No result from this set selects an extractor without the sealed holdout (M4-03), which stays closed."
+
+decision:
+  exact_P3_extractor: LOCKED
+  live_predictions_started: false
+  FV1_gold_access_authorized: false
+  holdout_access_authorized: false
+  next_allowed_action: M4_04B3G_BLIND_RUN_UNDER_THIS_LOCK
