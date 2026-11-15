@@ -169,13 +169,38 @@ python -m tools.story_pipeline.run_pipeline --chapters 1-5 --min-words 1500 --ma
 python -m tools.story_pipeline.run_pipeline --resume .local/story_pipeline_runs/<run id>
 ```
 
-Useful flags: `--stop-after brief|plan|script|critic`, `--revision-rounds N`,
-`--revise-severities CRITICAL,HIGH`, `--profile <yaml>`, `--temperature`.
+Useful flags:
+- `--stop-after brief|plan|script|critic`, `--profile <yaml>`, `--temperature`;
+- `--revision-rounds N` and `--full-revision-rounds K`: the first K rounds may rewrite the script, later rounds only patch sentences;
+- `--revise-severities CRITICAL,HIGH`;
+- `--source-check-samples N` (default 2), or `--no-source-check`;
+- `--recap` (episode mode), `--no-memory`.
 
-Each run writes to `.local/story_pipeline_runs/<run id>/` (git-ignored): `briefs/`,
-`plan.json`, `script_v*.json|md`, `critic_v*.json`, `script_final.md`, `report.md`,
-`report.json`, `review_form.md`, `calls.jsonl` (every model call with raw output and validation errors) and
-`run_manifest.json` (scope, background chapters, where each brief came from — memory or model —, profile, model, prompt/schema sha256, status). Episode runs also write `memory_recap.json`.
+A whole story, episode by episode:
+
+```
+python -m tools.story_pipeline.run_story --chapters 1-5 --episodes 1,2-3,4-5 --revision-rounds 3 --model <chain>
+python -m tools.story_pipeline.run_story --chapters 1-30 --episode-size 3 --model <chain>
+```
+
+- Running the same command again continues the season: completed episodes are skipped, an interrupted one resumes from its saved stage outputs, and a quota error pauses the season (`PAUSED_QUOTA`).
+- `.local/story_seasons/<story id>/` holds `season.json`, `season.md` (an index with links to every episode's report and review page) and one directory per episode.
+- `--keep-going` continues after a failure that is not a quota stop.
+
+A source whose paragraphs end with a single line break (common in Korean and Chinese web novels) is prepared first with `python -m tools.story_pipeline.prepare_source` (see below), then run with `--manifest <prepared manifest>`.
+
+Each run writes to `.local/story_pipeline_runs/<run id>/` (git-ignored):
+- `briefs/`, `plan.json`, `script_v*.json|md`, `critic_v*.json`, `source_check_v*.json`, `strength_audit_v*.json`, `script_final.md`;
+- `report.md` and `report.json`;
+- `review.html`: the owner's review page. Each paragraph sits next to its cited brief items and source passages, with findings marked. It ends with the review form, whose button copies a filled `review_form.md`;
+- `review_form.md`;
+- `calls.jsonl`: every model call, with raw output, validation errors and token usage;
+- `run_manifest.json`: scope, background chapters, where each brief came from, profile, model, prompt and schema sha256, tokens per stage, the glossary state and the status. Episode runs also write `memory_recap.json`.
+
+Story memory lives in `.local/story_memory/<story id>/`: `chapters/` (one brief per chapter) and `glossary.yaml`, the name glossary.
+- The glossary is synced from the roster after the briefs; new characters get their brief romanization.
+- Edit `display` (and `also_allowed`) to choose the spelling viewers hear, for example Sino-Vietnamese names for a Chinese novel, then set `confirmed: true`.
+- The pipeline never overwrites these edits. It tells the writer the display names, and flags any other spelling of the same character as a MEDIUM finding.
 
 ## Live runs
 
