@@ -1,0 +1,149 @@
+"""M7 brief verification: check every Story Brief item against the source it cites.
+
+Errors born in the brief cannot be seen by the critic, which judges the script against the
+brief (live runs: "phản ứng dữ dội" for a flat refusal; "there is no rumour that she failed"
+labelled as a rumour). This stage gives a fact checker the chapter's source and every brief
+item (ref, label, cited passages) and asks for the items with a problem, each with a corrected
+text and label. Corrections are applied to the episode's copy of the brief only when the
+corrected brief still passes every brief check; the rest are reported for the reviewer.
+Item refs follow the retrieval scheme (c3.E2, c3.CH1.F2, c3.R1).
+"""
+
+from __future__ import annotations
+
+import copy
+from typing import Any, Dict, List, Optional, Sequence, Tuple
+
+from tools.story_pipeline import stages
+from tools.story_pipeline.llm import CallLog, LLMClient, run_json_stage
+from tools.story_pipeline.profile import LANGUAGE_NAMES, NarrativeProfile
+from tools.story_pipeline.source import Chapter
+from tools.story_retrieval.brief_retrieval_v1 import render_items
+
+VERDICT_VI = {"NOT_SUPPORTED": "nguồn không có", "CONTRADICTS_SOURCE": "trái nguồn",
+              "STRONGER_THAN_SOURCE": "mạnh hơn nguồn", "WRONG_LABEL": "sai nhãn",
+              "WRONG_SPEAKER": "sai người nói"}
+
+
+def item_lines(brief: Dict[str, Any]) -> List[str]:
+    return [f"- {i.ref} [{i.kind}, {i.epistemic}{', ' + i.importance if i.importance else ''}] "
+            f"(cites {', '.join(i.evidence)}): {i.summary}" for i in render_items(brief)]
+
+
+def brief_check_errors(result: Dict[str, Any], brief: Dict[str, Any]) -> List[str]:
+    refs = {i.ref for i in render_items(brief)}
+    errors, seen = [], set()
+    for index, finding in enumerate(result["findings"]):
+        where = f"findings[{index}] {finding['ref']}"
+        if finding["ref"] not in refs:
+            errors.append(f"{where}: no such item; use the refs listed")
+        if finding["ref"] in seen:
+            errors.append(f"{where}: report each item once")
+        seen.add(finding["ref"])
+        if finding["verdict"] == "WRONG_LABEL" and not finding["corrected_label"]:
+            errors.append(f"{where}: WRONG_LABEL needs corrected_label")
+        if finding["verdict"] != "NOT_SUPPORTED" and not (finding["corrected_text"] or finding["corrected_label"]):
+            errors.append(f"{where}: give corrected_text (or corrected_label); only NOT_SUPPORTED may remove an item")
+    return errors
+
+
+def run_brief_check(client: LLMClient, chapter: Chapter, brief: Dict[str, Any], profile: NarrativeProfile,
+                    source_language: str, log: CallLog, max_repairs: int) -> Dict[str, Any]:
+    schema = stages.load_schema("brief_check_v0")
+    language = LANGUAGE_NAMES.get(source_language, source_language)
+    system = stages.render("brief_check_system", brief_language_name=profile.brief_language_name,
+                           source_language_name=language, schema=stages.dump(schema))
+    lines = item_lines(brief)
+    user = stages.render("brief_check_user", chapter_order=chapter.order, source_language_name=language,
+                         source=stages.source_check_text([chapter]), item_count=len(lines), items="\n".join(lines))
+    return run_json_stage(client, stage="brief_check", system=system, user=user, schema=schema,
+                          semantic_check=lambda r: brief_check_errors(r, brief), max_repairs=max_repairs, log=log,
+                          request_suffix=f"ch{chapter.order}")
+
+
+def _locate(brief: Dict[str, Any], ref: str) -> Optional[Tuple[Dict[str, Any], str, List[Dict[str, Any]]]]:
+    """(item dict, text field, containing list) for a ref of this brief."""
+    local = ref.split(".", 1)[1]
+    if local.startswith("E"):
+        items = brief["events"]
+        found = next((e for e in items if e["id"] == local), None)
+        return (found, "summary", items) if found else None
+    if local.startswith("R"):
+        index = int(local[1:]) - 1
+        items = brief["relationships"]
+        return (items[index], "state", items) if 0 <= index < len(items) else None
+    character_id, fact = local.split(".")
+    character = next((c for c in brief["characters"] if c["id"] == character_id), None)
+    index = int(fact[1:]) - 1
+    if character is None or not 0 <= index < len(character["facts"]):
+        return None
+    return character["facts"][index], "text", character["facts"]
+
+
+def _errors(brief: Dict[str, Any], chapter: Chapter, source_language: str, brief_language: str) -> List[str]:
+    return (stages.brief_semantic_errors(brief, chapter, source_language, brief_language)
+            + stages.brief_atomicity_errors(brief, brief_language))
+
+
+def apply_corrections(brief: Dict[str, Any], findings: Sequence[Dict[str, Any]], chapter: Chapter,
+                      source_language: str, brief_language: str
+                      ) -> Tuple[Dict[str, Any], List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """Apply each correction that keeps the brief valid; returns (brief, applied, rejected).
+
+    A correction is kept only if the corrected brief has no more brief-check errors than
+    before it. A CORE event is never removed; removals happen last, so refs stay valid."""
+    fixed = copy.deepcopy(brief)
+    applied: List[Dict[str, Any]] = []
+    rejected: List[Dict[str, Any]] = []
+    removals = []
+    baseline = len(_errors(fixed, chapter, source_language, brief_language))
+    for finding in findings:
+        located = _locate(fixed, finding["ref"])
+        if located is None:
+            rejected.append({**finding, "reason": "no such item"})
+            continue
+        item, field, container = located
+        if not finding["corrected_text"] and not finding["corrected_label"]:
+            if item.get("importance") == "CORE":
+                rejected.append({**finding, "reason": "a CORE event is never removed automatically"})
+            else:
+                removals.append((finding, item, container))
+            continue
+        before = (item[field], item["epistemic"])
+        if finding["corrected_text"]:
+            item[field] = finding["corrected_text"]
+        if finding["corrected_label"]:
+            item["epistemic"] = finding["corrected_label"]
+        now = len(_errors(fixed, chapter, source_language, brief_language))
+        if now > baseline:
+            item[field], item["epistemic"] = before
+            rejected.append({**finding, "reason": "the corrected item fails the brief checks"})
+            continue
+        baseline = now
+        applied.append({**finding, "before": before[0], "before_label": before[1]})
+    for finding, item, container in removals:
+        container.remove(item)
+        applied.append({**finding, "before": item.get("summary") or item.get("text") or item.get("state"),
+                        "before_label": item["epistemic"], "removed": True})
+    return fixed, applied, rejected
+
+
+def report_markdown(summary: Dict[str, Any]) -> str:
+    """brief_check.md: what the check found per chapter, applied or left for the reviewer."""
+    lines = ["# Kiểm chứng brief với nguồn (M7)", "",
+             "Mỗi mục brief được đối chiếu với đoạn nguồn nó trích. Bản sửa nào vẫn qua mọi kiểm tra brief "
+             "thì đã áp vào brief của lần chạy này (bộ nhớ truyện giữ nguyên); bản còn lại cần người xem.", ""]
+    for chapter, info in sorted(summary.items(), key=lambda item: int(item[0])):
+        lines.append(f"## Chương {chapter}")
+        if "failed" in info:
+            lines += ["", f"Không kiểm được: {info['failed']}", ""]
+            continue
+        lines += ["", f"{info['findings']} phát hiện; đã áp {len(info['applied'])}, cần xem {len(info['rejected'])}.", ""]
+        for item in info["applied"]:
+            action = "đã bỏ" if item.get("removed") else f"→ {item['corrected_text'] or ''} [{item['corrected_label'] or item['before_label']}]"
+            lines.append(f"- [đã áp] {item['ref']} ({VERDICT_VI[item['verdict']]}): {item['before']} {action}")
+        for item in info["rejected"]:
+            lines.append(f"- [CẦN XEM] {item['ref']} ({VERDICT_VI[item['verdict']]}): {item['explanation']} "
+                         f"— gợi ý: {item['corrected_text'] or 'bỏ mục'} ({item['reason']})")
+        lines.append("")
+    return "\n".join(lines)

@@ -994,6 +994,13 @@ M4-04B3H: score the locked FV1 predictions.
 - Score the 9 compiled batches, and FV1_03 as a structural failure, with the frozen Snapshot V2 evaluator against the sealed gold.
 - No model call, repair or re-run after the gold opens. The holdout stays closed.
 
+## M7 Story Brief — ACCEPTED (DEC-022, 2026-11-15)
+
+- **Deliverable:** the episode Story Brief is written before planning: `story_brief.json/.md/.html`, built from evidence-quoted chapter briefs, the recap and the M6 callbacks.
+- **Brief check:** each chapter brief is checked against its source; corrections that pass every brief check are applied to the run's copy, and the rest go to `brief_check.md` for review. The trial found 15 problems in 7 chapters, 14 of them real.
+- **Owner review:** `brief_review_form.md` changes are applied before planning on `--resume`.
+- **Open:** there is no sealed brief-fidelity benchmark; brief coverage is about 80% of the DEV questions; the hedge check misreads negated hearsay.
+
 ## M6 Retrieval Baseline — ACCEPTED as a baseline over the brief memory (DEC-021, 2026-11-15)
 
 - **Phase 1** (PR #5, merged 2026-11-15): cutoff-safe passage retrieval; details below.

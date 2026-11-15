@@ -57,6 +57,7 @@ Trong thư mục của lần chạy (`.local/story_pipeline_runs/<id>/` hoặc t
 
 | File | Dùng để |
 |---|---|
+| `brief_check.md` | Kết quả đối chiếu từng mục brief với nguồn: mục đã tự sửa, và mục **CẦN XEM** để bạn quyết |
 | `script_final.md` | Kịch bản cuối |
 | `script_final.txt` | Chỉ lời dẫn, không tiêu đề hay ký hiệu: đưa thẳng vào công cụ đọc giọng (TTS). Cả mùa có thêm `season_script.md` ghép mọi tập |
 | `review.html` | **Trang chấm**: mỗi đoạn kịch bản đặt cạnh brief và nguyên văn nguồn, chỗ bị báo lỗi được tô vàng |

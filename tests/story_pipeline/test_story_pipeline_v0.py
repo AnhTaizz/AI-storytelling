@@ -163,6 +163,8 @@ class FakeModel:
             units = list(dict.fromkeys(re.findall(r"<(P\d{3})>", user)))
             return json.dumps({"paragraphs": [{"unit_id": u, "findings": []} for u in units],
                                "critic_reviews": critic_reviews(user, self.flag_verdict)})
+        if stage == "brief_check":
+            return json.dumps({"findings": []})
         raise AssertionError(stage)
 
     flag_verdict = "NOT_IN_SOURCE"
@@ -719,8 +721,10 @@ class EndToEndTests(unittest.TestCase):
             self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
             stages_called = [c["stage"] for c in client.calls]
             # One source-check call per four paragraphs by default (this script has two).
-            self.assertEqual(stages_called, ["brief", "brief", "plan", "script", "critic", "source_check",
-                                             "revise", "critic", "source_check"])
+            # Each episode brief is checked against its chapter's source before planning (M7).
+            self.assertEqual(stages_called, ["brief", "brief", "brief_check", "brief_check", "plan", "script",
+                                             "critic", "source_check", "revise", "critic", "source_check"])
+            self.assertTrue((out / "brief_check.md").is_file())
             for name in ("briefs/chapter_001.json", "briefs/chapter_002.json", "plan.json", "script_v1.json",
                          "critic_v1.json", "source_check_v1.json", "script_v2.json",
                          "critic_v2.json", "source_check_v2.json", "script_final.md", "script_final.txt",

@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 64 — test functions: 1064
+Suites: 9 — test files: 66 — test functions: 1073
 
 ## canonical_story
 
@@ -1196,6 +1196,14 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `ViewTests.test_as_of_orders_and_cuts`
 
 ## story_pipeline
+
+### test_brief_check (4)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.brief_check`, `tools.story_pipeline.llm`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`
+
+- `BriefCheckTests.test_items_are_listed_with_refs_labels_and_evidence`
+- `BriefCheckTests.test_answers_are_validated`
+- `BriefCheckTests.test_corrections_apply_only_when_the_brief_stays_valid`
+- `BriefCheckTests.test_the_stage_and_its_place_in_the_pipeline`
 
 ### test_episode_brief (4)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.episode_brief`
