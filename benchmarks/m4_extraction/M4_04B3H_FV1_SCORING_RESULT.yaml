@@ -1,0 +1,293 @@
+task: M4-04B3H
+date: '2026-11-15'
+status: M4_04B3H_FV1_SCORED
+scope: SCORE_LOCKED_M4_04B3G_FV1_PREDICTIONS_ONLY
+authorization: project owner delegation, 2026-11-15 ("Những gì tôi cần tôi duyệt thì bạn làm hộ tôi luôn nhé"; "Oke
+  bạn chạy tiếp đi, làm đi nhé")
+preregistered_rules_used:
+  evaluator: M4_EVALUATION_PROTOCOL_SNAPSHOT_V2 (tools/story_extraction/evaluate_extraction_guarded_v1.py), unchanged
+  snapshot_v2_sha256: 8dddbd0b9f3ea51af593c1fab0631b088b6f4e6b8c16833a1f11b8448088eee9
+  metrics: docs/research/m4/M4_EXTRACTION_EVALUATION_PROTOCOL_V0.md section 12 (no single accuracy, no weighting)
+  case_outcome: section 13 FULL_CANONICAL_CASE_SUCCESS
+  mode: REAL_SOURCE with sealed gold_completeness COMPLETE_FOR_PROFILE for all 10 cases
+  unmatched_predictions: 'COMPLETE_FOR_PROFILE gold: the frozen evaluator records them as UNSUPPORTED_ASSERTION
+    with severity UNRATED; no human adjudication was performed'
+  structural_failure: FV1_03 scored as a failed case (L0 false), as preregistered in the M4-04B3G Next Candidate
+  acceptance_thresholds: 'NONE_PREREGISTERED: no pass/fail threshold on these metrics was locked; none is invented
+    here'
+verification_before_gold_open:
+  prediction_lock_record: benchmarks/m4_extraction/M4_04B3G_FV1_PREDICTION_LOCK.yaml
+  prediction_lock_on_main_commit: b3bf1fec9ddde74e2a550fa8a9c27c3758f36e9a
+  prediction_set_sha256: 8e055962e5df600c87b7ea352a85636ece7efd3120059ce2cf64faa8816aff32
+  every_private_artifact_matches_lock: true
+  prediction_set_recomputed: true
+  fv1_input_and_blindness_manifest_match_seal: true
+  fv1_gold_sha256: 732a3555717c6d3426e6e379e43061cd1fd6d11df8798ec859f37248202ddc73
+  fv1_gold_matches_seal: true
+  snapshot_v2_file_hashes_match: true
+gold_access:
+  chronology: PREDICTION_LOCK_ON_MAIN_THEN_FV1_GOLD_OPENED
+  fv1_gold_opened_at_utc: '2026-11-15T17:52:24+00:00'
+  provider_operations_after_gold_open: 0
+  private_access_record_sha256: 02f447a51f9e112b859a5adcdfdc86da33fd87147886cdcd39eab373566fefd7
+  private_evaluation_sha256: fbdc20cec28ce227089c1b03e9b92003444120ce93f7d323e1d43a8bea7d027e
+  private_location: .local/story_extraction/M4_04B3H_FV1_SCORING_V1/ (git-ignored; carries assertion identities)
+aggregate:
+  cases: 10
+  l0_structurally_valid: 9
+  full_canonical_case_success: 0/10
+  layers:
+    L0_structural_valid: 9
+    L1_evidence_grounding_pass: 2
+    L2_atomic_semantics_pass: 8
+    L3_referent_event_structure_pass: 1
+    L4_coverage_pass: 0
+    L5_full_case_success: 0
+  micro_assertion_precision: 0.7642
+  micro_assertion_recall_over_l0_valid_cases: 0.6351
+  unsupported_assertion_rate: 0.2358
+  unsupported_severity:
+    CRITICAL: 0
+    HIGH: 0
+    LOW: 0
+    MEDIUM: 0
+    UNRATED: 29
+  mean_per_case:
+    assertion_precision: 0.7996
+    assertion_recall: 0.6513
+    epistemic_accuracy: 1.0
+    evidence_grounding_precision: 0.843
+    evidence_grounding_recall: 0.5443
+    evidence_role_accuracy: 0.8839
+    referent_resolution_accuracy: 0.7499
+  pending_adjudications: 0
+cases:
+- case_id: FV1_01
+  terminal_status: STRUCTURAL_VALID
+  repair_used: false
+  l0_structural_validity: true
+  case_outcome: FAIL
+  metrics:
+    assertion_precision: 0.7778
+    assertion_recall: 0.7
+    epistemic_accuracy: 1.0
+    evidence_grounding_precision: 0.9286
+    evidence_grounding_recall: 0.65
+    evidence_role_accuracy: 1.0
+    referent_resolution_accuracy: 0.8571
+  failure_code_counts:
+    MISSED_REQUIRED_ASSERTION: 5
+    MISSING_ENTITY_RESOLUTION: 1
+    UNSUPPORTED_ASSERTION: 4
+    WRONG_EVIDENCE_SPAN: 1
+  required_recovered: 14
+  gold_required: 20
+  predicted: 18
+  unsupported: 4
+- case_id: FV1_02
+  terminal_status: STRUCTURAL_VALID
+  repair_used: false
+  l0_structural_validity: true
+  case_outcome: FAIL
+  metrics:
+    assertion_precision: 0.6667
+    assertion_recall: 0.6087
+    epistemic_accuracy: 1.0
+    evidence_grounding_precision: 1.0
+    evidence_grounding_recall: 0.6087
+    evidence_role_accuracy: 1.0
+    referent_resolution_accuracy: 0.75
+  failure_code_counts:
+    MISSED_REQUIRED_ASSERTION: 7
+    MISSING_ENTITY_RESOLUTION: 2
+    UNSUPPORTED_ASSERTION: 7
+  required_recovered: 14
+  gold_required: 23
+  predicted: 21
+  unsupported: 7
+- case_id: FV1_03
+  terminal_status: STRUCTURAL_FAILURE
+  repair_used: true
+  l0_structural_validity: false
+  case_outcome: FAIL
+  metrics: null
+  failure_code_counts:
+    CANONICAL_CONFORMANCE_FAILURE: 1
+  required_recovered: null
+  gold_required: null
+  predicted: null
+  unsupported: null
+- case_id: FV1_04
+  terminal_status: STRUCTURAL_VALID
+  repair_used: true
+  l0_structural_validity: true
+  case_outcome: FAIL
+  metrics:
+    assertion_precision: 1.0
+    assertion_recall: 0.5385
+    epistemic_accuracy: 1.0
+    evidence_grounding_precision: 1.0
+    evidence_grounding_recall: 0.5385
+    evidence_role_accuracy: 1.0
+    referent_resolution_accuracy: 0.5
+  failure_code_counts:
+    MISSED_REQUIRED_ASSERTION: 4
+    MISSING_ENTITY_RESOLUTION: 2
+  required_recovered: 7
+  gold_required: 13
+  predicted: 7
+  unsupported: 0
+- case_id: FV1_05
+  terminal_status: STRUCTURAL_VALID
+  repair_used: false
+  l0_structural_validity: true
+  case_outcome: FAIL
+  metrics:
+    assertion_precision: 1.0
+    assertion_recall: 0.5833
+    epistemic_accuracy: 1.0
+    evidence_grounding_precision: 0.7143
+    evidence_grounding_recall: 0.4167
+    evidence_role_accuracy: 0.8
+    referent_resolution_accuracy: 0.5
+  failure_code_counts:
+    MISSED_REQUIRED_ASSERTION: 2
+    MISSING_ENTITY_RESOLUTION: 3
+    WRONG_EVIDENCE_ROLE: 1
+    WRONG_EVIDENCE_SPAN: 2
+    WRONG_VALIDITY_BOUND: 1
+  required_recovered: 7
+  gold_required: 12
+  predicted: 7
+  unsupported: 0
+- case_id: FV1_06
+  terminal_status: STRUCTURAL_VALID
+  repair_used: false
+  l0_structural_validity: true
+  case_outcome: FAIL
+  metrics:
+    assertion_precision: 0.9
+    assertion_recall: 0.5625
+    epistemic_accuracy: 1.0
+    evidence_grounding_precision: 0.7778
+    evidence_grounding_recall: 0.4375
+    evidence_role_accuracy: 0.6667
+    referent_resolution_accuracy: 0.6667
+  failure_code_counts:
+    MISSED_REQUIRED_ASSERTION: 5
+    MISSING_ENTITY_RESOLUTION: 2
+    UNSUPPORTED_ASSERTION: 1
+    WRONG_EVIDENCE_ROLE: 2
+    WRONG_EVIDENCE_SPAN: 2
+  required_recovered: 9
+  gold_required: 16
+  predicted: 10
+  unsupported: 1
+- case_id: FV1_07
+  terminal_status: STRUCTURAL_VALID
+  repair_used: false
+  l0_structural_validity: true
+  case_outcome: FAIL
+  metrics:
+    assertion_precision: 0.6471
+    assertion_recall: 0.44
+    epistemic_accuracy: 1.0
+    evidence_grounding_precision: 0.9091
+    evidence_grounding_recall: 0.4
+    evidence_role_accuracy: 0.9167
+    referent_resolution_accuracy: 0.875
+  failure_code_counts:
+    MISSED_REQUIRED_ASSERTION: 13
+    MISSING_ENTITY_RESOLUTION: 1
+    UNSUPPORTED_ASSERTION: 6
+    WRONG_EVIDENCE_ROLE: 1
+    WRONG_EVIDENCE_SPAN: 1
+  required_recovered: 11
+  gold_required: 25
+  predicted: 17
+  unsupported: 6
+- case_id: FV1_08
+  terminal_status: STRUCTURAL_VALID
+  repair_used: false
+  l0_structural_validity: true
+  case_outcome: FAIL
+  metrics:
+    assertion_precision: 0.5833
+    assertion_recall: 0.7
+    epistemic_accuracy: 1.0
+    evidence_grounding_precision: 0.5714
+    evidence_grounding_recall: 0.4
+    evidence_role_accuracy: 0.5714
+    referent_resolution_accuracy: 0.8
+  failure_code_counts:
+    INSUFFICIENT_SUPPORT_MARKED_SUFFICIENT: 1
+    MISSED_REQUIRED_ASSERTION: 2
+    MISSING_ENTITY_RESOLUTION: 1
+    UNSUPPORTED_ASSERTION: 5
+    WRONG_EVIDENCE_ROLE: 3
+    WRONG_EVIDENCE_SPAN: 2
+  required_recovered: 7
+  gold_required: 10
+  predicted: 12
+  unsupported: 5
+- case_id: FV1_09
+  terminal_status: STRUCTURAL_VALID
+  repair_used: false
+  l0_structural_validity: true
+  case_outcome: FAIL
+  metrics:
+    assertion_precision: 0.7647
+    assertion_recall: 0.9286
+    epistemic_accuracy: 1.0
+    evidence_grounding_precision: 0.7692
+    evidence_grounding_recall: 0.7143
+    evidence_role_accuracy: 1.0
+    referent_resolution_accuracy: 1.0
+  failure_code_counts:
+    MISSED_REQUIRED_ASSERTION: 1
+    UNSUPPORTED_ASSERTION: 4
+    WRONG_EVIDENCE_SPAN: 3
+  required_recovered: 13
+  gold_required: 14
+  predicted: 17
+  unsupported: 4
+- case_id: FV1_10
+  terminal_status: STRUCTURAL_VALID
+  repair_used: false
+  l0_structural_validity: true
+  case_outcome: FAIL
+  metrics:
+    assertion_precision: 0.8571
+    assertion_recall: 0.8
+    epistemic_accuracy: 1.0
+    evidence_grounding_precision: 0.9167
+    evidence_grounding_recall: 0.7333
+    evidence_role_accuracy: 1.0
+    referent_resolution_accuracy: 0.8
+  failure_code_counts:
+    MISSED_REQUIRED_ASSERTION: 2
+    MISSING_ENTITY_RESOLUTION: 1
+    UNSUPPORTED_ASSERTION: 2
+    WRONG_EVIDENCE_SPAN: 1
+  required_recovered: 12
+  gold_required: 15
+  predicted: 14
+  unsupported: 2
+verdict:
+  structural: 9/10 cases compile (Draft V1.1 is writable by gemini-3.5-flash-lite under the locked protocol)
+  extraction_quality: 0/10 FULL_CANONICAL_CASE_SUCCESS; every L0-valid case misses required assertions (L4 coverage
+    pass 0/9); micro recall 0.6351, precision 0.7642
+  extractor_lockable: false
+  reason: coverage and grounding fall well short of full case success, and the gold is agent-drafted, not human-confirmed;
+    no threshold was preregistered that this result could pass
+boundaries:
+  model_calls: 0
+  repairs_or_reruns_after_gold_open: 0
+  protocol_change: false
+  dev2_gold_opened: false
+  holdout_accessed: false
+  m4_04c_started: false
+  m5_started: false
+tooling:
+  scorer: tools/story_extraction/score_m4_04b3h_fv1_v1.py
+  tests: tests/story_extraction/test_score_m4_04b3h_fv1_v1.py

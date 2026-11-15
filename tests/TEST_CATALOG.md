@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 67 — test functions: 1080
+Suites: 9 — test files: 68 — test functions: 1083
 
 ## canonical_story
 
@@ -1036,6 +1036,13 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_co
 - `RunTests.test_primary_repair_and_terminal_outcomes`
 - `RunTests.test_smoke_qualification_and_summary`
 - `RunTests.test_lock_mismatches_stop_before_any_call`
+
+### test_score_m4_04b3h_fv1_v1 (3)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.m4_04b3f_fv1_protocol_v1`, `tools.story_extraction.score_m4_04b3h_fv1_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `ScoringTests.test_verified_predictions_are_scored_and_the_failure_counts_as_a_failed_case`
+- `ScoringTests.test_any_mismatch_stops_before_the_gold_is_opened`
+- `ScoringTests.test_cli_prints_the_public_summary_or_refuses`
 
 ### test_story_extraction_contract_v0 (39)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.evaluate_extraction_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
