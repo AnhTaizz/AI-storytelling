@@ -665,6 +665,25 @@ The run COMPLETED in 17 calls, 234,402 tokens and 357 s. S2's episode 2 took 31 
 - The plan may cite them like recap CORE events. The audits read their own epistemic label, so a recalled rumour must stay a rumour.
 - `--no-callbacks` turns this off. If the corpus cannot be built (for example a background brief cites a passage outside its chapter), the reason is recorded as `callbacks_skipped`, and the episode runs on without callbacks.
 
+**Story Brief for review (M7).** `docs/TARGET_ARCHITECTURE.md` presents the Story Brief to the user before planning ("approve / edit / continue"). Every run now writes the episode's declared factual boundary, built deterministically by `tools/story_pipeline/episode_brief.py` once the briefs, the recap and the callbacks are final:
+
+- `story_brief.json` (`EPISODE_STORY_BRIEF/v1`) holds:
+  - the scope and spoiler cutoff;
+  - per chapter: events with importance, characters (glossary display names) with facts, relationships, unknowns, forbidden inferences and the closing hook;
+  - an `uncertain` list of every item not labelled EXPLICIT;
+  - the earlier-chapter background (recap CORE events and callbacks);
+  - counts.
+
+  Every item keeps its ref (`c3.E2`, `c3.CH1.F2`, `c3.R1`, the brief-retrieval scheme) and evidence ids.
+- `story_brief.md`, and `story_brief.html`, which puts each item beside the source passages it cites and highlights uncertain items.
+- `brief_review_form.md` has one line per item: `- [ ] sai [ ] bỏ \`ref\` ...`.
+  - `[x] bỏ` drops the item. `[x] sai` with `→ correct text` at the end of the line replaces its text.
+  - A wrong mark without a correction, or an unknown ref, is reported and not applied.
+- The intended loop is `--stop-after brief`, then review, then `--resume <run dir>`.
+  - On resume, a filled form becomes a round in `brief_review.json` and is kept as `brief_review_form_reviewed_N.md`. Each round is applied in order to this run's episode briefs, before planning.
+  - `manifest["brief_review"]` lists every change. A dropped CORE event is flagged. `after_plan` is true when a plan already existed, since a saved plan is reused on resume.
+  - Story memory and `briefs/` stay unchanged, and later resumes replay the recorded rounds.
+
 ## Known limits
 
 - Brief paraphrase quality is not measured against gold. Quotes pin the evidence, but a

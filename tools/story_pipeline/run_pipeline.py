@@ -26,7 +26,8 @@ if str(REPO) not in sys.path:
 
 from tools.story_memory import glossary_v0  # noqa: E402
 from tools.story_memory.memory_v0 import StoryMemory, build_roster, recap_context, recap_event_refs  # noqa: E402
-from tools.story_pipeline import PIPELINE_VERSION, checks, lexicon, review_page, review_summary, stages  # noqa: E402
+from tools.story_pipeline import (PIPELINE_VERSION, checks, episode_brief, lexicon, review_page,  # noqa: E402
+                                  review_summary, stages)
 from tools.story_pipeline.facts import StoryFacts  # noqa: E402
 from tools.story_pipeline.llm import CallLog, LLMClient, StageFailed  # noqa: E402
 from tools.story_pipeline.profile import DEFAULT_PROFILE_PATH, NarrativeProfile, load_profile  # noqa: E402
@@ -359,6 +360,56 @@ def callback_events(all_briefs: Sequence[Dict[str, Any]], briefs: Sequence[Dict[
     return callback_candidates(corpus, queries, per_query=2, limit=8, exclude=recap_event_refs(recap))
 
 
+# --------------------------------------------------------------------------- story brief (M7)
+
+BRIEF_REVIEW_FILE = "brief_review.json"
+BRIEF_FORM = "brief_review_form.md"
+
+
+def story_brief_step(out_dir: Path, scope: StoryScope, briefs: List[Dict[str, Any]],
+                     recap: Optional[Dict[str, Any]], memory: Optional[StoryMemory],
+                     manifest: Dict[str, Any], resume: bool) -> List[Dict[str, Any]]:
+    """Apply the owner's recorded brief edits, then write story_brief.json/.md/.html and a
+    review form. A filled form found on resume becomes a new round in brief_review.json (so
+    later resumes replay it) and is kept as brief_review_form_reviewed_N.md."""
+    record = out_dir / BRIEF_REVIEW_FILE
+    rounds = json.loads(record.read_text(encoding="utf-8"))["rounds"] if record.is_file() else []
+    form = out_dir / BRIEF_FORM
+    if resume and form.is_file():
+        edits = episode_brief.parse_brief_review(form.read_text(encoding="utf-8"))
+        if edits:
+            rounds.append({"edits": edits, "after_plan": (out_dir / "plan.json").is_file()})
+            write_json(record, {"rounds": rounds})
+            index = 1
+            while (out_dir / f"brief_review_form_reviewed_{index}.md").exists():
+                index += 1
+            form.rename(out_dir / f"brief_review_form_reviewed_{index}.md")
+    changes: List[Dict[str, Any]] = []
+    rejected: List[Dict[str, Any]] = []
+    for review in rounds:  # each round's refs name items of the brief the owner saw then
+        briefs, report = episode_brief.apply_brief_review(briefs, review["edits"])
+        changes += report["changes"]
+        rejected += report["rejected"]
+    if rounds:
+        manifest["brief_review"] = {"rounds": len(rounds), "changes": changes, "rejected": rejected,
+                                    # A plan made before the review is reused on resume.
+                                    "after_plan": any(r.get("after_plan") for r in rounds)}
+    glossary = None
+    if memory is not None:
+        try:
+            glossary = glossary_v0.load(memory.directory.parent / "glossary.yaml")
+        except ValueError:
+            glossary = None
+    episode = episode_brief.build_episode_brief(scope, briefs, recap, glossary)
+    passages = {p.passage_id: p.text for c in scope.chapters for p in c.passages}
+    write_json(out_dir / "story_brief.json", episode)
+    (out_dir / "story_brief.md").write_text(episode_brief.render_markdown(episode), encoding="utf-8")
+    (out_dir / "story_brief.html").write_text(episode_brief.render_html(episode, passages), encoding="utf-8")
+    if not form.is_file() or not episode_brief.parse_brief_review(form.read_text(encoding="utf-8")):
+        form.write_text(episode_brief.brief_review_form(episode), encoding="utf-8")
+    return briefs
+
+
 # --------------------------------------------------------------------------- orchestration
 
 
@@ -461,6 +512,9 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                     recap["callbacks"] = found
         if recap is not None:
             write_json(out_dir / "memory_recap.json", recap)
+        # M7: the episode's Story Brief, the reviewable factual boundary. The owner's edits
+        # (brief_review_form.md) apply to this run's briefs before planning, never to memory.
+        briefs = story_brief_step(out_dir, scope, briefs, recap, memory, manifest, resume)
         if stop_after == "brief":
             return finish("STOPPED_AFTER_BRIEF")
 

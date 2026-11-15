@@ -17,7 +17,7 @@ import yaml
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
 
-from tools.story_pipeline import checks, stages  # noqa: E402
+from tools.story_pipeline import checks, episode_brief, stages  # noqa: E402
 from tools.story_pipeline.facts import FactsError, StoryFacts  # noqa: E402
 from tools.story_pipeline.llm import (  # noqa: E402
     CallLog,
@@ -1005,6 +1005,42 @@ class EndToEndTests(unittest.TestCase):
             before, after = checks.split_units(checks.script_text(v2)), checks.split_units(checks.script_text(v3))
             self.assertTrue(after[0]["text"].startswith("Câu đã sửa."))
             self.assertEqual([u["text"] for u in before[1:]], [u["text"] for u in after[1:]])  # untouched
+
+    def test_story_brief_is_written_for_review_and_owner_edits_reach_the_plan(self):
+        """M7: the episode Story Brief is the reviewable boundary before planning."""
+        scope = load_scope(DEFAULT_MANIFEST, (1, 1))
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "run"
+            manifest = run(ScriptedLLMClient(FakeModel()), scope, test_profile(), out, stop_after="brief")
+            self.assertEqual(manifest["status"], "STOPPED_AFTER_BRIEF")
+            for name in ("story_brief.json", "story_brief.md", "story_brief.html", "brief_review_form.md"):
+                self.assertTrue((out / name).is_file(), name)
+            self.assertEqual(json.loads((out / "story_brief.json").read_text(encoding="utf-8"))["format"],
+                             "EPISODE_STORY_BRIEF/v1")
+            form = (out / "brief_review_form.md").read_text(encoding="utf-8")
+            filled = form.replace("- [ ] sai [ ] bỏ `c1.E2`", "- [ ] sai [x] bỏ `c1.E2`").replace(
+                "- [ ] sai [ ] bỏ `c1.R1` (quan hệ Amane – Mahiru) Hàng xóm",
+                "- [x] sai [ ] bỏ `c1.R1` (quan hệ Amane – Mahiru) Hàng xóm → Hàng xóm cạnh nhà")
+            (out / "brief_review_form.md").write_text(filled, encoding="utf-8")
+
+            model = FakeModel()
+            manifest = run(ScriptedLLMClient(model), scope, test_profile(), out, resume=True, stop_after="plan")
+            self.assertEqual(manifest["status"], "STOPPED_AFTER_PLAN", manifest.get("error"))
+            plan_prompt = model.plan_prompts[0]
+            self.assertIn("Hàng xóm cạnh nhà", plan_prompt)
+            self.assertNotIn("Amane đưa ô cho Mahiru", plan_prompt)
+            self.assertEqual([(c["ref"], c["action"]) for c in manifest["brief_review"]["changes"]],
+                             [("c1.E2", "drop"), ("c1.R1", "correct")])
+            self.assertFalse(manifest["brief_review"]["after_plan"])
+            self.assertEqual((out / "brief_review_form_reviewed_1.md").read_text(encoding="utf-8"), filled)
+            fresh = (out / "brief_review_form.md").read_text(encoding="utf-8")
+            self.assertEqual(episode_brief.parse_brief_review(fresh), [])  # a blank form for the edited brief
+            self.assertIn("Hàng xóm cạnh nhà", (out / "story_brief.md").read_text(encoding="utf-8"))
+            # The stored briefs are not changed; a later resume replays the recorded round.
+            self.assertIn("Amane đưa ô cho Mahiru", (out / "briefs" / "chapter_001.json").read_text(encoding="utf-8"))
+            again = run(ScriptedLLMClient(FakeModel()), scope, test_profile(), out, resume=True, stop_after="plan")
+            self.assertEqual(len(again["brief_review"]["changes"]), 2)
+            self.assertFalse((out / "brief_review_form_reviewed_2.md").exists())
 
     def test_owner_review_errors_are_fixed_in_a_patch_round(self):
         """The owner's quoted errors in review_form.md become one patch round (--apply-review)."""
