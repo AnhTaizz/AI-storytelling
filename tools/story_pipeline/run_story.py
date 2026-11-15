@@ -114,6 +114,37 @@ def season_markdown(season: Dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def season_html(season: Dict[str, Any]) -> str:
+    """The season index as a small self-contained page (review_page's colours and fonts)."""
+    from html import escape
+    from tools.story_pipeline.review_page import _STYLE
+
+    cards = []
+    for row in season["episodes"]:
+        start, end = row["chapters"]
+        links = (f"<a href='{escape(row['dir'])}/review.html'>Chấm (review)</a> · "
+                 f"<a href='{escape(row['dir'])}/script_final.md'>Kịch bản</a> · "
+                 f"<a href='{escape(row['dir'])}/report.md'>Báo cáo</a>") if row.get("findings_left") is not None else ""
+        gates = ", ".join(g.replace("GATE_", "") for g in row.get("gates_needing_review", [])) or "không"
+        status = escape(str(row["status"]))
+        cards.append(f"<section class='q'><b>Tập {row['episode']}</b> · chương {start}–{end} · "
+                     f"<span class='{status}'>{status}</span><br>"
+                     f"<span class='muted'>{row.get('word_count') or '—'} từ · {row.get('findings_left', '—')} lỗi "
+                     f"còn lại · gate cần xem: {escape(gates)}</span><br>{links}</section>")
+    stop = f"<p class='muted'>Dừng: {escape(season['stop_reason'])}</p>" if season.get("stop_reason") else ""
+    totals = season["totals"]
+    return ("<!doctype html><html lang='vi'><head><meta charset='utf-8'>"
+            "<meta name='viewport' content='width=device-width, initial-scale=1'>"
+            f"<title>Mùa {escape(str(season['story_id']))}</title><style>{_STYLE}"
+            ".COMPLETED{color:var(--ok);font-weight:600}.FAILED{color:var(--crit);font-weight:600}"
+            "a{color:inherit}</style></head><body><main>"
+            f"<h1>Mùa truyện — {escape(str(season['story_id']))}</h1>"
+            f"<div class='meta'>{escape(season['status'])} · chương {season['chapters'][0]}–{season['chapters'][1]} · "
+            f"{len(season['episodes'])} tập · {totals['calls']} lần gọi · {totals['tokens']:,} token</div>{stop}"
+            f"<form>{''.join(cards)}</form>"
+            "<p class='muted'>Chấm từng tập trong trang review của tập đó.</p></main></body></html>")
+
+
 def run_season(client: LLMClient, manifest_path: Path | str, ranges: Sequence[Tuple[int, int]],
                profile: NarrativeProfile, season_dir: Path, *, memory: Optional[StoryMemory],
                source_root: Optional[str] = None, facts: Optional[StoryFacts] = None,
@@ -173,6 +204,7 @@ def _write_season(season_dir: Path, story_id: Optional[str], ranges: Sequence[Tu
     (season_dir / "season.json").write_text(json.dumps(season, ensure_ascii=False, indent=1) + "\n",
                                             encoding="utf-8")
     (season_dir / "season.md").write_text(season_markdown(season), encoding="utf-8")
+    (season_dir / "season.html").write_text(season_html(season), encoding="utf-8")
     return season
 
 

@@ -79,6 +79,9 @@ class SeasonTests(unittest.TestCase):
         self.assertEqual(season["totals"]["tokens"], 300)
         index = (self.season_dir / "season.md").read_text(encoding="utf-8")
         self.assertIn("[review](ep02_ch2-3/review.html)", index)
+        page = (self.season_dir / "season.html").read_text(encoding="utf-8")
+        self.assertIn("href='ep02_ch2-3/review.html'", page)
+        self.assertIn("FACTUAL_GROUNDING", page)
         self.assertEqual(json.loads((self.season_dir / "season.json").read_text(encoding="utf-8")), season)
 
     def test_rerun_skips_completed_episodes_and_resumes_the_rest(self):
@@ -108,6 +111,7 @@ class SeasonTests(unittest.TestCase):
                 if status != "COMPLETED_WITH_FAILURES":
                     self.assertEqual(season["episodes"][2]["status"], "NOT_RUN")
                     self.assertIn("tập 2", season["stop_reason"])
+                    self.assertIn("Dừng: tập 2", (season_dir / "season.html").read_text(encoding="utf-8"))
 
     def test_season_with_the_real_pipeline_and_shared_memory(self):
         client = ScriptedLLMClient(FakeModel())
