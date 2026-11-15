@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 61 — test functions: 1046
+Suites: 9 — test files: 62 — test functions: 1054
 
 ## canonical_story
 
@@ -1278,6 +1278,18 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `GeminiClientTests.test_model_fallback_chain`
 
 ## story_retrieval
+
+### test_brief_retrieval_v1 (8)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.source`, `tools.story_retrieval.brief_retrieval_v1`, `tools.story_retrieval.evaluate_brief_v1`
+
+- `BriefCorpusTests.test_items_have_snapshot_bound_refs_and_their_own_words`
+- `BriefCorpusTests.test_later_chapters_never_enter_and_bad_evidence_rejects_the_corpus`
+- `RetrievalTests.test_hits_carry_their_complete_evidence_and_respect_the_cutoff`
+- `RetrievalTests.test_bad_requests_are_rejected`
+- `RetrievalTests.test_an_unsafe_retriever_cannot_leak_later_content`
+- `RetrievalTests.test_delivery_dossier_and_callbacks`
+- `RetrievalTests.test_tokenizers_follow_the_brief_language`
+- `EvaluationTests.test_pinned_briefs_beat_passage_bm25_on_vietnamese_probes_without_leaks`
 
 ### test_cjk_lexical_v1 (2)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_retrieval.cjk_lexical_v1`

@@ -1,0 +1,314 @@
+{
+ "chapter_order": 1,
+ "source_version": "917ec0448e01dbb3eff0564280f2abd13d42db507cbf34e9bb716af0f538fe45",
+ "producer": "gemini:gemini-3.6-flash,gemini-3.5-flash,gemini-3-flash-preview,gemini-3.5-flash-lite",
+ "brief": {
+  "chapter_order": 1,
+  "chapter_summary": "Fujimiya Amane tình cờ bắt gặp cô bạn cùng trường nổi tiếng Shiina Mahiru đang ngồi một mình dưới mưa tại một công viên gần căn hộ của họ. Dù ban đầu định lờ đi và không muốn dính dáng đến cô, Amane cảm thấy mủi lòng khi thấy Mahiru có vẻ mặt đau khổ như sắp khóc. Anh đã lên tiếng hỏi thăm và đưa chiếc ô của mình cho cô, bất chấp thái độ từ chối khéo léo nhưng xa cách của Mahiru, rồi nhanh chóng rời đi với suy nghĩ rằng họ sẽ không còn liên quan gì đến nhau nữa.",
+  "characters": [
+   {
+    "id": "CH1",
+    "name": "藤宮周",
+    "romanized_name": "Fujimiya Amane",
+    "aliases": [],
+    "facts": [
+     {
+      "text": "Là học sinh năm nhất cao trung và mới bắt đầu sống một mình trong một căn hộ.",
+      "evidence": [
+       "1.3"
+      ],
+      "quote": "今年高校一年生となり一人暮らしを始めた",
+      "epistemic": "EXPLICIT"
+     },
+     {
+      "text": "Sống ở căn hộ ngay bên cạnh căn hộ của Shiina Mahiru.",
+      "evidence": [
+       "1.3"
+      ],
+      "quote": "マンションの右隣には、天使が住んでいる",
+      "epistemic": "EXPLICIT"
+     },
+     {
+      "text": "Coi Mahiru là một đối tượng đẹp đẽ để ngắm nhìn chứ không có ý định theo đuổi tình cảm.",
+      "evidence": [
+       "1.11",
+       "1.15"
+      ],
+      "quote": "眺めるのが一番いい鑑賞用の美少女といった認識だ",
+      "epistemic": "EXPLICIT"
+     },
+     {
+      "text": "Cảm thấy lương tâm cắn rứt khi bỏ mặc một người đang có vẻ mặt như sắp khóc.",
+      "evidence": [
+       "1.26",
+       "1.28"
+      ],
+      "quote": "ああいった顔をした人間を放っておくのは、なんとなく良心が痛んだ",
+      "epistemic": "EXPLICIT"
+     }
+    ]
+   },
+   {
+    "id": "CH2",
+    "name": "椎名真昼",
+    "romanized_name": "Shiina Mahiru",
+    "aliases": [
+     "天使様"
+    ],
+    "facts": [
+     {
+      "text": "Được ví như \"Thiên sứ\" (dù đây là hình ảnh so sánh) vì vẻ ngoài vô cùng xinh đẹp và đáng yêu.",
+      "evidence": [
+       "1.3",
+       "1.4"
+      ],
+      "quote": "天使というのは勿論比喩であるが",
+      "epistemic": "REPORTED"
+     },
+     {
+      "text": "Có mái tóc thẳng màu lanh bóng mượt và làn da trắng mịn như sữa.",
+      "evidence": [
+       "1.5"
+      ],
+      "quote": "亜麻色のストレートヘアーはいつもさらさらとして",
+      "epistemic": "EXPLICIT"
+     },
+     {
+      "text": "Nghe nói luôn đứng đầu trong các kỳ kiểm tra định kỳ ở trường.",
+      "evidence": [
+       "1.7"
+      ],
+      "quote": "定期考査でも常に一位を取っているし",
+      "epistemic": "REPORTED"
+     },
+     {
+      "text": "Nghe nói hoạt động xuất sắc như một át chủ bài trong các giờ học thể dục.",
+      "evidence": [
+       "1.7"
+      ],
+      "quote": "体育の授業でもエース並の活躍をしているそうだ",
+      "epistemic": "REPORTED"
+     },
+     {
+      "text": "Được cho là có tính cách khiêm tốn và điềm đạm dù rất nổi tiếng.",
+      "evidence": [
+       "1.9"
+      ],
+      "quote": "驕らず謙虚で大人しい性格だとくれば",
+      "epistemic": "REPORTED"
+     },
+     {
+      "text": "Nghe nói cô thường xuyên nhận được lời tỏ tình và tiếp cận từ các nam sinh trong trường.",
+      "evidence": [
+       "1.39"
+      ],
+      "quote": "校内の男子生徒から告白やアプローチを受けているらしく",
+      "epistemic": "REPORTED"
+     }
+    ]
+   }
+  ],
+  "relationships": [
+   {
+    "between": [
+     "CH1",
+     "CH2"
+    ],
+    "state": "Hàng xóm sống cạnh phòng nhau nhưng chưa từng nói chuyện cho đến sự kiện ở công viên.",
+    "evidence": [
+     "1.2",
+     "1.3",
+     "1.13"
+    ],
+    "quote": "椎名真昼と初めて話したのは",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "between": [
+     "CH1",
+     "CH2"
+    ],
+    "state": "Có vẻ Mahiru tỏ ra cảnh giác mờ nhạt đối với Amane khi anh đột nhiên bắt chuyện.",
+    "evidence": [
+     "1.35"
+    ],
+    "quote": "暗褐色の瞳にうっすらと警戒が滲んだ",
+    "epistemic": "APPEARANCE"
+   }
+  ],
+  "events": [
+   {
+    "id": "E1",
+    "summary": "Amane nhìn thấy Mahiru đang ngồi một mình trên xích đu dưới trời mưa tầm tã tại công viên.",
+    "participants": [
+     "CH1",
+     "CH2"
+    ],
+    "location": "Công viên giữa trường học và khu chung cư",
+    "importance": "CORE",
+    "motivation": {
+     "text": "Amane đang trên đường đi học về.",
+     "status": "EXPLICIT"
+    },
+    "consequence": "Amane nhận ra Mahiru và thắc mắc tại sao cô lại ở đó một mình mà không che ô.",
+    "evidence": [
+     "1.2",
+     "1.18",
+     "1.20",
+     "1.21"
+    ],
+    "quote": "公園でブランコに座っていた彼女を見かけた時だった",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "id": "E2",
+    "summary": "Amane cất tiếng hỏi Mahiru xem cô đang làm gì ở đó.",
+    "participants": [
+     "CH1",
+     "CH2"
+    ],
+    "location": "Công viên",
+    "importance": "CORE",
+    "motivation": {
+     "text": "Lương tâm cắn rứt khi nhìn thấy khuôn mặt như sắp khóc của Mahiru.",
+     "status": "EXPLICIT"
+    },
+    "consequence": "Mahiru quay lại nhìn Amane với sự cảnh giác mờ nhạt.",
+    "evidence": [
+     "1.26",
+     "1.28",
+     "1.29",
+     "1.30",
+     "1.35"
+    ],
+    "quote": "「……なにやってるんだ」",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "id": "E3",
+    "summary": "Mahiru nhận ra họ của Amane và hỏi anh có việc gì với cô không.",
+    "participants": [
+     "CH1",
+     "CH2"
+    ],
+    "location": "Công viên",
+    "importance": "SUPPORTING",
+    "motivation": {
+     "text": "Đáp lại lời bắt chuyện đột ngột của Amane.",
+     "status": "SUPPORTED_INFERENCE"
+    },
+    "consequence": "Amane cảm thấy bất ngờ vì cô nhớ họ của mình nhưng nhận ra cô sẽ không dễ dàng hạ sự phòng bị.",
+    "evidence": [
+     "1.36",
+     "1.37"
+    ],
+    "quote": "「藤宮さん。私に何かご用で？」",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "id": "E4",
+    "summary": "Amane giải thích rằng anh không có việc gì đặc biệt, chỉ là thấy tò mò khi cô ở một mình dưới mưa.",
+    "participants": [
+     "CH1",
+     "CH2"
+    ],
+    "location": "Công viên",
+    "importance": "MINOR",
+    "motivation": {
+     "text": "Giải thích lý do mình cất lời.",
+     "status": "EXPLICIT"
+    },
+    "consequence": "Mahiru phản hồi lại lý do của cô.",
+    "evidence": [
+     "1.40"
+    ],
+    "quote": "「別に、用はない。ただこの雨の中一人でこんなところに居たら気になるだろう」",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "id": "E5",
+    "summary": "Mahiru từ chối sự quan tâm, nói rằng cô ở lại vì bản thân muốn thế và bảo Amane đừng bận tâm.",
+    "participants": [
+     "CH1",
+     "CH2"
+    ],
+    "location": "Công viên",
+    "importance": "SUPPORTING",
+    "motivation": {
+     "text": "Muốn ở một mình và từ chối sự can thiệp của người khác.",
+     "status": "SUPPORTED_INFERENCE"
+    },
+    "consequence": "Amane quyết định không gặng hỏi thêm hay can thiệp sâu vào chuyện của cô.",
+    "evidence": [
+     "1.41",
+     "1.44"
+    ],
+    "quote": "「そうですか。お気遣いはありがたいですが、私はここに居たいから居るので。私の事はお気になさらず」",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "id": "E6",
+    "summary": "Amane đưa chiếc ô của mình cho Mahiru và bảo cô cầm lấy che về kẻo bị cảm lạnh.",
+    "participants": [
+     "CH1",
+     "CH2"
+    ],
+    "location": "Công viên",
+    "importance": "CORE",
+    "motivation": {
+     "text": "Không muốn thấy cô bị cảm và để làm nhẹ bớt cảm giác áy náy của bản thân.",
+     "status": "EXPLICIT"
+    },
+    "consequence": "Amane ép Mahiru nhận lấy chiếc ô rồi ngay lập tức quay lưng đi.",
+    "evidence": [
+     "1.52",
+     "1.54",
+     "1.55",
+     "1.58"
+    ],
+    "quote": "「風邪引くし、さして帰れよ。返さなくていいから」",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "id": "E7",
+    "summary": "Amane rảo bước rời đi, nghe thấy giọng nói nhỏ xíu của Mahiru từ phía sau nhưng bị tiếng mưa lấn át.",
+    "participants": [
+     "CH1",
+     "CH2"
+    ],
+    "location": "Công viên",
+    "importance": "SUPPORTING",
+    "motivation": {
+     "text": "Nhanh chóng rút lui để tránh làm đối phương khó chịu.",
+     "status": "EXPLICIT"
+    },
+    "consequence": "Amane trở về nhà và tin rằng mối quan hệ giữa hai người dừng lại ở đây.",
+    "evidence": [
+     "1.55",
+     "1.56",
+     "1.57",
+     "1.60"
+    ],
+    "quote": "彼女の唇が動く前に背を向けた",
+    "epistemic": "EXPLICIT"
+   }
+  ],
+  "unknowns": [
+   "Lý do cụ thể khiến Mahiru ngồi dưới mưa với vẻ mặt sắp khóc.",
+   "Nội dung lời Mahiru thốt lên nho nhỏ đằng sau lưng Amane."
+  ],
+  "forbidden_inferences": [
+   "Amane có tình cảm lãng mạn với Mahiru ngay từ đầu.",
+   "Mahiru đang gặp rắc rối gia đình hoặc chuyện tình cảm.",
+   "Amane và Mahiru sẽ lập tức trở nên thân thiết ngay sau sự kiện này."
+  ],
+  "ending_state": "Amane đã về nhà sau khi đưa ô cho Mahiru, tin rằng đây là lần tiếp xúc duy nhất và mối quan hệ giữa họ sẽ không phát triển thêm.",
+  "closing_hook": {
+   "text": "Người kể chuyện ám chỉ rằng suy nghĩ của Amane về việc không còn dính dáng đến Mahiru nữa chỉ đúng vào ngay thời điểm đó.",
+   "quote": "その時は。",
+   "evidence": [
+    "1.61"
+   ]
+  }
+ }
+}
