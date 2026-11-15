@@ -1181,6 +1181,17 @@ class EndToEndTests(unittest.TestCase):
             reused = run(again, scope, test_profile(), Path(tmp) / "run2", memory=memory)
             self.assertEqual(reused["brief_sources"], {"1": "memory"})
 
+    def test_chinese_names_use_sino_vietnamese_readings_without_touching_other_languages(self):
+        """DEC-020: the profile's name reading reaches Chinese briefs only."""
+        profile = load_profile()
+        for language in ("ja", "ko"):
+            with self.subTest(language):
+                self.assertEqual(stages.brief_fingerprint(profile, language), stages.brief_fingerprint(profile))
+                self.assertNotIn("Sino-Vietnamese", stages.brief_system_prompt(profile, language, "1.12", {}))
+        self.assertNotEqual(stages.brief_fingerprint(profile, "zh"), stages.brief_fingerprint(profile))
+        self.assertIn("林婉儿 → Lâm Uyển Nhi", stages.brief_system_prompt(profile, "zh", "1.12", {}))
+        self.assertIn("Hán-Việt", profile.name_policy)
+
     def test_cli_episode_mode(self):
         clients = []
 

@@ -37,14 +37,28 @@ def render(name: str, **values: Any) -> str:
     return Template(load_prompt(name)).substitute(**values)
 
 
-def brief_fingerprint(profile: NarrativeProfile) -> str:
-    """Identity of everything that shapes a chapter brief except the model and the source."""
+def brief_fingerprint(profile: NarrativeProfile, source_language: str = "") -> str:
+    """Identity of everything that shapes a chapter brief except the model and the source.
+    A name-reading rule counts only for the language it applies to, so adding one for
+    Chinese does not invalidate stored Japanese briefs."""
     digest = hashlib.sha256()
     for path in (PROMPT_DIR / "brief_system.md", PROMPT_DIR / "brief_user.md",
                  SCHEMA_DIR / "story_brief_v0.schema.json"):
         digest.update(path.read_bytes())
     digest.update(profile.brief_language.encode("utf-8"))
+    reading = profile.name_reading(source_language)
+    if reading:
+        digest.update(b"\0name reading\0" + reading.encode("utf-8"))
     return digest.hexdigest()
+
+
+def brief_system_prompt(profile: NarrativeProfile, source_language: str, example_id: str, schema: Any) -> str:
+    system = render("brief_system", source_language_name=LANGUAGE_NAMES.get(source_language, source_language),
+                    example_id=example_id, brief_language_name=profile.brief_language_name, schema=dump(schema))
+    reading = profile.name_reading(source_language)
+    if reading:
+        system += f"\n\nName reading for this story: `romanized_name` and Latin aliases use {reading}\n"
+    return system
 
 
 def prompt_fingerprints() -> Dict[str, str]:
@@ -365,11 +379,7 @@ def run_brief(client: LLMClient, scope: StoryScope, chapter: Chapter, profile: N
             facts_block = ("\nUpstream extraction hints for this chapter (may be incomplete or "
                            "wrong: keep only what the source passages confirm, and cite them):\n"
                            f"{rendered}\n")
-    system = render("brief_system",
-                    source_language_name=LANGUAGE_NAMES.get(scope.source_language, scope.source_language),
-                    example_id=f"{chapter.order}.12",
-                    brief_language_name=profile.brief_language_name,
-                    schema=dump(schema))
+    system = brief_system_prompt(profile, scope.source_language, f"{chapter.order}.12", schema)
     user = render("brief_user", story_id=scope.story_id, chapter_order=chapter.order,
                   chapter_title=chapter.title, known_characters=known_characters_text(earlier_briefs),
                   facts_block=facts_block, chapter_text=chapter.render())

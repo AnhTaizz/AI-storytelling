@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 8 — test files: 58 — test functions: 1021
+Suites: 8 — test files: 58 — test functions: 1022
 
 ## canonical_story
 
@@ -1226,7 +1226,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `SeasonTests.test_season_with_the_real_pipeline_and_shared_memory`
 - `CliTests.test_bad_episode_plan_is_rejected_before_any_call`
 
-### test_story_pipeline_v0 (46)
+### test_story_pipeline_v0 (47)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
 
 - `test_profile`
@@ -1269,6 +1269,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `EndToEndTests.test_patch_edits_are_validated_and_applied_in_place`
 - `EndToEndTests.test_episode_with_memory_recap`
 - `EndToEndTests.test_memory_brief_failing_current_checks_is_regenerated`
+- `EndToEndTests.test_chinese_names_use_sino_vietnamese_readings_without_touching_other_languages` — DEC-020: the profile's name reading reaches Chinese briefs only.
 - `EndToEndTests.test_cli_episode_mode`
 - `EndToEndTests.test_plan_may_call_back_to_recap_but_must_cover_episode`
 - `EndToEndTests.test_stage_failure_is_recorded`

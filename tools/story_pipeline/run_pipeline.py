@@ -403,7 +403,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         return manifest
 
     try:
-        fingerprint = stages.brief_fingerprint(profile)
+        fingerprint = stages.brief_fingerprint(profile, scope.source_language)
         all_briefs: List[Dict[str, Any]] = []
         for chapter in sorted([*background, *scope.chapters], key=lambda c: c.order):
             progress(f"brief: chapter {chapter.order}")
