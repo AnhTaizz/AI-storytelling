@@ -7,7 +7,8 @@ glossary is the one place that decides. It lives next to the story memory
 (`<memory root>/<story id>/glossary.yaml`) and is built from the roster. New characters are
 added with their brief romanization; the owner can then edit `display` and `also_allowed`,
 and those edits are never overwritten. The pipeline tells the writer to use the display
-names and flags any other known spelling of the same character.
+names (and the `pronoun`, when set, so episodes do not drift between "cậu" and "anh") and
+flags any other known spelling of the same character.
 """
 
 from __future__ import annotations
@@ -71,6 +72,7 @@ def sync(path: Path, roster: Dict[str, Any]) -> Dict[str, Any]:
                                  and _key(n) != _key(character["romanized_name"])],
                 "source_names": [n for n in names if n and not _latin(n)],
                 "first_chapter": character.get("first_chapter"),
+                "pronoun": None,
                 "confirmed": False,
             })
             changed = True
@@ -82,8 +84,9 @@ def sync(path: Path, roster: Dict[str, Any]) -> Dict[str, Any]:
     if changed:
         path.parent.mkdir(parents=True, exist_ok=True)
         header = ("# Character names for the script. Edit `display` (and `also_allowed`) to choose the\n"
-                  "# spelling viewers hear, for example Sino-Vietnamese names for a Chinese novel; then set\n"
-                  "# confirmed: true. The pipeline adds new characters but never overwrites your edits.\n")
+                  "# spelling viewers hear, for example Sino-Vietnamese names for a Chinese novel; set\n"
+                  "# `pronoun` (cậu, cô, anh...) so every episode refers to the character the same way; then\n"
+                  "# set confirmed: true. The pipeline adds new characters but never overwrites your edits.\n")
         path.write_text(header + yaml.safe_dump(glossary, allow_unicode=True, sort_keys=False), encoding="utf-8")
     return glossary
 
@@ -96,7 +99,8 @@ def rules(glossary: Dict[str, Any]) -> str:
     for entry in glossary["characters"]:
         source = ", ".join(entry["source_names"]) or "?"
         also = f" (also acceptable: {', '.join(entry['also_allowed'])})" if entry.get("also_allowed") else ""
-        lines.append(f"- {source} → {entry['display']}{also}")
+        pronoun = f"; always refer to them as \"{entry['pronoun']}\"" if entry.get("pronoun") else ""
+        lines.append(f"- {source} → {entry['display']}{also}{pronoun}")
     return "\n".join(lines)
 
 
