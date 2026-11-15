@@ -5,6 +5,12 @@ language: vi
 word_boundaries: true
 chars_per_event: 1500
 clause_markers: [và, nhưng, sau khi, trước khi, khi, nếu, vì, rồi, mà, để]
+# Reported speech: a verb of saying, then (within one clause) the complementizer that
+# introduces what was said. "Amane giải thích rằng ..." (attribution audit, live run 10).
+speech_verbs: [nói, bảo, giải thích, đáp, trả lời, hỏi, kể, thốt lên, lên tiếng, phân trần, khẳng định,
+               thừa nhận, nhắc, dặn, tuyên bố, cất lời, cất tiếng, trấn an, xin lỗi, than, yêu cầu, hứa,
+               thú nhận, phàn nàn, trêu]
+speech_complementizers: [rằng]
 # A hedge does not reach across a contrast. Openers start such a part.
 contrast_openers: [nhưng, tuy nhiên, song]
 strength:

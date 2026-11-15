@@ -315,6 +315,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                                                   recap))
         (out_dir / "script_v1.md").write_text(script_markdown(script, "v1"), encoding="utf-8")
         critic: Optional[Dict[str, Any]] = None
+        passages = {p.passage_id: p.text for c in [*background, *scope.chapters] for p in c.passages}
         version = 1
         if stop_after != "script":
             while True:
@@ -327,6 +328,8 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                                               profile.brief_language)
                 audit += stages.hedge_audit(critic, briefs, recap, units, profile.target_language,
                                             profile.brief_language)
+                audit += stages.attribution_audit(critic, briefs, units, passages, profile.target_language,
+                                                  profile.brief_language)
                 write_json(out_dir / f"strength_audit_v{version}.json", audit)
                 problems = stages.findings_for_revision(critic, SEVERITY_ORDER) + audit
                 check = checks.check_script(script, profile.min_words, profile.max_words,
@@ -356,7 +359,9 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         final_audit = (stages.strength_audit(critic, briefs, recap, final_units, profile.target_language,
                                              profile.brief_language)
                        + stages.hedge_audit(critic, briefs, recap, final_units, profile.target_language,
-                                            profile.brief_language) if critic is not None else [])
+                                            profile.brief_language)
+                       + stages.attribution_audit(critic, briefs, final_units, passages, profile.target_language,
+                                                  profile.brief_language) if critic is not None else [])
         report = gate_report(critic, final_check, briefs, final_audit)
         report["source_hedge_review"] = [
             item for chapter, brief in zip(sorted([*background, *scope.chapters], key=lambda c: c.order), all_briefs)

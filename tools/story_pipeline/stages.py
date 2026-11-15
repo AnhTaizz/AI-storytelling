@@ -8,7 +8,7 @@ import json
 import re
 from pathlib import Path
 from string import Template
-from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple
+from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 
 from tools.story_memory.memory_v0 import recap_event_refs
 from tools.story_pipeline import checks, lexicon
@@ -682,6 +682,81 @@ def hedge_audit(critic: Dict[str, Any], briefs: Sequence[Dict[str, Any]],
     return findings
 
 
+ATTRIBUTION_MATCH = HEDGE_MATCH  # same threshold as the hedge audit
+
+
+def _statement_sources(briefs: Sequence[Dict[str, Any]]) -> Dict[str, List[Tuple[str, str, List[str]]]]:
+    """Ref -> (statement, quote, evidence) for every fact and event. Recap events carry no
+    quote, so they are left out and never count as narration-only."""
+    items: Dict[str, List[Tuple[str, str, List[str]]]] = {}
+    for brief in briefs:
+        n = brief["chapter_order"]
+        for character in brief["characters"]:
+            items[f"c{n}.{character['id']}"] = [(f["text"], f["quote"], f["evidence"]) for f in character["facts"]]
+        for event in brief["events"]:
+            text = " ".join([event["summary"], event.get("consequence") or ""])
+            items[f"c{n}.{event['id']}"] = [(text, event["quote"], event["evidence"])]
+    return items
+
+
+def attribution_audit(critic: Dict[str, Any], briefs: Sequence[Dict[str, Any]],
+                      units: Optional[Sequence[Dict[str, str]]], passages: Mapping[str, str],
+                      script_language: str = "vi", brief_language: Optional[str] = None) -> List[Dict[str, Any]]:
+    """Nobody may be made to say what the chapter only has them think, or what only the narrator says.
+
+    Live run 10 had Amane explain to Mahiru ("giải thích rằng ...") that her look was like a
+    lost child's. In the source (4.18) that is his thought, and the brief recorded it as such.
+    For every paragraph, a clause that is the content of reported speech ("X giải thích rằng
+    |...") is compared with the clauses of the brief statements its claims cite. If it retells
+    (similarity >= ATTRIBUTION_MATCH) a statement that involves no speech at all (no verb of
+    saying in its text and no dialogue in its quote or in any cited passage) better than any
+    statement that does, the sentence becomes a MEDIUM finding for revision.
+
+    On the saved scripts of live runs 2-10 (25 versions) this flags only the run-10 sentence.
+    Needs the script and the brief in one language, with speech verbs in its lexicon.
+    """
+    brief_language = brief_language or script_language
+    lex = lexicon.load(script_language)
+    if (lex is None or units is None or not lex.speech_verbs
+            or lexicon.lexicon_code(script_language) != lexicon.lexicon_code(brief_language)):
+        return []
+    sources = _statement_sources(briefs)
+    unit_text = {u["unit_id"]: u["text"] for u in units}
+    findings = []
+    for unit in critic["units"]:
+        refs = sorted({ref for claim in unit["claims"] for ref in claim["brief_refs"]})
+        candidates = []
+        for ref in refs:
+            for text, quote, evidence in sources.get(ref, []):
+                speech = (bool(_DIALOGUE.search(quote)) or lex.mentions_speech(text)
+                          or any(_DIALOGUE.search(passages.get(e, "")) for e in evidence))
+                candidates += [(ref, clause, speech) for clause in lex.clauses(text) if len(_squash(clause)) >= 8]
+        if not candidates:
+            continue
+        for match in _SENTENCE.finditer(unit_text.get(unit["unit_id"], "")):
+            sentence = match.group(0).strip()
+            start = lex.reported_speech_start(sentence)
+            if start is None:
+                continue
+            reported = sentence[start:]
+            best = max(((similarity(clause, c), ref, c, speech) for clause in lex.clauses(reported)
+                        for ref, c, speech in candidates), default=None)
+            if best is None or best[0] < ATTRIBUTION_MATCH or best[3]:
+                continue
+            _, ref, clause, _ = best
+            findings.append({
+                "unit_id": unit["unit_id"], "claim": sentence,
+                "claim_type": "UNSUPPORTED_STORY_CLAIM", "failure_category": "SOURCE_GROUNDING_FAILURE",
+                "severity": "MEDIUM", "brief_refs": [ref], "source": "attribution_audit",
+                "concepts": [], "phrases": [],
+                "explanation": f"Câu kịch bản cho nhân vật nói ra điều mà brief ({ref}) ghi là suy nghĩ hoặc lời "
+                               f"người kể, không phải lời thoại: \"{clause[:120]}\".",
+                "suggested_fix": "Kể lại như suy nghĩ hoặc lời người kể (\"cậu nghĩ\", \"thật ra\"), "
+                                 "không dùng \"nói/giải thích rằng\".",
+            })
+    return findings
+
+
 def source_hedge_review(brief: Dict[str, Any], chapter: Chapter, source_language: str,
                         brief_language: str) -> List[Dict[str, Any]]:
     """Advisory list for a person: brief items with no hedge although a cited passage hedges.
@@ -717,6 +792,9 @@ def audit_coverage(script_language: str, brief_language: str, source_language: s
         "brief_hedge_check": not ({brief_language, source_language} & set(missing)),
         "script_hedge_audit": (not ({script_language, brief_language} & set(missing))
                                and lexicon.lexicon_code(script_language) == lexicon.lexicon_code(brief_language)),
+        "attribution_audit": (not ({script_language, brief_language} & set(missing))
+                              and lexicon.lexicon_code(script_language) == lexicon.lexicon_code(brief_language)
+                              and bool(lexicon.load(script_language).speech_verbs)),
         "missing_lexicons": missing,
         "available_lexicons": lexicon.available_languages(),
     }

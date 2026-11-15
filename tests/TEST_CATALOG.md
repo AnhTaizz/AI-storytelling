@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 8 — test files: 54 — test functions: 990
+Suites: 8 — test files: 54 — test functions: 992
 
 ## canonical_story
 
@@ -1170,7 +1170,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 
 ## story_pipeline
 
-### test_lexicon (6)
+### test_lexicon (7)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.lexicon`
 
 - `LexiconFileTests.test_every_lexicon_file_is_complete_and_loads`
@@ -1179,6 +1179,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `MatchingTests.test_concepts_found_per_language`
 - `ClauseTests.test_clauses_split_on_punctuation_and_conjunctions`
 - `ClauseTests.test_contrast_parts_split_only_at_a_contrast`
+- `ReportedSpeechTests.test_reported_speech_content_starts_after_the_complementizer`
 
 ### test_prepare_source (5)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.prepare_source`, `tools.story_pipeline.source`
@@ -1189,7 +1190,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `PrepareTests.test_invalid_input_is_rejected`
 - `PrepareTests.test_cli_reports_each_chapter`
 
-### test_story_pipeline_v0 (36)
+### test_story_pipeline_v0 (37)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
 
 - `test_profile`
@@ -1213,6 +1214,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `SemanticValidationTests.test_closing_hook_is_quoted_and_landed_by_the_plan`
 - `SemanticValidationTests.test_brief_keeps_source_hedging_in_any_language_pair` — Labels and text of a brief item must keep the hedging of what it quotes.
 - `SemanticValidationTests.test_script_must_keep_the_hedges_of_the_brief_clause_it_retells`
+- `SemanticValidationTests.test_thought_or_narration_must_not_become_speech` — Live run 10: Amane's thought (4.18) was told as something he explains to Mahiru.
 - `SemanticValidationTests.test_brief_facts_should_be_atomic`
 - `SemanticValidationTests.test_source_hedge_review_lists_items_for_a_person`
 - `SemanticValidationTests.test_critic_must_extract_claims_at_paragraph_density`

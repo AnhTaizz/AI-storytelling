@@ -450,6 +450,49 @@ class SemanticValidationTests(unittest.TestCase):
         self.assertEqual(stages.hedge_audit(critic, [brief], None, None), [])
         self.assertFalse(stages.audit_coverage("vi", "en", "ja")["script_hedge_audit"])
 
+    def test_thought_or_narration_must_not_become_speech(self):
+        """Live run 10: Amane's thought (4.18) was told as something he explains to Mahiru."""
+        brief = brief_json(1)
+        brief["characters"][0]["facts"] = [
+            {"text": "Đã đưa ô vì bận tâm đến ánh mắt như đứa trẻ bị lạc của cô", "evidence": ["1.18"],
+             "quote": "x", "epistemic": "FIGURATIVE"},
+            {"text": "Nói dối rằng đã đưa ô cho một đứa trẻ bị lạc", "evidence": ["1.18"], "quote": "x",
+             "epistemic": "EXPLICIT"},
+            {"text": "Cho rằng sẽ không còn gặp lại Mahiru nữa", "evidence": ["1.30"], "quote": "x",
+             "epistemic": "EXPLICIT"},
+        ]
+        passages = {"1.18": "彼女が気になったからこそ傘を押し付けたのだ。", "1.30": "「もう会わないだろ」と周は言った。"}
+
+        def run_case(paragraph, refs):
+            units = [{"unit_id": "P001", "sha256": "x", "text": paragraph}]
+            critic = {"units": [{"unit_id": "P001", "no_claim_reason": None, "claims": [
+                {"claim": "x", "claim_type": "SUPPORTED_FACT", "failure_category": None, "severity": None,
+                 "brief_refs": refs, "explanation": "e", "suggested_fix": None}]}]}
+            return stages.attribution_audit(critic, [brief], units, passages)
+
+        cases = [
+            ("thought told as speech",
+             "Amane trấn an cô, giải thích rằng cậu bận tâm đến ánh mắt như đứa trẻ bị lạc của cô.", ["c1.CH1"], 1),
+            ("same content as a thought", "Cậu đưa ô vì bận tâm đến ánh mắt như đứa trẻ bị lạc của cô.", ["c1.CH1"], 0),
+            # The brief records that he said it, so telling it as speech is right.
+            ("brief records the speech", "Amane nói rằng đã đưa ô cho một đứa trẻ bị lạc.", ["c1.CH1"], 0),
+            # A cited passage has dialogue, so the brief may have summarised speech.
+            ("cited passage has dialogue", "Amane nói rằng sẽ không còn gặp lại Mahiru nữa.", ["c1.CH1"], 0),
+            ("hearsay is not speech", "Nghe nói rằng cậu bận tâm đến ánh mắt như đứa trẻ bị lạc của cô.", ["c1.CH1"], 0),
+            ("paragraph cites nothing",
+             "Amane giải thích rằng cậu bận tâm đến ánh mắt như đứa trẻ bị lạc của cô.", [], 0),
+        ]
+        for label, paragraph, refs, expected in cases:
+            with self.subTest(label):
+                findings = run_case(paragraph, refs)
+                self.assertEqual(len(findings), expected, findings)
+                for finding in findings:
+                    self.assertEqual((finding["source"], finding["severity"]), ("attribution_audit", "MEDIUM"))
+        self.assertEqual(stages.attribution_audit({"units": []}, [brief], None, passages), [])
+        self.assertEqual(stages.attribution_audit({"units": []}, [brief], [], passages, "vi", "en"), [])
+        self.assertTrue(stages.audit_coverage("vi", "vi", "ja")["attribution_audit"])
+        self.assertFalse(stages.audit_coverage("ko", "ko", "ko")["attribution_audit"])  # no speech verbs yet
+
     def test_brief_facts_should_be_atomic(self):
         brief = brief_json(1)
         brief["characters"][1]["facts"] = [

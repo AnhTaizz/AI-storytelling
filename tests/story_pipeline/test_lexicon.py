@@ -40,6 +40,7 @@ class LexiconFileTests(unittest.TestCase):
             "bad density": (lambda d: d.update(chars_per_event=0), "chars_per_event"),
             "bad clause markers": (lambda d: d.update(clause_markers=["and", ""]), "clause_markers"),
             "bad contrast openers": (lambda d: d.update(contrast_openers=["But"]), "contrast_openers"),
+            "bad speech verbs": (lambda d: d.update(speech_verbs=["said", ""]), "speech_verbs"),
         }
         for label, (mutate, message) in cases.items():
             with self.subTest(label):
@@ -114,6 +115,26 @@ class ClauseTests(unittest.TestCase):
         for language, text, expected in cases:
             with self.subTest(language=language, text=text):
                 self.assertEqual(lexicon.load(language).contrast_parts(text), expected)
+
+
+class ReportedSpeechTests(unittest.TestCase):
+    def test_reported_speech_content_starts_after_the_complementizer(self):
+        cases = [
+            ("vi", "Amane trấn an cô, giải thích rằng cậu tự nguyện", "cậu tự nguyện"),
+            ("vi", "Cậu nói với Mahiru rằng không sao", "không sao"),
+            ("vi", "Nghe nói rằng cô ấy giỏi", None),            # hearsay, not someone speaking
+            ("vi", "Nói về Mahiru thì cô rất đẹp", None),         # no complementizer
+            ("vi", "Cậu nói, rằng thì là mà", None),               # verb and complementizer in different clauses
+            ("en", "He told her that it was fine", "it was fine"),
+            ("ja", "彼はそう言った", None),                        # no speech verbs in this lexicon yet
+        ]
+        for language, text, expected in cases:
+            with self.subTest(language=language, text=text):
+                lex = lexicon.load(language)
+                start = lex.reported_speech_start(text)
+                self.assertEqual(text[start:].strip() if start is not None else None, expected)
+        self.assertTrue(lexicon.load("vi").mentions_speech("Cậu đã nói dối"))
+        self.assertFalse(lexicon.load("vi").mentions_speech("Nghe nói cô giỏi"))
 
 
 if __name__ == "__main__":
