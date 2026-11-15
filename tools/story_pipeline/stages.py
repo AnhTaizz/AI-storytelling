@@ -542,7 +542,7 @@ def patch_errors(patch: Dict[str, Any], units: Sequence[Dict[str, str]], target_
     errors, seen = [], set()
     for index, edit in enumerate(patch["edits"]):
         where = f"edits[{index}] ({edit['unit_id']})"
-        text = unit_text.get(edit["unit_id"])
+        text = unit_text.get(_unit_id(edit["unit_id"]))
         if text is None:
             errors.append(f"{where}: no such paragraph")
             continue
@@ -552,9 +552,9 @@ def patch_errors(patch: Dict[str, Any], units: Sequence[Dict[str, str]], target_
                           f"copy it character for character")
         if edit["old"] == edit["new"]:
             errors.append(f"{where}: \"new\" is the same as \"old\"")
-        if (edit["unit_id"], edit["old"]) in seen:
+        if (_unit_id(edit["unit_id"]), edit["old"]) in seen:
             errors.append(f"{where}: the same span is edited twice")
-        seen.add((edit["unit_id"], edit["old"]))
+        seen.add((_unit_id(edit["unit_id"]), edit["old"]))
         foreign = checks.foreign_script_characters(edit["new"], target_language)
         if foreign:
             errors.append(f"{where}: \"new\" contains characters from another writing system ({foreign[0]!r})")
@@ -569,7 +569,7 @@ def apply_patch(script: Dict[str, Any], units: Sequence[Dict[str, str]], patch: 
     replacements: Dict[str, str] = {}
     for unit in units:
         text = unit["text"]
-        for edit in (e for e in patch["edits"] if e["unit_id"] == unit["unit_id"]):
+        for edit in (e for e in patch["edits"] if _unit_id(e["unit_id"]) == unit["unit_id"]):
             new = edit["new"].strip()
             text = text.replace(edit["old"], new, 1)
         replacements[unit["text"]] = re.sub(r"[ \t]{2,}", " ", text).strip()
@@ -1025,6 +1025,12 @@ SOURCE_CHECK_KINDS = {
 }
 
 
+def _unit_id(value: Any) -> str:
+    """A paragraph id as the model wrote it, without the tag brackets the prompt shows
+    ("<P001>" -> "P001"; season S2's fallback model copied them)."""
+    return str(value).strip().strip("<>/").strip()
+
+
 def source_check_text(chapters: Sequence[Chapter]) -> str:
     return "\n".join(f"[{p.passage_id}] {p.text}" for c in chapters for p in c.passages)
 
@@ -1034,17 +1040,18 @@ def source_check_errors(check: Dict[str, Any], units: Sequence[Dict[str, str]],
     """Every paragraph listed once; quotes copied from their paragraph; passages in scope."""
     errors = []
     unit_text = {u["unit_id"]: u["text"] for u in units}
-    listed = [p["unit_id"] for p in check["paragraphs"]]
+    listed = [_unit_id(p["unit_id"]) for p in check["paragraphs"]]
     missing = [u for u in unit_text if u not in listed]
     if missing or len(listed) != len(set(listed)) or set(listed) - set(unit_text):
         errors.append(f"paragraphs: list every paragraph exactly once ({len(unit_text)} paragraphs, "
                       f"missing {missing[:5]})")
     for paragraph in check["paragraphs"]:
-        text = _squash(unit_text.get(paragraph["unit_id"], ""))
+        uid = _unit_id(paragraph["unit_id"])
+        text = _squash(unit_text.get(uid, ""))
         for index, finding in enumerate(paragraph["findings"]):
-            where = f"{paragraph['unit_id']} findings[{index}]"
+            where = f"{uid} findings[{index}]"
             if _squash(finding["script_quote"]) not in text:
-                errors.append(f"{where}: script_quote is not copied exactly from paragraph {paragraph['unit_id']}")
+                errors.append(f"{where}: script_quote is not copied exactly from paragraph {uid}")
             unknown = [pid for pid in finding["passage_ids"] if pid not in passage_ids]
             if unknown:
                 errors.append(f"{where}: passage ids {unknown} are not in this episode's source")
@@ -1059,7 +1066,7 @@ def source_check_findings(check: Dict[str, Any], passages: Mapping[str, str]) ->
             claim_type, category = SOURCE_CHECK_KINDS[finding["kind"]]
             cited = "; ".join(f"[{pid}] {passages.get(pid, '')[:160]}" for pid in finding["passage_ids"])
             findings.append({
-                "unit_id": paragraph["unit_id"], "claim": finding["script_quote"],
+                "unit_id": _unit_id(paragraph["unit_id"]), "claim": finding["script_quote"],
                 "claim_type": claim_type, "failure_category": category, "severity": "MEDIUM",
                 "brief_refs": [], "source": "source_check", "kind": finding["kind"],
                 "passage_ids": finding["passage_ids"], "concepts": [], "phrases": [],

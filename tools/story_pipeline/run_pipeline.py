@@ -405,9 +405,16 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                     samples = []
                     for sample in range(1, max(1, source_check_samples) + 1):
                         name = f"source_check_v{version}.json" if sample == 1 else f"source_check_v{version}_s{sample}.json"
-                        result = cached(out_dir / name, resume,
-                                        lambda: stages.run_source_check(client, scope, units, profile, log,
-                                                                        max_repairs, version, sample))
+                        try:
+                            result = cached(out_dir / name, resume,
+                                            lambda: stages.run_source_check(client, scope, units, profile, log,
+                                                                            max_repairs, version, sample))
+                        except StageFailed as exc:
+                            # A second verifier that cannot answer must not sink the episode
+                            # (season S2): record it and go on with the other checks.
+                            manifest.setdefault("source_check_failed", []).append(
+                                {"version": version, "sample": sample, "error": str(exc)[:300]})
+                            continue
                         if result is None:
                             manifest["source_check_skipped"] = (f"episode source is longer than "
                                                                 f"{stages.SOURCE_CHECK_MAX_CHARS} characters")

@@ -771,6 +771,16 @@ class EndToEndTests(unittest.TestCase):
             self.assertIn("longer than 10", manifest["source_check_skipped"])
             self.assertNotIn("source_check", [c["stage"] for c in client.calls])
 
+            class BrokenSourceCheckModel(FakeModel):
+                """A source check that never answers in the right shape (season S2)."""
+                def __call__(self, stage, system, user):
+                    return '{"paragraphs": []}' if stage == "source_check" else super().__call__(stage, system, user)
+
+            manifest = run(ScriptedLLMClient(BrokenSourceCheckModel()), scope, test_profile(), Path(tmp) / "broken",
+                           source_check_samples=1)
+            self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
+            self.assertIn("list every paragraph", manifest["source_check_failed"][0]["error"])
+
             client = ScriptedLLMClient(SourceCheckModel())
             manifest = run(client, scope, test_profile(), Path(tmp) / "off", source_check=False)
             self.assertNotIn("source_check", [c["stage"] for c in client.calls])
@@ -788,6 +798,7 @@ class EndToEndTests(unittest.TestCase):
                    "explanation": "no steam"}
         cases = [
             ("valid (whitespace-insensitive quote)", answer(("P001", [finding]), ("P002", [])), []),
+            ("tag brackets around ids are tolerated", answer(("<P001>", [finding]), ("<P002>", [])), []),
             ("paragraph missing", answer(("P001", [])), ["list every paragraph exactly once"]),
             ("paragraph twice", answer(("P001", []), ("P001", []), ("P002", [])), ["exactly once"]),
             ("quote not in paragraph", answer(("P001", [dict(finding, script_quote="bốc hơi")]), ("P002", [])),
@@ -866,6 +877,8 @@ class EndToEndTests(unittest.TestCase):
                 self.assertEqual(len(errors), len(expected), errors)
                 for message, error in zip(expected, errors):
                     self.assertIn(message, error)
+        self.assertEqual(stages.patch_errors({"edits": [{"unit_id": "<P002>", "old": "Cô cười.", "new": "Cô cười nhẹ."}]},
+                                             units, "vi"), [])  # tag brackets tolerated
         twice = {"unit_id": "P002", "old": "Cô cười.", "new": "Cô mỉm cười."}
         self.assertIn("edited twice", stages.patch_errors({"edits": [twice, twice]}, units, "vi")[-1])
 
