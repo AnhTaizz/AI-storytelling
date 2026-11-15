@@ -20,6 +20,7 @@ from typing import AbstractSet, Protocol
 
 from tools.story_benchmark.bm25_lexical_v1 import BM25LexicalV1
 from tools.story_pipeline.source import Passage, load_scope
+from tools.story_retrieval.cjk_lexical_v1 import CjkBm25V1
 
 E5_SMALL_MODEL = 'intfloat/multilingual-e5-small'
 E5_SMALL_REVISION = '614241f622f53c4eeff9890bdc4f31cfecc418b3'
@@ -34,6 +35,37 @@ class RetrievalRequest:
     cutoff_chapter: int
     k: int = 10
     chapters: tuple[int, int] | None = None
+    story_id: str | None = None
+
+
+def validate_story_id(story_id: str) -> str:
+    """Portable single directory component; also reject Windows device names."""
+    if (not isinstance(story_id, str)
+            or not re.fullmatch(r'[A-Za-z0-9_][A-Za-z0-9_.-]*', story_id)
+            or story_id.endswith('.') or '..' in story_id
+            or story_id.split('.')[0].upper() in
+            {'CON', 'PRN', 'AUX', 'NUL', *(f'COM{i}' for i in range(10)),
+             *(f'LPT{i}' for i in range(10))}):
+        raise ValueError('story_id must be a safe single path component')
+    return story_id
+
+
+class StoryCorpus(list):
+    """List-compatible passages retaining the manifest identity and language.
+
+    Legacy bare sequences belong to the explicit `unscoped` Japanese namespace.
+    Multi-story callers must retain StoryCorpus rather than flattening metadata.
+    """
+
+    def __init__(self, passages=(), *, story_id: str, source_language: str):
+        super().__init__(passages)
+        self.story_id = validate_story_id(story_id)
+        self.source_language = source_language
+
+
+def _corpus_identity(passages):
+    return (validate_story_id(getattr(passages, 'story_id', 'unscoped')),
+            getattr(passages, 'source_language', 'ja'), tuple(passages))
 
 
 @dataclass(frozen=True)
@@ -72,18 +104,21 @@ def _rank(scores, k: int) -> list[tuple[str, float]]:
                   key=lambda item: (-item[1], natural_key(item[0])))[:k]
 
 
-def build_corpus(manifest_path, cutoff_chapter: int, source_root=None) -> list[Passage]:
+def build_corpus(manifest_path, cutoff_chapter: int, source_root=None) -> StoryCorpus:
     if cutoff_chapter < 1:
         raise ValueError('cutoff_chapter must be >= 1')
     scope = load_scope(manifest_path, (1, cutoff_chapter), source_root)
     passages = [p for c in sorted(scope.chapters, key=lambda c: c.order) for p in c.passages]
     if any(passage_chapter(p.passage_id) > cutoff_chapter for p in passages):
         raise RuntimeError('corpus contains a passage after the cutoff')
-    return passages
+    return StoryCorpus(passages, story_id=scope.story_id, source_language=scope.source_language)
 
 
 def retrieve(request: RetrievalRequest, retriever: Retriever,
              passages: Sequence[Passage]) -> list[Hit]:
+    story_id, _, _ = _corpus_identity(passages)
+    if request.story_id is not None and validate_story_id(request.story_id) != story_id:
+        raise ValueError('request story_id does not match corpus story_id')
     if not request.query.strip():
         raise ValueError('query must not be empty')
     if request.k < 1 or request.cutoff_chapter < 1:
@@ -126,17 +161,22 @@ class Bm25RetrieverV0:
 
     def __init__(self):
         self._passages = None
+        self._identity = None
         self._model = BM25LexicalV1(k1=1.2, b=0.75)
 
     def index(self, passages: Sequence[Passage]) -> None:
-        snapshot = tuple(passages)
-        if snapshot == self._passages:
+        identity = _corpus_identity(passages)
+        story_id, language, snapshot = identity
+        if identity == self._identity:
             return
-        model = BM25LexicalV1(k1=1.2, b=0.75)
+        if language not in ('ja', 'ko', 'zh'):
+            raise ValueError(f'BM25 does not support source_language={language!r}; expected ja, ko or zh')
+        model = (BM25LexicalV1 if language == 'ja' else CjkBm25V1)(k1=1.2, b=0.75)
         for passage in snapshot:
             model.add_document(passage.passage_id, passage.text)
         model.build()
         self._model, self._passages = model, snapshot
+        self._identity = identity
 
     def search(self, query: str, allowed_ids: AbstractSet[str], k: int) -> list[tuple[str, float]]:
         return _rank(self._model.score(query, set(allowed_ids)), k)
@@ -187,6 +227,8 @@ class DenseE5RetrieverV0:
         self.cache_dir = Path(cache_dir) if cache_dir is not None else None
         self._encoder = encoder
         self._passages = None
+        self._identity = None
+        self._story_id = 'unscoped'
         self._vectors = {}
 
     def _encode(self, texts: Sequence[str]) -> list[tuple[float, ...]]:
@@ -199,7 +241,7 @@ class DenseE5RetrieverV0:
 
     def _cache_path(self) -> Path:
         identity = json.dumps([self.model_name, self.revision], ensure_ascii=True)
-        return self.cache_dir / (hashlib.sha256(identity.encode('utf-8')).hexdigest() + '.json')
+        return self.cache_dir / self._story_id / (hashlib.sha256(identity.encode('utf-8')).hexdigest() + '.json')
 
     def _load_cache(self) -> dict[str, tuple[float, ...]]:
         try:
@@ -225,11 +267,11 @@ class DenseE5RetrieverV0:
             return {}
 
     def _save_cache(self, vectors: dict[str, tuple[float, ...]]) -> None:
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
         path = self._cache_path()
+        path.parent.mkdir(parents=True, exist_ok=True)
         # Same-directory replacement never exposes a partially written JSON file.
         stream = tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', newline='\n',
-                                            dir=self.cache_dir, delete=False)
+                                            dir=path.parent, delete=False)
         temporary = Path(stream.name)
         try:
             with stream:
@@ -255,12 +297,17 @@ class DenseE5RetrieverV0:
         return [cached[key] for key in keys]
 
     def index(self, passages: Sequence[Passage]) -> None:
-        snapshot = tuple(passages)
-        if snapshot == self._passages:
+        identity = _corpus_identity(passages)
+        story_id, _, snapshot = identity
+        if identity == self._identity:
             return
+        self._story_id = story_id
+        self._identity = None
+        self._vectors = {}
         vectors = self._passage_vectors(['passage: ' + p.text for p in snapshot])
         self._vectors = dict(zip((p.passage_id for p in snapshot), vectors))
         self._passages = snapshot
+        self._identity = identity
 
     def search(self, query: str, allowed_ids: AbstractSet[str], k: int) -> list[tuple[str, float]]:
         if not self._vectors or not allowed_ids:
@@ -289,16 +336,19 @@ class HybridRrfRetrieverV0:
         self.version = '0[' + ','.join(f'{r.name}:{r.version}' for r in retrievers) + ']'
         self.rrf_k = rrf_k
         self._passages = None
+        self._identity = None
 
     def index(self, passages: Sequence[Passage]) -> None:
-        snapshot = tuple(passages)
-        if snapshot == self._passages:
+        identity = _corpus_identity(passages)
+        if identity == self._identity:
             return
         # A component failure must force the next attempt to re-index every component.
         self._passages = None
+        self._identity = None
         for retriever in self.retrievers:
-            retriever.index(snapshot)
-        self._passages = snapshot
+            retriever.index(passages)
+        self._passages = identity[2]
+        self._identity = identity
 
     def search(self, query: str, allowed_ids: AbstractSet[str], k: int) -> list[tuple[str, float]]:
         scores = defaultdict(float)

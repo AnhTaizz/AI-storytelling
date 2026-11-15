@@ -4,6 +4,7 @@ import hashlib
 import io
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -18,7 +19,7 @@ from tools.story_benchmark.bm25_lexical_v1 import jp_simple_lexical_v1
 from tools.story_pipeline.source import Chapter, Passage, StoryScope
 from tools.story_retrieval.retrieval_v0 import (
     E5_LARGE_MODEL, E5_LARGE_REVISION, E5_SMALL_MODEL, E5_SMALL_REVISION, RETRIEVER_NAMES,
-    Bm25RetrieverV0, DenseE5RetrieverV0, HybridRrfRetrieverV0, RetrievalRequest,
+    Bm25RetrieverV0, DenseE5RetrieverV0, HybridRrfRetrieverV0, RetrievalRequest, StoryCorpus,
     build_corpus, make_retriever, natural_key, passage_chapter, result_to_dict, retrieve,
 )
 from tools.story_retrieval.retrieve import DEFAULT_MANIFEST, REPO, main
@@ -71,6 +72,102 @@ class RetrievalV0Tests(unittest.TestCase):
                             .read_text(encoding='utf-8'))
         Draft202012Validator.check_schema(schema)
         cls.validator = Draft202012Validator(schema)
+
+    def test_story_isolation_api_cli_cache_and_deletion(self):
+        """Same names/IDs stay in their story through reuse, CLI and warm caches."""
+        import yaml
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            corpora = {}
+            for story, text in [('story-a', 'Mira apple'), ('story-b', 'Mira banana')]:
+                directory = root / story
+                directory.mkdir()
+                data = text.encode('utf-8')
+                (directory / 'chapter.txt').write_bytes(data)
+                manifest = dict(contract_version='LIGHT_NOVEL_INGESTION/v0', story_id=story,
+                                stream_id='stream-synthetic', source_language='ja', documents=[dict(
+                                    document_id='doc-synthetic', order=1, path='chapter.txt',
+                                    expected_sha256=hashlib.sha256(data).hexdigest())])
+                path = directory / 'manifest.yaml'
+                path.write_text(yaml.safe_dump(manifest), encoding='utf-8')
+                corpora[story] = build_corpus(path, 1)
+                self.assertEqual((corpora[story].story_id, corpora[story].source_language), (story, 'ja'))
+            for kind in ['bm25', 'dense', 'hybrid']:
+                with self.subTest(kind=kind):
+                    cache = root / ('cache-' + kind)
+                    encoder = CountingEncoder()
+                    dense = DenseE5RetrieverV0(encoder, cache_dir=cache)
+                    retriever = (Bm25RetrieverV0() if kind == 'bm25' else dense if kind == 'dense'
+                                 else HybridRrfRetrieverV0([Bm25RetrieverV0(), dense]))
+                    for story in ['story-a', 'story-b', 'story-a']:
+                        corpus = corpora[story]
+                        request = RetrievalRequest('Mira', 1, story_id=story)
+                        hits = retrieve(request, retriever, corpus)
+                        self.assertEqual([h.text for h in hits], [corpus[0].text])
+                        with patch('tools.story_retrieval.retrieve.make_retriever', return_value=retriever):
+                            with redirect_stdout(io.StringIO()) as output:
+                                self.assertEqual(main(['--manifest', str(root / story / 'manifest.yaml'),
+                                                       '--story-id', story, '--cutoff', '1', '--query',
+                                                       'Mira', '--json']), 0)
+                            self.assertEqual([h['text'] for h in json.loads(output.getvalue())['hits']],
+                                             [corpus[0].text])
+                        with self.assertRaisesRegex(ValueError, 'does not match'):
+                            retrieve(RetrievalRequest('Mira', 1, story_id='other'), retriever, corpus)
+                    with redirect_stderr(io.StringIO()):
+                        self.assertEqual(main(['--manifest', str(root / 'story-a/manifest.yaml'),
+                                               '--story-id', 'story-b', '--cutoff', '1', '--query', 'Mira']), 2)
+                    if kind != 'bm25':
+                        self.assertEqual(set(p.name for p in cache.iterdir()), {'story-a', 'story-b'})
+                        self.assertEqual(encoder.passages, ['passage: Mira apple', 'passage: Mira banana'])
+                        survivor = next((cache / 'story-b').glob('*.json'))
+                        before = survivor.read_bytes()
+                        target = (cache / 'story-a').resolve()
+                        self.assertEqual(target.parent, cache.resolve())
+                        shutil.rmtree(target)
+                        self.assertEqual(survivor.read_bytes(), before)
+                        warm = CountingEncoder()
+                        hits = retrieve(RetrievalRequest('Mira', 1, story_id='story-b'),
+                                        DenseE5RetrieverV0(warm, cache_dir=cache), corpora['story-b'])
+                        self.assertEqual([h.text for h in hits], ['Mira banana'])
+                        self.assertEqual(warm.passages, [])
+            # Even identical text/IDs in distinct stories must not share passage-derived data.
+            encoder = CountingEncoder()
+            dense = DenseE5RetrieverV0(encoder, cache_dir=root / 'identical')
+            component = RankedRetriever([('1.1', 1)])
+            hybrid = HybridRrfRetrieverV0([component, dense])
+            for story in ['story-a', 'story-b']:
+                corpus = StoryCorpus(corpora['story-a'], story_id=story, source_language='ja')
+                retrieve(RetrievalRequest('Mira', 1, story_id=story), hybrid, corpus)
+            self.assertEqual(component.index_calls, 2)
+            self.assertEqual(encoder.passages, ['passage: Mira apple'] * 2)
+
+    def test_story_identity_validation_and_tokenizer_selection(self):
+        """Unsafe IDs fail; ja stays frozen, ko/zh use bigrams, dense accepts any language."""
+        for story in ['', '.', '..', '../a', 'a/b', 'a\\b', 'C:bad', 'NUL', 'con.txt', 'x.', 'a b']:
+            with self.subTest(story=story), self.assertRaisesRegex(ValueError, 'safe single path'):
+                StoryCorpus([], story_id=story, source_language='ja')
+        retriever = Bm25RetrieverV0()
+        for language, text, query, match in [('ja', '日本語 Mira', '日本', True),
+                                             ('ko', '미라의 사과 Mira', '미라', True),
+                                             ('zh', '米拉吃苹果 Mira', '苹果', True),
+                                             ('unknown', 'Mira', 'Mira', False),
+                                             ('en', 'Mira', 'Mira', False)]:
+            with self.subTest(language=language):
+                corpus = StoryCorpus([Passage('1.1', text)], story_id='story', source_language=language)
+                request = RetrievalRequest(query, 1, story_id='story')
+                if match:
+                    self.assertEqual([h.passage_id for h in retrieve(request, retriever, corpus)], ['1.1'])
+                    if language == 'ja':
+                        legacy = retrieve(RetrievalRequest(query, 1), Bm25RetrieverV0(), list(corpus))
+                        self.assertEqual(retrieve(request, retriever, corpus), legacy)
+                else:
+                    with self.assertRaisesRegex(ValueError, 'source_language'):
+                        retrieve(request, retriever, corpus)
+                self.assertTrue(retrieve(RetrievalRequest('Mira', 1),
+                                         DenseE5RetrieverV0(character_encoder), corpus))
+        with self.assertRaisesRegex(ValueError, 'safe single path'):
+            retrieve(RetrievalRequest('Mira', 1, story_id='../a'), retriever, self.corpus)
 
     def test_spoiler_boundary_and_narrower_window(self):
         """All retrievers filter a later exact match, even with an over-broad corpus."""
@@ -295,7 +392,7 @@ class RetrievalV0Tests(unittest.TestCase):
             self.assertEqual([pid for pid, _ in retriever.search('pear', {'1.99'}, 10)], ['1.99'])
             retriever.index([])
             self.assertEqual(retriever.search('pear', {'1.99'}, 10), [])
-            data = json.loads(next(cache.glob('*.json')).read_text(encoding='utf-8'))
+            data = json.loads(next((cache / 'unscoped').glob('*.json')).read_text(encoding='utf-8'))
             self.assertIn(hashlib.sha256(b'passage: pear').hexdigest(), data['vectors'])
             self.assertEqual(len(list(cache.iterdir())), 1)
 
@@ -311,12 +408,12 @@ class RetrievalV0Tests(unittest.TestCase):
                 self.assertEqual(list(cache.iterdir()), [])
             for model, revision in [('a/b', 'rev/one'), ('a/b', 'rev/two'), ('a_b', 'rev/one')]:
                 with self.subTest(model=model, revision=revision):
-                    before = set(cache.iterdir())
+                    before = set(cache.rglob('*.json'))
                     encoder = CountingEncoder()
                     retriever = DenseE5RetrieverV0(encoder, model_name=model, revision=revision, cache_dir=cache)
                     retriever.index(passages)
                     self.assertEqual(encoder.calls, [['passage: apple', 'passage: banana']])
-                    added = set(cache.iterdir()) - before
+                    added = set(cache.rglob('*.json')) - before
                     self.assertEqual(len(added), 1)
                     self.assertRegex(added.pop().name, r'^[0-9a-f]{64}\.json$')
 
@@ -339,7 +436,7 @@ class RetrievalV0Tests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             cache = Path(tmp)
             DenseE5RetrieverV0(character_encoder, cache_dir=cache).index(passages)
-            path = next(cache.iterdir())
+            path = next(cache.rglob('*.json'))
             for bad in bad_files:
                 with self.subTest(bad=bad):
                     path.write_bytes(bad)
@@ -377,7 +474,7 @@ class RetrievalV0Tests(unittest.TestCase):
                 with self.assertRaises(OSError):
                     DenseE5RetrieverV0(character_encoder, cache_dir=cache).index([Passage('1.9', 'pear')])
             self.assertEqual(path.read_bytes(), original)
-            self.assertEqual(list(cache.iterdir()), [path])
+            self.assertEqual(list(cache.rglob('*.json')), [path])
 
     def test_rrf_hand_computed_ranks_depth_and_reindexing(self):
         """RRF K=60 fuses component ranks with natural ties and indexes each corpus once."""

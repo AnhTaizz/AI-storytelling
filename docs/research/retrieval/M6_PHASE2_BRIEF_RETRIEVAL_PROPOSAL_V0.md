@@ -7,7 +7,7 @@ proposed unless explicitly described as current. Agreement is required before im
 
 ## 1. What exists today
 
-- Passage retrieval uses frozen `RetrievalRequest(query, cutoff_chapter, k=10, chapters=None)` and `Hit(passage_id,
+- Passage retrieval uses frozen `RetrievalRequest(query, cutoff_chapter, k=10, chapters=None, story_id=None)` and `Hit(passage_id,
   chapter, score, rank, text, retriever)`; `Retriever` has `name`, `version`, `index`, and `search`. Cutoffs are
   inclusive; windows satisfy `1 <= start <= end <= cutoff`; only positive scores survive, with natural-ID tie ordering
   (`tools/story_retrieval/retrieval_v0.py:RetrievalRequest, Hit, Retriever, retrieve, natural_key`).
@@ -198,7 +198,18 @@ RetrievalRequest`; construct validated corpus first.
 
 ## 4. Evaluation plan (after agreement)
 
-Reuse questions/languages/cutoffs from `tests/story_retrieval/fixtures/dev_probes_v0.yaml` as candidate DEV probes;
+**Primary acceptance criterion: completeness of the evidence actually handed to the brief writer.** Report
+Full_Evidence_Success and Recall at that delivery depth, including every passage expanded from selected items.
+Hit@10 and MRR remain secondary diagnostics. A relevant hit is insufficient when another required event or fact is
+missing. Choose a larger delivery depth from the measured curve in
+`M6_RETRIEVAL_BASELINE_V0.md:Completeness curve (owner criterion)` rather than adopting k=10 from the v0 API default.
+Provisionally budget up to 50 source passages for completeness-sensitive retrieval, with 30 as an explicit lower-cost
+option; measure item depth separately before choosing a brief-item k. A passage budget of 50 does not mean 50 brief
+items. Report all omitted support and budget overflows; do not silently trim expansions to fit a prompt. The owner
+must agree delivery cost and completeness thresholds before acceptance.
+
+Reuse questions/languages/cutoffs from the locked `tests/story_retrieval/fixtures/dev_probes_v1.yaml` (30 probes),
+retaining v0 as a historical comparison, as candidate DEV probes;
 current gold is passage IDs, not brief refs (`tools/story_retrieval/evaluate_v0.py:evaluate_dev`). Manually map answer
 support to snapshot-bound gold item refs; mark questions absent from briefs as coverage gaps, not invented gold.
 Preserve a source-only comparison and report brief coverage rate. Pin public chapter-1–5 brief snapshots and their
@@ -206,7 +217,7 @@ source/setup/content hashes; use reviewed stored briefs or hand-authored fixture
 
 Maintain separate `gold_item_sets` and `gold_passage_sets`; adapt each separately to `gold_evidence_sets` for
 `tools/story_benchmark/multi_gold_metrics.py:calculate_probe_metrics`. Report item Hit/Recall/Full Evidence
-Success@1/5/10 and MRR@10; for evidence, deduplicate in parent-rank then nested-rank order. Report evidence metrics at
+Success@1/5/10/20/30/50 and MRR@10; for evidence, deduplicate in parent-rank then nested-rank order. Report evidence metrics at
 fixed passage budgets and completeness from the full expansion of top-k items, clearly distinguishing units. The
 calculator supports alternative complete gold paths and treats IDs as strings; it does not calculate spoiler violations
 (same file:normalize_gold_evidence_sets, calculate_probe_metrics; `tools/story_retrieval/evaluate_v0.py:_metrics`).
@@ -217,6 +228,59 @@ briefs, reordered/regenerated items, changing/conflicting relationship states, a
 synthetic future-contract cases for atomic multi-chapter cutoff behavior if approved. This remains DEV evaluation, not a
 sealed benchmark or milestone completion; agree quality thresholds after baseline measurement. No evaluation is
 performed by this document.
+
+### Entity-scoped request: all evidence about entity X up to cutoff N
+
+Propose a separate `EntityEvidenceRequest(story_id, entity_ref, cutoff_chapter)` returning evidence in chapter order,
+then source passage/span order. This is an exhaustive enumeration request with explicit coverage status, not a
+similarity top-k request. Bind identity, source versions and memory snapshots to the same story. Paginate if needed
+without a hidden result cap; provide a count and continuation/completion marker so the writer can detect incomplete
+delivery. Keep all occurrences and state history, while deduplicating shared source passages for transport.
+
+Use these sources in order of authority:
+
+1. **M4 extraction persisted by M5 is the completeness source, once available:** enumerate resolved mentions of X,
+   identity/alias links, events where X is a participant, indirect assertions about X and state changes, with their
+   evidence. Track extraction coverage for every chapter 1..N and surface unresolved identities and missing records.
+   Enumeration is complete only relative to the validated extraction profile; it cannot repair an extractor omission.
+   This depends explicitly on M4 mention/identity/event/state extraction and M5 versioned persistence. Neither the
+   current extraction research tooling nor the brief-memory prototype establishes that end-to-end guarantee today.
+2. **Interim StoryMemory roster:** validate fresh eligible briefs first, then use `as_of(briefs, N)`, `build_roster`,
+   chapter-local refs, names/aliases and facts with evidence. Preserve roster warnings and epistemic labels. Per-chapter
+   briefs retain selected facts, so this source is **not exhaustive**; a roster miss cannot establish absence. Its
+   normalized-name merges are provisional identity evidence, not authoritative resolution. Return `partial` coverage
+   when M4/M5 records are unavailable, never label the interim dossier complete.
+3. **Retrieval safety net:** build multiple queries from X's eligible names/aliases and, if agreed, event/state facets.
+   Search only this story up to N; union candidate passage IDs with (1)/(2), preserving route, query, chapter and source
+   provenance. Mark retrieval-only candidates `needs_verification` for identity and support; never silently merge
+   them into the authoritative entity record. Surface disagreements and false name matches. This route also finds
+   quotes and callbacks; high similarity cannot prove identity or enumerate pronouns and indirect evidence.
+
+Apply the same inclusive cutoff to records, source passages, alias knowledge, renderings and every query seed. Filter
+before building roster/identity views; an alias learned after N is unavailable at N. Do not resolve an earlier
+ambiguous reference using a later reveal. Check returned evidence again. A narrower observation window must not
+silently change an "all evidence up to N" request into partial coverage; use an explicit partial request instead.
+Evaluate the routes separately and combined using
+`M6_CHARACTER_DOSSIER_EVAL_PROPOSAL_V0.md`; no gold or dossier implementation is created here.
+
+### Review-content coverage checklist
+
+Use the eligible extracted key events as a versioned checklist for a review brief. For each required event, the brief
+must cite its exact record and evidence, or record an explicit skip reason. A deterministic check joins checklist IDs
+to brief citations/skip records and reports uncovered events, invalid or stale citations, duplicate dispositions and
+unexplained skips. Report cited coverage separately from disposition coverage: a skip is not evidence recall. The owner
+defines which events must not be omitted and which reasons are acceptable; disallowed skips still fail acceptance.
+The check tests recorded coverage, not paraphrase fidelity, and cannot detect events missing from extraction. Missing
+chapter extraction must therefore make coverage status incomplete rather than shrink the checklist silently.
+
+### Multi-step / agentic retrieval
+
+Multi-step search could expand safety-net queries around names, aliases and related events; cross-lingual query
+translation could reduce Vietnamese-to-Japanese misses. An agent could inspect candidates and search again, but a
+stopping rule based on similarity or "no new hits" cannot prove exhaustive coverage, especially for pronouns, indirect
+information or evidence across volumes. These proposed semantic expansion/translation steps would need LLM calls,
+which require an explicit owner decision on models, privacy, cost and evaluation. No LLM calls are made in this spike;
+deterministic name/alias query enumeration can be evaluated separately without them.
 
 ## 5. Decisions needed from the owner and pipeline owner
 
@@ -235,6 +299,16 @@ performed by this document.
    critic preserve epistemic labels from recap?
 8. Does retrieval own the new result schema, with pipeline review of consumers? Agree context payload/budget,
    precise-ref audit support, probe ownership, and rollout.
+9. Which content types require exhaustive character evidence, key-event checklist coverage, or only quote/callback
+   search? What evidence is "must not be omitted", including repeated mentions, reported information and state changes?
+10. Accept Full_Evidence_Success and Recall at actual writer delivery depth as primary, with a provisional passage
+    budget up to 50 (30 as the measured cost tradeoff)? Set thresholds, overflow behavior and item-expansion cost limits.
+11. Accept the entity request's M4/M5 dependency, explicitly partial interim roster, and separately verified retrieval
+    candidates? Who owns unresolved identities, extraction completeness audits and candidate adjudication?
+12. Who authors and adjudicates independent dossier gold, and which roles/cutoffs/classes must it cover? Agree the
+    checklist's skip policy and whether any mandatory omissions block release regardless of aggregate recall.
+13. Authorize any future LLM-assisted expansion/translation or agentic search, with which budget, model and privacy
+    constraints? These calls do not replace the exhaustive source or its independent completeness evaluation.
 
 ## 6. Out of scope and risks
 
@@ -247,4 +321,6 @@ without claiming M5/M6 completion (`docs/PROJECT_STATE.md:Implementation Status,
 
 **Review summary:** add a separate, cutoff-bounded brief search API with complete source-passage expansion and
 snapshot-qualified refs. Agreement is chiefly needed on IDs/regeneration, freshness/resume, kind/language policy,
-evidence/time semantics, and the pipeline's schema, prompt, and audit consumers before any code starts.
+evidence/time semantics, and the pipeline's schema, prompt, and audit consumers before any code starts. Also agree
+the exhaustive entity request's M4/M5 dependency, independent dossier evaluation, review-event checklist and actual
+writer delivery budget. Retrieval remains a safety net for completeness-sensitive content.

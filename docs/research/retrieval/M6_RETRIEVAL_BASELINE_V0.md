@@ -36,6 +36,46 @@ corpus chapter bounds, and hits with text, chapter, positive score, rank and
 retriever name. Chapter bounds describe supplied passages at or below the cutoff,
 independently of a narrower search window; both bounds are null for an empty corpus.
 
+## Story isolation
+
+Following the "One index per story" amendment owned by PR #6 (the spec on this
+branch is unchanged), `build_corpus` now returns a list-compatible `StoryCorpus`
+carrying `load_scope`'s `story_id` and `source_language`. `RetrievalRequest` adds an
+optional final `story_id` field; `retrieve --story-id ID` exposes it. When supplied,
+it must match the corpus before indexing/search. Existing positional calls still
+work. Keep the corpus object when passing it between components: converting it to
+a bare list discards its identity. Legacy bare passage sequences use the explicit
+`unscoped` namespace and Japanese tokenizer; multi-story applications must use
+`StoryCorpus`. The frozen v0 JSON schema/request echo is unchanged; story matching
+is enforced at the request boundary rather than adding fields to that schema.
+
+Index snapshots include story ID, language and passages. Reusing one BM25, dense
+or hybrid instance for another story replaces its index, even if passage IDs and
+text coincide. A hybrid passes the original corpus metadata to every component.
+The model/encoder can be reused across stories; passage vectors and indexes cannot.
+Cache files now live under `<cache_root>/<story_id>/<model_revision_hash>.json`.
+Old root-level cache files are ignored, with no automatic migration. Story IDs
+must be safe portable single path components (no separators, traversal or Windows
+device names); removing one story's directory leaves other stories intact.
+The legacy private-pack adapter has no manifest identity and assigns its own
+`private-<pack_directory_name>` namespace, separately from manifest-backed stories.
+
+Tokenizer selection follows **source** language, independently of query language:
+`ja` uses the unchanged `BM25LexicalV1` / `jp_simple_lexical_v1`, preserving all
+recorded Japanese-source scores. `ko` and `zh` use the new versioned
+`cjk_lexical_v1.py:cjk_words_bigrams_v1`: NFKC/casefold, alphanumeric words retained
+(including Korean whitespace words), plus adjacent bigrams within CJK/Hangul runs
+and singleton script tokens. Punctuation/whitespace stop bigrams. Lossless ASCII
+token serialization lets it reuse frozen BM25 scoring without changing that
+module. This is a small **untuned baseline**, not a morphological or tuned ko/zh
+tokenizer. Other/unknown source languages raise a clear BM25 error, including in
+hybrids. Dense retrieval remains language-agnostic.
+
+Synthetic tests use two tiny manifests with the same name and passage IDs, test
+API and CLI switching with fake encoders, warm-cache isolation/deletion, identical
+text across stories, unsafe IDs and language selection. No new real-model test
+gate or protected-path change is needed.
+
 ## Retrievers and tokenizer
 
 - `bm25` / `bm25_v0`, version `0`: wraps the unchanged `BM25LexicalV1`, k1=1.2,
@@ -95,7 +135,7 @@ Passage caching is opt-in: `DenseE5RetrieverV0(..., cache_dir=None)` and
 cache files. Both CLIs accept `--cache-dir PATH`, including for either hybrid's
 dense component. Recommended ignored location: `.local/story_retrieval/embedding_cache/`.
 
-Each model/revision pair has one JSON file named by the SHA-256 of its serialized
+Within each story directory, each model/revision pair has one JSON file named by the SHA-256 of its serialized
 identity; entries hash the exact UTF-8 `passage: ` plus text, independent of IDs.
 Vectors are stored **after `_unit`**, as round-tripped Python floats (double
 precision), without normalizing again on load. Missing unique texts use one ordered
@@ -493,13 +533,18 @@ about **4.0 times** small in the warm hybrid runs. Large model loading is about
 2.3 times small. Keeping a retriever alive avoids repeated model loading; the
 passage cache does not cache query embeddings.
 
-**Recommend `dense_e5_large` as the provisional default for the story pipeline**,
+**Recommend `dense_e5_large` provisionally for completeness-sensitive passage retrieval,
+at a writer delivery depth chosen from the completeness curve below**,
 whose briefs commonly use Vietnamese, with `dense_e5` as the explicitly selected
 lower-latency CPU option. Large retrieves some gold for 11/15 Vietnamese probes
 at rank ten versus 7/15 for small, and completes 8/15 versus 4/15; Vietnamese
 Recall@10 rises from 37.78% to 63.33%. Overall Recall/Success@10 rises from
 57.22%/46.67% to 68.33%/60.00%, and full MRR from 0.3841 to 0.5522. This quality
 gain supports paying the measured load and query-encoding cost for that use case.
+The primary comparison is Recall and Full_Evidence_Success at the actual delivery
+depth; these historical @10 facts do not recommend a ten-passage writer budget.
+Character-life completeness instead depends on exhaustive M4 extraction persisted
+by M5, with retrieval supplying a safety net and quotes/callbacks.
 
 Large does **not** dominate multi-passage retrieval: small's multi-passage
 Recall@10 is 68.06% versus large's 62.50%, with both completing only 5/12.
@@ -585,3 +630,224 @@ aggregation on synthetic probes, and default/explicit CLI probe selection; cases
 share bodies through `subTest`. The catalog was regenerated with the prescribed
 test-policy command and converted to LF. All changed files use LF. No commit,
 push, branch switch, private evaluation or pipeline integration was performed.
+
+## Completeness curve (owner criterion)
+
+The owner's primary criterion is **Full_Evidence_Success (FES) and Recall at the
+actual depth handed to the brief writer**, because a missing event or character
+fact matters even when an early hit is relevant. Hit@10 and MRR remain useful
+secondary diagnostics. Existing results above are retained unchanged.
+
+`evaluate_v0 --k-values INT [INT ...]` now selects reported depths. DEV defaults
+remain 1/5/10; private defaults remain 1/3/5/10/20 and private always retains 10
+when explicit depths are supplied. Invalid zero/negative depths return CLI exit
+2 or raise `ValueError` through the evaluator API. Full-ranking MRR and mrr@10
+are unchanged. JSON adds `passages_in_scope` (indexed count and eligible counts
+by cutoff), separate from metrics, and DEV adds a `multi_passage` aggregate
+(overall and per language); text mode omits scope counts. Multi-passage means
+all acceptable gold paths require more than one passage, the same 12-probe
+subset used in the earlier tables.
+
+### DEV v1: measured depth curve
+
+Every cell is **Recall % / FES %**; these are macro probe means, not micro unit
+recall. Overall n=30, ja/vi n=15 each; multi n=12 (ja 8, vi 4). Spoiler violations
+are zero at all six evaluated depths. The set is **implementer-authored**, covers
+only **five chapters**, and is neither independent gold nor a sealed benchmark.
+One probe moves overall FES by 3.33 points; one Vietnamese multi-passage probe
+moves that subgroup by 25 points. These are question-evidence completeness
+measurements, not character-dossier completeness measurements.
+
+| Group | Retriever | @10 R / FES | @20 R / FES | @30 R / FES | @50 R / FES |
+|---|---|---:|---:|---:|---:|
+| Overall (30) | BM25 | 36.67 / 36.67 | 36.67 / 36.67 | 46.67 / 46.67 | 46.67 / 46.67 |
+| Overall (30) | E5-small | 57.22 / 46.67 | 63.89 / 56.67 | 67.22 / 60.00 | 83.33 / 80.00 |
+| Overall (30) | E5-large | 68.33 / 60.00 | 82.22 / 73.33 | 82.22 / 73.33 | 91.67 / 90.00 |
+| Overall (30) | Hybrid-small | 52.22 / 43.33 | 67.22 / 63.33 | 73.89 / 70.00 | 88.33 / 86.67 |
+| Overall (30) | Hybrid-large | 65.00 / 56.67 | 88.89 / 83.33 | 90.56 / 86.67 | 95.00 / 93.33 |
+| ja (15) | BM25 | 73.33 / 73.33 | 73.33 / 73.33 | 93.33 / 93.33 | 93.33 / 93.33 |
+| ja (15) | E5-small | 76.67 / 66.67 | 80.00 / 73.33 | 80.00 / 73.33 | 90.00 / 86.67 |
+| ja (15) | E5-large | 73.33 / 66.67 | 83.33 / 73.33 | 83.33 / 73.33 | 93.33 / 93.33 |
+| ja (15) | Hybrid-small | 66.67 / 60.00 | 86.67 / 86.67 | 93.33 / 93.33 | 100.00 / 100.00 |
+| ja (15) | Hybrid-large | 66.67 / 60.00 | 96.67 / 93.33 | 100.00 / 100.00 | 100.00 / 100.00 |
+| vi (15) | BM25 | 0.00 / 0.00 | 0.00 / 0.00 | 0.00 / 0.00 | 0.00 / 0.00 |
+| vi (15) | E5-small | 37.78 / 26.67 | 47.78 / 40.00 | 54.44 / 46.67 | 76.67 / 73.33 |
+| vi (15) | E5-large | 63.33 / 53.33 | 81.11 / 73.33 | 81.11 / 73.33 | 90.00 / 86.67 |
+| vi (15) | Hybrid-small | 37.78 / 26.67 | 47.78 / 40.00 | 54.44 / 46.67 | 76.67 / 73.33 |
+| vi (15) | Hybrid-large | 63.33 / 53.33 | 81.11 / 73.33 | 81.11 / 73.33 | 90.00 / 86.67 |
+| Multi all (12) | BM25 | 66.67 / 66.67 | 66.67 / 66.67 | 66.67 / 66.67 | 66.67 / 66.67 |
+| Multi all (12) | E5-small | 68.06 / 41.67 | 76.39 / 58.33 | 76.39 / 58.33 | 83.33 / 75.00 |
+| Multi all (12) | E5-large | 62.50 / 41.67 | 80.56 / 58.33 | 80.56 / 58.33 | 95.83 / 91.67 |
+| Multi all (12) | Hybrid-small | 72.22 / 50.00 | 84.72 / 75.00 | 84.72 / 75.00 | 87.50 / 83.33 |
+| Multi all (12) | Hybrid-large | 70.83 / 50.00 | 88.89 / 75.00 | 93.06 / 83.33 | 95.83 / 91.67 |
+| Multi ja (8) | BM25 | 100.00 / 100.00 | 100.00 / 100.00 | 100.00 / 100.00 | 100.00 / 100.00 |
+| Multi ja (8) | E5-small | 81.25 / 62.50 | 87.50 / 75.00 | 87.50 / 75.00 | 93.75 / 87.50 |
+| Multi ja (8) | E5-large | 75.00 / 62.50 | 81.25 / 62.50 | 81.25 / 62.50 | 100.00 / 100.00 |
+| Multi ja (8) | Hybrid-small | 87.50 / 75.00 | 100.00 / 100.00 | 100.00 / 100.00 | 100.00 / 100.00 |
+| Multi ja (8) | Hybrid-large | 87.50 / 75.00 | 93.75 / 87.50 | 100.00 / 100.00 | 100.00 / 100.00 |
+| Multi vi (4) | BM25 | 0.00 / 0.00 | 0.00 / 0.00 | 0.00 / 0.00 | 0.00 / 0.00 |
+| Multi vi (4) | E5-small | 41.67 / 0.00 | 54.17 / 25.00 | 54.17 / 25.00 | 62.50 / 50.00 |
+| Multi vi (4) | E5-large | 37.50 / 0.00 | 79.17 / 50.00 | 79.17 / 50.00 | 87.50 / 75.00 |
+| Multi vi (4) | Hybrid-small | 41.67 / 0.00 | 54.17 / 25.00 | 54.17 / 25.00 | 62.50 / 50.00 |
+| Multi vi (4) | Hybrid-large | 37.50 / 0.00 | 79.17 / 50.00 | 79.17 / 50.00 | 87.50 / 75.00 |
+
+### Private: aggregates only
+
+| Retriever (15 probes) | @10 R / FES | @20 R / FES | @30 R / FES | @50 R / FES |
+|---|---:|---:|---:|---:|
+| E5-small | 56.67 / 20.00 | 73.33 / 53.33 | 82.22 / 66.67 | 91.11 / 80.00 |
+| E5-large | 57.78 / 26.67 | 82.22 / 60.00 | 91.11 / 80.00 | 93.33 / 86.67 |
+
+**Private reproduction: PASS.** Both dense models reproduce the Recall and FES
+values at @10/@20/@30/@50 from the recorded M1-30CH-K completeness curve (its F
+and K columns). The sole parsed-float difference is large Recall@20:
+0.8222222222222223 versus recorded 0.8222222222222222 (1.11e-16). Recomputing
+all depths from both frozen per-probe rankings with this evaluator's Python
+mean exactly matches every current Recall/FES value, confirming aggregation
+roundoff rather than a changed completeness result. Hit@10, Recall@10,
+Success@10 and full MRR also exactly match their recorded M1 result artifacts;
+the frozen probe/chunk input hashes match. This is reproduction, with no private
+probe tuning. No private queries, character names, text or IDs are published.
+None of these tested private depths reaches 100% Recall or FES: small reaches
+91.11% / 80.00% at 50; large reaches 93.33% / 86.67%. Private hybrids and BM25
+were not rerun beyond their previously recorded depths; no new private depth
+claim is made for them.
+
+### Passages in scope
+
+DEV indexes 353 passages for unchanged corpus statistics and filters eligible
+IDs by inclusive cutoff. Private indexes the original 97 parent chunks; their
+sizes are different from public paragraph passages. Depth is therefore not a
+comparable token budget between these corpora.
+
+| DEV cutoff | Eligible passages | 50 / eligible |
+|---|---:|---:|
+| 1 | 61 | 81.97% |
+| 2 | 143 | 34.97% |
+| 3 | 246 | 20.33% |
+| 4 | 313 | 15.97% |
+| 5 | 353 | 14.16% |
+
+| Private cutoff | Eligible parent chunks | min(50, eligible) / eligible |
+|---|---:|---:|
+| 10 | 30 | 100.00% |
+| 15 | 47 | 100.00% |
+| 18 | 57 | 87.72% |
+| 21 | 68 | 73.53% |
+| 24 | 79 | 63.29% |
+| 28 | 90 | 55.56% |
+| 30 | 97 | 51.55% |
+
+Counts are aggregates, not positive-score candidate counts. A retriever can
+return fewer than k, and lexical zero-score evidence remains unreachable by
+increasing k. At the full private cutoff 50 is 51.55% of the 97-chunk corpus.
+For hybrids this curve truncates the evaluator's **full-pool RRF ranking**
+(component depth `max(indexed passage count, 100)`). Reproduce that policy before
+truncating context for the writer: a standalone `retrieve --k 50` uses component
+depth 100 and its hybrid context has not been validated by this table. Dense and
+BM25 rankings do not have that RRF depth distinction. A future pipeline must
+measure its actual selection and any later prompt trimming, not assume an
+internal candidate-depth score survives the final handoff.
+
+### Interpretation and provisional delivery choice
+
+For an illustrative **80% overall FES** target on DEV, BM25 never reaches it in
+the tested range; E5-small needs 50, E5-large needs 50, hybrid-small needs 50,
+and hybrid-large first reaches it at 20 (83.33%). At 50 the respective overall
+Recall/FES values are 46.67/46.67, 83.33/80.00, 91.67/90.00, 88.33/86.67 and
+95.00/93.33 percent. For at least 90% overall Recall, large needs 50 and
+hybrid-large needs 30; the other three do not reach it by 50. Hybrid-large
+reaches 100% on the Japanese group at 30, and hybrid-small at 50; these small
+subgroups do not establish a general guarantee. BM25 has no Vietnamese matches
+at any measured depth.
+
+For private **80% FES**, small needs 50 while large needs 30 (both have Recall 91.11%
+at those depths). Large improves further to 86.67% FES at 50 but still misses
+required evidence. No tested depth provides complete private evidence for every
+probe. Earlier M1-30CH-L/M/N/O diagnostics already show why better early ranking
+or reranking can leave one required item outside a small delivery budget; their
+recorded results and conclusions are unchanged.
+
+**Small-corpus caveat.** Deep values are partly a property of corpus size, not
+of ranking quality. At private cutoffs 10 and 15, depth 50 returns every eligible
+chunk, and at DEV cutoff 1 it returns 82% of the eligible passages. The @50
+figures are therefore optimistic for a multi-volume story, where the same depth
+is a far smaller share of the corpus. Read the curve as "how deep the evidence
+sits in a 5-chapter / 30-chapter corpus", not as a depth that transfers.
+
+Keep **dense_e5_large at delivery depth 50** as the provisional Vietnamese
+pipeline safety-net choice: Vietnamese Recall/FES rises from 63.33/53.33 at ten
+to 90.00/86.67 at fifty. Depth 30 is an explicitly lower-completeness/cost option
+(private 91.11/80.00; Vietnamese DEV 81.11/73.33). The measured CPU load/query
+cost facts above still apply; larger writer context adds unmeasured generation
+cost. For mixed Japanese/Vietnamese review content, **hybrid-large at 50 under
+the evaluated full-pool fusion policy** is the stronger public completeness
+candidate (95.00/93.33 overall), rather than rejecting it from its @10 result.
+It ties dense-large on Vietnamese results, and its private @50 behavior remains
+unevaluated. Small remains an explicit lower-latency option with lower measured
+completeness. These are provisional choices to agree, not a pipeline change or
+an accepted quality threshold.
+
+Even at 50, dense-large/hybrid-large complete only 3/4 Vietnamese multi-passage
+probes (75%); small/hybrid-small complete 2/4 (50%). Similarity top-k cannot
+guarantee exhaustive evidence: a fixed budget can exclude low-similarity facts,
+pronouns, aliases, indirect reports and evidence spread across volumes. Increasing
+the budget changes this empirical curve, not that guarantee. Character-life
+coverage must come from exhaustive M4 mention/identity, event/participant,
+information and state-change extraction, persisted by M5 and checked for missing
+chapters/records. Today's roster preserves selected chapter-brief facts and is
+not exhaustive. Retrieval supplies separately verified safety-net candidates,
+quotes and callbacks; review briefs also need an extracted key-event checklist.
+See the updated Phase 2 proposal and
+`M6_CHARACTER_DOSSIER_EVAL_PROPOSAL_V0.md` (both **PROPOSAL**, no dossier gold or
+implementation authored).
+
+### Reproduction and verification for this change
+
+With the already cached pinned models and the offline environment above:
+
+```text
+python -m tools.story_retrieval.evaluate_v0 --probes tests/story_retrieval/fixtures/dev_probes_v1.yaml --k-values 1 5 10 20 30 50 --retriever bm25 dense_e5 dense_e5_large hybrid hybrid_large --private-root .local/none --cache-dir .local/story_retrieval/embedding_cache --json
+python -m tools.story_retrieval.evaluate_v0 --k-values 10 20 30 50 --retriever dense_e5 dense_e5_large --cache-dir .local/story_retrieval/embedding_cache --json
+```
+
+Both commands use `HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1`, `PYTHONUTF8=1` and
+`PYTHONDONTWRITEBYTECODE=1`, with eight CPU threads. DEV historical overall,
+language and category metrics are exactly equal to the previous v1 aggregate
+JSON. Raw aggregate outputs stay in ignored local storage; passage caches use
+per-story directories under the cache root. No network, model download, Gemini or LLM
+call, fixture edit, branch switch, commit or push occurred.
+
+Final no-torch gate: compile and test policy pass; all **894 tests** pass, zero
+failures/skips, seven unchanged declared environment gates. Exact suite lines:
+
+```text
+  OK   canonical_story    ran   99  failed   0  skipped   0  gated   0  5.97s
+  OK   ci                 ran   26  failed   0  skipped   0  gated   0  27.71s
+  OK   script_quality     ran   64  failed   0  skipped   0  gated   0  6.09s
+  OK   story_benchmark    ran  193  failed   0  skipped   0  gated   6  21.11s
+  OK   story_extraction   ran  362  failed   0  skipped   0  gated   0  41.3s
+  OK   story_ingestion    ran   79  failed   0  skipped   0  gated   1  2.26s
+  OK   story_memory       ran    7  failed   0  skipped   0  gated   0  0.02s
+  OK   story_pipeline     ran   40  failed   0  skipped   0  gated   0  2.32s
+  OK   story_retrieval    ran   24  failed   0  skipped   0  gated   0  7.7s
+```
+
+On Windows the diff-coverage guard reports 0% because of a path-separator issue
+in the guard (unchanged, not bypassed); CI on Linux runs the full gate. Direct
+retrieval coverage is:
+
+| Module | Covered statements | Coverage including branches |
+|---|---:|---:|
+| `cjk_lexical_v1.py` | 20/20 | 100% |
+| `evaluate_v0.py` | 115/116 | 99% |
+| `retrieval_v0.py` | 250/259 | 97% |
+| `retrieve.py` | 44/45 | 96% |
+| Total (including empty `__init__.py`) | 429/440 (97.5%) | 97% |
+
+A read-only calculation with the guard's own `diff_coverage_findings`, normalized
+coverage keys and working-tree/new-file changes gives **89/89 changed executable
+lines covered (100%)** against HEAD, and **429/440 (97.5%)** against origin/main.
+DEV evaluation took 336.282 s; the dense-only command
+including historical v0 DEV and private took 307.415 s. These are local runtime
+observations, not controlled latency benchmarks.

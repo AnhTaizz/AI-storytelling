@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 54 — test functions: 996
+Suites: 9 — test files: 55 — test functions: 1000
 
 ## canonical_story
 
@@ -1209,6 +1209,12 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 
 ## story_retrieval
 
+### test_cjk_lexical_v1 (2)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_retrieval.cjk_lexical_v1`
+
+- `CjkLexicalV1Tests.test_normalization_words_and_script_runs`
+- `CjkLexicalV1Tests.test_scoring_preserves_tokens_without_cross_punctuation_bigrams`
+
 ### test_evaluate_v0 (5)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_benchmark.multi_gold_metrics`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.source`, `tools.story_retrieval.evaluate_v0`, `tools.story_retrieval.retrieval_v0`, `tools.story_retrieval.retrieve`
 
@@ -1218,9 +1224,11 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_benchmark.multi_gol
 - `EvaluateV0Tests.test_private_synthetic_mapping_cutoff_and_missing_files` — Chunk IDs map back correctly and future-only lexical evidence cannot be returned.
 - `EvaluateV0Tests.test_cli_aggregate_output_and_errors` — CLI emits aggregate-only JSON/text and handles dependency/argument errors.
 
-### test_retrieval_v0 (15)
+### test_retrieval_v0 (17)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_benchmark.bm25_lexical_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.source`, `tools.story_retrieval.retrieval_v0`, `tools.story_retrieval.retrieve`
 
+- `RetrievalV0Tests.test_story_isolation_api_cli_cache_and_deletion` — Same names/IDs stay in their story through reuse, CLI and warm caches.
+- `RetrievalV0Tests.test_story_identity_validation_and_tokenizer_selection` — Unsafe IDs fail; ja stays frozen, ko/zh use bigrams, dense accepts any language.
 - `RetrievalV0Tests.test_spoiler_boundary_and_narrower_window` — All retrievers filter a later exact match, even with an over-broad corpus.
 - `RetrievalV0Tests.test_invalid_requests` — Invalid query, cutoff, depth and windows fail before search.
 - `RetrievalV0Tests.test_corpus_loading_and_explicit_boundary_check` — The real loader bounds chapters; an invalid loader result fails explicitly.

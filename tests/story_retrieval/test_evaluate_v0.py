@@ -78,6 +78,10 @@ class EvaluateV0Tests(unittest.TestCase):
                     self.assertEqual(values['overall']['recall@10'], .625)
                     self.assertEqual(values['per_language']['ja']['recall@10'], .75)
                     self.assertEqual(values['per_language']['vi']['recall@10'], .5)
+                    self.assertEqual(values['multi_passage']['probe_count'], 1)
+                    self.assertEqual(values['multi_passage']['overall']['recall@10'], .5)
+                    self.assertEqual(values['multi_passage']['overall']['success@10'], 0)
+                    self.assertEqual(set(values['multi_passage']['per_language']), {'ja'})
                     self.assertEqual('per_category' in values, categorized)
                     if categorized:
                         self.assertEqual(set(values['per_category']), {'event', 'recap'})
@@ -92,6 +96,8 @@ class EvaluateV0Tests(unittest.TestCase):
         """Evaluation reports overall/language means and ranks without source text."""
         result = evaluate_dev(DEFAULT_PROBES, DEFAULT_MANIFEST, [Bm25RetrieverV0()])
         self.assertEqual(result['probe_count'], 10)
+        self.assertEqual(result['passages_in_scope'], {
+            'indexed': 353, 'by_cutoff': {'1': 61, '2': 143, '3': 246, '4': 313, '5': 353}})
         values = result['retrievers']['bm25_v0']
         self.assertEqual(values['version'], '0')
         expected = {'mrr', 'mrr@10'} | {f'{metric}@{k}' for metric in ['hit', 'recall', 'success', 'spoiler_violation']
@@ -127,9 +133,11 @@ class EvaluateV0Tests(unittest.TestCase):
                     self.assertEqual(values['per_probe'][0]['ranking'],
                                      [{'passage_id': p.passage_id, 'rank': i}
                                       for i, p in enumerate(passages[:max(depths)], 1)])
-        for k_values in [(), (0,), ('bad',)]:
-            with self.subTest(k_values=k_values), self.assertRaises(ValueError):
-                evaluate_dev(DEFAULT_PROBES, DEFAULT_MANIFEST, [Bm25RetrieverV0()], k_values)
+        for evaluator in [evaluate_dev, evaluate_private]:
+            for k_values in [(), (0,), (-1,), ('bad',)]:
+                with self.subTest(evaluator=evaluator.__name__, k_values=k_values), self.assertRaises(ValueError):
+                    args = (DEFAULT_PROBES, DEFAULT_MANIFEST, [Bm25RetrieverV0()]) if evaluator == evaluate_dev else ('.local/none',)
+                    evaluator(*args, k_values=k_values)
 
     def test_private_synthetic_mapping_cutoff_and_missing_files(self):
         """Chunk IDs map back correctly and future-only lexical evidence cannot be returned."""
@@ -152,6 +160,7 @@ class EvaluateV0Tests(unittest.TestCase):
             result = evaluate_private(root)
             self.assertEqual(result['mode'], 'CUTOFF_FILTERED')
             self.assertEqual(result['probe_count'], 2)
+            self.assertEqual(result['passages_in_scope'], {'indexed': 2, 'by_cutoff': {'1': 1}})
             metrics = result['retrievers']['bm25_v0']
             self.assertEqual(result['retriever_versions'], {'bm25_v0': '0'})
             self.assertTrue({'hit@20', 'recall@20', 'success@20', 'mrr@10'} <= metrics.keys())
@@ -174,18 +183,24 @@ class EvaluateV0Tests(unittest.TestCase):
                            for i in range(1, 22)]
             late_probe = dict(probe_id='late', question='x', cutoff_chapter=1,
                               required_evidence_chunk_ids=['chunk21'])
-            for gold_rank in [11, 20, 21]:
-                with self.subTest(first_gold_rank=gold_rank):
+            for gold_rank, depths in [(11, None), (20, (20, 30, 50)), (21, (20, 30, 50))]:
+                with self.subTest(first_gold_rank=gold_rank, depths=depths):
                     late_probe['required_evidence_chunk_ids'] = [f'chunk{gold_rank}']
                     (root / 'LONG_RANGE_PROBE_V1/probes.yaml').write_text(
                         yaml.safe_dump([late_probe]), encoding='utf-8')
                     path.write_text('\n'.join(json.dumps(row) for row in late_chunks), encoding='utf-8')
-                    late = evaluate_private(root, [Bm25RetrieverV0()])['retrievers']['bm25_v0']
+                    result = evaluate_private(root, [Bm25RetrieverV0()], **(
+                        {'k_values': depths} if depths is not None else {}))
+                    late = result['retrievers']['bm25_v0']
                     self.assertAlmostEqual(late['mrr'], 1 / gold_rank)
                     self.assertEqual(late['mrr@10'], 0)
                     for metric in ['hit', 'recall', 'success']:
                         self.assertEqual(late[f'{metric}@20'], int(gold_rank <= 20))
                     self.assertEqual(late['spoiler_violation@20'], 0)
+                    self.assertIn('recall@10', late)
+                    if depths:
+                        self.assertEqual(late['recall@30'], 1)
+                        self.assertEqual(late['success@50'], 1)
             path.write_text('\n'.join(json.dumps(row) for row in chunks + [chunks[0]]), encoding='utf-8')
             with self.assertRaises(ValueError):
                 evaluate_private(root)
@@ -196,17 +211,25 @@ class EvaluateV0Tests(unittest.TestCase):
     def test_cli_aggregate_output_and_errors(self):
         """CLI emits aggregate-only JSON/text and handles dependency/argument errors."""
         with tempfile.TemporaryDirectory() as tmp:
-            for path, count in [(None, 10), (DEFAULT_PROBES.with_name('dev_probes_v1.yaml'), 30)]:
+            for path, count, depths in [(None, 10, None),
+                                        (DEFAULT_PROBES.with_name('dev_probes_v1.yaml'), 30, [1, 5, 10, 20, 30, 50])]:
                 for as_json in [True, False]:
                     with self.subTest(probes=path, as_json=as_json), redirect_stdout(io.StringIO()) as output:
                         args = ['--retriever', 'bm25', '--private-root', tmp] + (['--json'] if as_json else [])
-                        self.assertEqual(main(args + (['--probes', str(path)] if path else [])), 0)
+                        args += ['--k-values', *map(str, depths)] if depths else []
+                        with patch('tools.story_retrieval.evaluate_v0.evaluate_private', return_value=None) as private:
+                            self.assertEqual(main(args + (['--probes', str(path)] if path else [])), 0)
+                        self.assertEqual(tuple(private.call_args.args[2]), tuple(depths or (1, 3, 5, 10, 20)))
                         text = output.getvalue()
                         self.assertNotIn('per_probe', text)
                         if as_json:
                             summary = json.loads(text)
                             self.assertIsNone(summary['private'])
                             self.assertEqual(summary['dev']['probe_count'], count)
+                            self.assertEqual(summary['dev']['passages_in_scope']['indexed'], 353)
+                            self.assertEqual({key for key in summary['dev']['retrievers']['bm25_v0']['overall']
+                                              if key.startswith('recall@')},
+                                             {f'recall@{k}' for k in depths or [1, 5, 10]})
                             self.assertEqual('per_category' in summary['dev']['retrievers']['bm25_v0'], path is not None)
                         else:
                             self.assertIn('private: not run', text)
@@ -228,8 +251,10 @@ class EvaluateV0Tests(unittest.TestCase):
                 self.assertTrue(error.getvalue().startswith('error: '))
                 self.assertIn('probes: [', error.getvalue())
                 self.assertEqual(output.getvalue(), '')
-        with redirect_stderr(io.StringIO()):
-            self.assertEqual(main(['--retriever', 'unknown']), 2)
+        for args in [['--retriever', 'unknown'], ['--k-values', '0'], ['--k-values', '-2'],
+                     ['--k-values', 'bad'], ['--k-values']]:
+            with self.subTest(args=args), redirect_stderr(io.StringIO()):
+                self.assertEqual(main(args), 2)
         with redirect_stdout(io.StringIO()):
             self.assertEqual(main(['--help']), 0)
         with tempfile.TemporaryDirectory() as tmp:
