@@ -665,6 +665,39 @@ The run COMPLETED in 17 calls, 234,402 tokens and 357 s. S2's episode 2 took 31 
 - The plan may cite them like recap CORE events. The audits read their own epistemic label, so a recalled rumour must stay a rumour.
 - `--no-callbacks` turns this off. If the corpus cannot be built (for example a background brief cites a passage outside its chapter), the reason is recorded as `callbacks_skipped`, and the episode runs on without callbacks.
 
+**Story Brief for review (M7).** `docs/TARGET_ARCHITECTURE.md` presents the Story Brief to the user before planning ("approve / edit / continue"). Every run now writes the episode's declared factual boundary, built deterministically by `tools/story_pipeline/episode_brief.py` once the briefs, the recap and the callbacks are final:
+
+- `story_brief.json` (`EPISODE_STORY_BRIEF/v1`) holds:
+  - the scope and spoiler cutoff;
+  - per chapter: events with importance, characters (glossary display names) with facts, relationships, unknowns, forbidden inferences and the closing hook;
+  - an `uncertain` list of every item not labelled EXPLICIT;
+  - the earlier-chapter background (recap CORE events and callbacks);
+  - counts.
+
+  Every item keeps its ref (`c3.E2`, `c3.CH1.F2`, `c3.R1`, the brief-retrieval scheme) and evidence ids.
+- `story_brief.md`, and `story_brief.html`, which puts each item beside the source passages it cites and highlights uncertain items.
+- `brief_review_form.md` has one line per item: `- [ ] sai [ ] bỏ \`ref\` ...`.
+  - `[x] bỏ` drops the item. `[x] sai` with `→ correct text` at the end of the line replaces its text.
+  - A wrong mark without a correction, or an unknown ref, is reported and not applied.
+- The intended loop is `--stop-after brief`, then review, then `--resume <run dir>`.
+  - On resume, a filled form becomes a round in `brief_review.json` and is kept as `brief_review_form_reviewed_N.md`. Each round is applied in order to this run's episode briefs, before planning.
+  - `manifest["brief_review"]` lists every change. A dropped CORE event is flagged. `after_plan` is true when a plan already existed, since a saved plan is reused on resume.
+  - Story memory and `briefs/` stay unchanged, and later resumes replay the recorded rounds.
+
+**Brief check against the source (M7).** Errors born in the brief are invisible to the critic, which judges the script against the brief. Examples: "phản ứng dữ dội" for a flat refusal; "Amane định đóng cửa", which run 17 carried into its final script; "chưa từng có tin đồn" labelled as a rumour.
+
+- **How it works.** `tools/story_pipeline/brief_check.py` gives a fact checker each episode chapter's source and every brief item, with its ref, label and cited passages. It answers with the items that have a problem (NOT_SUPPORTED, CONTRADICTS_SOURCE, STRONGER_THAN_SOURCE, WRONG_LABEL, WRONG_SPEAKER), each with a corrected text and label. There is one call per chapter, before planning.
+- **What is applied.**
+  - A correction is applied to the run's copy of the brief only if the corrected brief still passes every brief check. Stored memory keeps the model's brief.
+  - A CORE event is never removed automatically.
+  - Corrections that are not applied are listed for the reviewer in `brief_check.md` and the manifest (`brief_check`).
+- **Switches.** `--no-brief-check` turns the check off. A check that cannot answer is recorded and the episode goes on.
+- **Trial on stored briefs** (sample chapters 1–5 and the original Chinese story chapters 1–2): 7 calls and 174k tokens found 15 problems. On a manual check against the source, 14 are real and 1 is arguable (a nickname labelled REPORTED rather than FIGURATIVE). They include "đứng đầu kỳ thi" written as a rumour although 1.7 states it, "định đóng cửa", "như thể anh nói nhiều người" (4.32 says "one or two"), and six character statements in the Chinese story labelled REPORTED.
+- **Corrections blocked by the brief checks.** At first, 5 of the 15 corrections were not applied. The deterministic hedge check read 噂 in "never heard a rumour that…" as hearsay, and let a 「…なさそうだ」 after 「ので、」 reach back to the first clause.
+  - Fixes: lexicons may list `negated_hedges` (ja, zh, vi), which are blanked before matching, and 「ので」 now closes a hedge's scope.
+  - Result: on the sample's stored corrections, 6 of 7 now apply. The remaining one, "always first in exams", waits for the reviewer.
+- **Live run** on chapters 2–3 (`--stop-after brief`): 2 calls. "định đóng cửa / trượt chân" was corrected before planning, and "no rumour" was listed for review. The run wrote `story_brief.html`, `story_brief.md`, `brief_check.md` and `brief_review_form.md`.
+
 ## Known limits
 
 - Brief paraphrase quality is not measured against gold. Quotes pin the evidence, but a

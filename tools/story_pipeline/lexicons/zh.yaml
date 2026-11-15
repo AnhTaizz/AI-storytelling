@@ -25,3 +25,5 @@ hedge:
   # 可能 is left out: it is inside 不可能 ("impossible"), which is not a hedge.
   speculation: [也许, 也許, 或许, 或許, 大概, 恐怕]
   metaphor: [比喻, 宛如, 犹如, 猶如, 仿佛, 彷彿, 如同, 般的]
+# A denied rumour is a plain statement (没听说过 …).
+negated_hedges: [没听说过, 沒聽說過, 从没听说, 從沒聽說, 没有传闻, 沒有傳聞]

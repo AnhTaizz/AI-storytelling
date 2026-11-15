@@ -57,6 +57,7 @@ Trong thư mục của lần chạy (`.local/story_pipeline_runs/<id>/` hoặc t
 
 | File | Dùng để |
 |---|---|
+| `brief_check.md` | Kết quả đối chiếu từng mục brief với nguồn: mục đã tự sửa, và mục **CẦN XEM** để bạn quyết |
 | `script_final.md` | Kịch bản cuối |
 | `script_final.txt` | Chỉ lời dẫn, không tiêu đề hay ký hiệu: đưa thẳng vào công cụ đọc giọng (TTS). Cả mùa có thêm `season_script.md` ghép mọi tập |
 | `review.html` | **Trang chấm**: mỗi đoạn kịch bản đặt cạnh brief và nguyên văn nguồn, chỗ bị báo lỗi được tô vàng |
@@ -105,6 +106,26 @@ python -m tools.story_pipeline.run_pipeline --resume <thư mục lần chạy> -
 - Không cần gõ lại `--chapters`, `--recap`, model hay các thiết lập kiểm tra: `--resume` tự lấy lại đúng tham số của lần chạy đó (in ra dòng "resume: using the run's own ..."), nên các bước đã có được dùng lại. Tham số nào bạn gõ lại thì dùng giá trị bạn gõ.
 - Phiếu bạn đã chấm được giữ lại thành `review_form_reviewed_1.md`, và một phiếu trống mới được tạo cho bản đã sửa.
 - Với cả mùa: chạy lại lệnh `run_story` cùng các tham số cũ, thêm `--apply-review`. Chỉ những tập có lỗi chưa sửa mới được chạy lại.
+
+### Duyệt Story Brief trước khi viết (M7)
+
+Story Brief là "ranh giới sự thật" của tập: kịch bản chỉ được kể những gì có trong đó. Nếu brief sai, kịch bản sẽ sai theo, nên tốt nhất là duyệt brief trước khi pipeline lập plan.
+
+1. Chạy đến hết bước brief:
+
+   ```
+   python -m tools.story_pipeline.run_pipeline --chapters 2-3 --recap --stop-after brief --model <chuỗi model>
+   ```
+2. Mở `story_brief.html`. Mỗi mục (sự kiện, sự thật về nhân vật, quan hệ) nằm cạnh nguyên văn nguồn nó trích. Mục có viền vàng là chưa chắc chắn (lời đồn, vẻ bề ngoài, phỏng đoán) và phải giữ đúng mức độ đó.
+3. Trong `brief_review_form.md`, mỗi mục là một dòng:
+   - Mục sai: đổi `[ ] sai` thành `[x] sai` và viết nội dung đúng sau `→` ở cuối dòng.
+   - Mục thừa hoặc không nên kể: đổi `[ ] bỏ` thành `[x] bỏ`.
+   - Mục đúng thì để nguyên.
+4. Chạy tiếp, không cần tham số nào khác: `python -m tools.story_pipeline.run_pipeline --resume <thư mục lần chạy>`.
+   - Plan, kịch bản và critic dùng brief đã sửa.
+   - `run_manifest.json` (mục `brief_review`) ghi lại từng thay đổi. Dòng không áp dụng được (thiếu nội dung sau `→`, hoặc mã mục không tồn tại) cũng được ghi lại, không bị bỏ qua lặng lẽ.
+   - Phiếu bạn đã điền được giữ lại thành `brief_review_form_reviewed_1.md`.
+   - Bộ nhớ của truyện không bị sửa: các tập khác vẫn dùng brief gốc.
 
 ## 6. Tên nhân vật (bảng tên của truyện)
 

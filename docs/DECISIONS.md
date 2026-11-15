@@ -748,3 +748,27 @@ DECISION:
 
 ACCEPTANCE:
 M6 is accepted as a retrieval **baseline over the brief memory**. Measured on DEV v1 (30 probes, pinned chapter 1–5 briefs, no model): brief-then-passage Success@30 90.0% overall; Vietnamese Success@10 80.0% against 0% for passage BM25 and 53.3% recorded for e5-large; 0 spoiler violations. Limits: DEV probes are not a sealed benchmark; 20% of probes need evidence that no brief item cites; the memory it reads is the M5 prototype, so exhaustive entity evidence remains open (item 9).
+
+---
+
+## DEC-022 — M7 Story Brief: Verified, Reviewable Factual Boundary
+
+STATUS: ACCEPTED (decided by the agent on the Project Owner's request to finish M6 and move on to M7, 2026-11-15)
+
+DECISION:
+1. **The Story Brief of an episode** is the declared factual boundary between retrieval and planning (`docs/TARGET_ARCHITECTURE.md`, section 5 item 6). It is built from the episode's chapter briefs (verbatim quotes, epistemic labels, same-chapter evidence), the recap of earlier chapters and the M6 callbacks. It is written as `story_brief.json/.md/.html` before planning.
+2. **Each chapter brief is checked against its source** before planning (`brief_check.py`). A correction is applied to the run's copy only when the corrected brief passes every deterministic brief check. A CORE event is never removed automatically. Stored memory keeps the model's brief, so the check never rewrites history.
+3. **Optional owner review.** The owner may drop or correct items in `brief_review_form.md`; `--resume` applies them before planning, records every change and keeps the filled form. A review after the plan exists is flagged, because the plan is reused.
+4. **Deterministic checks keep the last word.** An LLM correction that conflicts with them is shown to the reviewer, not applied.
+
+ACCEPTANCE:
+M7 is accepted on this evidence:
+- the brief check found 15 problems in 7 stored chapter briefs, 14 of them real on a manual check against the source;
+- a live episode run produced the reviewable Story Brief and corrected a contradiction that had reached a final script before;
+- the owner-edit path is covered by tests.
+
+LIMITS:
+- No sealed brief-fidelity benchmark exists. The precision figure is one agent's check on 7 chapters.
+- Briefs keep selected facts. The M6 DEV probes found 20% of questions whose evidence no brief item cites.
+- The hedge check used to misread negated hearsay (「噂は聞いた事がない」) and a hedge after 「ので、」. Both are fixed: lexicons may list `negated_hedges`, and 「ので」 closes a hedge's scope. On the stored trial, 6 of 7 corrections now pass the brief checks; the last one waits for the reviewer.
+- Exhaustive extraction remains M4's.

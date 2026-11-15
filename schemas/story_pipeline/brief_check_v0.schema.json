@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "brief_check_v0",
+  "description": "Problems a fact checker found in one chapter brief, item by item, against the chapter's source text.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["findings"],
+  "properties": {
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ref", "verdict", "explanation", "corrected_text", "corrected_label"],
+        "properties": {
+          "ref": {"type": "string"},
+          "verdict": {"enum": ["NOT_SUPPORTED", "CONTRADICTS_SOURCE", "STRONGER_THAN_SOURCE", "WRONG_LABEL", "WRONG_SPEAKER"]},
+          "explanation": {"type": "string", "minLength": 1},
+          "corrected_text": {"type": ["string", "null"]},
+          "corrected_label": {"enum": ["EXPLICIT", "REPORTED", "APPEARANCE", "SPECULATION", "FIGURATIVE", null]}
+        }
+      }
+    }
+  }
+}

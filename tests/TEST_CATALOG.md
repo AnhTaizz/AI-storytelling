@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 63 — test functions: 1059
+Suites: 9 — test files: 66 — test functions: 1073
 
 ## canonical_story
 
@@ -1028,6 +1028,15 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_co
 - `M404B3CDev2PredictionRunnerTests.test_compiler_failure_is_repair_eligible_and_private_safe`
 - `M404B3CDev2PredictionRunnerTests.test_context_only_compiler_failure_remains_structural`
 
+### test_run_m4_04b3g_fv1_predictions_v1 (5)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_compiler_v1_1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.durable_research_executor_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.m4_04b3f_fv1_protocol_v1`, `tools.story_extraction.run_m4_04b3g_fv1_predictions_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `ValidationTests.test_structural_categories_carry_blockers_but_no_private_text`
+- `ValidationTests.test_runner_cannot_reach_gold_or_an_evaluator`
+- `RunTests.test_primary_repair_and_terminal_outcomes`
+- `RunTests.test_smoke_qualification_and_summary`
+- `RunTests.test_lock_mismatches_stop_before_any_call`
+
 ### test_story_extraction_contract_v0 (39)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.evaluate_extraction_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
@@ -1188,6 +1197,22 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 
 ## story_pipeline
 
+### test_brief_check (4)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.brief_check`, `tools.story_pipeline.llm`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`
+
+- `BriefCheckTests.test_items_are_listed_with_refs_labels_and_evidence`
+- `BriefCheckTests.test_answers_are_validated`
+- `BriefCheckTests.test_corrections_apply_only_when_the_brief_stays_valid`
+- `BriefCheckTests.test_the_stage_and_its_place_in_the_pipeline`
+
+### test_episode_brief (4)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.episode_brief`
+
+- `EpisodeBriefTests.test_the_episode_brief_keeps_refs_evidence_uncertainty_and_background`
+- `EpisodeBriefTests.test_renderings_show_every_item_with_its_sources`
+- `EpisodeBriefTests.test_owner_edits_round_trip_through_the_form`
+- `EpisodeBriefTests.test_edits_apply_to_copies_and_every_change_is_recorded`
+
 ### test_lexicon (7)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.lexicon`
 
@@ -1235,8 +1260,8 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `SeasonTests.test_season_with_the_real_pipeline_and_shared_memory`
 - `CliTests.test_bad_episode_plan_is_rejected_before_any_call`
 
-### test_story_pipeline_v0 (47)
-Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
+### test_story_pipeline_v0 (48)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.episode_brief`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
 
 - `test_profile`
 - `SourceTests.test_parse_range`
@@ -1274,6 +1299,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `EndToEndTests.test_critic_findings_the_source_supports_become_brief_gaps` — Season S2 episode 2: the critic flagged four details that the brief had left out
 - `EndToEndTests.test_source_check_answers_are_validated`
 - `EndToEndTests.test_later_revision_rounds_patch_only_the_sentences_at_fault` — Live run 13: a second full rewrite put new errors into correct text.
+- `EndToEndTests.test_story_brief_is_written_for_review_and_owner_edits_reach_the_plan` — M7: the episode Story Brief is the reviewable boundary before planning.
 - `EndToEndTests.test_owner_review_errors_are_fixed_in_a_patch_round` — The owner's quoted errors in review_form.md become one patch round (--apply-review).
 - `EndToEndTests.test_patch_edits_are_validated_and_applied_in_place`
 - `EndToEndTests.test_episode_with_memory_recap`

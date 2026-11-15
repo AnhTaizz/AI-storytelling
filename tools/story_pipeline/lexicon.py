@@ -48,6 +48,7 @@ class Lexicon:
     coordinators: Tuple[str, ...] = ()  # conjunctions that join two statements of equal rank ("và", "and")
     third_person_pronouns: Tuple[str, ...] = ()  # ways to refer to a character ("cậu", "anh", "cô")
     pronoun_exceptions: Tuple[str, ...] = ()  # look like pronouns but are nouns ("anh chàng", "cô nàng")
+    negated_hedges: Tuple[str, ...] = ()  # deny a hedge rather than use it (「噂は聞いた事がない」, "chưa từng nghe")
 
     def coordinated_parts(self, text: str) -> List[str]:
         """Split at commas, semicolons and coordinating conjunctions only. Unlike `clauses`,
@@ -131,8 +132,13 @@ class Lexicon:
                    for o in self.contrast_openers)
 
     def find(self, text: str, kind: str) -> List[Tuple[str, str]]:
-        """(concept, phrase) for every phrase of `kind` that occurs in `text`."""
+        """(concept, phrase) for every phrase of `kind` that occurs in `text`. For hedges,
+        phrases that deny one ("never heard a rumour that ...") are blanked first: the brief
+        check of chapter 3 rejected a correct EXPLICIT label because of 「噂は聞いた事がない」."""
         folded = text.casefold()
+        if kind == "hedge":
+            for phrase in sorted(self.negated_hedges, key=len, reverse=True):
+                folded = folded.replace(phrase, " ")
         found = []
         for concept, phrases in sorted(self.phrases.get(kind, {}).items()):
             for phrase in phrases:
@@ -166,7 +172,7 @@ def validate(data: dict, expected_language: str) -> List[str]:
         problems.append("word_boundaries must be true or false")
     for field in ("clause_markers", "contrast_endings", "contrast_openers", "speech_verbs",
                   "speech_complementizers", "audience_address", "coordinators", "third_person_pronouns",
-                  "pronoun_exceptions"):
+                  "pronoun_exceptions", "negated_hedges"):
         markers = data.get(field, [])
         if not isinstance(markers, list) or not all(
                 isinstance(m, str) and m.strip() and m == m.casefold().strip() for m in markers):
@@ -222,7 +228,7 @@ def load(language: str) -> Optional[Lexicon]:
                    tuple(data.get("contrast_openers", [])), tuple(data.get("speech_verbs", [])),
                    tuple(data.get("speech_complementizers", [])), tuple(data.get("audience_address", [])),
                    tuple(data.get("coordinators", [])), tuple(data.get("third_person_pronouns", [])),
-                   tuple(data.get("pronoun_exceptions", [])))
+                   tuple(data.get("pronoun_exceptions", [])), tuple(data.get("negated_hedges", [])))
 
 
 def missing_languages(*languages: str) -> FrozenSet[str]:

@@ -1,0 +1,288 @@
+task: M4-04B3G
+date: '2026-11-15'
+status: M4_04B3G_FV1_PREDICTIONS_LOCKED
+scope: BLIND_FV1_PREDICTION_RUN_AND_PREDICTION_LOCK_ONLY_NO_SCORING
+authorization: project owner delegation, 2026-11-15 ("Những gì tôi cần tôi duyệt thì bạn làm hộ tôi luôn nhé"),
+  confirmed the same day ("Oke bạn chạy tiếp đi, làm đi nhé")
+protocol_lock:
+  commit: 11a6ac622405709c0729b8ddf22cb4b7af91ce18
+  protocol_sha256: b33d2c4d2ca9e1d6a482789b330ba151cd46c836c527b8245499586caa3c243a
+  validation_sha256: 2ee8633539990472df4d69d21d6ab916df5232077f5ab287a3a6740e3564d638
+  record: benchmarks/m4_extraction/M4_04B3F_FV1_PROTOCOL_LOCK.yaml
+  protocol_rebuilt_and_verified_before_any_call: true
+runner:
+  module: tools/story_extraction/run_m4_04b3g_fv1_predictions_v1.py
+  runner_id: M4_04B3G_FV1_PREDICTION_RUNNER_V1
+  committed_before_any_call: f0d20cc
+fv1_bindings:
+  input_sha256: 724041283cde55ccbce27844c9297cf66eed857c96cf18989dc97997fef55729
+  blindness_manifest_sha256: cdb8c0dcc62d12e776b0061201f3ec984289007f6e11450266474cfe52a75ea8
+  input_and_manifest_hash_checked_before_any_call: true
+credential_qualification:
+  procedure: one M4-04B1K smoke call (Return exactly {"status":"ok"})
+  slot: gemini_slot_33
+  model: gemini-3.5-flash-lite
+  qualified: true
+  provider_operations: 1
+  tokens:
+    candidates_token_count: 11
+    prompt_token_count: 20
+    total_token_count: 31
+execution:
+  model: gemini-3.5-flash-lite
+  credential_slot: gemini_slot_33
+  case_order:
+  - FV1_01
+  - FV1_02
+  - FV1_03
+  - FV1_04
+  - FV1_05
+  - FV1_06
+  - FV1_07
+  - FV1_08
+  - FV1_09
+  - FV1_10
+  semantic_jobs: 12
+  semantic_job_budget: 20
+  provider_operations_semantic: 13
+  repairs: 2
+  terminal_counts:
+    STRUCTURAL_FAILURE: 1
+    STRUCTURAL_VALID: 9
+    TRANSPORT_FAILURE: 0
+  usage_totals_including_smoke:
+    cached_content_token_count: 6079
+    candidates_token_count: 45568
+    prompt_token_count: 124853
+    total_token_count: 170421
+prediction_lock:
+  prediction_set_sha256: 8e055962e5df600c87b7ea352a85636ece7efd3120059ce2cf64faa8816aff32
+  private_prediction_manifest:
+    name: M4_04B3G_FV1_PREDICTION_MANIFEST_V1.json
+    sha256: 00e989d4fd503b2eee94dff85211f4c9fb0e8e7b483dc001c3869b02dadad602
+  private_result:
+    name: M4_04B3G_FV1_PREDICTION_RESULT_V1.json
+    sha256: cc265d198cae49a554b7202c0c8a4472fad8e280ddc8166218d04a481d80b163
+  private_location: .local/story_extraction/M4_04B3G_FV1_PREDICTIONS_V1/ (git-ignored)
+  raw_outputs_committed: false
+  reason_raw_outputs_not_committed: drafts quote the private FV1 source text; this record binds them by sha256
+cases:
+- case_id: FV1_01
+  terminal_status: STRUCTURAL_VALID
+  repair_used: false
+  compiled_batch_sha256: a658233a38eb03a1cd050d2bf5adcd29f7fe1894a3cf36e83417c339db28765a
+  terminal_failure_sha256: null
+  attempts:
+  - phase: primary
+    request_fingerprint: b2cee982d68e56ddfb3be555a0ac70c78c759af4570e1ffa1482eacedddedb41
+    raw_response_sha256: 1a4d4365c781644ecbb18d31ab5bec9f2ab9843e60739d5dfec7b3cbe0c64123
+    draft_sha256: 832b0e6181abac769508048e25ae62cca6356c9de95df5d9a2fb8b796cfd3c6c
+    validation_category: null
+    blocker_codes: []
+    provider_operations: 1
+    windows: 1
+    tokens:
+      candidates_token_count: 4935
+      prompt_token_count: 9633
+      total_token_count: 14568
+- case_id: FV1_02
+  terminal_status: STRUCTURAL_VALID
+  repair_used: false
+  compiled_batch_sha256: 99a072d3af81232a1a7f848af81026a973b3618520ef70c54c8ec3d8d7dee755
+  terminal_failure_sha256: null
+  attempts:
+  - phase: primary
+    request_fingerprint: f44142b602764bbefcf69c9402850558db6b2e9c77fd1bf471fcea147fc8b6d5
+    raw_response_sha256: 895818959279bead4aa0d7a7b957a1fdb643b5d3163137be0079f5a25d19ccc7
+    draft_sha256: 9d4c1d305f11580629fdeda15a603b85a52620407e64c114c7d6cf957ec12287
+    validation_category: null
+    blocker_codes: []
+    provider_operations: 1
+    windows: 1
+    tokens:
+      candidates_token_count: 5754
+      prompt_token_count: 9641
+      total_token_count: 15395
+- case_id: FV1_03
+  terminal_status: STRUCTURAL_FAILURE
+  repair_used: true
+  compiled_batch_sha256: null
+  terminal_failure_sha256: b76e04e88bcb22fcc8bf53f6a9ba18fdf71fa05b4fab7bbdf7ab41ddf5774041
+  attempts:
+  - phase: primary
+    request_fingerprint: 18ad6531b68b15bea66279a50116e25b16d975477c210462b017daf727d1d9e9
+    raw_response_sha256: 062e44b85ad7e15ba288435298b3a7acfbe75ca2a2ae37d7dba0cd8eb703e546
+    draft_sha256: a7d362cb949538fbff1cc17c5e10899b1a4bc175fd2f200e9a04bdbf7c1f2579
+    validation_category: DRAFT_COMPILER_FAILURE
+    blocker_codes:
+    - CANONICAL_COMPILER:CANONICAL_CONFORMANCE_FAILURE
+    provider_operations: 1
+    windows: 1
+    tokens:
+      candidates_token_count: 4274
+      prompt_token_count: 9638
+      total_token_count: 13912
+  - phase: repair_1
+    request_fingerprint: a53b8935595ef3e700ee1fba748415860cb1ba56a9d986766791860e97416337
+    raw_response_sha256: 062e44b85ad7e15ba288435298b3a7acfbe75ca2a2ae37d7dba0cd8eb703e546
+    draft_sha256: a7d362cb949538fbff1cc17c5e10899b1a4bc175fd2f200e9a04bdbf7c1f2579
+    validation_category: DRAFT_COMPILER_FAILURE
+    blocker_codes:
+    - CANONICAL_COMPILER:CANONICAL_CONFORMANCE_FAILURE
+    provider_operations: 1
+    windows: 1
+    tokens:
+      candidates_token_count: 4274
+      prompt_token_count: 14138
+      total_token_count: 18412
+- case_id: FV1_04
+  terminal_status: STRUCTURAL_VALID
+  repair_used: true
+  compiled_batch_sha256: 3c5fe53183b690bcc655984ccdf94ed9cdb6655836ae3cba86faae9f557541fb
+  terminal_failure_sha256: null
+  attempts:
+  - phase: primary
+    request_fingerprint: 1a447d0c92b9348dd76e82f25a9cea09fd0c0c4067e84992ca166c3ef7aa3d30
+    raw_response_sha256: 97a94ed52a80451d7579f60380376f74242d4d77f14c1a4a73eade81bf52e83c
+    draft_sha256: 5d20ec1b207d9ebcfdb2f536970fa9336355eb9405749c044959d6acca09880d
+    validation_category: DRAFT_COMPILER_FAILURE
+    blocker_codes:
+    - QUOTE:AMBIGUOUS_QUOTE
+    provider_operations: 1
+    windows: 1
+    tokens:
+      candidates_token_count: 2122
+      prompt_token_count: 9568
+      total_token_count: 11690
+  - phase: repair_1
+    request_fingerprint: b4294ee75a8f3ee3fc3cefba7ea5d39cec7bd1982bb5dc87bea9239fca1367c8
+    raw_response_sha256: 67b223a9a487000372f7e7c32dab91e66bf27f17e79ae534407388591580626d
+    draft_sha256: a23993c652f99ee9dc6f69979363eb542a8354704cd13457d4aee5a62231848e
+    validation_category: null
+    blocker_codes: []
+    provider_operations: 1
+    windows: 1
+    tokens:
+      candidates_token_count: 2138
+      prompt_token_count: 11949
+      total_token_count: 14087
+- case_id: FV1_05
+  terminal_status: STRUCTURAL_VALID
+  repair_used: false
+  compiled_batch_sha256: 2de467b6090c0475dfa716ace7ab825dc89bcc0e1ec616d6ab289a22c10d00f3
+  terminal_failure_sha256: null
+  attempts:
+  - phase: primary
+    request_fingerprint: b9236d44acf1bd6c7260c585116d5b6689d27c30b6a8c3ae885650558b0a7d13
+    raw_response_sha256: 4ea07d3c9e4ca17a36b8d97ec3a330685595d07e3e3a18c4b4df95f2d405f0bd
+    draft_sha256: 5f7744063f617c5207cc6bbc5310de9135778a8069681ab2fbf390f9b1c3a4a4
+    validation_category: null
+    blocker_codes: []
+    provider_operations: 1
+    windows: 1
+    tokens:
+      candidates_token_count: 2197
+      prompt_token_count: 9601
+      total_token_count: 11798
+- case_id: FV1_06
+  terminal_status: STRUCTURAL_VALID
+  repair_used: false
+  compiled_batch_sha256: 4627e31aca14d448dbf2360c99d8b76062aab24b9d2c2278e91a1e264451a4b5
+  terminal_failure_sha256: null
+  attempts:
+  - phase: primary
+    request_fingerprint: 66e1936d2262405caafb5b71f65c5dacffc870d3c3e572a4bed7c65f862383d6
+    raw_response_sha256: f048e18e105397130368e47113e82478f6b1605aa8bf6edea92876b3369179e5
+    draft_sha256: 21a18e56c244525b1fb885974592d2582281c2e41a97e0196941507c1fca5d15
+    validation_category: null
+    blocker_codes: []
+    provider_operations: 1
+    windows: 1
+    tokens:
+      candidates_token_count: 2869
+      prompt_token_count: 9593
+      total_token_count: 12462
+- case_id: FV1_07
+  terminal_status: STRUCTURAL_VALID
+  repair_used: false
+  compiled_batch_sha256: 193350eae6e14171a8af6688e904b85ed86418656fc511149043be882a87b21b
+  terminal_failure_sha256: null
+  attempts:
+  - phase: primary
+    request_fingerprint: d381cccb11e3d7962051624a68781460c711befa6ee60083ce0a467fb400fa6f
+    raw_response_sha256: 01cc34c8a32704567e0705180dcae239b1d3eaccea47e4332278c78a4cfdd0ca
+    draft_sha256: da5fc4766f8ac7b99899c3a43f884581af578b59b7924333593368c0c6d27c4c
+    validation_category: null
+    blocker_codes: []
+    provider_operations: 1
+    windows: 1
+    tokens:
+      candidates_token_count: 4972
+      prompt_token_count: 9654
+      total_token_count: 14626
+- case_id: FV1_08
+  terminal_status: STRUCTURAL_VALID
+  repair_used: false
+  compiled_batch_sha256: ec8a6fc55ec533b4bdbec735bd5c9e9c014b2f22d5e1f360f8ae6ba10a8b3de1
+  terminal_failure_sha256: null
+  attempts:
+  - phase: primary
+    request_fingerprint: 1796dd3f04defcf14e2929f1bdf15ee64f05e4181ff91f9b3d07ee826902eaf8
+    raw_response_sha256: 9ab7a640f6075e5db2f9180af9688e4ae3793d726085a19d7c219b783c78aebc
+    draft_sha256: 0215c7d706f38b8192bcfe17451edfb4e1f826af6d31c82f6252c546287bc6cc
+    validation_category: null
+    blocker_codes: []
+    provider_operations: 1
+    windows: 1
+    tokens:
+      candidates_token_count: 3461
+      prompt_token_count: 9634
+      total_token_count: 13095
+- case_id: FV1_09
+  terminal_status: STRUCTURAL_VALID
+  repair_used: false
+  compiled_batch_sha256: 58c3e6f76955a4c8bc4ee0a20252901948422c1184a1cf99df47dac7f10aa581
+  terminal_failure_sha256: null
+  attempts:
+  - phase: primary
+    request_fingerprint: a6608533e46bd257989b66d5b26e72df5a934d359c9cf43142e41b79a1a5ef6b
+    raw_response_sha256: b5a6306d3736a76cd264358a569f70efe11d7911a2bb0074a5c41edbbc0b14eb
+    draft_sha256: 387d94d9e099c958e8adf4a004abf5c71699b510043a00f1feb18b767f7ae70f
+    validation_category: null
+    blocker_codes: []
+    provider_operations: 2
+    windows: 1
+    tokens:
+      cached_content_token_count: 6079
+      candidates_token_count: 4755
+      prompt_token_count: 9643
+      total_token_count: 14398
+- case_id: FV1_10
+  terminal_status: STRUCTURAL_VALID
+  repair_used: false
+  compiled_batch_sha256: 6775fbd1fada4baabc858d0d66111429d125197f31a2b79a25b2f696c53678bd
+  terminal_failure_sha256: null
+  attempts:
+  - phase: primary
+    request_fingerprint: c540764347056478f9704fec4721722ff2aadd6ff97cbf23d075d6a7360e233d
+    raw_response_sha256: e725a863b9de0202cea5542aed69153af7f3d46981e17ce9e9c5259dbd6d6caa
+    draft_sha256: f415d4e9e946a0a898feaebdb072dbf52b79796dc331cb545e0b50329c35eb5d
+    validation_category: null
+    blocker_codes: []
+    provider_operations: 1
+    windows: 1
+    tokens:
+      candidates_token_count: 3806
+      prompt_token_count: 12141
+      total_token_count: 15947
+boundaries:
+  FV1_gold_opened: false
+  FV1_gold_read_or_hashed: false
+  DEV2_gold_opened: false
+  holdout_accessed: false
+  scoring_performed: false
+  model_or_repair_calls_after_gold_open: 0
+  second_model_arm: false
+  protocol_changed: false
+  M4_04C_started: false
+  M5_started: false

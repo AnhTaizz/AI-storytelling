@@ -26,7 +26,9 @@ if str(REPO) not in sys.path:
 
 from tools.story_memory import glossary_v0  # noqa: E402
 from tools.story_memory.memory_v0 import StoryMemory, build_roster, recap_context, recap_event_refs  # noqa: E402
-from tools.story_pipeline import PIPELINE_VERSION, checks, lexicon, review_page, review_summary, stages  # noqa: E402
+from tools.story_pipeline import brief_check as brief_checker  # noqa: E402
+from tools.story_pipeline import (PIPELINE_VERSION, checks, episode_brief, lexicon, review_page,  # noqa: E402
+                                  review_summary, stages)
 from tools.story_pipeline.facts import StoryFacts  # noqa: E402
 from tools.story_pipeline.llm import CallLog, LLMClient, StageFailed  # noqa: E402
 from tools.story_pipeline.profile import DEFAULT_PROFILE_PATH, NarrativeProfile, load_profile  # noqa: E402
@@ -359,6 +361,85 @@ def callback_events(all_briefs: Sequence[Dict[str, Any]], briefs: Sequence[Dict[
     return callback_candidates(corpus, queries, per_query=2, limit=8, exclude=recap_event_refs(recap))
 
 
+# --------------------------------------------------------------------------- story brief (M7)
+
+BRIEF_REVIEW_FILE = "brief_review.json"
+BRIEF_FORM = "brief_review_form.md"
+
+
+def brief_check_step(client: LLMClient, out_dir: Path, scope: StoryScope, briefs: List[Dict[str, Any]],
+                     profile: NarrativeProfile, log: CallLog, max_repairs: int, manifest: Dict[str, Any],
+                     resume: bool) -> List[Dict[str, Any]]:
+    """M7 brief verification (tools/story_pipeline/brief_check.py): check each episode brief
+    against its chapter's source and apply the corrections that keep the brief valid, to this
+    run's copy only (memory keeps the brief the model wrote). Writes brief_check.md for the
+    reviewer; a check that cannot answer is recorded and the episode goes on."""
+    chapters = {c.order: c for c in scope.chapters}
+    checked: List[Dict[str, Any]] = []
+    summary: Dict[str, Any] = {}
+    for brief in briefs:
+        chapter = chapters[brief["chapter_order"]]
+        try:
+            result = cached(out_dir / "brief_check" / f"chapter_{chapter.order:03d}.json", resume,
+                            lambda: brief_checker.run_brief_check(client, chapter, brief, profile,
+                                                                  scope.source_language, log, max_repairs))
+        except StageFailed as exc:
+            summary[str(chapter.order)] = {"failed": str(exc)[:300]}
+            checked.append(brief)
+            continue
+        fixed, applied, rejected = brief_checker.apply_corrections(brief, result["findings"], chapter,
+                                                                   scope.source_language, profile.brief_language)
+        summary[str(chapter.order)] = {"findings": len(result["findings"]), "applied": applied, "rejected": rejected}
+        checked.append(fixed)
+    manifest["brief_check"] = summary
+    (out_dir / "brief_check.md").write_text(brief_checker.report_markdown(summary), encoding="utf-8")
+    return checked
+
+
+def story_brief_step(out_dir: Path, scope: StoryScope, briefs: List[Dict[str, Any]],
+                     recap: Optional[Dict[str, Any]], memory: Optional[StoryMemory],
+                     manifest: Dict[str, Any], resume: bool) -> List[Dict[str, Any]]:
+    """Apply the owner's recorded brief edits, then write story_brief.json/.md/.html and a
+    review form. A filled form found on resume becomes a new round in brief_review.json (so
+    later resumes replay it) and is kept as brief_review_form_reviewed_N.md."""
+    record = out_dir / BRIEF_REVIEW_FILE
+    rounds = json.loads(record.read_text(encoding="utf-8"))["rounds"] if record.is_file() else []
+    form = out_dir / BRIEF_FORM
+    if resume and form.is_file():
+        edits = episode_brief.parse_brief_review(form.read_text(encoding="utf-8"))
+        if edits:
+            rounds.append({"edits": edits, "after_plan": (out_dir / "plan.json").is_file()})
+            write_json(record, {"rounds": rounds})
+            index = 1
+            while (out_dir / f"brief_review_form_reviewed_{index}.md").exists():
+                index += 1
+            form.rename(out_dir / f"brief_review_form_reviewed_{index}.md")
+    changes: List[Dict[str, Any]] = []
+    rejected: List[Dict[str, Any]] = []
+    for review in rounds:  # each round's refs name items of the brief the owner saw then
+        briefs, report = episode_brief.apply_brief_review(briefs, review["edits"])
+        changes += report["changes"]
+        rejected += report["rejected"]
+    if rounds:
+        manifest["brief_review"] = {"rounds": len(rounds), "changes": changes, "rejected": rejected,
+                                    # A plan made before the review is reused on resume.
+                                    "after_plan": any(r.get("after_plan") for r in rounds)}
+    glossary = None
+    if memory is not None:
+        try:
+            glossary = glossary_v0.load(memory.directory.parent / "glossary.yaml")
+        except ValueError:
+            glossary = None
+    episode = episode_brief.build_episode_brief(scope, briefs, recap, glossary)
+    passages = {p.passage_id: p.text for c in scope.chapters for p in c.passages}
+    write_json(out_dir / "story_brief.json", episode)
+    (out_dir / "story_brief.md").write_text(episode_brief.render_markdown(episode), encoding="utf-8")
+    (out_dir / "story_brief.html").write_text(episode_brief.render_html(episode, passages), encoding="utf-8")
+    if not form.is_file() or not episode_brief.parse_brief_review(form.read_text(encoding="utf-8")):
+        form.write_text(episode_brief.brief_review_form(episode), encoding="utf-8")
+    return briefs
+
+
 # --------------------------------------------------------------------------- orchestration
 
 
@@ -369,7 +450,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         background: Sequence[Chapter] = (), memory: Optional[StoryMemory] = None,
         source_check: bool = True, source_check_samples: int = 1, full_revision_rounds: int = 1,
         full_recheck: bool = False, source_check_chunk: int = 4, owner_review: Optional[Path | str] = None,
-        callbacks: bool = True,
+        callbacks: bool = True, check_briefs: bool = True,
         invocation: Optional[Dict[str, Any]] = None, progress: Callable[[str], None] = lambda message: None) -> Dict[str, Any]:
     """`scope` is the episode. `background` are earlier chapters, summarised from memory as a
     recap (never later chapters). With `memory`, chapter briefs are reused across runs."""
@@ -392,7 +473,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         "settings": {"max_repairs": max_repairs, "revision_rounds": revision_rounds,
                      "revise_severities": list(revise_severities), "stop_after": stop_after,
                      "source_check": source_check, "source_check_samples": source_check_samples,
-                     "full_recheck": full_recheck, "source_check_chunk": source_check_chunk, "callbacks": callbacks,
+                     "full_recheck": full_recheck, "source_check_chunk": source_check_chunk, "callbacks": callbacks, "check_briefs": check_briefs,
                      "full_revision_rounds": full_revision_rounds},
         "invocation": invocation,
         "prompt_fingerprints": stages.prompt_fingerprints(),
@@ -461,6 +542,11 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                     recap["callbacks"] = found
         if recap is not None:
             write_json(out_dir / "memory_recap.json", recap)
+        if check_briefs:
+            briefs = brief_check_step(client, out_dir, scope, briefs, profile, log, max_repairs, manifest, resume)
+        # M7: the episode's Story Brief, the reviewable factual boundary. The owner's edits
+        # (brief_review_form.md) apply to this run's briefs before planning, never to memory.
+        briefs = story_brief_step(out_dir, scope, briefs, recap, memory, manifest, resume)
         if stop_after == "brief":
             return finish("STOPPED_AFTER_BRIEF")
 
@@ -693,6 +779,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--apply-review", nargs="?", const="review_form.md", default=None, metavar="FORM",
                         help="with --resume: fix the quoted errors of a filled review form (default: the run's "
                              "review_form.md) in one patch round, then recheck the changed paragraphs")
+    parser.add_argument("--no-brief-check", action="store_true",
+                        help="skip the M7 check of each brief against its chapter's source")
     parser.add_argument("--no-callbacks", action="store_true",
                         help="do not add earlier events found by brief retrieval to an episode's recap")
     parser.add_argument("--full-recheck", action="store_true",
@@ -749,11 +837,12 @@ def run_options(args: argparse.Namespace) -> Dict[str, Any]:
             "stop_after": args.stop_after, "source_check": not args.no_source_check,
             "source_check_samples": args.source_check_samples, "source_check_chunk": args.source_check_chunk,
             "full_revision_rounds": args.full_revision_rounds, "full_recheck": args.full_recheck,
-            "owner_review": args.apply_review, "callbacks": not args.no_callbacks}
+            "owner_review": args.apply_review, "callbacks": not args.no_callbacks,
+            "check_briefs": not args.no_brief_check}
 
 
 # Options a resumed run takes from its own manifest unless given again on the command line.
-RESUMABLE_OPTIONS = ("manifest", "source_root", "chapters", "recap", "memory", "no_memory", "full_revision_rounds",
+RESUMABLE_OPTIONS = ("no_brief_check", "manifest", "source_root", "chapters", "recap", "memory", "no_memory", "full_revision_rounds",
                      "source_check_samples", "source_check_chunk", "full_recheck", "no_source_check", "profile",
                      "min_words", "max_words", "model", "temperature", "facts", "max_repairs", "revision_rounds",
                      "revise_severities", "stop_after", "no_callbacks")
