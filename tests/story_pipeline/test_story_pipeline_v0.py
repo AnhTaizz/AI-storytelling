@@ -526,6 +526,13 @@ class SemanticValidationTests(unittest.TestCase):
                 errors = stages.brief_atomicity_errors(brief, "vi")
                 self.assertEqual(len(errors), expected, errors)
                 self.assertTrue(all("one statement" in e for e in errors))
+        # Events too: an APPEARANCE event that also tells a plain action hedges the action as well.
+        brief["characters"][1]["facts"] = []
+        brief["events"][0].update(summary="So-yeon có vẻ khựng lại một chút khi chạm mắt rồi cúi đầu chào cậu bạn",
+                                  epistemic="APPEARANCE")
+        self.assertIn("event E1: is APPEARANCE but joins 2 statements", stages.brief_atomicity_errors(brief, "vi")[0])
+        brief["events"][0]["epistemic"] = "EXPLICIT"
+        self.assertEqual(stages.brief_atomicity_errors(brief, "vi"), [])
         self.assertEqual(stages.brief_atomicity_errors(brief, "xx"), [])  # no lexicon: not judged
 
     def test_brief_text_must_be_in_the_brief_language(self):

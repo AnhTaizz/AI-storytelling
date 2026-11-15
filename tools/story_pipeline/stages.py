@@ -266,6 +266,15 @@ def brief_atomicity_errors(brief: Dict[str, Any], brief_language: Optional[str])
                 errors.append(f"{where}: is {label} but joins {len(parts)} statements; a labelled fact must be "
                               f"one statement. Keep the {label.lower()} part here and put each other statement "
                               f"in its own fact with its own label")
+    for event in brief["events"]:
+        label = event.get("epistemic", "EXPLICIT")
+        parts = _statements(event["summary"], lex)
+        if label != "EXPLICIT" and len(parts) > 1:
+            # A Korean season episode 2 brief joined "seemed to stop" and "bowed" under APPEARANCE,
+            # and the script then hedged the plain bow ("dường như cúi đầu chào").
+            errors.append(f"event {event['id']}: is {label} but joins {len(parts)} statements, so every part reads "
+                          f"as {label.lower()}. Label the event by its main action (usually EXPLICIT) and keep the "
+                          f"hedge words only on the part the source hedges, or split it into separate events")
     return errors
 
 
