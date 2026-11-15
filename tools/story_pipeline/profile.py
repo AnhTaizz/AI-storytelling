@@ -10,7 +10,7 @@ import yaml
 
 DEFAULT_PROFILE_PATH = Path(__file__).resolve().parent / "profiles" / "vi_youtube_casual_v0.yaml"
 
-LANGUAGE_NAMES = {"vi": "Vietnamese", "en": "English", "ja": "Japanese"}
+LANGUAGE_NAMES = {"vi": "Vietnamese", "en": "English", "ja": "Japanese", "ko": "Korean", "zh": "Chinese"}
 
 
 @dataclass(frozen=True)

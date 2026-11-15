@@ -42,6 +42,61 @@ class Lexicon:
     clause_markers: Tuple[str, ...] = ()  # conjunctions that start a new clause
     contrast_endings: Tuple[str, ...] = ()  # clause-final connectives that close a contrast ("…が、")
     contrast_openers: Tuple[str, ...] = ()  # words that open a contrasting part ("but …")
+    speech_verbs: Tuple[str, ...] = ()  # verbs of saying ("giải thích", "explain")
+    speech_complementizers: Tuple[str, ...] = ()  # what introduces reported content ("rằng", "that")
+    audience_address: Tuple[str, ...] = ()  # the narrator talking to the viewers ("đúng không mọi người")
+    coordinators: Tuple[str, ...] = ()  # conjunctions that join two statements of equal rank ("và", "and")
+    third_person_pronouns: Tuple[str, ...] = ()  # ways to refer to a character ("cậu", "anh", "cô")
+    pronoun_exceptions: Tuple[str, ...] = ()  # look like pronouns but are nouns ("anh chàng", "cô nàng")
+
+    def coordinated_parts(self, text: str) -> List[str]:
+        """Split at commas, semicolons and coordinating conjunctions only. Unlike `clauses`,
+        a time or cause clause ("... khi ngẩng đầu") stays with its statement."""
+        parts = re.split(r"[,;，；、]+", text)
+        if self.coordinators:
+            alternatives = "|".join(re.escape(c) for c in sorted(self.coordinators, key=len, reverse=True))
+            pattern = rf"(?<!\w)(?:{alternatives})(?!\w)" if self.word_boundaries else f"(?:{alternatives})"
+            parts = [piece for part in parts for piece in re.split(pattern, part, flags=re.IGNORECASE)]
+        return [p.strip() for p in parts if p and p.strip()]
+
+    def without_audience_address(self, text: str) -> str:
+        """`text` with phrases that address the viewers blanked out, so that "mọi người" in
+        "đúng không mọi người?" is not read as "everyone" (live run 13)."""
+        folded = text.casefold()
+        for phrase in sorted(self.audience_address, key=len, reverse=True):
+            folded = folded.replace(phrase, " " * len(phrase))
+        return folded
+
+    # Words allowed between a speech verb and its complementizer ("nói với Mahiru rằng").
+    SPEECH_GAP = 30
+
+    def reported_speech_start(self, text: str) -> Optional[int]:
+        """Where the content of the first reported-speech construction starts ("... giải thích
+        rằng|..."), or None. A hedge phrase that contains a speech verb ("nghe nói") does not
+        count, and the verb and its complementizer must be in one clause."""
+        if not self.speech_verbs or not self.speech_complementizers:
+            return None
+        folded = text.casefold()
+        for phrase in sorted((p for ps in self.phrases.get("hedge", {}).values() for p in ps), key=len, reverse=True):
+            folded = folded.replace(phrase, " " * len(phrase))
+        boundary = (r"(?<!\w)", r"(?!\w)") if self.word_boundaries else ("", "")
+        complementizer = "|".join(re.escape(c) for c in self.speech_complementizers)
+        starts = []
+        for verb in self.speech_verbs:
+            for match in re.finditer(f"{boundary[0]}{re.escape(verb)}{boundary[1]}", folded):
+                tail = re.match(rf"[^,.;:!?、。，；]{{0,{self.SPEECH_GAP}}}?{boundary[0]}(?:{complementizer}){boundary[1]}",
+                                folded[match.end():])
+                if tail:
+                    starts.append(match.end() + tail.end())
+        return min(starts) if starts else None
+
+    def mentions_speech(self, text: str) -> bool:
+        """Whether a verb of saying occurs outside hedge phrases."""
+        folded = text.casefold()
+        for phrase in (p for ps in self.phrases.get("hedge", {}).values() for p in ps):
+            folded = folded.replace(phrase, " ")
+        boundary = (r"(?<!\w)", r"(?!\w)") if self.word_boundaries else ("", "")
+        return any(re.search(f"{boundary[0]}{re.escape(v)}{boundary[1]}", folded) for v in self.speech_verbs)
 
     def clauses(self, text: str) -> List[str]:
         """Split at punctuation and at this language's clause conjunctions."""
@@ -105,7 +160,9 @@ def validate(data: dict, expected_language: str) -> List[str]:
         problems.append(f"language must be {expected_language!r}")
     if not isinstance(data.get("word_boundaries"), bool):
         problems.append("word_boundaries must be true or false")
-    for field in ("clause_markers", "contrast_endings", "contrast_openers"):
+    for field in ("clause_markers", "contrast_endings", "contrast_openers", "speech_verbs",
+                  "speech_complementizers", "audience_address", "coordinators", "third_person_pronouns",
+                  "pronoun_exceptions"):
         markers = data.get(field, [])
         if not isinstance(markers, list) or not all(
                 isinstance(m, str) and m.strip() and m == m.casefold().strip() for m in markers):
@@ -158,7 +215,10 @@ def load(language: str) -> Optional[Lexicon]:
     phrases = {kind: {concept: tuple(values) for concept, values in data[kind].items()} for kind in KINDS}
     return Lexicon(language, data["word_boundaries"], data["chars_per_event"], phrases,
                    tuple(data.get("clause_markers", [])), tuple(data.get("contrast_endings", [])),
-                   tuple(data.get("contrast_openers", [])))
+                   tuple(data.get("contrast_openers", [])), tuple(data.get("speech_verbs", [])),
+                   tuple(data.get("speech_complementizers", [])), tuple(data.get("audience_address", [])),
+                   tuple(data.get("coordinators", [])), tuple(data.get("third_person_pronouns", [])),
+                   tuple(data.get("pronoun_exceptions", [])))
 
 
 def missing_languages(*languages: str) -> FrozenSet[str]:

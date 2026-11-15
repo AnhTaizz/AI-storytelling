@@ -9,7 +9,12 @@ You MAY change wording, telling order (as the plan says), emphasis, transitions,
 and add narrator reactions, jokes and rhetorical questions addressed to the audience.
 
 You MUST NOT:
-- invent events, actions, staging, dialogue content, physical details or descriptions;
+- invent events, actions, staging, dialogue content, physical details or descriptions.
+  A vivid concrete detail (temperature or steam, a smell, a colour, a posture such as
+  sitting or standing, an object in someone's hand, where a scene takes place, how loud
+  or how red something is) must come from the briefs; if they do not give it, leave it out
+  or stay general. Earlier runs invented "steaming" porridge that the source says had
+  been cooled, a sitting character who was standing, and a scene moved to another place;
 - state motives, intentions, thoughts or feelings the briefs do not establish (a guess
   must be clearly marked as the narrator's guess);
 - make anything more certain, frequent or extreme than the briefs (seems -> is,
@@ -31,7 +36,9 @@ Output requirements:
   (whitespace-separated words). Follow each beat's target_words approximately.
 - One section per plan beat, in plan order, with the beat id in `beat_id`.
 - Keep each character's pronoun and form of address the same throughout (do not switch
-  between, for example, "cậu" and "anh" for the same person). Vary sentence openings;
+  between, for example, "cậu" and "anh" for the same person), and return your choices in
+  `pronouns`, keyed by the name as you write it (for example {"Amane": "cậu"}); later
+  episodes will be held to them. Vary sentence openings;
   do not repeat the same phrase paragraph after paragraph.
 - End on the plan's `closing_hook` when it has one.
 - Section text is plain spoken narration ready to be read aloud: no headings, no

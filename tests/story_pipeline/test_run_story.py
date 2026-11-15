@@ -1,0 +1,139 @@
+"""Tests for tools/story_pipeline/run_story.py (running a story episode by episode)."""
+import json
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from test_story_pipeline_v0 import FakeModel, test_profile  # noqa: E402  (shared fixtures)
+
+from tools.story_memory.memory_v0 import StoryMemory  # noqa: E402
+from tools.story_pipeline import run_story  # noqa: E402
+from tools.story_pipeline.llm import ScriptedLLMClient  # noqa: E402
+from tools.story_pipeline.run_pipeline import DEFAULT_MANIFEST  # noqa: E402
+
+
+class StubRun:
+    """Stands in for run_pipeline.run: writes a manifest with a scripted status per episode."""
+
+    def __init__(self, outcomes):
+        self.outcomes = outcomes  # chapters start -> (status, error) or a list consumed in order
+        self.calls = []
+
+    def __call__(self, client, scope, profile, out_dir, **kwargs):
+        start = scope.chapters[0].order
+        self.calls.append({"start": start, "resume": kwargs["resume"],
+                           "background": [c.order for c in kwargs["background"]]})
+        outcome = self.outcomes.get(start, ("COMPLETED", None))
+        if isinstance(outcome, list):
+            outcome = outcome.pop(0)
+        status, error = outcome
+        manifest = {"status": status, "model_calls": 3, "seconds": 1.0,
+                    "usage": {"total": {"total": 100}}}
+        if error:
+            manifest["error"] = error
+        out_dir.mkdir(parents=True, exist_ok=True)
+        (out_dir / "run_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+        if status == "COMPLETED":
+            (out_dir / "report.json").write_text(json.dumps({
+                "gates": {"GATE_FACTUAL_GROUNDING": {"status": "FLAG"}, "GATE_SPOILER_DISCIPLINE": {"status": "PASS"}},
+                "findings": [{"x": 1}], "final_check": {"word_count": 950}}), encoding="utf-8")
+        return manifest
+
+
+class PlanTests(unittest.TestCase):
+    def test_episodes_cover_the_range_in_order(self):
+        self.assertEqual(run_story.plan_episodes(1, 5, "1,2-3,4-5"), [(1, 1), (2, 3), (4, 5)])
+        self.assertEqual(run_story.plan_episodes(1, 7, episode_size=3), [(1, 3), (4, 6), (7, 7)])
+        self.assertEqual(run_story.plan_episodes(4, 5), [(4, 4), (5, 5)])
+        for label, episodes in {"gap": "1,3-5", "overlap": "1-2,2-5", "short": "1,2-3", "backwards": "1,3-2"}.items():
+            with self.subTest(label):
+                with self.assertRaises(ValueError):
+                    run_story.plan_episodes(1, 5, episodes)
+        with self.assertRaises(ValueError):
+            run_story.plan_episodes(1, 5, episode_size=0)
+
+
+class SeasonTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.season_dir = Path(self.tmp.name) / "season"
+        self.ranges = [(1, 1), (2, 3), (4, 5)]
+
+    def season(self, stub, **kwargs):
+        return run_story.run_season(None, DEFAULT_MANIFEST, self.ranges, test_profile(), self.season_dir,
+                                    memory=None, run=stub, **kwargs)
+
+    def test_episodes_run_in_order_with_earlier_chapters_as_background(self):
+        stub = StubRun({})
+        season = self.season(stub)
+        self.assertEqual(season["status"], "COMPLETED")
+        self.assertEqual([c["background"] for c in stub.calls], [[], [1], [1, 2, 3]])
+        self.assertEqual([r["dir"] for r in season["episodes"]], ["ep01_ch1", "ep02_ch2-3", "ep03_ch4-5"])
+        self.assertEqual(season["episodes"][1]["gates_needing_review"], ["GATE_FACTUAL_GROUNDING"])
+        self.assertEqual(season["totals"]["tokens"], 300)
+        index = (self.season_dir / "season.md").read_text(encoding="utf-8")
+        self.assertIn("[review](ep02_ch2-3/review.html)", index)
+        page = (self.season_dir / "season.html").read_text(encoding="utf-8")
+        self.assertIn("href='ep02_ch2-3/review.html'", page)
+        self.assertIn("FACTUAL_GROUNDING", page)
+        self.assertEqual(json.loads((self.season_dir / "season.json").read_text(encoding="utf-8")), season)
+
+    def test_rerun_skips_completed_episodes_and_resumes_the_rest(self):
+        self.season(StubRun({2: ("FAILED", "stage plan failed after 3 attempt(s): bad JSON")}))
+        stub = StubRun({})
+        season = self.season(stub)
+        self.assertEqual([(c["start"], c["resume"]) for c in stub.calls], [(2, True), (4, False)])
+        self.assertTrue(season["episodes"][0]["skipped_as_completed"])
+        self.assertEqual(season["status"], "COMPLETED")
+
+    def test_quota_pauses_and_failures_stop_unless_told_to_keep_going(self):
+        cases = [
+            ("quota", {2: ("FAILED", "TransientProviderError: 429 RESOURCE_EXHAUSTED")}, {}, "PAUSED_QUOTA", [1, 2]),
+            ("failure stops", {2: ("FAILED", "stage brief failed")}, {}, "FAILED", [1, 2]),
+            ("keep going", {2: ("FAILED", "stage brief failed")}, {"stop_on_failure": False},
+             "COMPLETED_WITH_FAILURES", [1, 2, 4]),
+        ]
+        for label, outcomes, kwargs, status, started in cases:
+            with self.subTest(label):
+                season_dir = Path(self.tmp.name) / label.replace(" ", "_")
+                stub = StubRun(outcomes)
+                season = run_story.run_season(None, DEFAULT_MANIFEST, self.ranges, test_profile(), season_dir,
+                                              memory=None, run=stub, **kwargs)
+                self.assertEqual(season["status"], status)
+                self.assertEqual([c["start"] for c in stub.calls], started)
+                self.assertEqual(len(season["episodes"]), 3)  # episodes not reached are listed as NOT_RUN
+                if status != "COMPLETED_WITH_FAILURES":
+                    self.assertEqual(season["episodes"][2]["status"], "NOT_RUN")
+                    self.assertIn("tập 2", season["stop_reason"])
+                    self.assertIn("Dừng: tập 2", (season_dir / "season.html").read_text(encoding="utf-8"))
+
+    def test_season_with_the_real_pipeline_and_shared_memory(self):
+        client = ScriptedLLMClient(FakeModel())
+        with tempfile.TemporaryDirectory() as tmp:
+            memory = StoryMemory(Path(tmp) / "memory", "story-sample-0001")
+            season = run_story.run_season(client, DEFAULT_MANIFEST, [(1, 1), (2, 2)], test_profile(),
+                                          Path(tmp) / "season", memory=memory,
+                                          options={"source_check": False})
+            self.assertEqual(season["status"], "COMPLETED", season)
+            # Episode 2 reuses chapter 1's brief from memory instead of asking the model again.
+            briefs = [c for c in client.calls if c["stage"] == "brief"]
+            self.assertEqual(len(briefs), 2)
+            ep2 = json.loads((Path(tmp) / "season" / "ep02_ch2" / "run_manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(ep2["brief_sources"], {"1": "memory", "2": "model"})
+            self.assertTrue((Path(tmp) / "season" / "ep02_ch2" / "review.html").is_file())
+            self.assertGreater(ep2["usage"]["total"]["calls"], 0)
+
+
+class CliTests(unittest.TestCase):
+    def test_bad_episode_plan_is_rejected_before_any_call(self):
+        self.assertEqual(run_story.main(["--chapters", "1-5", "--episodes", "1,3-5"]), 2)
+
+
+if __name__ == "__main__":
+    unittest.main()

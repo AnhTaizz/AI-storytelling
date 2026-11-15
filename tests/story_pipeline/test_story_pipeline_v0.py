@@ -12,6 +12,8 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+import yaml
+
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
 
@@ -29,7 +31,9 @@ from tools.story_pipeline.profile import load_profile  # noqa: E402
 from tools.story_pipeline import run_pipeline  # noqa: E402
 from tools.story_pipeline.run_pipeline import DEFAULT_MANIFEST, gate_report, run  # noqa: E402
 from tools.story_memory.memory_v0 import StoryMemory  # noqa: E402
-from tools.story_pipeline.source import Chapter, Passage, StoryScope, load_scope, parse_range  # noqa: E402
+from tools.story_pipeline.source import (  # noqa: E402
+    Chapter, Passage, StoryScope, layout_warnings, load_scope, parse_range,
+)
 
 SECTION_1 = ("Một buổi chiều mưa, Amane đi ngang qua công viên và thấy Mahiru ngồi một mình "
              "trên xích đu, người ướt sũng.")
@@ -151,7 +155,20 @@ class FakeModel:
         if stage == "critic":
             self.critic_calls += 1
             return json.dumps(critic_json(user, self.critic_calls == 1), ensure_ascii=False)
+        if stage == "source_check":
+            units = list(dict.fromkeys(re.findall(r"<(P\d{3})>", user)))
+            return json.dumps({"paragraphs": [{"unit_id": u, "findings": []} for u in units],
+                               "critic_reviews": critic_reviews(user, self.flag_verdict)})
         raise AssertionError(stage)
+
+    flag_verdict = "NOT_IN_SOURCE"
+
+
+def critic_reviews(user, verdict):
+    """An answer for every critic statement the source-check prompt lists."""
+    return [{"id": flag, "verdict": verdict, "passage_ids": ["1.2"] if verdict == "IN_SOURCE" else [],
+             "explanation": "nguồn nói vậy" if verdict == "IN_SOURCE" else "nguồn không có"}
+            for flag in re.findall(r"^(F\d+) \(", user, re.MULTILINE)]
 
 
 def test_profile():
@@ -176,6 +193,21 @@ class SourceTests(unittest.TestCase):
     def test_chapters_outside_manifest_rejected(self):
         with self.assertRaises(ValueError):
             load_scope(DEFAULT_MANIFEST, (5, 6))
+
+
+    def test_chapter_packed_into_one_passage_is_reported(self):
+        """A source with single line breaks reaches the pipeline as one huge passage."""
+        packed = Chapter(2, "doc", "t", (Passage("2.1", "\n".join(f"문장 {n}." for n in range(8))),))
+        normal = load_scope(DEFAULT_MANIFEST, (1, 1)).chapters[0]
+        warnings = layout_warnings([normal, packed])
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("chapter 2: 8 lines in 1 passage(s)", warnings[0])
+        report = run_pipeline.report_markdown(
+            {"run_id": "r", "scope": {"label": "chapter 2", "story_id": "s"}, "client": "c",
+             "profile": {"profile_id": "p", "min_words": 1, "max_words": 2}, "model_calls": 0, "seconds": 0,
+             "status": "COMPLETED", "source_warnings": warnings, "versions": []},
+            {"gates": {}, "claim_counts": {}, "findings": [], "undetermined": []})
+        self.assertIn("Cảnh báo nguồn", report)
 
 
 class ChecksTests(unittest.TestCase):
@@ -376,6 +408,8 @@ class SemanticValidationTests(unittest.TestCase):
             ("hedge on the other side of a contrast", contrast, "Amane khác lớp", "EXPLICIT", "ja", "vi", []),
             ("quote spanning a contrast", across, "Cô hoàn hảo, cậu khác lớp", "EXPLICIT", "ja", "vi",
              ["label", "text"]),
+            ("Korean appearance with a simile marker", "소연의 눈가가 조금 붉어진 것처럼 보였다.",
+             "Vành mắt So-yeon có vẻ hơi đỏ", "APPEARANCE", "ko", "vi", []),
             ("Korean hearsay kept", korean, "Nghe nói cô thường nhận lời tỏ tình", "REPORTED", "ko", "vi", []),
         ]
         for label_text, source, fact, label, src_lang, brief_lang, expected in cases:
@@ -431,6 +465,49 @@ class SemanticValidationTests(unittest.TestCase):
         self.assertEqual(stages.hedge_audit(critic, [brief], None, None), [])
         self.assertFalse(stages.audit_coverage("vi", "en", "ja")["script_hedge_audit"])
 
+    def test_thought_or_narration_must_not_become_speech(self):
+        """Live run 10: Amane's thought (4.18) was told as something he explains to Mahiru."""
+        brief = brief_json(1)
+        brief["characters"][0]["facts"] = [
+            {"text": "Đã đưa ô vì bận tâm đến ánh mắt như đứa trẻ bị lạc của cô", "evidence": ["1.18"],
+             "quote": "x", "epistemic": "FIGURATIVE"},
+            {"text": "Nói dối rằng đã đưa ô cho một đứa trẻ bị lạc", "evidence": ["1.18"], "quote": "x",
+             "epistemic": "EXPLICIT"},
+            {"text": "Cho rằng sẽ không còn gặp lại Mahiru nữa", "evidence": ["1.30"], "quote": "x",
+             "epistemic": "EXPLICIT"},
+        ]
+        passages = {"1.18": "彼女が気になったからこそ傘を押し付けたのだ。", "1.30": "「もう会わないだろ」と周は言った。"}
+
+        def run_case(paragraph, refs):
+            units = [{"unit_id": "P001", "sha256": "x", "text": paragraph}]
+            critic = {"units": [{"unit_id": "P001", "no_claim_reason": None, "claims": [
+                {"claim": "x", "claim_type": "SUPPORTED_FACT", "failure_category": None, "severity": None,
+                 "brief_refs": refs, "explanation": "e", "suggested_fix": None}]}]}
+            return stages.attribution_audit(critic, [brief], units, passages)
+
+        cases = [
+            ("thought told as speech",
+             "Amane trấn an cô, giải thích rằng cậu bận tâm đến ánh mắt như đứa trẻ bị lạc của cô.", ["c1.CH1"], 1),
+            ("same content as a thought", "Cậu đưa ô vì bận tâm đến ánh mắt như đứa trẻ bị lạc của cô.", ["c1.CH1"], 0),
+            # The brief records that he said it, so telling it as speech is right.
+            ("brief records the speech", "Amane nói rằng đã đưa ô cho một đứa trẻ bị lạc.", ["c1.CH1"], 0),
+            # A cited passage has dialogue, so the brief may have summarised speech.
+            ("cited passage has dialogue", "Amane nói rằng sẽ không còn gặp lại Mahiru nữa.", ["c1.CH1"], 0),
+            ("hearsay is not speech", "Nghe nói rằng cậu bận tâm đến ánh mắt như đứa trẻ bị lạc của cô.", ["c1.CH1"], 0),
+            ("paragraph cites nothing",
+             "Amane giải thích rằng cậu bận tâm đến ánh mắt như đứa trẻ bị lạc của cô.", [], 0),
+        ]
+        for label, paragraph, refs, expected in cases:
+            with self.subTest(label):
+                findings = run_case(paragraph, refs)
+                self.assertEqual(len(findings), expected, findings)
+                for finding in findings:
+                    self.assertEqual((finding["source"], finding["severity"]), ("attribution_audit", "MEDIUM"))
+        self.assertEqual(stages.attribution_audit({"units": []}, [brief], None, passages), [])
+        self.assertEqual(stages.attribution_audit({"units": []}, [brief], [], passages, "vi", "en"), [])
+        self.assertTrue(stages.audit_coverage("vi", "vi", "ja")["attribution_audit"])
+        self.assertFalse(stages.audit_coverage("ko", "ko", "ko")["attribution_audit"])  # no speech verbs yet
+
     def test_brief_facts_should_be_atomic(self):
         brief = brief_json(1)
         brief["characters"][1]["facts"] = [
@@ -441,7 +518,62 @@ class SemanticValidationTests(unittest.TestCase):
         errors = stages.brief_atomicity_errors(brief, "vi")
         self.assertEqual(len(errors), 1)
         self.assertIn("CH2 facts[0]: joins 3 clauses", errors[0])
+        # A labelled fact must be one statement (live run 14: the plain half became a rumour too).
+        cases = [
+            ("rumour joined to a plain action", "Nghe nói Itsuki đã lo lắng cho Amane và gửi tin nhắn hỏi thăm cậu",
+             "REPORTED", 1),
+            ("time clause stays with its statement", "Vành mắt có vẻ hơi ửng đỏ khi ngẩng đầu nhìn cậu",
+             "APPEARANCE", 0),
+            ("nouns joined by và", "Có lẽ cô chăm sóc cậu do tinh thần trách nhiệm và cảm giác tội lỗi",
+             "SPECULATION", 0),
+            ("plain fact may join two statements", "Itsuki đã lo lắng cho Amane và gửi tin nhắn hỏi thăm cậu",
+             "EXPLICIT", 0),
+        ]
+        for label, text, epistemic, expected in cases:
+            with self.subTest(label):
+                brief["characters"][1]["facts"] = [{"text": text, "evidence": ["1.7"], "quote": "x",
+                                                    "epistemic": epistemic}]
+                errors = stages.brief_atomicity_errors(brief, "vi")
+                self.assertEqual(len(errors), expected, errors)
+                self.assertTrue(all("one statement" in e for e in errors))
+        # Events too: an APPEARANCE event that also tells a plain action hedges the action as well.
+        brief["characters"][1]["facts"] = []
+        brief["events"][0].update(summary="So-yeon có vẻ khựng lại một chút khi chạm mắt rồi cúi đầu chào cậu bạn",
+                                  epistemic="APPEARANCE")
+        self.assertIn("event E1: is APPEARANCE but joins 2 statements", stages.brief_atomicity_errors(brief, "vi")[0])
+        brief["events"][0]["epistemic"] = "EXPLICIT"
+        self.assertEqual(stages.brief_atomicity_errors(brief, "vi"), [])
         self.assertEqual(stages.brief_atomicity_errors(brief, "xx"), [])  # no lexicon: not judged
+
+    def test_brief_text_must_be_in_the_brief_language(self):
+        """Runs 12-13 left 붉어, 面 and 廊 inside Vietnamese briefs; 廊 then reached a script."""
+        def brief_with(**changes):
+            brief = brief_json(1)
+            for path, value in changes.items():
+                if path == "fact":
+                    brief["characters"][0]["facts"][0]["text"] = value
+                elif path == "location":
+                    brief["events"][0]["location"] = value
+                elif path == "unknown":
+                    brief["unknowns"] = [value]
+            return brief
+
+        cases = [
+            ("kanji in a fact", brief_with(fact="Có vẻ rất khỏe mạnh và sắc面 tươi tắn"), ["'sắc面'"]),
+            ("Hangul location", brief_with(location="편의점 처마 밑"), ["'편의점'", "'처마'", "'밑'"]),
+            ("kana in an unknown", brief_with(unknown="Vì sao cô ở hành 廊"), ["'廊'"]),
+            ("clean brief", brief_json(1), []),
+        ]
+        for label, brief, expected in cases:
+            with self.subTest(label):
+                errors = stages.brief_script_errors(brief, "vi")
+                self.assertEqual(len(errors), 1 if expected else 0, errors)
+                for word in expected:
+                    self.assertIn(word, errors[0])
+        quoted = brief_json(1)
+        quoted["characters"][0]["name"] = "藤宮周"  # names and quotes keep the source script
+        self.assertEqual(stages.brief_script_errors(quoted, "vi"), [])
+        self.assertEqual(stages.brief_script_errors(brief_with(fact="面"), None), [])
 
     def test_source_hedge_review_lists_items_for_a_person(self):
         chapter = Chapter(1, "doc", "t", (Passage("1.1", "彼女は告白を受けているらしい。"),
@@ -458,6 +590,31 @@ class SemanticValidationTests(unittest.TestCase):
         self.assertEqual([(r["ref"], r["text"]) for r in review], [("c1.CH2", "Cô được tỏ tình")])
         self.assertEqual(review[0]["source_hedges"], [["reported", "らしい", "1.1"]])
         self.assertEqual(stages.source_hedge_review(brief, chapter, "xx", "vi"), [])
+
+    def test_source_strength_review_lists_briefs_stronger_than_their_source(self):
+        """A brief that already overstates passes the script audits (live run 10: "dữ dội")."""
+        chapter = Chapter(1, "doc", "t", (Passage("1.1", "学年問わず告白を受けているらしい。"),
+                                          Passage("1.2", "恐らく警戒を緩める事はないだろう。"),
+                                          Passage("1.3", "彼女の評判はよく聞く。")))
+        brief = brief_json(1, ["1.1"], "告白")
+        brief["characters"][1]["facts"] = [
+            {"text": "Nghe nói cô thường xuyên được tỏ tình", "evidence": ["1.1"], "quote": "x"},
+            {"text": "Cô nổi tiếng trong trường", "evidence": ["1.3"], "quote": "x"},  # 評判 backs it
+            {"text": "Nghe nói cô được tỏ tình", "evidence": ["1.1"], "quote": "x"},
+        ]
+        brief["characters"][0]["facts"] = []
+        brief["events"] = [dict(brief["events"][0], summary="Cô chắc chắn sẽ cảnh giác", consequence=None,
+                                evidence=["1.2"])]
+        review = stages.source_strength_review(brief, chapter, "ja", "vi")
+        self.assertEqual([(r["ref"], r["phrases"]) for r in review],
+                         [("c1.CH2", ["thường xuyên"]), ("c1.E1", ["chắc chắn"])])
+        self.assertEqual(stages.source_strength_review(brief, chapter, "xx", "vi"), [])
+        report = run_pipeline.report_markdown(
+            {"run_id": "r", "scope": {"label": "chapter 1", "story_id": "s"}, "client": "c",
+             "profile": {"profile_id": "p", "min_words": 1, "max_words": 2}, "model_calls": 0, "seconds": 0,
+             "status": "COMPLETED", "versions": []},
+            {"gates": {}, "claim_counts": {}, "findings": [], "undetermined": [], "source_strength_review": review})
+        self.assertIn("brief có thể mạnh hơn nguồn", report)
 
     def test_critic_must_extract_claims_at_paragraph_density(self):
         paragraph = " ".join(["từ"] * 95)  # 95 words -> at least 3 claims
@@ -506,7 +663,9 @@ class SemanticValidationTests(unittest.TestCase):
                 for finding in findings:
                     self.assertEqual((finding["severity"], finding["source"]), ("MEDIUM", "strength_audit"))
         # The critic may paraphrase an intensifier away; the paragraph's own wording is checked too.
-        units = [{"unit_id": "P001", "sha256": "x", "text": "Cậu thấy vô cùng áy náy. Rồi cậu về nhà."}]
+        # "mọi người" addressing the viewers (live run 13) is not "everyone".
+        units = [{"unit_id": "P001", "sha256": "x",
+                  "text": "Cậu thấy vô cùng áy náy. Rồi cậu về nhà. Thương ghê, đúng không mọi người?"}]
         paraphrased = critic_with("Cậu thấy áy náy", ["c1.E1"])
         text_findings = stages.strength_audit(paraphrased, [brief], recap, units)
         self.assertEqual([(f["source"], f["claim"]) for f in text_findings],
@@ -555,9 +714,12 @@ class EndToEndTests(unittest.TestCase):
             manifest = run(client, scope, test_profile(), out)
             self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
             stages_called = [c["stage"] for c in client.calls]
-            self.assertEqual(stages_called, ["brief", "brief", "plan", "script", "critic", "revise", "critic"])
+            # Two source-check calls per version by default; their findings are pooled.
+            self.assertEqual(stages_called, ["brief", "brief", "plan", "script", "critic", "source_check",
+                                             "source_check", "revise", "critic", "source_check", "source_check"])
             for name in ("briefs/chapter_001.json", "briefs/chapter_002.json", "plan.json", "script_v1.json",
-                         "critic_v1.json", "script_v2.json", "critic_v2.json", "script_final.md",
+                         "critic_v1.json", "source_check_v1.json", "source_check_v1_s2.json", "script_v2.json",
+                         "critic_v2.json", "source_check_v2.json", "script_final.md",
                          "report.json", "report.md", "calls.jsonl", "run_manifest.json"):
                 self.assertTrue((out / name).is_file(), name)
             report = json.loads((out / "report.json").read_text(encoding="utf-8"))
@@ -566,6 +728,7 @@ class EndToEndTests(unittest.TestCase):
             self.assertEqual([v["problem_claims"] for v in manifest["versions"]], [1, 0])
             self.assertIn("ĐẠT", (out / "report.md").read_text(encoding="utf-8"))
             self.assertTrue((out / "review_form.md").is_file())
+            self.assertIn("<form id='review'", (out / "review.html").read_text(encoding="utf-8"))
             coverage = report["gates"]["GATE_NECESSARY_COVERAGE"]
             # The fake critic only cites c1.E1, so chapter 2's CORE event is reported as not cited.
             self.assertEqual((coverage["status"], coverage["not_cited"]), ("FLAG", ["c2.E1"]))
@@ -575,6 +738,235 @@ class EndToEndTests(unittest.TestCase):
             resumed = run(resumed_client, scope, test_profile(), out, resume=True)
             self.assertEqual(resumed["status"], "COMPLETED")
             self.assertEqual(resumed_client.calls, [])
+
+    def test_source_check_findings_go_to_revision_and_the_report(self):
+        """The second verifier reads the script against the source text (live run 10)."""
+        scope = load_scope(DEFAULT_MANIFEST, (1, 1))
+
+        class SourceCheckModel(FakeModel):
+            """The first source check finds an invented detail; the critic finds nothing."""
+            def __init__(self):
+                super().__init__()
+                self.checks = 0
+                self.critic_calls = 1
+
+            def __call__(self, stage, system, user):
+                if stage != "source_check":
+                    return super().__call__(stage, system, user)
+                self.checks += 1
+                units = list(dict.fromkeys(re.findall(r"<(P\d{3})>", user)))
+                first = re.search(r"<P001>\n(.+?)\n</P001>", user, re.S).group(1)
+                findings = [{"script_quote": first[:12], "kind": "CONTRADICTS_SOURCE", "passage_ids": ["1.2"],
+                             "explanation": "the source says otherwise"}] if self.checks == 1 else []
+                return json.dumps({"paragraphs": [{"unit_id": u, "findings": findings if u == "P001" else []}
+                                                  for u in units], "critic_reviews": []})
+
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "run"
+            model = SourceCheckModel()
+            prompts = []
+            client = ScriptedLLMClient(lambda stage, system, user: (prompts.append((stage, user)),
+                                                                     model(stage, system, user))[1])
+            manifest = run(client, scope, test_profile(), out)
+            self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
+            revise_prompt = next(user for stage, user in prompts if stage == "revise")
+            self.assertIn("the source says otherwise", revise_prompt)
+            self.assertIn("[1.2]", revise_prompt)  # the reviser sees the source passage
+            self.assertEqual([v["problem_claims"] for v in manifest["versions"]], [1, 0])
+
+            out2 = Path(tmp) / "skip"
+            client = ScriptedLLMClient(SourceCheckModel())
+            with mock.patch.object(stages, "SOURCE_CHECK_MAX_CHARS", 10):
+                manifest = run(client, scope, test_profile(), out2)
+            self.assertIn("longer than 10", manifest["source_check_skipped"])
+            self.assertNotIn("source_check", [c["stage"] for c in client.calls])
+
+            class BrokenSourceCheckModel(FakeModel):
+                """A source check that never answers in the right shape (season S2)."""
+                def __call__(self, stage, system, user):
+                    return '{"paragraphs": []}' if stage == "source_check" else super().__call__(stage, system, user)
+
+            manifest = run(ScriptedLLMClient(BrokenSourceCheckModel()), scope, test_profile(), Path(tmp) / "broken",
+                           source_check_samples=1)
+            self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
+            self.assertIn("list every paragraph", manifest["source_check_failed"][0]["error"])
+
+            client = ScriptedLLMClient(SourceCheckModel())
+            manifest = run(client, scope, test_profile(), Path(tmp) / "off", source_check=False)
+            self.assertNotIn("source_check", [c["stage"] for c in client.calls])
+            self.assertFalse(manifest["settings"]["source_check"])
+
+    def test_critic_findings_the_source_supports_become_brief_gaps(self):
+        """Season S2 episode 2: the critic flagged four details that the brief had left out
+        but the source does say. The source check adjudicates them; supported ones are not
+        revised, do not count in the gates, and are listed as brief gaps."""
+        scope = load_scope(DEFAULT_MANIFEST, (1, 1))
+        model = FakeModel()
+        model.flag_verdict = "IN_SOURCE"
+        prompts = []
+        client = ScriptedLLMClient(lambda stage, system, user: (prompts.append((stage, user)),
+                                                                 model(stage, system, user))[1])
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "run"
+            manifest = run(client, scope, test_profile(), out)
+            self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
+            check_prompt = next(user for stage, user in prompts if stage == "source_check")
+            self.assertIn("F1 (P001, not supported): x", check_prompt)
+            self.assertNotIn("revise", [stage for stage, _ in prompts])
+            self.assertEqual([(v["problem_claims"], v["critic_overturned"]) for v in manifest["versions"]], [(0, 1)])
+            report = json.loads((out / "report.json").read_text(encoding="utf-8"))
+            self.assertEqual(report["findings"], [])
+            self.assertEqual(report["gates"]["GATE_FACTUAL_GROUNDING"]["status"], "PASS")
+            self.assertEqual([(g["unit_id"], g["claim"], g["passage_ids"]) for g in report["brief_gaps"]],
+                             [("P001", "x", ["1.2"])])
+            self.assertIn("SUPPORTED_FACT", report["claim_counts"])  # the critic's other claims stay
+            self.assertIn("## Brief bỏ sót", (out / "report.md").read_text(encoding="utf-8"))
+            self.assertIn("<h2>Brief bỏ sót</h2>", (out / "review.html").read_text(encoding="utf-8"))
+
+    def test_source_check_answers_are_validated(self):
+        units = [{"unit_id": "P001", "sha256": "x", "text": "Cô bưng bát cháo nghi ngút khói."},
+                 {"unit_id": "P002", "sha256": "x", "text": "Cậu khen cháo ngon."}]
+        ids = {"3.81", "3.96"}
+
+        def answer(*paragraphs):
+            return {"paragraphs": [{"unit_id": u, "findings": f} for u, f in paragraphs]}
+
+        finding = {"script_quote": "nghi ngút  khói", "kind": "CONTRADICTS_SOURCE", "passage_ids": ["3.81"],
+                   "explanation": "no steam"}
+        cases = [
+            ("valid (whitespace-insensitive quote)", answer(("P001", [finding]), ("P002", [])), []),
+            ("tag brackets around ids are tolerated", answer(("<P001>", [finding]), ("<P002>", [])), []),
+            ("paragraph missing", answer(("P001", [])), ["list every paragraph exactly once"]),
+            ("paragraph twice", answer(("P001", []), ("P001", []), ("P002", [])), ["exactly once"]),
+            ("quote not in paragraph", answer(("P001", [dict(finding, script_quote="bốc hơi")]), ("P002", [])),
+             ["not copied exactly"]),
+            ("passage outside the episode", answer(("P001", [dict(finding, passage_ids=["9.1"])]), ("P002", [])),
+             ["not in this episode's source"]),
+        ]
+        for label, check, expected in cases:
+            with self.subTest(label):
+                errors = stages.source_check_errors(check, units, ids)
+                self.assertEqual(len(errors), len(expected), errors)
+                for message, error in zip(expected, errors):
+                    self.assertIn(message, error)
+
+        # Verdicts on the critic's flags: one per flag, and IN_SOURCE names its passages.
+        critic = {"units": [{"unit_id": "P001", "claims": [claim("SUPPORTED_FACT"),
+                                                           claim("UNSUPPORTED_STORY_CLAIM", "LOW", "UNSUPPORTED_INVENTION"),
+                                                           claim("UNDETERMINED")]},
+                            {"unit_id": "P002", "claims": [claim("STRENGTHENED_STORY_CLAIM", "LOW", "EPISTEMIC_ERROR")]}]}
+        flags = stages.critic_flags(critic)
+        self.assertEqual([(f["id"], f["unit_id"], f["claim_type"]) for f in flags],
+                         [("F1", "P001", "UNSUPPORTED_STORY_CLAIM"), ("F2", "P002", "STRENGTHENED_STORY_CLAIM")])
+        self.assertEqual(stages.flagged_text(flags).splitlines(),
+                         ["F1 (P001, not supported): x", "F2 (P002, stated more strongly than the summary): x"])
+        self.assertIn("empty critic_reviews", stages.flagged_text([]))
+
+        def review(flag, verdict="IN_SOURCE", passage_ids=("3.81",)):
+            return {"id": flag, "verdict": verdict, "passage_ids": list(passage_ids), "explanation": "e"}
+
+        base = answer(("P001", []), ("P002", []))
+        cases = [
+            ("every flag answered", [review("F1"), review("F2", "NOT_IN_SOURCE", ())], []),
+            ("a flag left unanswered", [review("F1")], ["answer each flagged statement exactly once"]),
+            ("IN_SOURCE without passages", [review("F1", passage_ids=()), review("F2")], ["needs the passage ids"]),
+            ("passage outside the episode", [review("F1", passage_ids=("9.1",)), review("F2")],
+             ["not in this episode's source"]),
+        ]
+        for label, reviews, expected in cases:
+            with self.subTest(label):
+                errors = stages.source_check_errors(dict(base, critic_reviews=reviews), units, ids, flags)
+                self.assertEqual(len(errors), len(expected), errors)
+                for message, error in zip(expected, errors):
+                    self.assertIn(message, error)
+
+        # Overturned only when every sample that answered says IN_SOURCE.
+        agree = dict(base, critic_reviews=[review("F1"), review("F2")])
+        dissent = dict(base, critic_reviews=[review("F1", passage_ids=("3.96",)), review("F2", "NOT_IN_SOURCE", ())])
+        overturned = stages.overturned_flags([agree, dissent, None, base], flags)
+        self.assertEqual([(f["id"], f["passage_ids"]) for f in overturned], [("F1", ["3.81", "3.96"])])
+        kept = stages.without_claims(critic, overturned)
+        self.assertEqual([[c["claim_type"] for c in u["claims"]] for u in kept["units"]],
+                         [["SUPPORTED_FACT", "UNDETERMINED"], ["STRENGTHENED_STORY_CLAIM"]])
+        converted = stages.source_check_findings(answer(("P001", [finding]), ("P002", [])),
+                                                 {"3.81": "湯気はたっていない"})
+        self.assertEqual([(f["claim_type"], f["failure_category"], f["severity"], f["source"]) for f in converted],
+                         [("CONTRADICTED_STORY_CLAIM", "FACTUAL_ERROR", "MEDIUM", "source_check")])
+        self.assertIn("湯気はたっていない", converted[0]["suggested_fix"])
+
+        # Pooled calls: the same defect quoted a little differently counts once.
+        other = dict(finding, script_quote="nghi ngút", kind="STRENGTHENED")
+        second = stages.source_check_findings(answer(("P001", [other]), ("P002", [dict(finding, script_quote="ngon")])), {})
+        merged = stages.merge_source_findings([converted, second])
+        self.assertEqual([(f["unit_id"], f["claim"]) for f in merged],
+                         [("P001", "nghi ngút  khói"), ("P002", "ngon")])
+
+    def test_later_revision_rounds_patch_only_the_sentences_at_fault(self):
+        """Live run 13: a second full rewrite put new errors into correct text."""
+        scope = load_scope(DEFAULT_MANIFEST, (1, 1))
+
+        class PersistentProblemModel(FakeModel):
+            """The critic flags the same sentence until it is patched."""
+            def __init__(self):
+                super().__init__()
+                self.patched = False
+
+            def __call__(self, stage, system, user):
+                if stage == "critic":
+                    return json.dumps(critic_json(user, not self.patched), ensure_ascii=False)
+                if stage == "patch":
+                    self.patched = True
+                    first = re.search(r"<P001>\n(.+?)\n</P001>", user, re.S).group(1)
+                    sentence = re.match(r"[^.!?]+[.!?]", first).group(0)
+                    return json.dumps({"edits": [{"unit_id": "P001", "old": sentence, "new": "Câu đã sửa."}]})
+                return super().__call__(stage, system, user)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            client = ScriptedLLMClient(PersistentProblemModel())
+            manifest = run(client, scope, test_profile(), Path(tmp) / "run", revision_rounds=2, source_check=False)
+            self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
+            self.assertEqual([c["stage"] for c in client.calls if c["stage"] in ("revise", "patch")],
+                             ["revise", "patch"])
+            self.assertEqual([v["problem_claims"] for v in manifest["versions"]], [1, 1, 0])
+            v2 = json.loads((Path(tmp) / "run" / "script_v2.json").read_text(encoding="utf-8"))
+            v3 = json.loads((Path(tmp) / "run" / "script_v3.json").read_text(encoding="utf-8"))
+            before, after = checks.split_units(checks.script_text(v2)), checks.split_units(checks.script_text(v3))
+            self.assertTrue(after[0]["text"].startswith("Câu đã sửa."))
+            self.assertEqual([u["text"] for u in before[1:]], [u["text"] for u in after[1:]])  # untouched
+
+    def test_patch_edits_are_validated_and_applied_in_place(self):
+        script = {"title_idea": "t", "sections": [
+            {"beat_id": "B1", "text": "Cháo nghi ngút khói. Cậu ăn.\n\nCô cười."},
+            {"beat_id": "B2", "text": "Cô về nhà. Cô về nhà."}]}
+        units = checks.split_units(checks.script_text(script))
+        cases = [
+            ("valid", {"unit_id": "P001", "old": "Cháo nghi ngút khói.", "new": "Cháo đã nguội bớt."}, []),
+            ("unknown paragraph", {"unit_id": "P009", "old": "x", "new": "y"}, ["no such paragraph"]),
+            ("span not in paragraph", {"unit_id": "P002", "old": "Cậu ăn.", "new": "y"}, ["exactly once"]),
+            ("span twice in paragraph", {"unit_id": "P003", "old": "Cô về nhà.", "new": "y"}, ["exactly once"]),
+            ("no change", {"unit_id": "P002", "old": "Cô cười.", "new": "Cô cười."}, ["same as"]),
+            ("foreign script", {"unit_id": "P002", "old": "Cô cười.", "new": "Cô 笑."}, ["another writing system"]),
+        ]
+        for label, edit, expected in cases:
+            with self.subTest(label):
+                errors = stages.patch_errors({"edits": [edit]}, units, "vi")
+                self.assertEqual(len(errors), len(expected), errors)
+                for message, error in zip(expected, errors):
+                    self.assertIn(message, error)
+        self.assertEqual(stages.patch_errors({"edits": [{"unit_id": "<P002>", "old": "Cô cười.", "new": "Cô cười nhẹ."}]},
+                                             units, "vi"), [])  # tag brackets tolerated
+        twice = {"unit_id": "P002", "old": "Cô cười.", "new": "Cô mỉm cười."}
+        self.assertIn("edited twice", stages.patch_errors({"edits": [twice, twice]}, units, "vi")[-1])
+
+        patched = stages.apply_patch(script, units, {"edits": [
+            {"unit_id": "P001", "old": "Cháo nghi ngút khói.", "new": "Cháo đã nguội bớt."},
+            {"unit_id": "P002", "old": "Cô cười.", "new": ""}]})  # empty "new" deletes the sentence
+        self.assertEqual(patched["sections"][0]["text"], "Cháo đã nguội bớt. Cậu ăn.")
+        self.assertEqual(patched["sections"][1], script["sections"][1])
+        whole_beat = stages.apply_patch(script, units, {"edits": [{"unit_id": "P003", "old": "Cô về nhà. Cô về nhà.",
+                                                                   "new": ""}]})
+        self.assertEqual(whole_beat["sections"][1], script["sections"][1])  # a beat is never deleted
+        self.assertEqual(script["sections"][0]["text"], "Cháo nghi ngút khói. Cậu ăn.\n\nCô cười.")  # not mutated
 
     def test_episode_with_memory_recap(self):
         full = load_scope(DEFAULT_MANIFEST, (1, 3))
@@ -606,6 +998,30 @@ class EndToEndTests(unittest.TestCase):
                          memory=memory)
             self.assertEqual(second["brief_sources"], {"1": "memory", "2": "memory", "3": "memory"})
             self.assertNotIn("brief", [c["stage"] for c in again.calls])
+
+            # The story's name glossary is kept with the memory; the owner's spelling is enforced.
+            glossary_file = Path(tmp) / "memory" / full.story_id / "glossary.yaml"
+            self.assertEqual(second["glossary"]["characters"], 2)
+            data = yaml.safe_load(glossary_file.read_text(encoding="utf-8"))
+            data["characters"][0].update(display="Chu", also_allowed=[], confirmed=True)
+            glossary_file.write_text(yaml.safe_dump(data, allow_unicode=True), encoding="utf-8")
+            systems = []
+            declaring = dict(SCRIPT, pronouns={"Mahiru": "cô", "Amane": "ông", "Ghost": "nó"})
+
+            def renamed_model(stage, system, user):
+                systems.append((stage, system))
+                return json.dumps(declaring, ensure_ascii=False) if stage == "script" else FakeModel()(stage, system, user)
+            renamed = ScriptedLLMClient(renamed_model)
+            third = run(renamed, episode, test_profile(), Path(tmp) / "ep3", background=background,
+                        memory=memory, source_check=False)
+            self.assertIn("藤宮周 → Chu", next(s for stage, s in systems if stage == "script"))
+            report = json.loads((Path(tmp) / "ep3" / "report.json").read_text(encoding="utf-8"))
+            self.assertIn(("glossary", "Amane"), [(f.get("source"), f["claim"]) for f in report["findings"]])
+            self.assertEqual(third["glossary"]["confirmed"], False)  # Mahiru is still a default
+            # The writer's declared pronouns become the rule for later episodes: "ông" is not a
+            # Vietnamese third-person pronoun in the lexicon, and nobody is called Ghost.
+            self.assertEqual(third["glossary"]["pronouns_adopted"], {"Mahiru": "cô"})
+            self.assertEqual(yaml.safe_load(glossary_file.read_text(encoding="utf-8"))["characters"][1]["pronoun"], "cô")
 
     def test_memory_brief_failing_current_checks_is_regenerated(self):
         scope = load_scope(DEFAULT_MANIFEST, (1, 1))
@@ -686,6 +1102,17 @@ class GeminiClientTests(unittest.TestCase):
             text = '{"n": 1}'
             usage_metadata = None
             model_version = "fake"
+            candidates = ()
+
+        class Reason:
+            name = "MAX_TOKENS"
+
+        class Candidate:
+            finish_reason = Reason()
+
+        class TruncatedResponse(FakeResponse):
+            text = '{"n": '
+            candidates = (Candidate(),)
 
         class FakeSDK:
             def generate(self, **kwargs):
@@ -712,6 +1139,17 @@ class GeminiClientTests(unittest.TestCase):
             text = '{"n": 1}'
             usage_metadata = None
             model_version = "fake"
+            candidates = ()
+
+        class Reason:
+            name = "MAX_TOKENS"
+
+        class Candidate:
+            finish_reason = Reason()
+
+        class TruncatedResponse(FakeResponse):
+            text = '{"n": '
+            candidates = (Candidate(),)
 
         class FakeSDK:
             def __init__(self, failures):
@@ -725,6 +1163,8 @@ class GeminiClientTests(unittest.TestCase):
                     failure = failure.pop(0) if failure else None
                 if failure == "timeout":
                     raise TimeoutError("read timed out")
+                if failure == "truncated":
+                    return TruncatedResponse()
                 if failure:
                     raise ProviderError(failure)
                 return FakeResponse()
@@ -750,6 +1190,9 @@ class GeminiClientTests(unittest.TestCase):
             ("dropped connection is retried, then falls back", {"busy-model": ["timeout", "timeout"]}, "ok",
              ["busy-model", "busy-model", "spare-model"]),
             ("every model down raises", {"busy-model": 503, "spare-model": 503}, "raise", None),
+            # Season S2: a model that runs out of output tokens (thinking) cuts its JSON off.
+            ("answer cut off by the token limit falls back", {"busy-model": "truncated"}, "ok",
+             ["busy-model", "spare-model"]),
         ]
         for label, failures, outcome, expected_calls in cases:
             with self.subTest(label):
@@ -760,7 +1203,9 @@ class GeminiClientTests(unittest.TestCase):
                     record = client.complete(system="s", user="u", request_id="t:1")
                     self.assertEqual(record["model_requested"], "spare-model")
                     self.assertEqual(record["fallback_from"][0]["model"], "busy-model")
-                    self.assertEqual(len(record["attempt_failures"]), len(sdk.calls) - 1)
+                    # Every earlier call failed in transport, except a cut-off answer, which arrived.
+                    cut_off = sum(1 for f in record["fallback_from"] if f["code"] == "MAX_TOKENS")
+                    self.assertEqual(len(record["attempt_failures"]), len(sdk.calls) - 1 - cut_off)
                 else:
                     with self.assertRaises(RuntimeError) as raised:
                         client.complete(system="s", user="u", request_id="t:1")

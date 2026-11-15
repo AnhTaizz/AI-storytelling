@@ -162,6 +162,12 @@ class GeminiLLMClient:
                     raise RuntimeError(f"{error} [attempt errors: {seen or 'none recorded'}]") from error
                 failed.append({"model": model, "code": error.code, "attempts": error.attempts})
                 continue
+            reasons = (record.get("provider_response_metadata") or {}).get("finish_reasons") or []
+            if "MAX_TOKENS" in reasons and index < len(self.models) - 1:
+                # Season S2: a fallback model spent ~63k tokens thinking and cut its JSON off
+                # three times in a row; the next model is a better bet than the same one again.
+                failed.append({"model": model, "code": "MAX_TOKENS", "attempts": 1})
+                continue
             record["fallback_from"] = failed
             record["attempt_failures"] = list(self.attempt_failures)
             return record
@@ -289,6 +295,7 @@ def run_json_stage(
                 "attempt_failures": record.get("attempt_failures") or [],
                 "seconds": round(time.time() - started, 3),
                 "usage": record.get("usage_metadata"),
+                "finish_reasons": (record.get("provider_response_metadata") or {}).get("finish_reasons") or [],
                 "valid": not errors,
                 "soft_errors_only": soft_only,
                 "errors": errors,

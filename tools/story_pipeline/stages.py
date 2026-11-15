@@ -8,7 +8,7 @@ import json
 import re
 from pathlib import Path
 from string import Template
-from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple
+from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 
 from tools.story_memory.memory_v0 import recap_event_refs
 from tools.story_pipeline import checks, lexicon
@@ -216,7 +216,10 @@ def brief_hedge_errors(brief: Dict[str, Any], chapter: Chapter, source_language:
             wanted.add(LABEL_CONCEPT[label])
         if not wanted:
             continue
-        required = {"metaphor"} if "metaphor" in wanted else set(lexicon.HEDGE_CONCEPTS)
+        # A figure of speech must stay one. When the source marks several kinds at once, any
+        # hedge will do: Korean 「붉어진 것처럼 보였다」 ("looked as if reddened") contains the
+        # simile marker 처럼 but is an appearance (live run 11).
+        required = {"metaphor"} if wanted == {"metaphor"} else set(lexicon.HEDGE_CONCEPTS)
         if rendered & required:
             continue
         examples = [p for c in sorted(wanted) for p in dst.phrases["hedge"].get(c, ())[:2]]
@@ -226,21 +229,82 @@ def brief_hedge_errors(brief: Dict[str, Any], chapter: Chapter, source_language:
 
 
 MAX_FACT_CLAUSES = 2
+# A coordinated part this long is a statement of its own; a shorter one is a noun or adjective
+# in a list ("trách nhiệm và cảm giác tội lỗi"). Words for spaced languages, else characters.
+MIN_STATEMENT_WORDS = 5
+MIN_STATEMENT_CHARS = 10
+
+
+def _statements(text: str, lex: "lexicon.Lexicon") -> List[str]:
+    """Coordinated parts of `text` that are long enough to be statements of their own."""
+    def long_enough(part: str) -> bool:
+        return (len(part.split()) >= MIN_STATEMENT_WORDS if lex.word_boundaries
+                else len(_squash(part)) >= MIN_STATEMENT_CHARS)
+    return [part for part in lex.coordinated_parts(text) if long_enough(part)]
 
 
 def brief_atomicity_errors(brief: Dict[str, Any], brief_language: Optional[str]) -> List[str]:
     """Soft check: one fact per item. A fact that joins several clauses ("tops every exam
-    and, reportedly, excels at sport") cannot carry one quote and one epistemic label."""
+    and, reportedly, excels at sport") cannot carry one quote and one epistemic label. A fact
+    labelled anything but EXPLICIT must be a single statement, because later checks treat the
+    label as covering the whole fact."""
     lex = lexicon.load(brief_language) if brief_language else None
     if lex is None:
         return []
     errors = []
     for character in brief["characters"]:
         for index, fact in enumerate(character["facts"]):
+            where = f"characters {character['id']} facts[{index}]"
             clauses = lex.clauses(fact["text"])
+            label = fact.get("epistemic", "EXPLICIT")
+            parts = _statements(fact["text"], lex)
             if len(clauses) > MAX_FACT_CLAUSES:
-                errors.append(f"characters {character['id']} facts[{index}]: joins {len(clauses)} clauses; "
-                              f"split it into separate facts, each with its own quote, evidence and epistemic")
+                errors.append(f"{where}: joins {len(clauses)} clauses; split it into separate facts, "
+                              f"each with its own quote, evidence and epistemic")
+            elif label != "EXPLICIT" and len(parts) > 1:
+                # Live run 14: "reportedly worried, and sent messages" made the plain half a rumour too.
+                errors.append(f"{where}: is {label} but joins {len(parts)} statements; a labelled fact must be "
+                              f"one statement. Keep the {label.lower()} part here and put each other statement "
+                              f"in its own fact with its own label")
+    for event in brief["events"]:
+        label = event.get("epistemic", "EXPLICIT")
+        parts = _statements(event["summary"], lex)
+        if label != "EXPLICIT" and len(parts) > 1:
+            # A Korean season episode 2 brief joined "seemed to stop" and "bowed" under APPEARANCE,
+            # and the script then hedged the plain bow ("dường như cúi đầu chào").
+            errors.append(f"event {event['id']}: is {label} but joins {len(parts)} statements, so every part reads "
+                          f"as {label.lower()}. Label the event by its main action (usually EXPLICIT) and keep the "
+                          f"hedge words only on the part the source hedges, or split it into separate events")
+    return errors
+
+
+def _brief_free_text(brief: Dict[str, Any]) -> List[Tuple[str, str]]:
+    """(where, text) for every field the brief writes in the brief language. Names, quotes
+    and ids are left out: they are meant to keep the source script."""
+    out = [("chapter_summary", brief.get("chapter_summary") or ""), ("ending_state", brief.get("ending_state") or ""),
+           ("closing_hook", (brief.get("closing_hook") or {}).get("text") or "")]
+    out += [(f"unknowns[{i}]", text) for i, text in enumerate(brief.get("unknowns", []))]
+    out += [(f"forbidden_inferences[{i}]", text) for i, text in enumerate(brief.get("forbidden_inferences", []))]
+    for character in brief["characters"]:
+        out += [(f"characters {character['id']} facts[{i}]", f["text"]) for i, f in enumerate(character["facts"])]
+    out += [(f"relationships[{i}]", r["state"]) for i, r in enumerate(brief["relationships"])]
+    for event in brief["events"]:
+        out += [(f"event {event['id']}", " ".join(str(event.get(k) or "") for k in ("summary", "consequence", "location"))),
+                (f"event {event['id']} motivation", event["motivation"].get("text") or "")]
+    return [(where, text) for where, text in out if isinstance(text, str) and text]
+
+
+def brief_script_errors(brief: Dict[str, Any], brief_language: Optional[str]) -> List[str]:
+    """Soft check: the brief's own text is in the brief language. Live runs 12 and 13 left
+    Hangul (붉어) and a kanji (面) inside Vietnamese facts, from where they can reach the script."""
+    if not brief_language:
+        return []
+    errors = []
+    for where, text in _brief_free_text(brief):
+        words = [w for w in text.split() if checks.foreign_script_characters(w, brief_language)]
+        if words:
+            errors.append(f"{where}: {', '.join(repr(w) for w in dict.fromkeys(words))} not written in "
+                          f"{brief_language}; translate it (names stay in `name`, source text in `quote`)")
     return errors
 
 
@@ -312,7 +376,8 @@ def run_brief(client: LLMClient, scope: StoryScope, chapter: Chapter, profile: N
     return run_json_stage(client, stage="brief", system=system, user=user, schema=schema,
                           semantic_check=lambda b: brief_semantic_errors(b, chapter, scope.source_language,
                                                                          profile.brief_language),
-                          soft_check=lambda b: brief_atomicity_errors(b, profile.brief_language),
+                          soft_check=lambda b: (brief_atomicity_errors(b, profile.brief_language)
+                                               + brief_script_errors(b, profile.brief_language)),
                           max_repairs=max_repairs, log=log, request_suffix=f"ch{chapter.order}")
 
 
@@ -469,6 +534,69 @@ def run_revision(client: LLMClient, scope: StoryScope, briefs: Sequence[Dict[str
                           max_repairs=max_repairs, log=log, request_suffix=f"v{version}")
 
 
+# --------------------------------------------------------------------------- patch
+
+def patch_errors(patch: Dict[str, Any], units: Sequence[Dict[str, str]], target_language: str) -> List[str]:
+    """Every edit names a paragraph, copies its span exactly once from it, and writes clean text."""
+    unit_text = {u["unit_id"]: u["text"] for u in units}
+    errors, seen = [], set()
+    for index, edit in enumerate(patch["edits"]):
+        where = f"edits[{index}] ({edit['unit_id']})"
+        text = unit_text.get(_unit_id(edit["unit_id"]))
+        if text is None:
+            errors.append(f"{where}: no such paragraph")
+            continue
+        count = text.count(edit["old"])
+        if count != 1:
+            errors.append(f"{where}: \"old\" must occur exactly once in the paragraph (found {count}); "
+                          f"copy it character for character")
+        if edit["old"] == edit["new"]:
+            errors.append(f"{where}: \"new\" is the same as \"old\"")
+        if (_unit_id(edit["unit_id"]), edit["old"]) in seen:
+            errors.append(f"{where}: the same span is edited twice")
+        seen.add((_unit_id(edit["unit_id"]), edit["old"]))
+        foreign = checks.foreign_script_characters(edit["new"], target_language)
+        if foreign:
+            errors.append(f"{where}: \"new\" contains characters from another writing system ({foreign[0]!r})")
+    return errors
+
+
+def apply_patch(script: Dict[str, Any], units: Sequence[Dict[str, str]], patch: Dict[str, Any]) -> Dict[str, Any]:
+    """The script with each edit applied inside its own paragraph; nothing else changes.
+
+    A paragraph emptied by deletions disappears. A whole beat cannot be deleted this way: if
+    every paragraph of a section would go, the section is kept as it was."""
+    replacements: Dict[str, str] = {}
+    for unit in units:
+        text = unit["text"]
+        for edit in (e for e in patch["edits"] if _unit_id(e["unit_id"]) == unit["unit_id"]):
+            new = edit["new"].strip()
+            text = text.replace(edit["old"], new, 1)
+        replacements[unit["text"]] = re.sub(r"[ \t]{2,}", " ", text).strip()
+    sections = []
+    for section in script["sections"]:
+        paragraphs = [p.strip() for p in re.split(r"\n\s*\n", section["text"]) if p.strip()]
+        text = "\n\n".join(r for r in (replacements.get(p, p) for p in paragraphs) if r)
+        sections.append({**section, "text": text or section["text"]})
+    return {**script, "sections": sections}
+
+
+def run_patch(client: LLMClient, scope: StoryScope, briefs: Sequence[Dict[str, Any]], script: Dict[str, Any],
+              findings: List[Dict[str, Any]], units: List[Dict[str, str]], profile: NarrativeProfile,
+              log: CallLog, max_repairs: int, version: int) -> Dict[str, Any]:
+    """A revision round that edits only the sentences at fault (see patch_user.md)."""
+    schema = load_schema("script_patch_v0")
+    lines = [f"- [{f['severity']}] in {f['unit_id']}: \"{f['claim']}\"\n  why: {f['explanation']}\n"
+             f"  suggested fix: {f['suggested_fix']}" for f in findings]
+    unit_lines = "\n\n".join(f"<{u['unit_id']}>\n{u['text']}\n</{u['unit_id']}>" for u in units)
+    user = render("patch_user", scope_label=scope.label(), findings="\n".join(lines),
+                  briefs=briefs_for_prompt(briefs), units=unit_lines, schema=dump(schema))
+    patch = run_json_stage(client, stage="patch", system=_script_system(profile), user=user, schema=schema,
+                           semantic_check=lambda p: patch_errors(p, units, profile.target_language),
+                           max_repairs=max_repairs, log=log, request_suffix=f"v{version}")
+    return apply_patch(script, units, patch)
+
+
 # --------------------------------------------------------------------------- critic
 
 
@@ -562,7 +690,8 @@ def strength_audit(critic: Dict[str, Any], briefs: Sequence[Dict[str, Any]],
 
     def unsupported(text: str, refs: Sequence[str]) -> List[Tuple[str, str]]:
         cited = brief_lex.concepts(" ".join(texts.get(ref, "") for ref in refs), "strength")
-        return [(c, p) for c, p in script_lex.find(text, "strength") if c not in cited]
+        return [(c, p) for c, p in script_lex.find(script_lex.without_audience_address(text), "strength")
+                if c not in cited]
 
     findings = []
     for unit in critic["units"]:
@@ -679,6 +808,81 @@ def hedge_audit(critic: Dict[str, Any], briefs: Sequence[Dict[str, Any]],
     return findings
 
 
+ATTRIBUTION_MATCH = HEDGE_MATCH  # same threshold as the hedge audit
+
+
+def _statement_sources(briefs: Sequence[Dict[str, Any]]) -> Dict[str, List[Tuple[str, str, List[str]]]]:
+    """Ref -> (statement, quote, evidence) for every fact and event. Recap events carry no
+    quote, so they are left out and never count as narration-only."""
+    items: Dict[str, List[Tuple[str, str, List[str]]]] = {}
+    for brief in briefs:
+        n = brief["chapter_order"]
+        for character in brief["characters"]:
+            items[f"c{n}.{character['id']}"] = [(f["text"], f["quote"], f["evidence"]) for f in character["facts"]]
+        for event in brief["events"]:
+            text = " ".join([event["summary"], event.get("consequence") or ""])
+            items[f"c{n}.{event['id']}"] = [(text, event["quote"], event["evidence"])]
+    return items
+
+
+def attribution_audit(critic: Dict[str, Any], briefs: Sequence[Dict[str, Any]],
+                      units: Optional[Sequence[Dict[str, str]]], passages: Mapping[str, str],
+                      script_language: str = "vi", brief_language: Optional[str] = None) -> List[Dict[str, Any]]:
+    """Nobody may be made to say what the chapter only has them think, or what only the narrator says.
+
+    Live run 10 had Amane explain to Mahiru ("giải thích rằng ...") that her look was like a
+    lost child's. In the source (4.18) that is his thought, and the brief recorded it as such.
+    For every paragraph, a clause that is the content of reported speech ("X giải thích rằng
+    |...") is compared with the clauses of the brief statements its claims cite. If it retells
+    (similarity >= ATTRIBUTION_MATCH) a statement that involves no speech at all (no verb of
+    saying in its text and no dialogue in its quote or in any cited passage) better than any
+    statement that does, the sentence becomes a MEDIUM finding for revision.
+
+    On the saved scripts of live runs 2-10 (25 versions) this flags only the run-10 sentence.
+    Needs the script and the brief in one language, with speech verbs in its lexicon.
+    """
+    brief_language = brief_language or script_language
+    lex = lexicon.load(script_language)
+    if (lex is None or units is None or not lex.speech_verbs
+            or lexicon.lexicon_code(script_language) != lexicon.lexicon_code(brief_language)):
+        return []
+    sources = _statement_sources(briefs)
+    unit_text = {u["unit_id"]: u["text"] for u in units}
+    findings = []
+    for unit in critic["units"]:
+        refs = sorted({ref for claim in unit["claims"] for ref in claim["brief_refs"]})
+        candidates = []
+        for ref in refs:
+            for text, quote, evidence in sources.get(ref, []):
+                speech = (bool(_DIALOGUE.search(quote)) or lex.mentions_speech(text)
+                          or any(_DIALOGUE.search(passages.get(e, "")) for e in evidence))
+                candidates += [(ref, clause, speech) for clause in lex.clauses(text) if len(_squash(clause)) >= 8]
+        if not candidates:
+            continue
+        for match in _SENTENCE.finditer(unit_text.get(unit["unit_id"], "")):
+            sentence = match.group(0).strip()
+            start = lex.reported_speech_start(sentence)
+            if start is None:
+                continue
+            reported = sentence[start:]
+            best = max(((similarity(clause, c), ref, c, speech) for clause in lex.clauses(reported)
+                        for ref, c, speech in candidates), default=None)
+            if best is None or best[0] < ATTRIBUTION_MATCH or best[3]:
+                continue
+            _, ref, clause, _ = best
+            findings.append({
+                "unit_id": unit["unit_id"], "claim": sentence,
+                "claim_type": "UNSUPPORTED_STORY_CLAIM", "failure_category": "SOURCE_GROUNDING_FAILURE",
+                "severity": "MEDIUM", "brief_refs": [ref], "source": "attribution_audit",
+                "concepts": [], "phrases": [],
+                "explanation": f"Câu kịch bản cho nhân vật nói ra điều mà brief ({ref}) ghi là suy nghĩ hoặc lời "
+                               f"người kể, không phải lời thoại: \"{clause[:120]}\".",
+                "suggested_fix": "Kể lại như suy nghĩ hoặc lời người kể (\"cậu nghĩ\", \"thật ra\"), "
+                                 "không dùng \"nói/giải thích rằng\".",
+            })
+    return findings
+
+
 def source_hedge_review(brief: Dict[str, Any], chapter: Chapter, source_language: str,
                         brief_language: str) -> List[Dict[str, Any]]:
     """Advisory list for a person: brief items with no hedge although a cited passage hedges.
@@ -706,6 +910,33 @@ def source_hedge_review(brief: Dict[str, Any], chapter: Chapter, source_language
     return review
 
 
+def source_strength_review(brief: Dict[str, Any], chapter: Chapter, source_language: str,
+                           brief_language: str) -> List[Dict[str, Any]]:
+    """Advisory list for a person: brief items stronger than every passage they cite.
+
+    The strength audit compares the script with the briefs, so a brief that already
+    overstates ("thường xuyên nhận được lời tỏ tình" for 「学年問わず…らしく」, "chắc chắn" for
+    「恐らく」) passes it. On the saved briefs of runs 2-15 about 4 in 10 listed items are real; the
+    rest are wordings the source lexicon does not know, so nothing is sent back to the model.
+    """
+    src, dst = lexicon.load(source_language), lexicon.load(brief_language)
+    if src is None or dst is None:
+        return []
+    texts = {p.passage_id: p.text for p in chapter.passages}
+    n = brief["chapter_order"]
+    items = [(f"c{n}.{c['id']}", f["text"], f["evidence"]) for c in brief["characters"] for f in c["facts"]]
+    items += [(f"c{n}.{e['id']}", " ".join([e["summary"], e.get("consequence") or ""]), e["evidence"])
+              for e in brief["events"]]
+    review = []
+    for ref, text, evidence in items:
+        cited = src.concepts(" ".join(texts.get(pid, "") for pid in evidence), "strength")
+        extra = sorted({(concept, phrase) for concept, phrase in dst.find(text, "strength") if concept not in cited})
+        if extra:
+            review.append({"ref": ref, "text": text, "phrases": [phrase for _, phrase in extra],
+                           "concepts": [concept for concept, _ in extra], "evidence": list(evidence)})
+    return review
+
+
 def audit_coverage(script_language: str, brief_language: str, source_language: str) -> Dict[str, Any]:
     """Which deterministic language checks can run, so a missing lexicon is reported, not silent."""
     missing = sorted(lexicon.missing_languages(script_language, brief_language, source_language))
@@ -714,6 +945,9 @@ def audit_coverage(script_language: str, brief_language: str, source_language: s
         "brief_hedge_check": not ({brief_language, source_language} & set(missing)),
         "script_hedge_audit": (not ({script_language, brief_language} & set(missing))
                                and lexicon.lexicon_code(script_language) == lexicon.lexicon_code(brief_language)),
+        "attribution_audit": (not ({script_language, brief_language} & set(missing))
+                              and lexicon.lexicon_code(script_language) == lexicon.lexicon_code(brief_language)
+                              and bool(lexicon.load(script_language).speech_verbs)),
         "missing_lexicons": missing,
         "available_lexicons": lexicon.available_languages(),
     }
@@ -775,3 +1009,168 @@ def run_critic(client: LLMClient, scope: StoryScope, briefs: Sequence[Dict[str, 
                             soft_check=lambda c: critic_density_errors(c, units),
                             max_repairs=max_repairs, log=log, request_suffix=f"v{version}")
     return normalize_critic(critic)
+
+
+# --------------------------------------------------------------------------- source check
+
+# Above this much source text the check is skipped (and recorded), so a long episode cannot
+# silently overflow the model's context; split such an episode instead.
+SOURCE_CHECK_MAX_CHARS = 60000
+SOURCE_CHECK_KINDS = {
+    "CONTRADICTS_SOURCE": ("CONTRADICTED_STORY_CLAIM", "FACTUAL_ERROR"),
+    "NOT_IN_SOURCE": ("UNSUPPORTED_STORY_CLAIM", "UNSUPPORTED_INVENTION"),
+    "WRONG_SPEAKER": ("UNSUPPORTED_STORY_CLAIM", "SOURCE_GROUNDING_FAILURE"),
+    "STRENGTHENED": ("STRENGTHENED_STORY_CLAIM", "EPISTEMIC_ERROR"),
+    "WRONG_CAUSE": ("CONTRADICTED_STORY_CLAIM", "CAUSALITY_ERROR"),
+}
+
+
+def _unit_id(value: Any) -> str:
+    """A paragraph id as the model wrote it, without the tag brackets the prompt shows
+    ("<P001>" -> "P001"; season S2's fallback model copied them)."""
+    return str(value).strip().strip("<>/").strip()
+
+
+def source_check_text(chapters: Sequence[Chapter]) -> str:
+    return "\n".join(f"[{p.passage_id}] {p.text}" for c in chapters for p in c.passages)
+
+
+def critic_flags(critic: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """The critic's problem claims, numbered F1, F2... for the source check to adjudicate.
+
+    The critic judges the script against the briefs, so a detail that the source does say
+    but the brief left out is reported as invented (season S2 episode 2: all four remaining
+    findings). The source check reads the whole episode and can tell the two apart."""
+    flags = []
+    for unit in (critic or {}).get("units", []):
+        for claim in unit["claims"]:
+            if claim["claim_type"] in PROBLEM_TYPES and claim["claim_type"] != "UNDETERMINED":
+                flags.append({"id": f"F{len(flags) + 1}", "unit_id": unit["unit_id"], **claim})
+    return flags
+
+
+_FLAG_KINDS = {"UNSUPPORTED_STORY_CLAIM": "not supported", "CONTRADICTED_STORY_CLAIM": "contradicted",
+               "STRENGTHENED_STORY_CLAIM": "stated more strongly than the summary"}
+
+
+def flagged_text(flags: Sequence[Dict[str, Any]]) -> str:
+    if not flags:
+        return "(none: return an empty critic_reviews list)"
+    return "\n".join(f"{f['id']} ({f['unit_id']}, {_FLAG_KINDS.get(f['claim_type'], 'questioned')}): {f['claim']}"
+                     for f in flags)
+
+
+def source_check_errors(check: Dict[str, Any], units: Sequence[Dict[str, str]],
+                        passage_ids: Set[str], flags: Sequence[Dict[str, Any]] = ()) -> List[str]:
+    """Every paragraph listed once; quotes copied from their paragraph; passages in scope;
+    every flagged statement answered once, IN_SOURCE with the passages that say it."""
+    errors = []
+    reviews = check.get("critic_reviews") or []
+    answered = [r["id"].strip() for r in reviews]
+    expected = [f["id"] for f in flags]
+    if sorted(answered) != sorted(expected):
+        errors.append(f"critic_reviews: answer each flagged statement exactly once ({expected}), got {answered}")
+    for review in reviews:
+        unknown = [pid for pid in review["passage_ids"] if pid not in passage_ids]
+        if unknown:
+            errors.append(f"critic_reviews {review['id']}: passage ids {unknown} are not in this episode's source")
+        if review["verdict"] == "IN_SOURCE" and not review["passage_ids"]:
+            errors.append(f"critic_reviews {review['id']}: IN_SOURCE needs the passage ids that say it")
+    unit_text = {u["unit_id"]: u["text"] for u in units}
+    listed = [_unit_id(p["unit_id"]) for p in check["paragraphs"]]
+    missing = [u for u in unit_text if u not in listed]
+    if missing or len(listed) != len(set(listed)) or set(listed) - set(unit_text):
+        errors.append(f"paragraphs: list every paragraph exactly once ({len(unit_text)} paragraphs, "
+                      f"missing {missing[:5]})")
+    for paragraph in check["paragraphs"]:
+        uid = _unit_id(paragraph["unit_id"])
+        text = _squash(unit_text.get(uid, ""))
+        for index, finding in enumerate(paragraph["findings"]):
+            where = f"{uid} findings[{index}]"
+            if _squash(finding["script_quote"]) not in text:
+                errors.append(f"{where}: script_quote is not copied exactly from paragraph {uid}")
+            unknown = [pid for pid in finding["passage_ids"] if pid not in passage_ids]
+            if unknown:
+                errors.append(f"{where}: passage ids {unknown} are not in this episode's source")
+    return errors
+
+
+def source_check_findings(check: Dict[str, Any], passages: Mapping[str, str]) -> List[Dict[str, Any]]:
+    """Findings in the form the revision stage and the gate report use (all MEDIUM)."""
+    findings = []
+    for paragraph in check["paragraphs"]:
+        for finding in paragraph["findings"]:
+            claim_type, category = SOURCE_CHECK_KINDS[finding["kind"]]
+            cited = "; ".join(f"[{pid}] {passages.get(pid, '')[:160]}" for pid in finding["passage_ids"])
+            findings.append({
+                "unit_id": _unit_id(paragraph["unit_id"]), "claim": finding["script_quote"],
+                "claim_type": claim_type, "failure_category": category, "severity": "MEDIUM",
+                "brief_refs": [], "source": "source_check", "kind": finding["kind"],
+                "passage_ids": finding["passage_ids"], "concepts": [], "phrases": [],
+                "explanation": finding["explanation"],
+                "suggested_fix": f"Sửa hoặc bỏ cho đúng nguyên tác: {cited}",
+            })
+    return findings
+
+
+def overturned_flags(checks: Sequence[Optional[Dict[str, Any]]],
+                     flags: Sequence[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Critic findings that the source check found in the source: every sample that answered
+    said IN_SOURCE (one dissent keeps the finding). They are brief gaps, not script errors."""
+    out = []
+    for flag in flags:
+        verdicts = [r for check in checks if check for r in check.get("critic_reviews") or []
+                    if r["id"].strip() == flag["id"]]
+        if verdicts and all(r["verdict"] == "IN_SOURCE" for r in verdicts):
+            passages = []
+            for review in verdicts:
+                passages += [p for p in review["passage_ids"] if p not in passages]
+            out.append({**flag, "passage_ids": passages, "source_explanation": verdicts[0]["explanation"]})
+    return out
+
+
+def without_claims(critic: Dict[str, Any], drop: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
+    """The critic result without the given claims (matched by paragraph, text and type)."""
+    keys = {(f["unit_id"], f["claim"], f["claim_type"]) for f in drop}
+    return {**critic, "units": [{**unit, "claims": [c for c in unit["claims"]
+                                                     if (unit["unit_id"], c["claim"], c["claim_type"]) not in keys]}
+                                for unit in critic["units"]]}
+
+
+def merge_source_findings(samples: Sequence[Sequence[Dict[str, Any]]]) -> List[Dict[str, Any]]:
+    """Union of several source-check calls. One call misses defects another catches (live
+    runs 13-14), and in trials every reported finding was real, so findings are pooled; two
+    findings on one paragraph whose quotes overlap count once (the first is kept)."""
+    merged: List[Dict[str, Any]] = []
+    for findings in samples:
+        for finding in findings:
+            quote = _squash(finding["claim"])
+            if not any(f["unit_id"] == finding["unit_id"] and (quote in _squash(f["claim"]) or _squash(f["claim"]) in quote)
+                       for f in merged):
+                merged.append(finding)
+    return merged
+
+
+def run_source_check(client: LLMClient, scope: StoryScope, units: List[Dict[str, str]],
+                     profile: NarrativeProfile, log: CallLog, max_repairs: int,
+                     version: int, sample: int = 1,
+                     flags: Sequence[Dict[str, Any]] = ()) -> Optional[Dict[str, Any]]:
+    """Check the script against the episode's own source text, and answer for each critic
+    flag (see critic_flags) whether the source says it. None when the episode is too long
+    for one call (see SOURCE_CHECK_MAX_CHARS)."""
+    source = source_check_text(scope.chapters)
+    if len(source) > SOURCE_CHECK_MAX_CHARS:
+        return None
+    schema = load_schema("source_check_v0")
+    language = LANGUAGE_NAMES.get(scope.source_language, scope.source_language)
+    system = render("source_check_system", target_language_name=profile.target_language_name,
+                    source_language_name=language, schema=dump(schema))
+    unit_lines = "\n\n".join(f"<{u['unit_id']}>\n{u['text']}\n</{u['unit_id']}>" for u in units)
+    user = render("source_check_user", scope_label=scope.label(), source_language_name=language,
+                  source=source, unit_count=len(units), units=unit_lines, flagged=flagged_text(flags))
+    ids = {p.passage_id for c in scope.chapters for p in c.passages}
+    return run_json_stage(client, stage="source_check", system=system, user=user, schema=schema,
+                          semantic_check=lambda c: source_check_errors(c, units, ids, flags),
+                          max_repairs=max_repairs, log=log,
+                          request_suffix=f"v{version}" if sample == 1 else f"v{version}s{sample}")
+

@@ -5,6 +5,21 @@ language: vi
 word_boundaries: true
 chars_per_event: 1500
 clause_markers: [và, nhưng, sau khi, trước khi, khi, nếu, vì, rồi, mà, để]
+# Conjunctions that join statements of equal rank (for one-statement labelled facts).
+coordinators: [và, nhưng, rồi, còn, đồng thời]
+# Third-person references to a character, for the glossary's pronoun check; the exceptions
+# are nouns that start like a pronoun.
+third_person_pronouns: [cậu, anh, cô, hắn, chàng, nàng, nó]
+pronoun_exceptions: [anh chàng, anh trai, anh bạn, anh em, cô nàng, cô gái, cô bé, chàng trai, cậu bé]
+# Reported speech: a verb of saying, then (within one clause) the complementizer that
+# introduces what was said. "Amane giải thích rằng ..." (attribution audit, live run 10).
+speech_verbs: [nói, bảo, giải thích, đáp, trả lời, hỏi, kể, thốt lên, lên tiếng, phân trần, khẳng định,
+               thừa nhận, nhắc, dặn, tuyên bố, cất lời, cất tiếng, trấn an, xin lỗi, than, yêu cầu, hứa,
+               thú nhận, phàn nàn, trêu]
+speech_complementizers: [rằng]
+# The narrator addressing the viewers; blanked out before the strength audit reads a sentence.
+audience_address: [đúng không mọi người, phải không mọi người, mọi người ơi, nhỉ mọi người, mọi người thấy, các bạn ạ,
+                   các bạn thấy, các bạn có thấy]
 # A hedge does not reach across a contrast. Openers start such a part.
 contrast_openers: [nhưng, tuy nhiên, song]
 strength:
