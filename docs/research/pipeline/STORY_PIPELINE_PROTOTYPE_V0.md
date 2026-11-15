@@ -615,6 +615,17 @@ The season COMPLETED in three invocations; the season runner resumed episode 3 t
   - Negative control: four wrong statements were added as critic claims. They were run 10's real "steaming porridge" defect (contradicted by 3.81), an invented piggyback home, an invented confession and a fever "so high he fainted" (strengthened). Both samples answered NOT_IN_SOURCE for all four, and three of the four answers cited the passage that contradicts the claim.
   - Result: 8 of 8 verdicts correct in both samples. This is one episode; the verifier can still be wrong, which is why a single dissent keeps a finding.
 
+**2026-11-15, run 17 (chapters 2–3 again, briefs from S2's memory, incremental checks; `gemini-3.6-flash` throughout).**
+
+The run COMPLETED in 17 calls, 234,402 tokens and 357 s. S2's episode 2 took 31 calls and 653,295 tokens.
+
+- **Where the difference comes from:** mostly not from incremental checks. This run needed no fallback model and almost no repairs, while S2's episode 2 ran three source checks on `gemini-3-flash-preview` at 32–71k tokens each and repeated four critic calls. S2's briefs (83k) were also reused from memory here.
+- **What incremental checks saved:** paragraphs checked by version were 14 → 7 → 1 → 1. A call's prompt is mostly the briefs (critic) or the source (source check), so one paragraph still costs about half a full call: the critic went 23.9k (v1) → 17.5k → 12.6k → 11.4k, and the source check about 15k → 9k. Against full rechecks of v2–v4, this saves about 55k tokens, or 19% of the run.
+- **Findings by version:** 9 → 1 → 1 → 1.
+  - v1: the source check caught "Mahiru chẳng hề phàn nàn", which contradicts 3.18 where she does complain. In S2 the critic had wrongly flagged the faithful version of the same detail.
+  - Left: "Rất nhanh trí" (quick-witted) for 2.73, where she only pulls his arm. A small embellishment, flagged for the reader.
+- **Recall depends on how much a call sees.** Paragraph P006 contained three defects from v1 on: "trượt chân" (2.71: he sways toward the wall), Amane refusing help (2.81: he has no strength to resist) and "rất nhanh trí". Both whole-script checks of v1 missed all three. P006 was then rechecked alone in each later version, and each recheck found one of them. Incremental checks keep that focus on changed paragraphs, but give unchanged paragraphs fewer looks. A chunked source check is being measured next.
+
 ## Known limits
 
 - Brief paraphrase quality is not measured against gold. Quotes pin the evidence, but a
