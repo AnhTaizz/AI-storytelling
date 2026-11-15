@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-storytelling:story-pipeline:source-check:v0",
+  "title": "Story Pipeline Source Check v0",
+  "description": "A second verifier that reads the script against the source text itself, not against the briefs. Every finding quotes the script exactly and names the source passages it relies on.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "paragraphs"
+  ],
+  "properties": {
+    "paragraphs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "unit_id",
+          "findings"
+        ],
+        "properties": {
+          "unit_id": {
+            "type": "string"
+          },
+          "findings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "script_quote",
+                "kind",
+                "passage_ids",
+                "explanation"
+              ],
+              "properties": {
+                "script_quote": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "kind": {
+                  "enum": [
+                    "CONTRADICTS_SOURCE",
+                    "NOT_IN_SOURCE",
+                    "WRONG_SPEAKER",
+                    "STRENGTHENED",
+                    "WRONG_CAUSE"
+                  ]
+                },
+                "passage_ids": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "explanation": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "critic_reviews": {
+      "description": "Verdicts on statements the brief-based critic flagged as unsupported: is each one in the source after all?",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "verdict",
+          "passage_ids",
+          "explanation"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "verdict": {
+            "enum": [
+              "IN_SOURCE",
+              "NOT_IN_SOURCE"
+            ]
+          },
+          "passage_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "explanation": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

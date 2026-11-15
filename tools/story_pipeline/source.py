@@ -8,9 +8,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Sequence, Tuple
 
 from tools.story_ingestion.light_novel_adapter_v0 import ingest_manifest_file
+from tools.story_pipeline.prepare_source import layout_warning
 
 
 @dataclass(frozen=True)
@@ -93,3 +94,9 @@ def load_scope(manifest_path: Path | str, chapter_range: Tuple[int, int],
         raise ValueError(f"chapters not in manifest: {missing}")
     return StoryScope(result.story_id, result.manifest.get("source_language", "unknown"),
                       tuple(chapters))
+
+
+def layout_warnings(chapters: Sequence[Chapter]) -> List[str]:
+    """Chapters that M3 packed into a few many-line passages (see prepare_source.py)."""
+    found = (layout_warning(f"chapter {c.order}", "\n\n".join(p.text for p in c.passages)) for c in chapters)
+    return [warning for warning in found if warning]

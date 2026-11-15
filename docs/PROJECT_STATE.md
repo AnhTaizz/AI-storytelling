@@ -109,6 +109,21 @@ Quality gate (DEC-019, 2026-11-13): `python -m tools.ci.check` runs compile, tes
 
 Prototype (not frozen, not M5 completion): story memory v0 (`tools/story_memory/`, 2026-11-13) persists chapter briefs across runs with source/prompt fingerprint invalidation, merges a cross-chapter character roster, tracks relationship states per chapter, and feeds a spoiler-safe recap of earlier chapters into episode runs (`--recap`). Not yet run against a live model.
 
+*Update 2026-11-15 (pipeline and memory prototypes; still not milestone completions):*
+- **Live use:** both prototypes now run against live Gemini models (runs 1–16, three seasons).
+- **Seasons:** `tools/story_pipeline/run_story.py` runs a story episode by episode with shared memory, resume and quota pause, and writes a season index.
+- **Script checks:**
+  - deterministic: strength, hedge, attribution and glossary (name spellings and pronouns);
+  - an LLM source check that reads the script against the source text, and overrules critic findings that the source supports (reported as brief gaps);
+  - findings go to revision, whose later rounds only patch sentences.
+- **Owner review:** each run writes `review.html`; `review_summary.py` collects filled forms.
+- **Other pieces:**
+  - a per-story name glossary with pronouns (`.local/story_memory/<story>/glossary.yaml`);
+  - source preparation for single-line-break (Korean and Chinese) files;
+  - lexicons for vi, ja, en, ko and zh.
+- **Limits:** the M1/M9 Script Quality Gate is still not evaluated, because it needs the owner's review. The pipeline still writes its own briefs, because no M4 extractor exists.
+- **Details:** `docs/research/pipeline/STORY_PIPELINE_PROTOTYPE_V0.md` and the owner's guide `docs/guides/HUONG_DAN_PIPELINE.md`.
+
 Story Extraction now has research-only validation/runtime tooling and the additive `STORY_EXTRACTION_DRAFT_V1` deterministic compiler prototype (M4-04B3A). No extraction model or end-to-end extractor is selected, locked, or production-qualified. Later application pipeline stages remain unimplemented.
 
 Not yet implemented:
@@ -917,9 +932,22 @@ M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02 are ACCEPTED. M4-03 is `FR
 - **Verification.** Full offline suites pass 902/902: canonical story 99, ingestion 79, extraction 362, script quality 64, and story benchmark 298 in strict offline mode. Protected V1 history, source-text, secret, and private-artifact scans pass.
 - **Records.** `benchmarks/m4_extraction/M4_04B3D_DRAFT_V1_1_REMEDIATION_RESULT.yaml` and `docs/research/m4/M4_DRAFT_INTERFACE_V1_1.md`.
 
+## M4-04B3E — FRESH VALIDATION V1 FOR DRAFT V1.1: CONSTRUCTION AND SEAL — COMPLETED — Status: M4_04B3E_FRESH_VALIDATION_V1_SEALED_PENDING_ORCHESTRATOR_REVIEW
+
+- **Authorization.** The project owner authorized the Next Candidate recorded after M4-04B3D on 2026-11-14.
+- **Fresh family.** Ten newly authored Japanese miniature story units were ingested independently under M3 as `ORIGINAL_JA_MINI_NARRATIVES_FV1`. No corpus, DEV1, DEV2 or holdout text was used; none of those private artifacts existed in the authoring environment. The ten cases repeat the capabilities preregistered for DEV2 on new text.
+- **Gold discipline.** Canonical semantics were annotated before any draft projection. Status is `AGENT_DRAFT_GOLD` / `NOT_HUMAN_CONFIRMED`; every assertion `UNREVIEWED`. All 10 cases are `COMPLETE_FOR_PROFILE`, with 168 required and zero optional assertions.
+- **Offline gate.** Gold → Draft V1.1 oracle projection → unchanged V1.1 compiler → canonical passes 10/10 frozen validation, 10/10 source-exact validation and 10/10 graph alpha-equivalence. No schema, compiler, snapshot or registry was changed.
+- **Private seal.** `M4_04B3E_FRESH_VALIDATION_V1_INPUT.zip` SHA-256 `724041283cde55ccbce27844c9297cf66eed857c96cf18989dc97997fef55729`; `M4_04B3E_FRESH_VALIDATION_V1_GOLD.zip` SHA-256 `732a3555717c6d3426e6e379e43061cd1fd6d11df8798ec859f37248202ddc73`; blindness manifest SHA-256 `cdb8c0dcc62d12e776b0061201f3ec984289007f6e11450266474cfe52a75ea8`. Input contains zero gold and shares no member name with gold. The packages were built in a cloud session and handed to the project owner; they are untracked.
+- **Verification.** Two builds gave identical hashes. Re-verification from the sealed files alone passes. The seal tool has synthetic tests only.
+- **Boundaries.** No provider request, prediction, DEV2 or holdout access, extractor or model selection, M4-04C or M5 work occurred.
+- **Records.** `benchmarks/m4_extraction/M4_04B3E_FRESH_VALIDATION_V1_SEAL_RESULT.yaml`; `docs/research/m4/M4_FRESH_VALIDATION_V1_PROTOCOL.md`; `tools/story_extraction/fresh_validation_seal_v1.py`.
+
 ## Next Candidate
 
-Author and seal a new independent fresh validation set for Draft V1.1 under separate authorization. Do not reuse DEV2 as fresh validation, open DEV2 gold, rerun predictions, access the holdout, begin M4-04C, or begin M5 without a separately authorized task.
+A concrete proposal for the next two M4 tasks is in `docs/research/m4/M4_04B3F_PROTOCOL_PROPOSAL_V0.md` (not authorized; nothing run).
+
+Orchestrator review of the M4-04B3E seal. After that, and under separate authorization: lock a Draft V1.1 prompt and runtime protocol against the fresh validation input hash, then run blind predictions. Do not open the fresh validation gold before those predictions are locked and hashed. Do not reuse DEV2 as fresh validation, open DEV2 gold, access the holdout, begin M4-04C, or begin M5 without a separately authorized task.
 
 ## M6 Retrieval Baseline v0 (spike) — IMPLEMENTED, PR pending owner review
 

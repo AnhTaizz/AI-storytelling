@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-storytelling:story-pipeline:script-patch:v0",
+  "title": "Story Pipeline Script Patch v0",
+  "description": "Sentence-level edits to a finished script. Each edit replaces one exact span of one paragraph; everything else stays byte for byte.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["edits"],
+  "properties": {
+    "edits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["unit_id", "old", "new"],
+        "properties": {
+          "unit_id": { "type": "string" },
+          "old": { "type": "string", "minLength": 1 },
+          "new": { "type": "string" }
+        }
+      }
+    }
+  }
+}

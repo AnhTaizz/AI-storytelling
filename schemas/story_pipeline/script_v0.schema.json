@@ -34,6 +34,15 @@
           }
         }
       }
+    },
+    "pronouns": {
+      "type": "object",
+      "description": "Optional: the pronoun used for each character referred to by a pronoun, keyed by the name as written in the script (for example {\"Amane\": \"cậu\"}).",
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20
+      }
     }
   }
 }

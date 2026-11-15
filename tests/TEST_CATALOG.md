@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 55 — test functions: 1000
+Suites: 9 — test files: 61 — test functions: 1041
 
 ## canonical_story
 
@@ -758,6 +758,18 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.evaluate
 - `TestRequiredAndAcceptable.test_optional_assertion_must_still_be_grounded_when_predicted`
 - `TestCatalogueStillPasses.test_every_synthetic_case_succeeds_in_real_source_mode_too`
 
+### test_fresh_validation_seal_v1 (8)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.fresh_validation_seal_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `SealTests.test_seal_is_deterministic_separates_gold_and_verifies`
+- `SealTests.test_input_package_gives_the_extractor_only_the_prepared_surface`
+- `SealTests.test_problems_block_the_seal`
+- `SealTests.test_unrepresentable_gold_is_reported_by_code`
+- `SealTests.test_records_of_a_prior_base_document_are_reused_not_copied` — A case may build on records an earlier step put in the base document.
+- `SealTests.test_changes_after_sealing_are_detected`
+- `SealTests.test_gold_in_an_input_package_is_refused`
+- `SealTests.test_source_manifest_must_be_one_document`
+
 ### test_gemini_credential_qualification_v1 (7)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.gemini_key_pool_v1`, `tools.story_extraction.run_gemini_credential_qualification_v1`, `tools.story_ingestion.light_novel_adapter_v0`
 
@@ -1145,6 +1157,15 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 
 ## story_memory
 
+### test_glossary_v0 (5)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.glossary_v0`
+
+- `GlossaryTests.test_sync_adds_characters_and_never_overwrites_the_owners_choice`
+- `GlossaryTests.test_other_spellings_of_a_character_are_flagged`
+- `GlossaryTests.test_pronoun_drift_is_flagged_only_where_the_glossary_decides` — Season S1 called Amane "cậu" in two episodes and "anh" in the third.
+- `GlossaryTests.test_declared_pronouns_fill_only_unset_entries`
+- `GlossaryTests.test_bad_files_and_ids_are_rejected`
+
 ### test_memory_v0 (7)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`
 
@@ -1158,7 +1179,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 
 ## story_pipeline
 
-### test_lexicon (6)
+### test_lexicon (7)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.lexicon`
 
 - `LexiconFileTests.test_every_lexicon_file_is_complete_and_loads`
@@ -1167,14 +1188,50 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `MatchingTests.test_concepts_found_per_language`
 - `ClauseTests.test_clauses_split_on_punctuation_and_conjunctions`
 - `ClauseTests.test_contrast_parts_split_only_at_a_contrast`
+- `ReportedSpeechTests.test_reported_speech_content_starts_after_the_complementizer`
 
-### test_story_pipeline_v0 (35)
+### test_prepare_source (5)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.prepare_source`, `tools.story_pipeline.source`
+
+- `LayoutTests.test_layout_decision`
+- `LayoutTests.test_split_keeps_every_line_as_its_own_paragraph`
+- `PrepareTests.test_prepared_korean_chapters_load_through_m3_as_separate_passages`
+- `PrepareTests.test_invalid_input_is_rejected`
+- `PrepareTests.test_cli_reports_each_chapter`
+
+### test_review_page (6)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.review_page`, `tools.story_pipeline.run_pipeline`
+
+- `ReviewPageTests.test_each_paragraph_sits_next_to_its_briefs_and_source`
+- `ReviewPageTests.test_findings_are_marked_on_their_sentence_most_severe_first`
+- `ReviewPageTests.test_text_is_escaped_and_the_page_is_self_contained`
+- `ReviewPageTests.test_review_form_lists_every_question`
+- `ReviewPageTests.test_brief_items_for_a_person_are_listed`
+- `ReviewPageTests.test_page_without_a_critic_still_renders`
+
+### test_review_summary (1)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.review_summary`, `tools.story_pipeline.run_pipeline`
+
+- `ReviewSummaryTests.test_forms_are_parsed_and_owner_and_agent_kept_apart`
+
+### test_run_story (6)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.llm`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.run_story`
+
+- `PlanTests.test_episodes_cover_the_range_in_order`
+- `SeasonTests.test_episodes_run_in_order_with_earlier_chapters_as_background`
+- `SeasonTests.test_rerun_skips_completed_episodes_and_resumes_the_rest`
+- `SeasonTests.test_quota_pauses_and_failures_stop_unless_told_to_keep_going`
+- `SeasonTests.test_season_with_the_real_pipeline_and_shared_memory`
+- `CliTests.test_bad_episode_plan_is_rejected_before_any_call`
+
+### test_story_pipeline_v0 (44)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
 
 - `test_profile`
 - `SourceTests.test_parse_range`
 - `SourceTests.test_sample_chapter_scope`
 - `SourceTests.test_chapters_outside_manifest_rejected`
+- `SourceTests.test_chapter_packed_into_one_passage_is_reported` — A source with single line breaks reaches the pipeline as one huge passage.
 - `ChecksTests.test_word_count_and_language`
 - `ChecksTests.test_foreign_script_depends_on_target_language`
 - `ChecksTests.test_contamination_and_artifacts_detected`
@@ -1191,13 +1248,21 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `SemanticValidationTests.test_closing_hook_is_quoted_and_landed_by_the_plan`
 - `SemanticValidationTests.test_brief_keeps_source_hedging_in_any_language_pair` — Labels and text of a brief item must keep the hedging of what it quotes.
 - `SemanticValidationTests.test_script_must_keep_the_hedges_of_the_brief_clause_it_retells`
+- `SemanticValidationTests.test_thought_or_narration_must_not_become_speech` — Live run 10: Amane's thought (4.18) was told as something he explains to Mahiru.
 - `SemanticValidationTests.test_brief_facts_should_be_atomic`
+- `SemanticValidationTests.test_brief_text_must_be_in_the_brief_language` — Runs 12-13 left 붉어, 面 and 廊 inside Vietnamese briefs; 廊 then reached a script.
 - `SemanticValidationTests.test_source_hedge_review_lists_items_for_a_person`
+- `SemanticValidationTests.test_source_strength_review_lists_briefs_stronger_than_their_source` — A brief that already overstates passes the script audits (live run 10: "dữ dội").
 - `SemanticValidationTests.test_critic_must_extract_claims_at_paragraph_density`
 - `SemanticValidationTests.test_strength_audit_flags_intensifiers_missing_from_cited_brief`
 - `SemanticValidationTests.test_critic_unit_mismatch`
 - `FactsTests.test_valid_and_invalid`
 - `EndToEndTests.test_full_pipeline_with_revision`
+- `EndToEndTests.test_source_check_findings_go_to_revision_and_the_report` — The second verifier reads the script against the source text (live run 10).
+- `EndToEndTests.test_critic_findings_the_source_supports_become_brief_gaps` — Season S2 episode 2: the critic flagged four details that the brief had left out
+- `EndToEndTests.test_source_check_answers_are_validated`
+- `EndToEndTests.test_later_revision_rounds_patch_only_the_sentences_at_fault` — Live run 13: a second full rewrite put new errors into correct text.
+- `EndToEndTests.test_patch_edits_are_validated_and_applied_in_place`
 - `EndToEndTests.test_episode_with_memory_recap`
 - `EndToEndTests.test_memory_brief_failing_current_checks_is_regenerated`
 - `EndToEndTests.test_cli_episode_mode`

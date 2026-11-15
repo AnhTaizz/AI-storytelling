@@ -109,13 +109,46 @@ Replay on the saved live briefs (ja → vi):
 
 | Area | State |
 |---|---|
-| M3 ingestion | Accepts any language tag (`source_language: ko`). It splits paragraphs on blank lines. **Risk:** a file that separates lines with single newlines only becomes one segment per chapter. The adapter is frozen, so that case needs a new versioned adapter and a decision. Check this on the first real Korean chapter. |
+| M3 ingestion | Accepts any language tag (`source_language: ko`). It makes one passage per run of non-blank lines. **Checked on 2026-11-14** with an original Korean text: with blank lines between paragraphs it gives 12 passages; with single line breaks, the common web-novel layout, the whole chapter becomes 1 passage. The adapter is frozen, so `tools/story_pipeline/prepare_source.py` rewrites such files before M3 (see below). |
 | Lexicon `ko.yaml` | Substring matching, because particles and endings attach to words. Reported speech is caught through endings such as ‑다고 한다 and ‑라던데, appearance through ‑것 같다 and ‑듯했다, speculation through ‑지도 모른다 and 아마, and metaphor through 마치 and ‑처럼. Ambiguous stems are excluded, for example 늘 (it matches inside 늘어나다) and 것이다. |
 | Event minimum | Now counts source characters divided by the lexicon's `chars_per_event` (ja 550, ko 700, vi 1500, en 1600; rough, tunable) instead of counting passages. Korean web novels often put every sentence on its own line: 200 one-line passages now need 9 events instead of 14. |
 | Foreign script check | Driven by the target language's allowed writing systems. **Hangul was previously not detected**, so Korean left in a Vietnamese script passed. Languages written without spaces (ja, zh, th) count length in characters. |
 | Dialogue | ‘…’ is added to the quote characters; Korean novels use it for inner speech. |
 | Names | The profile's name policy is now script-neutral: standard romanization, no original script. |
 | Embeddings | The pipeline uses none. The M1 retrieval models (multilingual-e5, bge-reranker-v2-m3) are multilingual but were only benchmarked on Japanese. Measure them on a Korean probe set before relying on retrieval. |
+
+### Preparing a source: `prepare_source.py`
+
+```
+python -m tools.story_pipeline.prepare_source --input-dir <raw chapter files> \
+    --out .local/sources/<story> --story-id <id> --language ko
+```
+
+- **What it writes:** the chapter files, an M3 manifest (`manifest.yaml`) and `SOURCE_PREPARATION.json`, which keeps the hash of each original file and the layout decision. The prepared files are the source of record.
+- **Layout `auto`:** a file is split line by line only when its paragraphs average 4 or more lines **and** at least 70% of its lines end a sentence. Hard-wrapped prose fails the second test and is left alone, with a warning. `--layout lines` and `--layout keep` force either way.
+- **Pipeline warning:** a chapter that reaches the pipeline with 4 or more lines per passage is reported on the console, in the run manifest (`source_warnings`) and in `report.md`.
+
+Still unverified: a real Korean chapter. The check above used text written for the test.
+
+**2026-11-15, runs 11 and 12 (the same original Korean text, prepared with `prepare_source`, 180–280 words).**
+
+- **Run 11 FAILED at the brief, a false positive.** 「눈가가 조금 붉어진 것처럼 보였다」 ("her eyes looked slightly reddened") contains the simile marker 처럼 inside an appearance construction. The check then required a figure of speech, and rejected "có vẻ hơi đỏ" three times. Now a metaphor is required only when the source marks nothing else.
+- **Run 12 COMPLETED** in 6 calls and 107 s, with every gate passed and no audit finding left:
+  - names romanized (Seo Ji-woo, Han So-yeon), no Hangul in the script;
+  - hearsay kept ("nghe nói ... đứng đầu toàn trường") and the appearance kept ("có vẻ hơi ửng đỏ").
+- **Manual check of run 12:**
+  - 「목소리가 들린 것 같았지만」 ("he seemed to hear a voice") became a plain "nghe thấy". The Korean lexicon listed only the dictionary forms (것 같다, 것 같았다), so the inflected 것 같았지만 matched nothing. It now lists stems (것 같, 듯하, 보였).
+  - The closing line again states that Ji-woo's belief "was wrong", where the source only says what he thought at the time (그때의 지우는 생각했다). This is the same over-commitment as in run 9.
+  - The brief's event E2 contains a Hangul word (붉어) inside Vietnamese text. Foreign script is checked only in the script, not in briefs.
+  - The test text itself contradicts itself: 같은 반 ("same class") and then 반이 달라서 ("different class"). The pipeline avoided both and wrote "cùng trường" (same school).
+
+### Chinese (`zh.yaml`, prepared without a Chinese sample)
+
+- **Lexicon:** simplified and traditional forms side by side (据说/據說, 似乎, 也许/也許, 宛如, 仿佛/彷彿). Phrases are matched as substrings, so every phrase has at least two characters: 像 alone would match 图像 and 想像. 可能 is left out because it is inside 不可能 ("impossible").
+- **Contrast openers:** 但是, 可是, 然而, 不过/不過.
+- **Event density:** `chars_per_event` 420.
+- **Source preparation:** Chinese web novels usually end paragraphs with a single line break and indent them with full-width spaces. `prepare_source` handles that layout, and the indentation is kept inside the passage text.
+- **Open product decision:** Vietnamese audiences know Chinese novels by their Sino-Vietnamese names (Hán-Việt, for example Lâm Uyển Nhi) rather than pinyin (Lin Wan'er). The profile's name policy says "standard romanization of the source language", which means pinyin. The owner should choose which convention to use.
 
 ## Integration seam for M4: `story_facts/v0`
 
@@ -136,13 +169,38 @@ python -m tools.story_pipeline.run_pipeline --chapters 1-5 --min-words 1500 --ma
 python -m tools.story_pipeline.run_pipeline --resume .local/story_pipeline_runs/<run id>
 ```
 
-Useful flags: `--stop-after brief|plan|script|critic`, `--revision-rounds N`,
-`--revise-severities CRITICAL,HIGH`, `--profile <yaml>`, `--temperature`.
+Useful flags:
+- `--stop-after brief|plan|script|critic`, `--profile <yaml>`, `--temperature`;
+- `--revision-rounds N` and `--full-revision-rounds K`: the first K rounds may rewrite the script, later rounds only patch sentences;
+- `--revise-severities CRITICAL,HIGH`;
+- `--source-check-samples N` (default 2), or `--no-source-check`;
+- `--recap` (episode mode), `--no-memory`.
 
-Each run writes to `.local/story_pipeline_runs/<run id>/` (git-ignored): `briefs/`,
-`plan.json`, `script_v*.json|md`, `critic_v*.json`, `script_final.md`, `report.md`,
-`report.json`, `review_form.md`, `calls.jsonl` (every model call with raw output and validation errors) and
-`run_manifest.json` (scope, background chapters, where each brief came from — memory or model —, profile, model, prompt/schema sha256, status). Episode runs also write `memory_recap.json`.
+A whole story, episode by episode:
+
+```
+python -m tools.story_pipeline.run_story --chapters 1-5 --episodes 1,2-3,4-5 --revision-rounds 3 --model <chain>
+python -m tools.story_pipeline.run_story --chapters 1-30 --episode-size 3 --model <chain>
+```
+
+- Running the same command again continues the season: completed episodes are skipped, an interrupted one resumes from its saved stage outputs, and a quota error pauses the season (`PAUSED_QUOTA`).
+- `.local/story_seasons/<story id>/` holds `season.json`, `season.md` (an index with links to every episode's report and review page) and one directory per episode.
+- `--keep-going` continues after a failure that is not a quota stop.
+
+A source whose paragraphs end with a single line break (common in Korean and Chinese web novels) is prepared first with `python -m tools.story_pipeline.prepare_source` (see below), then run with `--manifest <prepared manifest>`.
+
+Each run writes to `.local/story_pipeline_runs/<run id>/` (git-ignored):
+- `briefs/`, `plan.json`, `script_v*.json|md`, `critic_v*.json`, `source_check_v*.json`, `strength_audit_v*.json`, `script_final.md`;
+- `report.md` and `report.json`;
+- `review.html`: the owner's review page. Each paragraph sits next to its cited brief items and source passages, with findings marked. It ends with the review form, whose button copies a filled `review_form.md`;
+- `review_form.md`;
+- `calls.jsonl`: every model call, with raw output, validation errors and token usage;
+- `run_manifest.json`: scope, background chapters, where each brief came from, profile, model, prompt and schema sha256, tokens per stage, the glossary state and the status. Episode runs also write `memory_recap.json`.
+
+Story memory lives in `.local/story_memory/<story id>/`: `chapters/` (one brief per chapter) and `glossary.yaml`, the name glossary.
+- The glossary is synced from the roster after the briefs; new characters get their brief romanization.
+- Edit `display` (and `also_allowed`) to choose the spelling viewers hear, for example Sino-Vietnamese names for a Chinese novel, then set `confirmed: true`.
+- The pipeline never overwrites these edits. It tells the writer the display names, and flags any other spelling of the same character as a MEDIUM finding.
 
 ## Live runs
 
@@ -364,11 +422,204 @@ New minor issues:
 
 The LLM critic again reported no problems with the final script.
 
+**2026-11-14, run 10 (first episode run: chapters 2–5 with a recap of chapter 1, two revision rounds, 2,400–3,000 words).**
+
+The run COMPLETED in 24 calls and 1,787 s. All gates passed.
+
+- **Briefs:** chapter 1 came from memory; chapters 2–5 were generated, and each took all three attempts. The first attempts failed on too few events, on hedges (a guess, an appearance and a metaphor labelled EXPLICIT, hearsay stated as fact) and on a schema error.
+- **The run-8 repair fallback mattered:** the chapter-4 brief's last attempt had hard errors, and the attempt before it, with soft errors only, was used. Without the fallback the run would have failed.
+- **Audits:** 26 findings in v1, 1 in v2, 0 in v3. The second revision round removed the last finding, which one round had left in run 9.
+- **Episode mechanics:** the recap was used only for the umbrella callback. The script ends on chapter 5's closing line.
+
+Manual check of the final script against the source of chapters 2–5 found three medium defects that no automated check reported:
+
+- **An invented detail that contradicts the source.** The script says the porridge arrived "nghi ngút khói" (steaming). 3.81 says it gave off no steam and had been cooled on purpose. The writer added this in v1. It is not in the brief, and the critic passed it three times.
+- **A narrator's thought turned into speech.** The "lost child" look (4.18) is Amane's thought. The brief records it correctly as a FIGURATIVE fact about him. The script has Amane explain it to Mahiru.
+- **A cause dropped and a manner inverted.** In the source Mahiru answers the boyfriend question with exasperation and turns cold only at Amane's "one or two" (4.24, 4.30); 4.32 and 4.37 describe flat words and a chilling look, explicitly not heat. The brief keeps the trigger. The script merges the two events, drops the trigger and calls the reaction "dữ dội" (fierce).
+
+Eight small ones as well: strengthened wording ("đỏ bừng mặt" for a faint blush, "sốt nặng"), small invented details, the weekend compressed into "the next day", and a remark Amane says aloud told as a thought. The text also has a garbage token ("so me"), which v2 had removed and v3 brought back, four misspellings, and one "anh" for Amane, who is "cậu" everywhere else.
+
+What this run shows:
+
+- The hedge and strength checks hold on four new chapters: no hearsay or appearance was stated as fact.
+- The remaining defects are of kinds the lexicon checks cannot see: invented descriptive details, who says or thinks something, and merged events. All three entered at the script stage, and the briefs were right. The critic compares the script with the briefs and still missed them.
+- Revision can undo an earlier fix (the garbage token).
+
+Candidate next steps:
+
+- A second verification pass that checks script sentences against the cited source passages, not only against the briefs.
+- A deterministic check that speech and thought verbs in the script match the brief item's kind.
+- A check that each revision keeps the fixes of the one before it.
+
+**Attribution audit and source check (added after run 10).**
+
+- **Attribution audit (deterministic, feeds revision).** It looks at the content of reported speech in the script ("X giải thích **rằng** |…"). If that content retells a brief statement better than any other, and the statement involves no speech at all, the sentence is a MEDIUM finding. A statement involves speech if its text has a verb of saying, or its quote or any cited passage has dialogue. Verbs and complementizers are optional lexicon fields (`speech_verbs`, `speech_complementizers`; vi and en so far). On the saved scripts of runs 2–10 (15 versions) it flags only run 10's "lost child" sentence. The first, looser prototype had 9 false positives for 1 catch.
+- **Source check (LLM, feeds revision).** A second verifier gets the episode's source text and every paragraph. It reports, quoting the script exactly:
+  - CONTRADICTS_SOURCE, NOT_IN_SOURCE and WRONG_SPEAKER;
+  - STRENGTHENED and WRONG_CAUSE.
+
+  Answers are rejected if a quote is not in its paragraph, a passage is outside the episode, or a paragraph is missing. It adds one call per script version, and is skipped (and recorded) above 60,000 source characters.
+- **Before integrating:** on run 10's final script, five trial calls in two designs returned 12 findings, all real:
+  - "steaming" porridge (4 of 5 calls);
+  - the lost-child speech (4/5);
+  - Itsuki's boast (3/5);
+  - "back at school the next day" (1/5);
+  - a strong blush (1/5);
+  - an "eat the whole bowl" instruction that the manual review had missed (1/5).
+
+  Giving the whole source worked better than giving each paragraph only its cited passages: the porridge passage (3.81) belonged to the next brief event. No trial call caught "fierce".
+
+**2026-11-15, run 13 (run 10's settings plus both checks).**
+
+The run COMPLETED in 14 calls and 875 s. All five briefs came from memory and passed the current checks. Findings for revision went 29 → 8 → 4.
+
+- **Source check:**
+  - v1: three real findings: the steaming porridge, Itsuki's boast, and Mahiru "calling his name" (5.39 has no name).
+  - v2: five real errors, all introduced by the first revision: Amane "falling flat on the floor" (2.71: he sways towards the wall), a scene moved to the shoe lockers, "two days ill in bed" (5.3: well the next day), and two smaller ones.
+  - v3: the WRONG_CAUSE "fierce" finding that no earlier check or trial call had caught, with the trigger (4.24) named.
+- **Attribution audit:** it flagged Amane "explaining" Mahiru's virtues (top of the year, good at sport). In the source those come from the narrator (4.26–4.27), and Amane only says she is popular (4.24). Partly true: the gist was spoken, but the list was not.
+- **Final script, checked by hand:**
+  - The steaming porridge and the lost-child speech are gone. The lost-child look is now Amane's recollection, as in the source.
+  - "Fierce" is still there, but the report now names it. It is no longer a silent pass.
+  - Remaining, unflagged: "đỏ bừng cả mặt" (3.47: faintly), "eat the whole bowl" (not in 3.76), and "nghe nói" for messages Amane himself received (5.8).
+  - The strength audit flagged "đúng không mọi người?", where "mọi người" addresses the audience. That is a false positive.
+- **Gates:** they now report GATE_FACTUAL_GROUNDING and GATE_EPISTEMIC_INTEGRITY as needing review, with four MEDIUM findings after the two revision rounds. Run 10 passed every gate with three real defects inside.
+
+What this shows:
+
+- Reading the script against the source catches the class of defect the brief-based critic cannot see, including errors that revision itself introduces.
+- Recall is still partial and varies from call to call, so the source check narrows the manual review but does not replace it.
+
+**Patch-mode revision and audience address (added after run 13).**
+
+- **Patch mode:** rounds after `--full-revision-rounds` (default 1) no longer rewrite the script. The model returns sentence-level edits (`script_patch_v0`). Each edit must copy its span exactly once from the named paragraph and must not add foreign-script characters. Code applies the edits in place, and a whole beat cannot be deleted.
+- **Audience address:** phrases that address the viewers (`audience_address` in the lexicon, for example "đúng không mọi người") are blanked out before the strength audit reads a sentence.
+
+**2026-11-15, run 14 (run 13 resumed after v2, then a patch round).**
+
+Run 14 reused run 13's briefs, plan and versions 1–2 unchanged, so its v3 can be compared directly with run 13's full-rewrite v3. It took 4 new calls and 219 s.
+
+- **The patch fixed all 8 findings in one valid call.** It changed 7 of 30 paragraphs; the other 23 are byte-identical. Every edit is a minimal, correct replacement:
+  - "ngã rạp xuống sàn" became "kéo cậu lại để giúp cậu lấy lại tư thế";
+  - the invented shoe-locker scene and "two days ill in bed" were removed;
+  - "ai cũng" and "lúc nào cũng" were dropped.
+- **v3:** neither the critic nor the source check reported anything. Run 13's full-rewrite v3 had 4 MEDIUM findings, and its rewrite had earlier introduced 5 new errors.
+- **Defects known from manual review that are still in run 14's v3, unflagged:**
+  - "phản ứng dữ dội": run 13's v3 source check caught it, this run's single call did not;
+  - "đỏ bừng", the "eat the whole bowl" instruction;
+  - a new "Nghe nói" before the weekend messages. The brief labelled that fact REPORTED because 5.8 says Itsuki "seems to have been worried" (らしく), but the messages themselves are plain narration. The hedge audit then asked the patch to add the hedge.
+
+What this shows:
+
+- Patching is the right tool for the last findings: it fixes what is flagged and touches nothing else.
+- The weak point is now recall. A single source-check call misses defects that another call catches. Five trial calls returned only real findings, so taking the union of two calls per version is the obvious next step (one more call per version).
+- The 「らしく」 case is another hedge-scope error, in the brief this time: a hedge on the worry is applied to the messages in the same sentence.
+
+**Pooled source check and one-statement labelled facts (added after run 14).**
+
+- **Pooled source check:** two independent source-check calls per version by default. Their findings are pooled, and findings on one paragraph with overlapping quotes count once.
+- **One-statement labelled facts:** a brief fact labelled anything but EXPLICIT may not join two statements (a soft check). Coordinated parts shorter than 5 words, such as nouns in a list, do not count as statements.
+
+  Tracing run 14 showed that the cause was not a hedge-scope error. The brief joined "reportedly worried" (5.8 「心配していたらしく」) and "sent messages" in one REPORTED fact, so the hedge audit asked for a hedge on the messages too.
+
+**2026-11-15, run 15 (chapters 2–5; chapters 2 and 5 re-briefed; 1 full revision and 2 patch rounds; pooled source check).**
+
+The run COMPLETED in 27 calls and 1,485 s. Findings for revision went 31 → 9 → 2 → 2.
+
+- **Briefs:**
+  - Chapter 2 needed three attempts. The first two failed on hedge labels (らしく, だろう), on too few events and on a quote that was not verbatim.
+  - Chapter 5's last attempt hit a hard hedge error, so the earlier soft-only attempt was used. That attempt still joins "reportedly worried" and "sent messages". The soft check asked for a split, but the fallback restored the joined fact.
+- **Source check:** two calls per version. Real findings by version:
+  - v1: the writer invented steaming porridge twice ("nóng hổi", "nghi ngút khói"), Mahiru "sitting" where 3.21 has her standing, an invented gel pack nearly dropped, and a cause for Itsuki noticing that the source does not give.
+  - v2: an invented "ask the teachers to go home early", and a reversed rumour.
+  - v4: "đỏ bừng" (3.47: faintly). This is the first time it was flagged, but the revision rounds were used up.
+- **Final script, checked by hand:**
+  - Fixed: the porridge, now in the source's own terms ("không hề bốc khói nghi ngút mà đã được cô cố tình làm nguội bớt"); the lost-child look, now a recollection; the "nghe nói" before the messages, now gone.
+  - Mahiru's reaction is now "ánh mắt lạnh ngắt và phản ứng gay gắt", closer to 4.32, though "gay gắt" is still a little strong.
+  - Remaining: "đỏ bừng" (flagged), a strong "dữ dội" for the headache (2.6 「ずきずき」), and an awkward "nghe nói chưa từng có đồn đại" (3.41).
+  - The run started before `review.html` existed. Its review page was rendered afterwards from its saved outputs.
+
+Across runs 10, 13, 14 and 15 on the same chapters:
+
+| | Run 10 | Run 13 | Run 14 | Run 15 |
+|---|---|---|---|---|
+| Medium defects found by hand in the final script | 3 | 1 (flagged) | 3 (unflagged) | 1 (flagged) |
+| Of which reported by the gates | 0 | 1 | 0 | 1 |
+
+**2026-11-15, season S1 (first live run of `run_story`: chapters 1–5 as episodes 1, 2–3 and 4–5; 3 revision rounds, profile length 900–1,100 words).**
+
+The season COMPLETED in 52 calls, 884,372 tokens and 1,854 s. Every brief came from memory. The critic is the most expensive stage in every episode. `season.md` links each episode's report and review page.
+
+| Episode | Chapters | Calls | Tokens | Findings by version | Left (flagged) |
+|---|---|---|---|---|---|
+| 1 | 1 | 15 | 205,201 | 11 → 2 → 1 | "cuộc sống bình lặng" (not in the source) |
+| 2 | 2–3 | 14 | 249,629 | 7 → 2 → 0 | — |
+| 3 | 4–5 | 23 | 429,542 | 18 → 3 → 6 → 1 | a hedge from a joined brief fact |
+
+Manual check of the three scripts:
+
+- **Episode 1:** the closing line is faithful ("Nhưng đó chỉ là những gì Amane nghĩ vào lúc ấy mà thôi..."). "Nghe nói ... **thường xuyên** nhận được lời tỏ tình" keeps the hearsay but carries the brief's "thường xuyên". The new advisory list of briefs stronger than their source names that item.
+- **Episode 2:** no invented steam or posture this time, and no "đỏ bừng". The only issue is a strong "đau nhức dữ dội" for 2.6's throbbing headache.
+- **Episode 3:** the lost-child look is Amane's comparison, as in the source. Mahiru's reaction is "gay gắt", still a little strong.
+- **Across episodes:** Amane is "cậu" in episodes 1 and 2 and "anh" in episode 3. Each episode chose its pronoun on its own. This is a defect only a season shows, and it led to the glossary's `pronoun` field.
+
+The tokens give a first cost estimate: about 175,000 tokens per chapter at these settings, so about 5.3 million for 30 chapters.
+
+**2026-11-15, run 16 (season episode 3 again, with the concrete no-invented-detail rule and glossary pronouns Amane "cậu" and Mahiru "cô").**
+
+The run COMPLETED in 17 calls, 323,269 tokens and 636 s. Findings went 17 → 4 → 6 → 3.
+
+- **Pronoun:** Amane is "anh" 2 times, against 13 in season S1's episode 3. One sentence at the very end still slips. The rule is prompt-only; no deterministic check follows it.
+- **Invented details:** the writer still added some, such as Mahiru "about to step out of the door" and a "gentle smile". The source check caught them in v1 and the revision removed them.
+- **Left (flagged):** Mahiru's "phản ứng rất gay gắt". It survived three rounds; each rewrite kept a strong word for 4.32's flat, cold refusal.
+
+**2026-11-15, Korean seasons (original two-chapter text, prepared with `prepare_source`, 180–300 words an episode).**
+
+- **First season:** completed in 21 calls, with no flagged findings left.
+  - The story's memory and glossary live apart from the Japanese sample's, as intended.
+  - Names follow the glossary (Seo Ji-woo, Han So-yeon, Park Do-hyeon).
+  - 「…다고들 한다」 became "nghe nói".
+  - But Ji-woo was "cậu" in episode 1 and "anh" in episode 2.
+- **Pronoun adoption:** counting pronouns near names could not fix this; it picked "cậu" for Mahiru in the Japanese season, because in two-person scenes the pronoun is about the other character. Instead, the writer now declares its pronouns in the script (`pronouns`). After a run, the glossary records them for characters that have none; owner-set pronouns are never changed. Later episodes are told the pronoun, and the pronoun check flags drift.
+- **Pronoun check:** a sentence that names glossary characters who all have pronouns, and uses a third-person pronoun the glossary assigns to nobody, is a MEDIUM finding. Nouns such as "anh chàng" are excluded. On nine saved scripts it flags 13 sentences, all real.
+- **Second season (rerun from scratch):** episode 1 declared Ji-woo "cậu" and So-yeon "cô", and the glossary recorded them. Episode 2 used "cậu" 5 times and "anh" 0 times.
+- **Over-hedging:** the same episode hedged plain actions ("dường như cúi đầu chào").
+  - The brief had labelled "seemed to stop, then bowed" APPEARANCE as one event.
+  - The one-statement rule for labelled facts now covers events. 5 of the 6 events it flags on saved briefs mix a plain action with a hedge.
+
+**2026-11-15, season S2 (chapters 1–5, the same episodes as S1, fresh briefs, every check added today).**
+
+The season COMPLETED in three invocations; the season runner resumed episode 3 twice. The first two invocations each stopped on a robustness defect that the live free-tier conditions exposed:
+
+- **First stop:** `gemini-3.6-flash` and `gemini-3.5-flash` were rate-limited (429) by then, so the critic ran on `gemini-3-flash-preview`. That model spent about 63,000 tokens thinking and cut its JSON off on all three attempts. Fix: a MAX_TOKENS finish now moves to the next model, and finish reasons are logged.
+- **Second stop:** the next fallback model wrote paragraph ids as `<P001>`, so every source-check answer was rejected. Fix: tag brackets are tolerated, and a source check that fails after its repairs is recorded (`source_check_failed`) instead of failing the episode.
+
+| Episode | Calls | Tokens | Findings by version | Left |
+|---|---|---|---|---|
+| 1 (ch. 1) | 14 | 207,947 | 14 → 0 | — |
+| 2 (ch. 2–3) | 31 | 653,295 | 11 → 7 → 3 → 4 | 4 LOW critic findings, all true to the source (2.34, 3.18, 3.65–3.69): the details were missing from the briefs, the critic's truth boundary |
+| 3 (ch. 4–5) | 10 (this invocation) | 378,520 | 14 → 6 → 9 → 4 | 2 source-check findings (a smile, "fruit jelly"), 1 critic MEDIUM, 1 critic LOW |
+
+- **Pronouns:** Amane is "cậu" 51 times and "anh" once across the season, against "anh" 13 times in S1's episode 3. Episode 2 also recorded Itsuki's pronoun ("cậu") from the writer's declaration.
+- **Not seen in this season:** invented steam, "đỏ bừng", "dữ dội" or the lost-child speech.
+- **Limit — critic false positives:** a LOW critic finding can be a faithful detail that the brief left out. The source check, which reads the source, did not flag these four.
+
+**Source check adjudicates the critic's findings (added after season S2).**
+
+- **Why:** the critic judges the script against the briefs, so a detail that the source says but the brief left out looks invented. All four findings left in S2's episode 2 were of this kind.
+- **How:** the source check, which already reads the whole episode, also receives the critic's problem claims (F1, F2…). For each it answers `IN_SOURCE` (naming the passages) or `NOT_IN_SOURCE` in `critic_reviews`. There is no extra call. Answers are rejected when a flag is unanswered or answered twice, when IN_SOURCE names no passage, or when a passage is outside the episode.
+- **Effect:** a critic finding is overturned only when every source-check sample that answered says IN_SOURCE; one dissent keeps it. Overturned findings leave revision and the gates. They are listed as brief gaps (`report.json` `brief_gaps`, "Brief bỏ sót" in `report.md` and `review.html`) with the cited passages, so a person can check them. Each version records `critic_overturned`.
+- **Live trial (S2 episode 2, v4 script and critic, `gemini-3.6-flash`, 2 samples, about 15,000 tokens a call):**
+  - All four false positives were overturned by both samples, citing 2.34, 3.8/3.18, 3.65–3.69 and 3.65/3.68. A manual check of those passages agrees.
+  - Negative control: four wrong statements were added as critic claims. They were run 10's real "steaming porridge" defect (contradicted by 3.81), an invented piggyback home, an invented confession and a fever "so high he fainted" (strengthened). Both samples answered NOT_IN_SOURCE for all four, and three of the four answers cited the passage that contradicts the claim.
+  - Result: 8 of 8 verdicts correct in both samples. This is one episode; the verifier can still be wrong, which is why a single dissent keeps a finding.
+
 ## Known limits
 
 - Brief paraphrase quality is not measured against gold. Quotes pin the evidence, but a
   wrong paraphrase of a correctly quoted passage still reaches the writer; the critic
-  judges the script only against the briefs.
+  judges the script only against the briefs (the source check reads the source and
+  overrules critic findings the source supports, but it does not correct the briefs).
 - The critic is a model and is known (H6/H6b) to miss violations; its PASS is weak evidence.
 - Word count is whitespace tokens (Vietnamese syllables), matching the M1 runs.
 - No human-review workflow yet; `UNDETERMINED` claims are listed in the report for a person.

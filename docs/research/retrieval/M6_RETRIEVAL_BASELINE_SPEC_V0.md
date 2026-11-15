@@ -60,6 +60,13 @@ def retrieve(request: RetrievalRequest, retriever: Retriever, passages: Sequence
 - **Corpus.** Load passages with `load_scope(manifest, (1, cutoff_chapter))`. Because only chapters
   up to the cutoff are loaded, spoiler safety holds by construction. Keep an explicit
   assertion as well.
+- **One index per story.** The corpus, the index and every cache are keyed by the manifest's
+  `story_id`, for example `.local/story_retrieval/<story_id>/`. A query names its story and
+  never reaches another story's passages. Two stories that share a character name, a setting
+  or a genre must not leak into each other's results, and deleting a story removes only its
+  own directory. The embedding model is shared; nothing derived from passages is. Stories in
+  different languages (ja, ko, zh) are separate stories, and each one's `source_language`
+  decides its tokenizer. Test this with two small stories that share a name.
 - **Retrievers:**
   - `bm25_v0` is required. It works with no extra dependencies; reuse or wrap
     `BM25LexicalV1`. Its tokenizer is Japanese-oriented, so state how other scripts

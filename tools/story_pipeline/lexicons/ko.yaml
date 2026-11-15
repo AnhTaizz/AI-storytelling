@@ -19,7 +19,8 @@ strength:
   reputation: [별명, 유명한]
   intensity_fill: [가득한, 가득 찬]
 hedge:
-  reported: [다고 한다, 라고 한다, 다던데, 소문, 라던데, 다고 하던데]
-  appearance: [것 같다, 것 같았다, 듯했다, 듯이, 보였다]
+  reported: [다고 한다, 라고 한다, 다던데, 소문, 라던데, 다고 하던데, 다고들]
+  # Stems, so inflected forms match too: 것 같았지만, 듯했지만, 보였지만 (live run 12).
+  appearance: [것 같, 듯했, 듯하, 듯이, 보였, 는 듯]
   speculation: [지도 모른다, 아마, 겠지]
   metaphor: [비유, 마치, 처럼]
