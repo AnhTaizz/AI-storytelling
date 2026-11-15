@@ -216,7 +216,10 @@ def brief_hedge_errors(brief: Dict[str, Any], chapter: Chapter, source_language:
             wanted.add(LABEL_CONCEPT[label])
         if not wanted:
             continue
-        required = {"metaphor"} if "metaphor" in wanted else set(lexicon.HEDGE_CONCEPTS)
+        # A figure of speech must stay one. When the source marks several kinds at once, any
+        # hedge will do: Korean 「붉어진 것처럼 보였다」 ("looked as if reddened") contains the
+        # simile marker 처럼 but is an appearance (live run 11).
+        required = {"metaphor"} if wanted == {"metaphor"} else set(lexicon.HEDGE_CONCEPTS)
         if rendered & required:
             continue
         examples = [p for c in sorted(wanted) for p in dst.phrases["hedge"].get(c, ())[:2]]

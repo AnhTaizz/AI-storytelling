@@ -393,6 +393,8 @@ class SemanticValidationTests(unittest.TestCase):
             ("hedge on the other side of a contrast", contrast, "Amane khác lớp", "EXPLICIT", "ja", "vi", []),
             ("quote spanning a contrast", across, "Cô hoàn hảo, cậu khác lớp", "EXPLICIT", "ja", "vi",
              ["label", "text"]),
+            ("Korean appearance with a simile marker", "소연의 눈가가 조금 붉어진 것처럼 보였다.",
+             "Vành mắt So-yeon có vẻ hơi đỏ", "APPEARANCE", "ko", "vi", []),
             ("Korean hearsay kept", korean, "Nghe nói cô thường nhận lời tỏ tình", "REPORTED", "ko", "vi", []),
         ]
         for label_text, source, fact, label, src_lang, brief_lang, expected in cases:
