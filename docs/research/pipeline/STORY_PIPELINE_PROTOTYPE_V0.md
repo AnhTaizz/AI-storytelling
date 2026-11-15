@@ -465,6 +465,31 @@ What this shows:
 - Reading the script against the source catches the class of defect the brief-based critic cannot see, including errors that revision itself introduces.
 - Recall is still partial and varies from call to call, so the source check narrows the manual review but does not replace it.
 
+**Patch-mode revision and audience address (added after run 13).**
+
+- **Patch mode:** rounds after `--full-revision-rounds` (default 1) no longer rewrite the script. The model returns sentence-level edits (`script_patch_v0`). Each edit must copy its span exactly once from the named paragraph and must not add foreign-script characters. Code applies the edits in place, and a whole beat cannot be deleted.
+- **Audience address:** phrases that address the viewers (`audience_address` in the lexicon, for example "đúng không mọi người") are blanked out before the strength audit reads a sentence.
+
+**2026-11-15, run 14 (run 13 resumed after v2, then a patch round).**
+
+Run 14 reused run 13's briefs, plan and versions 1–2 unchanged, so its v3 can be compared directly with run 13's full-rewrite v3. It took 4 new calls and 219 s.
+
+- **The patch fixed all 8 findings in one valid call.** It changed 7 of 30 paragraphs; the other 23 are byte-identical. Every edit is a minimal, correct replacement:
+  - "ngã rạp xuống sàn" became "kéo cậu lại để giúp cậu lấy lại tư thế";
+  - the invented shoe-locker scene and "two days ill in bed" were removed;
+  - "ai cũng" and "lúc nào cũng" were dropped.
+- **v3:** neither the critic nor the source check reported anything. Run 13's full-rewrite v3 had 4 MEDIUM findings, and its rewrite had earlier introduced 5 new errors.
+- **Defects known from manual review that are still in run 14's v3, unflagged:**
+  - "phản ứng dữ dội": run 13's v3 source check caught it, this run's single call did not;
+  - "đỏ bừng", the "eat the whole bowl" instruction;
+  - a new "Nghe nói" before the weekend messages. The brief labelled that fact REPORTED because 5.8 says Itsuki "seems to have been worried" (らしく), but the messages themselves are plain narration. The hedge audit then asked the patch to add the hedge.
+
+What this shows:
+
+- Patching is the right tool for the last findings: it fixes what is flagged and touches nothing else.
+- The weak point is now recall. A single source-check call misses defects that another call catches. Five trial calls returned only real findings, so taking the union of two calls per version is the obvious next step (one more call per version).
+- The 「らしく」 case is another hedge-scope error, in the brief this time: a hedge on the worry is applied to the messages in the same sentence.
+
 ## Known limits
 
 - Brief paraphrase quality is not measured against gold. Quotes pin the evidence, but a
