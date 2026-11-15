@@ -95,13 +95,13 @@ Trong mục "Lỗi cụ thể" của phiếu, mỗi lỗi một dòng: trích **
 Sau đó chạy:
 
 ```
-python -m tools.story_pipeline.run_pipeline --chapters <như lần trước> --recap --resume <thư mục lần chạy> --apply-review
+python -m tools.story_pipeline.run_pipeline --resume <thư mục lần chạy> --apply-review
 ```
 
 - Pipeline sửa đúng các câu đó trong một vòng (chỉ sửa câu, không viết lại cả bài), rồi kiểm lại các đoạn vừa đổi.
 - `report.md` có mục "Góp ý của người duyệt" ghi từng lỗi: đã sửa; đã sửa nhưng đoạn vẫn bị báo lỗi (câu mới vẫn có thể sai, hãy xem); câu vẫn còn; hoặc không tìm thấy câu (thường do trích không đúng nguyên văn).
 - Ghi rõ **điều đúng trong nguồn** ở phần lý do (ví dụ "cậu quên đo, chỉ đo sau khi Mahiru gõ cửa nhắc"), không chỉ "sai". Lý do càng cụ thể, câu sửa càng đúng.
-- Chạy lại với **đúng các tham số của lần chạy đó**, để pipeline dùng lại các bước đã có thay vì gọi model lại từ đầu.
+- Không cần gõ lại `--chapters`, `--recap`, model hay các thiết lập kiểm tra: `--resume` tự lấy lại đúng tham số của lần chạy đó (in ra dòng "resume: using the run's own ..."), nên các bước đã có được dùng lại. Tham số nào bạn gõ lại thì dùng giá trị bạn gõ.
 - Phiếu bạn đã chấm được giữ lại thành `review_form_reviewed_1.md`, và một phiếu trống mới được tạo cho bản đã sửa.
 - Với cả mùa: chạy lại lệnh `run_story` cùng các tham số cũ, thêm `--apply-review`. Chỉ những tập có lỗi chưa sửa mới được chạy lại.
 
@@ -128,6 +128,6 @@ bao giờ bị ghi đè.
 
 ## 7. Khi có lỗi
 
-- **`FAILED` ở bước brief:** xem `calls.jsonl` để biết lý do từng lần thử. Chạy lại với `--resume <thư mục lần chạy>` để không phải gọi lại các bước đã xong.
+- **`FAILED` ở bước brief:** xem `calls.jsonl` để biết lý do từng lần thử. Chạy lại với `--resume <thư mục lần chạy>` (không cần tham số khác) để không phải gọi lại các bước đã xong.
 - **Lỗi 503 / quá tải:** chuỗi model tự chuyển sang model sau. Nếu tất cả đều lỗi, chờ một lúc rồi chạy lại.
 - **Hết quota:** với `run_story`, chạy lại cùng lệnh hôm sau.

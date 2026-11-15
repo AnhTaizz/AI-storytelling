@@ -1182,17 +1182,43 @@ class EndToEndTests(unittest.TestCase):
             self.assertEqual(reused["brief_sources"], {"1": "memory"})
 
     def test_cli_episode_mode(self):
+        clients = []
+
+        def client(*args, **kwargs):
+            clients.append(ScriptedLLMClient(FakeModel()))
+            return clients[-1]
+
         with tempfile.TemporaryDirectory() as tmp, \
-                mock.patch("tools.story_pipeline.llm.GeminiLLMClient",
-                           lambda *a, **k: ScriptedLLMClient(FakeModel())), \
+                mock.patch("tools.story_pipeline.llm.GeminiLLMClient", client), \
                 mock.patch("sys.stdout", new_callable=io.StringIO) as out:
             code = run_pipeline.main(["--chapters", "2", "--recap", "--memory", str(Path(tmp) / "mem"),
-                                      "--out", str(Path(tmp) / "run"), "--min-words", "20", "--max-words", "200"])
+                                      "--out", str(Path(tmp) / "run"), "--min-words", "20", "--max-words", "200",
+                                      "--source-check-chunk", "1"])
             self.assertEqual(code, 0, out.getvalue())
-            manifest = json.loads((Path(tmp) / "run" / "run_manifest.json").read_text(encoding="utf-8"))
+            manifest_path = Path(tmp) / "run" / "run_manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
             self.assertEqual((manifest["scope"]["chapters"], manifest["background_chapters"]), ([2], [1]))
             self.assertTrue((Path(tmp) / "run" / "memory_recap.json").is_file())
             self.assertTrue(any((Path(tmp) / "mem").rglob("chapter_002.json")))
+            self.assertEqual(manifest["invocation"]["source_check_chunk"], 1)
+
+            # `--resume <dir>` alone takes the run's own options, so every saved stage is reused;
+            # a run made before invocations were recorded is read from its scope and settings.
+            for label in ("recorded", "legacy"):
+                with self.subTest(label):
+                    if label == "legacy":
+                        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                        del manifest["invocation"]
+                        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+                    code = run_pipeline.main(["--resume", str(Path(tmp) / "run"), "--memory", str(Path(tmp) / "mem")])
+                    self.assertEqual((code, clients[-1].calls), (0, []), out.getvalue())
+                    self.assertIn("resume: using the run's own chapters, recap", out.getvalue())
+            # An option given again wins over the recorded one.
+            args = run_pipeline.build_parser().parse_args(["--resume", "x", "--chapters", "3"])
+            restored = run_pipeline.restore_invocation(args, {"resume", "chapters"}, Path(tmp) / "run")
+            self.assertEqual(args.chapters, "3")
+            self.assertNotIn("chapters", restored)
+            self.assertEqual(run_pipeline.restore_invocation(args, set(), Path(tmp) / "missing"), [])
 
     def test_plan_may_call_back_to_recap_but_must_cover_episode(self):
         profile = test_profile()

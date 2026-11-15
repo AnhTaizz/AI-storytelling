@@ -655,7 +655,7 @@ The run COMPLETED in 17 calls, 234,402 tokens and 357 s. S2's episode 2 took 31 
 - Three replacements are right: no "nhanh trí", "cháo" without the plum, "buổi tối".
 - The rumour sentence is now faithful to 3.41, but the hedge audit flags it. The brief labels "there is no rumour that she failed" as REPORTED, so the audit asks for "nghe nói". This is a brief error, not a script error.
 - The thermometer sentence is still wrong: "khi cô bước ra ngoài, cậu mới kẹp nhiệt kế". The recheck caught it, and the report marks it "fixed but still flagged". The owner's note should say what happened, not only what is wrong.
-- Settings: a resume reuses saved stage outputs only under the same source-check grouping. This copy of a run made before grouping was resumed with `--source-check-chunk 0 --source-check-samples 2`.
+- Settings: a resume reuses saved stage outputs only under the same source-check grouping. This copy of a run made before grouping was resumed with `--source-check-chunk 0 --source-check-samples 2`. Since then the run manifest records its `invocation`, and `--resume <dir>` restores every option not given again (older runs are read from their scope and settings).
 
 ## Known limits
 

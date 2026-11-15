@@ -18,7 +18,7 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple
 
 REPO = Path(__file__).resolve().parents[2]
 if str(REPO) not in sys.path:
@@ -352,7 +352,8 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         stop_after: str = "revise", resume: bool = False,
         background: Sequence[Chapter] = (), memory: Optional[StoryMemory] = None,
         source_check: bool = True, source_check_samples: int = 1, full_revision_rounds: int = 1,
-        full_recheck: bool = False, source_check_chunk: int = 4, owner_review: Optional[Path | str] = None, progress: Callable[[str], None] = lambda message: None) -> Dict[str, Any]:
+        full_recheck: bool = False, source_check_chunk: int = 4, owner_review: Optional[Path | str] = None,
+        invocation: Optional[Dict[str, Any]] = None, progress: Callable[[str], None] = lambda message: None) -> Dict[str, Any]:
     """`scope` is the episode. `background` are earlier chapters, summarised from memory as a
     recap (never later chapters). With `memory`, chapter briefs are reused across runs."""
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -376,6 +377,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                      "source_check": source_check, "source_check_samples": source_check_samples,
                      "full_recheck": full_recheck, "source_check_chunk": source_check_chunk,
                      "full_revision_rounds": full_revision_rounds},
+        "invocation": invocation,
         "prompt_fingerprints": stages.prompt_fingerprints(),
         "language_checks": stages.audit_coverage(profile.target_language, profile.brief_language,
                                                  scope.source_language),
@@ -720,8 +722,69 @@ def run_options(args: argparse.Namespace) -> Dict[str, Any]:
             "owner_review": args.apply_review}
 
 
+# Options a resumed run takes from its own manifest unless given again on the command line.
+RESUMABLE_OPTIONS = ("manifest", "source_root", "chapters", "recap", "memory", "no_memory", "full_revision_rounds",
+                     "source_check_samples", "source_check_chunk", "full_recheck", "no_source_check", "profile",
+                     "min_words", "max_words", "model", "temperature", "facts", "max_repairs", "revision_rounds",
+                     "revise_severities", "stop_after")
+
+
+def invocation_of(args: argparse.Namespace) -> Dict[str, Any]:
+    return {key: getattr(args, key) for key in RESUMABLE_OPTIONS if hasattr(args, key)}
+
+
+def given_options(parser: argparse.ArgumentParser, argv: Optional[List[str]]) -> Set[str]:
+    """The options actually typed on the command line (not filled from defaults)."""
+    for action in parser._actions:
+        action.default = argparse.SUPPRESS
+    return set(vars(parser.parse_args(argv)))
+
+
+def _legacy_invocation(manifest: Dict[str, Any]) -> Dict[str, Any]:
+    """What a run made before invocations were recorded can still tell about its options."""
+    chapters = manifest["scope"]["chapters"]
+    settings = manifest.get("settings", {})
+    client = manifest.get("client", "")
+    out: Dict[str, Any] = {"chapters": f"{chapters[0]}-{chapters[-1]}",
+                           "recap": bool(manifest.get("background_chapters")),
+                           "min_words": manifest["profile"].get("min_words"),
+                           "max_words": manifest["profile"].get("max_words")}
+    if client.startswith("gemini:"):
+        out["model"] = client.split(":", 1)[1]
+    if settings:
+        out.update(max_repairs=settings["max_repairs"], revision_rounds=settings["revision_rounds"],
+                   revise_severities=",".join(settings["revise_severities"]), stop_after=settings["stop_after"],
+                   no_source_check=not settings.get("source_check", True),
+                   source_check_samples=settings.get("source_check_samples", 2),
+                   # Runs before grouping checked the whole script in one call.
+                   source_check_chunk=settings.get("source_check_chunk", 0),
+                   full_revision_rounds=settings.get("full_revision_rounds", 1),
+                   full_recheck=settings.get("full_recheck", False))
+    return out
+
+
+def restore_invocation(args: argparse.Namespace, given: Set[str], run_dir: Path) -> List[str]:
+    """Fill the options a resumed run was started with, except those given again; returns
+    the names restored. A resume with other check settings would redo stages it has saved."""
+    path = run_dir / "run_manifest.json"
+    if not path.is_file():
+        return []
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    recorded = manifest.get("invocation") or _legacy_invocation(manifest)
+    restored = []
+    for key, value in recorded.items():
+        if key in RESUMABLE_OPTIONS and key not in given and getattr(args, key, value) != value:
+            setattr(args, key, value)
+            restored.append(key)
+    return restored
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.resume:
+        restored = restore_invocation(args, given_options(build_parser(), argv), Path(args.resume))
+        if restored:
+            print(f"resume: using the run's own {', '.join(restored)}", flush=True)
     start, end = parse_range(args.chapters)
     scope, background = episode_scope(args.manifest, start, end, args.source_root, args.recap)
     memory = None if args.no_memory else StoryMemory(args.memory, scope.story_id)
@@ -742,7 +805,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         print(f"warning: {warning}", flush=True)
     manifest = run(client, scope, profile, out_dir, facts=facts, resume=resume, background=background,
                    memory=memory, progress=lambda message: print(f"  ... {message}", flush=True),
-                   **run_options(args))
+                   invocation=invocation_of(args), **run_options(args))
     print(f"status: {manifest['status']}  calls: {manifest['model_calls']}  seconds: {manifest['seconds']}")
     if manifest.get("error"):
         print(f"error: {manifest['error']}")
