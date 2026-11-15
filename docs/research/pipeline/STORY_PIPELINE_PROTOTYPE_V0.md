@@ -546,6 +546,25 @@ Across runs 10, 13, 14 and 15 on the same chapters:
 | Medium defects found by hand in the final script | 3 | 1 (flagged) | 3 (unflagged) | 1 (flagged) |
 | Of which reported by the gates | 0 | 1 | 0 | 1 |
 
+**2026-11-15, season S1 (first live run of `run_story`: chapters 1–5 as episodes 1, 2–3 and 4–5; 3 revision rounds, profile length 900–1,100 words).**
+
+The season COMPLETED in 52 calls, 884,372 tokens and 1,854 s. Every brief came from memory. The critic is the most expensive stage in every episode. `season.md` links each episode's report and review page.
+
+| Episode | Chapters | Calls | Tokens | Findings by version | Left (flagged) |
+|---|---|---|---|---|---|
+| 1 | 1 | 15 | 205,201 | 11 → 2 → 1 | "cuộc sống bình lặng" (not in the source) |
+| 2 | 2–3 | 14 | 249,629 | 7 → 2 → 0 | — |
+| 3 | 4–5 | 23 | 429,542 | 18 → 3 → 6 → 1 | a hedge from a joined brief fact |
+
+Manual check of the three scripts:
+
+- **Episode 1:** the closing line is faithful ("Nhưng đó chỉ là những gì Amane nghĩ vào lúc ấy mà thôi..."). "Nghe nói ... **thường xuyên** nhận được lời tỏ tình" keeps the hearsay but carries the brief's "thường xuyên". The new advisory list of briefs stronger than their source names that item.
+- **Episode 2:** no invented steam or posture this time, and no "đỏ bừng". The only issue is a strong "đau nhức dữ dội" for 2.6's throbbing headache.
+- **Episode 3:** the lost-child look is Amane's comparison, as in the source. Mahiru's reaction is "gay gắt", still a little strong.
+- **Across episodes:** Amane is "cậu" in episodes 1 and 2 and "anh" in episode 3. Each episode chose its pronoun on its own. This is a defect only a season shows, and it led to the glossary's `pronoun` field.
+
+The tokens give a first cost estimate: about 175,000 tokens per chapter at these settings, so about 5.3 million for 30 chapters.
+
 ## Known limits
 
 - Brief paraphrase quality is not measured against gold. Quotes pin the evidence, but a
