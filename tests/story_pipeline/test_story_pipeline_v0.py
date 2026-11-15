@@ -1013,6 +1013,17 @@ class GeminiClientTests(unittest.TestCase):
             text = '{"n": 1}'
             usage_metadata = None
             model_version = "fake"
+            candidates = ()
+
+        class Reason:
+            name = "MAX_TOKENS"
+
+        class Candidate:
+            finish_reason = Reason()
+
+        class TruncatedResponse(FakeResponse):
+            text = '{"n": '
+            candidates = (Candidate(),)
 
         class FakeSDK:
             def generate(self, **kwargs):
@@ -1039,6 +1050,17 @@ class GeminiClientTests(unittest.TestCase):
             text = '{"n": 1}'
             usage_metadata = None
             model_version = "fake"
+            candidates = ()
+
+        class Reason:
+            name = "MAX_TOKENS"
+
+        class Candidate:
+            finish_reason = Reason()
+
+        class TruncatedResponse(FakeResponse):
+            text = '{"n": '
+            candidates = (Candidate(),)
 
         class FakeSDK:
             def __init__(self, failures):
@@ -1052,6 +1074,8 @@ class GeminiClientTests(unittest.TestCase):
                     failure = failure.pop(0) if failure else None
                 if failure == "timeout":
                     raise TimeoutError("read timed out")
+                if failure == "truncated":
+                    return TruncatedResponse()
                 if failure:
                     raise ProviderError(failure)
                 return FakeResponse()
@@ -1077,6 +1101,9 @@ class GeminiClientTests(unittest.TestCase):
             ("dropped connection is retried, then falls back", {"busy-model": ["timeout", "timeout"]}, "ok",
              ["busy-model", "busy-model", "spare-model"]),
             ("every model down raises", {"busy-model": 503, "spare-model": 503}, "raise", None),
+            # Season S2: a model that runs out of output tokens (thinking) cuts its JSON off.
+            ("answer cut off by the token limit falls back", {"busy-model": "truncated"}, "ok",
+             ["busy-model", "spare-model"]),
         ]
         for label, failures, outcome, expected_calls in cases:
             with self.subTest(label):
@@ -1087,7 +1114,9 @@ class GeminiClientTests(unittest.TestCase):
                     record = client.complete(system="s", user="u", request_id="t:1")
                     self.assertEqual(record["model_requested"], "spare-model")
                     self.assertEqual(record["fallback_from"][0]["model"], "busy-model")
-                    self.assertEqual(len(record["attempt_failures"]), len(sdk.calls) - 1)
+                    # Every earlier call failed in transport, except a cut-off answer, which arrived.
+                    cut_off = sum(1 for f in record["fallback_from"] if f["code"] == "MAX_TOKENS")
+                    self.assertEqual(len(record["attempt_failures"]), len(sdk.calls) - 1 - cut_off)
                 else:
                     with self.assertRaises(RuntimeError) as raised:
                         client.complete(system="s", user="u", request_id="t:1")
