@@ -46,6 +46,7 @@ cách chỉnh tên nhân vật. Chi tiết kỹ thuật nằm trong
   - Chạy lại đúng lệnh này để chạy tiếp: tập đã xong được bỏ qua, tập đang dở chạy tiếp từ chỗ dừng.
   - Khi hết quota, mùa dừng gọn (trạng thái `PAUSED_QUOTA`). Hôm sau chạy lại cùng lệnh.
   - Mục lục cả mùa nằm ở `.local/story_seasons/<mã truyện>/season.md`.
+- **Gài lại chi tiết cũ (callback):** khi chạy theo tập (`--recap`, hoặc `run_story`), pipeline tự tìm trong brief của các chương trước những sự kiện liên quan đến tập này, kể cả sự kiện nhỏ, rồi đưa cho người viết kèm passage nguồn. Danh sách nằm ở mục `callbacks` của `memory_recap.json`. Tắt bằng `--no-callbacks`.
 - **Độ dài:** đặt bằng `--min-words` / `--max-words`. Mặc định theo profile là 900–1100 từ; tập 4 chương nên đặt khoảng 2400–3000.
 
 Kịch bản đầu ra luôn bằng tiếng Việt. Cổng kiểm tra chặn chữ Hán, kana, Hangul lọt vào kịch bản.

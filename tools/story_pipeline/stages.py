@@ -663,6 +663,8 @@ def brief_item_texts(briefs: Sequence[Dict[str, Any]], recap: Optional[Dict[str,
     for chapter in (recap or {}).get("chapters", []):
         for event in chapter["core_events"]:
             texts[event["ref"]] = event["summary"]
+    for callback in (recap or {}).get("callbacks", []):
+        texts[callback["ref"]] = callback["summary"]
     return texts
 
 
@@ -725,7 +727,8 @@ def brief_items(briefs: Sequence[Dict[str, Any]], recap: Optional[Dict[str, Any]
 
 def labelled_statements(briefs: Sequence[Dict[str, Any]],
                         recap: Optional[Dict[str, Any]] = None) -> Dict[str, List[Tuple[str, str]]]:
-    """Ref -> (statement, epistemic label) pairs; recap events count as EXPLICIT."""
+    """Ref -> (statement, epistemic label) pairs; recap CORE events count as EXPLICIT, and
+    retrieved callbacks keep their own label (a rumour recalled later is still a rumour)."""
     items: Dict[str, List[Tuple[str, str]]] = {}
     for brief in briefs:
         n = brief["chapter_order"]
@@ -738,6 +741,8 @@ def labelled_statements(briefs: Sequence[Dict[str, Any]],
     for chapter in (recap or {}).get("chapters", []):
         for event in chapter["core_events"]:
             items[event["ref"]] = [(event["summary"], "EXPLICIT")]
+    for callback in (recap or {}).get("callbacks", []):
+        items[callback["ref"]] = [(callback["summary"], callback.get("epistemic", "EXPLICIT"))]
     return items
 
 
