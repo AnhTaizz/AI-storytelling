@@ -44,6 +44,15 @@ class Lexicon:
     contrast_openers: Tuple[str, ...] = ()  # words that open a contrasting part ("but …")
     speech_verbs: Tuple[str, ...] = ()  # verbs of saying ("giải thích", "explain")
     speech_complementizers: Tuple[str, ...] = ()  # what introduces reported content ("rằng", "that")
+    audience_address: Tuple[str, ...] = ()  # the narrator talking to the viewers ("đúng không mọi người")
+
+    def without_audience_address(self, text: str) -> str:
+        """`text` with phrases that address the viewers blanked out, so that "mọi người" in
+        "đúng không mọi người?" is not read as "everyone" (live run 13)."""
+        folded = text.casefold()
+        for phrase in sorted(self.audience_address, key=len, reverse=True):
+            folded = folded.replace(phrase, " " * len(phrase))
+        return folded
 
     # Words allowed between a speech verb and its complementizer ("nói với Mahiru rằng").
     SPEECH_GAP = 30
@@ -139,7 +148,7 @@ def validate(data: dict, expected_language: str) -> List[str]:
     if not isinstance(data.get("word_boundaries"), bool):
         problems.append("word_boundaries must be true or false")
     for field in ("clause_markers", "contrast_endings", "contrast_openers", "speech_verbs",
-                  "speech_complementizers"):
+                  "speech_complementizers", "audience_address"):
         markers = data.get(field, [])
         if not isinstance(markers, list) or not all(
                 isinstance(m, str) and m.strip() and m == m.casefold().strip() for m in markers):
@@ -193,7 +202,7 @@ def load(language: str) -> Optional[Lexicon]:
     return Lexicon(language, data["word_boundaries"], data["chars_per_event"], phrases,
                    tuple(data.get("clause_markers", [])), tuple(data.get("contrast_endings", [])),
                    tuple(data.get("contrast_openers", [])), tuple(data.get("speech_verbs", [])),
-                   tuple(data.get("speech_complementizers", [])))
+                   tuple(data.get("speech_complementizers", [])), tuple(data.get("audience_address", [])))
 
 
 def missing_languages(*languages: str) -> FrozenSet[str]:

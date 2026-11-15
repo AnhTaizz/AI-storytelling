@@ -11,6 +11,9 @@ speech_verbs: [nói, bảo, giải thích, đáp, trả lời, hỏi, kể, th�
                thừa nhận, nhắc, dặn, tuyên bố, cất lời, cất tiếng, trấn an, xin lỗi, than, yêu cầu, hứa,
                thú nhận, phàn nàn, trêu]
 speech_complementizers: [rằng]
+# The narrator addressing the viewers; blanked out before the strength audit reads a sentence.
+audience_address: [đúng không mọi người, phải không mọi người, mọi người ơi, nhỉ mọi người, mọi người thấy, các bạn ạ,
+                   các bạn thấy, các bạn có thấy]
 # A hedge does not reach across a contrast. Openers start such a part.
 contrast_openers: [nhưng, tuy nhiên, song]
 strength:

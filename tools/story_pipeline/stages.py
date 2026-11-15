@@ -472,6 +472,69 @@ def run_revision(client: LLMClient, scope: StoryScope, briefs: Sequence[Dict[str
                           max_repairs=max_repairs, log=log, request_suffix=f"v{version}")
 
 
+# --------------------------------------------------------------------------- patch
+
+def patch_errors(patch: Dict[str, Any], units: Sequence[Dict[str, str]], target_language: str) -> List[str]:
+    """Every edit names a paragraph, copies its span exactly once from it, and writes clean text."""
+    unit_text = {u["unit_id"]: u["text"] for u in units}
+    errors, seen = [], set()
+    for index, edit in enumerate(patch["edits"]):
+        where = f"edits[{index}] ({edit['unit_id']})"
+        text = unit_text.get(edit["unit_id"])
+        if text is None:
+            errors.append(f"{where}: no such paragraph")
+            continue
+        count = text.count(edit["old"])
+        if count != 1:
+            errors.append(f"{where}: \"old\" must occur exactly once in the paragraph (found {count}); "
+                          f"copy it character for character")
+        if edit["old"] == edit["new"]:
+            errors.append(f"{where}: \"new\" is the same as \"old\"")
+        if (edit["unit_id"], edit["old"]) in seen:
+            errors.append(f"{where}: the same span is edited twice")
+        seen.add((edit["unit_id"], edit["old"]))
+        foreign = checks.foreign_script_characters(edit["new"], target_language)
+        if foreign:
+            errors.append(f"{where}: \"new\" contains characters from another writing system ({foreign[0]!r})")
+    return errors
+
+
+def apply_patch(script: Dict[str, Any], units: Sequence[Dict[str, str]], patch: Dict[str, Any]) -> Dict[str, Any]:
+    """The script with each edit applied inside its own paragraph; nothing else changes.
+
+    A paragraph emptied by deletions disappears. A whole beat cannot be deleted this way: if
+    every paragraph of a section would go, the section is kept as it was."""
+    replacements: Dict[str, str] = {}
+    for unit in units:
+        text = unit["text"]
+        for edit in (e for e in patch["edits"] if e["unit_id"] == unit["unit_id"]):
+            new = edit["new"].strip()
+            text = text.replace(edit["old"], new, 1)
+        replacements[unit["text"]] = re.sub(r"[ \t]{2,}", " ", text).strip()
+    sections = []
+    for section in script["sections"]:
+        paragraphs = [p.strip() for p in re.split(r"\n\s*\n", section["text"]) if p.strip()]
+        text = "\n\n".join(r for r in (replacements.get(p, p) for p in paragraphs) if r)
+        sections.append({**section, "text": text or section["text"]})
+    return {**script, "sections": sections}
+
+
+def run_patch(client: LLMClient, scope: StoryScope, briefs: Sequence[Dict[str, Any]], script: Dict[str, Any],
+              findings: List[Dict[str, Any]], units: List[Dict[str, str]], profile: NarrativeProfile,
+              log: CallLog, max_repairs: int, version: int) -> Dict[str, Any]:
+    """A revision round that edits only the sentences at fault (see patch_user.md)."""
+    schema = load_schema("script_patch_v0")
+    lines = [f"- [{f['severity']}] in {f['unit_id']}: \"{f['claim']}\"\n  why: {f['explanation']}\n"
+             f"  suggested fix: {f['suggested_fix']}" for f in findings]
+    unit_lines = "\n\n".join(f"<{u['unit_id']}>\n{u['text']}\n</{u['unit_id']}>" for u in units)
+    user = render("patch_user", scope_label=scope.label(), findings="\n".join(lines),
+                  briefs=briefs_for_prompt(briefs), units=unit_lines, schema=dump(schema))
+    patch = run_json_stage(client, stage="patch", system=_script_system(profile), user=user, schema=schema,
+                           semantic_check=lambda p: patch_errors(p, units, profile.target_language),
+                           max_repairs=max_repairs, log=log, request_suffix=f"v{version}")
+    return apply_patch(script, units, patch)
+
+
 # --------------------------------------------------------------------------- critic
 
 
@@ -565,7 +628,8 @@ def strength_audit(critic: Dict[str, Any], briefs: Sequence[Dict[str, Any]],
 
     def unsupported(text: str, refs: Sequence[str]) -> List[Tuple[str, str]]:
         cited = brief_lex.concepts(" ".join(texts.get(ref, "") for ref in refs), "strength")
-        return [(c, p) for c, p in script_lex.find(text, "strength") if c not in cited]
+        return [(c, p) for c, p in script_lex.find(script_lex.without_audience_address(text), "strength")
+                if c not in cited]
 
     findings = []
     for unit in critic["units"]:

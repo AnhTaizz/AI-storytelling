@@ -571,7 +571,9 @@ class SemanticValidationTests(unittest.TestCase):
                 for finding in findings:
                     self.assertEqual((finding["severity"], finding["source"]), ("MEDIUM", "strength_audit"))
         # The critic may paraphrase an intensifier away; the paragraph's own wording is checked too.
-        units = [{"unit_id": "P001", "sha256": "x", "text": "Cậu thấy vô cùng áy náy. Rồi cậu về nhà."}]
+        # "mọi người" addressing the viewers (live run 13) is not "everyone".
+        units = [{"unit_id": "P001", "sha256": "x",
+                  "text": "Cậu thấy vô cùng áy náy. Rồi cậu về nhà. Thương ghê, đúng không mọi người?"}]
         paraphrased = critic_with("Cậu thấy áy náy", ["c1.E1"])
         text_findings = stages.strength_audit(paraphrased, [brief], recap, units)
         self.assertEqual([(f["source"], f["claim"]) for f in text_findings],
@@ -720,6 +722,71 @@ class EndToEndTests(unittest.TestCase):
         self.assertEqual([(f["claim_type"], f["failure_category"], f["severity"], f["source"]) for f in converted],
                          [("CONTRADICTED_STORY_CLAIM", "FACTUAL_ERROR", "MEDIUM", "source_check")])
         self.assertIn("湯気はたっていない", converted[0]["suggested_fix"])
+
+    def test_later_revision_rounds_patch_only_the_sentences_at_fault(self):
+        """Live run 13: a second full rewrite put new errors into correct text."""
+        scope = load_scope(DEFAULT_MANIFEST, (1, 1))
+
+        class PersistentProblemModel(FakeModel):
+            """The critic flags the same sentence until it is patched."""
+            def __init__(self):
+                super().__init__()
+                self.patched = False
+
+            def __call__(self, stage, system, user):
+                if stage == "critic":
+                    return json.dumps(critic_json(user, not self.patched), ensure_ascii=False)
+                if stage == "patch":
+                    self.patched = True
+                    first = re.search(r"<P001>\n(.+?)\n</P001>", user, re.S).group(1)
+                    sentence = re.match(r"[^.!?]+[.!?]", first).group(0)
+                    return json.dumps({"edits": [{"unit_id": "P001", "old": sentence, "new": "Câu đã sửa."}]})
+                return super().__call__(stage, system, user)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            client = ScriptedLLMClient(PersistentProblemModel())
+            manifest = run(client, scope, test_profile(), Path(tmp) / "run", revision_rounds=2, source_check=False)
+            self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
+            self.assertEqual([c["stage"] for c in client.calls if c["stage"] in ("revise", "patch")],
+                             ["revise", "patch"])
+            self.assertEqual([v["problem_claims"] for v in manifest["versions"]], [1, 1, 0])
+            v2 = json.loads((Path(tmp) / "run" / "script_v2.json").read_text(encoding="utf-8"))
+            v3 = json.loads((Path(tmp) / "run" / "script_v3.json").read_text(encoding="utf-8"))
+            before, after = checks.split_units(checks.script_text(v2)), checks.split_units(checks.script_text(v3))
+            self.assertTrue(after[0]["text"].startswith("Câu đã sửa."))
+            self.assertEqual([u["text"] for u in before[1:]], [u["text"] for u in after[1:]])  # untouched
+
+    def test_patch_edits_are_validated_and_applied_in_place(self):
+        script = {"title_idea": "t", "sections": [
+            {"beat_id": "B1", "text": "Cháo nghi ngút khói. Cậu ăn.\n\nCô cười."},
+            {"beat_id": "B2", "text": "Cô về nhà. Cô về nhà."}]}
+        units = checks.split_units(checks.script_text(script))
+        cases = [
+            ("valid", {"unit_id": "P001", "old": "Cháo nghi ngút khói.", "new": "Cháo đã nguội bớt."}, []),
+            ("unknown paragraph", {"unit_id": "P009", "old": "x", "new": "y"}, ["no such paragraph"]),
+            ("span not in paragraph", {"unit_id": "P002", "old": "Cậu ăn.", "new": "y"}, ["exactly once"]),
+            ("span twice in paragraph", {"unit_id": "P003", "old": "Cô về nhà.", "new": "y"}, ["exactly once"]),
+            ("no change", {"unit_id": "P002", "old": "Cô cười.", "new": "Cô cười."}, ["same as"]),
+            ("foreign script", {"unit_id": "P002", "old": "Cô cười.", "new": "Cô 笑."}, ["another writing system"]),
+        ]
+        for label, edit, expected in cases:
+            with self.subTest(label):
+                errors = stages.patch_errors({"edits": [edit]}, units, "vi")
+                self.assertEqual(len(errors), len(expected), errors)
+                for message, error in zip(expected, errors):
+                    self.assertIn(message, error)
+        twice = {"unit_id": "P002", "old": "Cô cười.", "new": "Cô mỉm cười."}
+        self.assertIn("edited twice", stages.patch_errors({"edits": [twice, twice]}, units, "vi")[-1])
+
+        patched = stages.apply_patch(script, units, {"edits": [
+            {"unit_id": "P001", "old": "Cháo nghi ngút khói.", "new": "Cháo đã nguội bớt."},
+            {"unit_id": "P002", "old": "Cô cười.", "new": ""}]})  # empty "new" deletes the sentence
+        self.assertEqual(patched["sections"][0]["text"], "Cháo đã nguội bớt. Cậu ăn.")
+        self.assertEqual(patched["sections"][1], script["sections"][1])
+        whole_beat = stages.apply_patch(script, units, {"edits": [{"unit_id": "P003", "old": "Cô về nhà. Cô về nhà.",
+                                                                   "new": ""}]})
+        self.assertEqual(whole_beat["sections"][1], script["sections"][1])  # a beat is never deleted
+        self.assertEqual(script["sections"][0]["text"], "Cháo nghi ngút khói. Cậu ăn.\n\nCô cười.")  # not mutated
 
     def test_episode_with_memory_recap(self):
         full = load_scope(DEFAULT_MANIFEST, (1, 3))

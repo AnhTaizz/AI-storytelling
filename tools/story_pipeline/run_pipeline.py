@@ -225,7 +225,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         revise_severities: Sequence[str] = ("CRITICAL", "HIGH", "MEDIUM"),
         stop_after: str = "revise", resume: bool = False,
         background: Sequence[Chapter] = (), memory: Optional[StoryMemory] = None,
-        source_check: bool = True,
+        source_check: bool = True, full_revision_rounds: int = 1,
         progress: Callable[[str], None] = lambda message: None) -> Dict[str, Any]:
     """`scope` is the episode. `background` are earlier chapters, summarised from memory as a
     recap (never later chapters). With `memory`, chapter briefs are reused across runs."""
@@ -247,7 +247,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         "brief_sources": {},
         "settings": {"max_repairs": max_repairs, "revision_rounds": revision_rounds,
                      "revise_severities": list(revise_severities), "stop_after": stop_after,
-                     "source_check": source_check},
+                     "source_check": source_check, "full_revision_rounds": full_revision_rounds},
         "prompt_fingerprints": stages.prompt_fingerprints(),
         "language_checks": stages.audit_coverage(profile.target_language, profile.brief_language,
                                                  scope.source_language),
@@ -358,12 +358,17 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                 if stop_after == "critic" or not to_fix or version > revision_rounds:
                     break
                 version += 1
-                progress(f"revise -> v{version} ({len(to_fix)} findings)")
                 previous, previous_units = script, units
+                # Later rounds edit only the sentences at fault: a full rewrite to fix the last
+                # few findings put new errors into correct text (live run 13, v2).
+                patching = version - 1 > full_revision_rounds
+                progress(f"{'patch' if patching else 'revise'} -> v{version} ({len(to_fix)} findings)")
                 script = cached(out_dir / f"script_v{version}.json", resume,
-                                lambda: stages.run_revision(client, scope, briefs, plan, previous,
-                                                            to_fix, previous_units, profile, log,
-                                                            max_repairs, version, recap))
+                                lambda: stages.run_patch(client, scope, briefs, previous, to_fix, previous_units,
+                                                         profile, log, max_repairs, version) if patching
+                                else stages.run_revision(client, scope, briefs, plan, previous,
+                                                         to_fix, previous_units, profile, log,
+                                                         max_repairs, version, recap))
                 (out_dir / f"script_v{version}.md").write_text(script_markdown(script, f"v{version}"),
                                                               encoding="utf-8")
         final_check = checks.check_script(script, profile.min_words, profile.max_words,
@@ -411,6 +416,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--memory", default=str(DEFAULT_MEMORY_ROOT),
                         help="story memory directory; chapter briefs are reused across runs")
     parser.add_argument("--no-memory", action="store_true", help="do not read or write story memory")
+    parser.add_argument("--full-revision-rounds", type=int, default=1,
+                        help="revision rounds that may rewrite the script; later rounds only patch sentences")
     parser.add_argument("--no-source-check", action="store_true",
                         help="skip the second verifier that reads the script against the source text")
     parser.add_argument("--profile", default=str(DEFAULT_PROFILE_PATH), help="Narrative Profile YAML")
@@ -468,7 +475,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                    revision_rounds=args.revision_rounds,
                    revise_severities=[s.strip() for s in args.revise_severities.split(",") if s.strip()],
                    stop_after=args.stop_after, resume=resume, background=background, memory=memory,
-                   source_check=not args.no_source_check,
+                   source_check=not args.no_source_check, full_revision_rounds=args.full_revision_rounds,
                    progress=lambda message: print(f"  ... {message}", flush=True))
     print(f"status: {manifest['status']}  calls: {manifest['model_calls']}  seconds: {manifest['seconds']}")
     if manifest.get("error"):

@@ -41,6 +41,7 @@ class LexiconFileTests(unittest.TestCase):
             "bad clause markers": (lambda d: d.update(clause_markers=["and", ""]), "clause_markers"),
             "bad contrast openers": (lambda d: d.update(contrast_openers=["But"]), "contrast_openers"),
             "bad speech verbs": (lambda d: d.update(speech_verbs=["said", ""]), "speech_verbs"),
+            "bad audience address": (lambda d: d.update(audience_address=["You Guys"]), "audience_address"),
         }
         for label, (mutate, message) in cases.items():
             with self.subTest(label):
