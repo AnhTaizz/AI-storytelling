@@ -15,7 +15,8 @@ Do not report:
 - statements about earlier chapters (they are background and not in this source).
 
 Quote the script words exactly, as they appear in the paragraph, and name the passage ids your
-finding relies on. Go through the paragraphs one by one and check every sentence; list each
+finding relies on. Write every explanation in ${target_language_name}, the language of the
+script and of its reviewer; source words may be quoted in the original script. Go through the paragraphs one by one and check every sentence; list each
 paragraph, with an empty findings list when it is faithful.
 
 Output exactly one JSON object that conforms to this JSON Schema. No Markdown, no code fences.

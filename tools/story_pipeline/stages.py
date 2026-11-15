@@ -269,6 +269,36 @@ def brief_atomicity_errors(brief: Dict[str, Any], brief_language: Optional[str])
     return errors
 
 
+def _brief_free_text(brief: Dict[str, Any]) -> List[Tuple[str, str]]:
+    """(where, text) for every field the brief writes in the brief language. Names, quotes
+    and ids are left out: they are meant to keep the source script."""
+    out = [("chapter_summary", brief.get("chapter_summary") or ""), ("ending_state", brief.get("ending_state") or ""),
+           ("closing_hook", (brief.get("closing_hook") or {}).get("text") or "")]
+    out += [(f"unknowns[{i}]", text) for i, text in enumerate(brief.get("unknowns", []))]
+    out += [(f"forbidden_inferences[{i}]", text) for i, text in enumerate(brief.get("forbidden_inferences", []))]
+    for character in brief["characters"]:
+        out += [(f"characters {character['id']} facts[{i}]", f["text"]) for i, f in enumerate(character["facts"])]
+    out += [(f"relationships[{i}]", r["state"]) for i, r in enumerate(brief["relationships"])]
+    for event in brief["events"]:
+        out += [(f"event {event['id']}", " ".join(str(event.get(k) or "") for k in ("summary", "consequence", "location"))),
+                (f"event {event['id']} motivation", event["motivation"].get("text") or "")]
+    return [(where, text) for where, text in out if isinstance(text, str) and text]
+
+
+def brief_script_errors(brief: Dict[str, Any], brief_language: Optional[str]) -> List[str]:
+    """Soft check: the brief's own text is in the brief language. Live runs 12 and 13 left
+    Hangul (붉어) and a kanji (面) inside Vietnamese facts, from where they can reach the script."""
+    if not brief_language:
+        return []
+    errors = []
+    for where, text in _brief_free_text(brief):
+        words = [w for w in text.split() if checks.foreign_script_characters(w, brief_language)]
+        if words:
+            errors.append(f"{where}: {', '.join(repr(w) for w in dict.fromkeys(words))} not written in "
+                          f"{brief_language}; translate it (names stay in `name`, source text in `quote`)")
+    return errors
+
+
 PASSAGES_PER_EVENT = 15
 
 
@@ -337,7 +367,8 @@ def run_brief(client: LLMClient, scope: StoryScope, chapter: Chapter, profile: N
     return run_json_stage(client, stage="brief", system=system, user=user, schema=schema,
                           semantic_check=lambda b: brief_semantic_errors(b, chapter, scope.source_language,
                                                                          profile.brief_language),
-                          soft_check=lambda b: brief_atomicity_errors(b, profile.brief_language),
+                          soft_check=lambda b: (brief_atomicity_errors(b, profile.brief_language)
+                                               + brief_script_errors(b, profile.brief_language)),
                           max_repairs=max_repairs, log=log, request_suffix=f"ch{chapter.order}")
 
 

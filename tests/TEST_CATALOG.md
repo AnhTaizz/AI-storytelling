@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 8 — test files: 54 — test functions: 996
+Suites: 8 — test files: 55 — test functions: 1002
 
 ## canonical_story
 
@@ -1190,7 +1190,16 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `PrepareTests.test_invalid_input_is_rejected`
 - `PrepareTests.test_cli_reports_each_chapter`
 
-### test_story_pipeline_v0 (41)
+### test_review_page (5)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.review_page`, `tools.story_pipeline.run_pipeline`
+
+- `ReviewPageTests.test_each_paragraph_sits_next_to_its_briefs_and_source`
+- `ReviewPageTests.test_findings_are_marked_on_their_sentence_most_severe_first`
+- `ReviewPageTests.test_text_is_escaped_and_the_page_is_self_contained`
+- `ReviewPageTests.test_review_form_lists_every_question`
+- `ReviewPageTests.test_page_without_a_critic_still_renders`
+
+### test_story_pipeline_v0 (42)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
 
 - `test_profile`
@@ -1216,6 +1225,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `SemanticValidationTests.test_script_must_keep_the_hedges_of_the_brief_clause_it_retells`
 - `SemanticValidationTests.test_thought_or_narration_must_not_become_speech` — Live run 10: Amane's thought (4.18) was told as something he explains to Mahiru.
 - `SemanticValidationTests.test_brief_facts_should_be_atomic`
+- `SemanticValidationTests.test_brief_text_must_be_in_the_brief_language` — Runs 12-13 left 붉어, 面 and 廊 inside Vietnamese briefs; 廊 then reached a script.
 - `SemanticValidationTests.test_source_hedge_review_lists_items_for_a_person`
 - `SemanticValidationTests.test_critic_must_extract_claims_at_paragraph_density`
 - `SemanticValidationTests.test_strength_audit_flags_intensifiers_missing_from_cited_brief`

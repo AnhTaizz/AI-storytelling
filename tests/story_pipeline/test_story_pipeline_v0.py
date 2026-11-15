@@ -526,6 +526,36 @@ class SemanticValidationTests(unittest.TestCase):
                 self.assertTrue(all("one statement" in e for e in errors))
         self.assertEqual(stages.brief_atomicity_errors(brief, "xx"), [])  # no lexicon: not judged
 
+    def test_brief_text_must_be_in_the_brief_language(self):
+        """Runs 12-13 left 붉어, 面 and 廊 inside Vietnamese briefs; 廊 then reached a script."""
+        def brief_with(**changes):
+            brief = brief_json(1)
+            for path, value in changes.items():
+                if path == "fact":
+                    brief["characters"][0]["facts"][0]["text"] = value
+                elif path == "location":
+                    brief["events"][0]["location"] = value
+                elif path == "unknown":
+                    brief["unknowns"] = [value]
+            return brief
+
+        cases = [
+            ("kanji in a fact", brief_with(fact="Có vẻ rất khỏe mạnh và sắc面 tươi tắn"), ["'sắc面'"]),
+            ("Hangul location", brief_with(location="편의점 처마 밑"), ["'편의점'", "'처마'", "'밑'"]),
+            ("kana in an unknown", brief_with(unknown="Vì sao cô ở hành 廊"), ["'廊'"]),
+            ("clean brief", brief_json(1), []),
+        ]
+        for label, brief, expected in cases:
+            with self.subTest(label):
+                errors = stages.brief_script_errors(brief, "vi")
+                self.assertEqual(len(errors), 1 if expected else 0, errors)
+                for word in expected:
+                    self.assertIn(word, errors[0])
+        quoted = brief_json(1)
+        quoted["characters"][0]["name"] = "藤宮周"  # names and quotes keep the source script
+        self.assertEqual(stages.brief_script_errors(quoted, "vi"), [])
+        self.assertEqual(stages.brief_script_errors(brief_with(fact="面"), None), [])
+
     def test_source_hedge_review_lists_items_for_a_person(self):
         chapter = Chapter(1, "doc", "t", (Passage("1.1", "彼女は告白を受けているらしい。"),
                                           Passage("1.2", "「雨だろう」と彼は言った。")))
@@ -654,6 +684,7 @@ class EndToEndTests(unittest.TestCase):
             self.assertEqual([v["problem_claims"] for v in manifest["versions"]], [1, 0])
             self.assertIn("ĐẠT", (out / "report.md").read_text(encoding="utf-8"))
             self.assertTrue((out / "review_form.md").is_file())
+            self.assertIn("<form id='review'", (out / "review.html").read_text(encoding="utf-8"))
             coverage = report["gates"]["GATE_NECESSARY_COVERAGE"]
             # The fake critic only cites c1.E1, so chapter 2's CORE event is reported as not cited.
             self.assertEqual((coverage["status"], coverage["not_cited"]), ("FLAG", ["c2.E1"]))

@@ -23,7 +23,7 @@ if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
 from tools.story_memory.memory_v0 import StoryMemory, recap_context  # noqa: E402
-from tools.story_pipeline import PIPELINE_VERSION, checks, stages  # noqa: E402
+from tools.story_pipeline import PIPELINE_VERSION, checks, review_page, stages  # noqa: E402
 from tools.story_pipeline.facts import StoryFacts  # noqa: E402
 from tools.story_pipeline.llm import CallLog, LLMClient, StageFailed  # noqa: E402
 from tools.story_pipeline.profile import DEFAULT_PROFILE_PATH, NarrativeProfile, load_profile  # noqa: E402
@@ -400,6 +400,9 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         finish(status)
         (out_dir / "report.md").write_text(report_markdown(manifest, report), encoding="utf-8")
         (out_dir / "review_form.md").write_text(review_form(manifest), encoding="utf-8")
+        (out_dir / "review.html").write_text(
+            review_page.render_review_page(manifest, report, final_units, critic, all_briefs, passages,
+                                           REVIEW_QUESTIONS), encoding="utf-8")
         return manifest
     except StageFailed as exc:
         return finish("FAILED", str(exc))
