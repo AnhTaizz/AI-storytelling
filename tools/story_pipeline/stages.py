@@ -856,3 +856,83 @@ def run_critic(client: LLMClient, scope: StoryScope, briefs: Sequence[Dict[str, 
                             soft_check=lambda c: critic_density_errors(c, units),
                             max_repairs=max_repairs, log=log, request_suffix=f"v{version}")
     return normalize_critic(critic)
+
+
+# --------------------------------------------------------------------------- source check
+
+# Above this much source text the check is skipped (and recorded), so a long episode cannot
+# silently overflow the model's context; split such an episode instead.
+SOURCE_CHECK_MAX_CHARS = 60000
+SOURCE_CHECK_KINDS = {
+    "CONTRADICTS_SOURCE": ("CONTRADICTED_STORY_CLAIM", "FACTUAL_ERROR"),
+    "NOT_IN_SOURCE": ("UNSUPPORTED_STORY_CLAIM", "UNSUPPORTED_INVENTION"),
+    "WRONG_SPEAKER": ("UNSUPPORTED_STORY_CLAIM", "SOURCE_GROUNDING_FAILURE"),
+    "STRENGTHENED": ("STRENGTHENED_STORY_CLAIM", "EPISTEMIC_ERROR"),
+    "WRONG_CAUSE": ("CONTRADICTED_STORY_CLAIM", "CAUSALITY_ERROR"),
+}
+
+
+def source_check_text(chapters: Sequence[Chapter]) -> str:
+    return "\n".join(f"[{p.passage_id}] {p.text}" for c in chapters for p in c.passages)
+
+
+def source_check_errors(check: Dict[str, Any], units: Sequence[Dict[str, str]],
+                        passage_ids: Set[str]) -> List[str]:
+    """Every paragraph listed once; quotes copied from their paragraph; passages in scope."""
+    errors = []
+    unit_text = {u["unit_id"]: u["text"] for u in units}
+    listed = [p["unit_id"] for p in check["paragraphs"]]
+    missing = [u for u in unit_text if u not in listed]
+    if missing or len(listed) != len(set(listed)) or set(listed) - set(unit_text):
+        errors.append(f"paragraphs: list every paragraph exactly once ({len(unit_text)} paragraphs, "
+                      f"missing {missing[:5]})")
+    for paragraph in check["paragraphs"]:
+        text = _squash(unit_text.get(paragraph["unit_id"], ""))
+        for index, finding in enumerate(paragraph["findings"]):
+            where = f"{paragraph['unit_id']} findings[{index}]"
+            if _squash(finding["script_quote"]) not in text:
+                errors.append(f"{where}: script_quote is not copied exactly from paragraph {paragraph['unit_id']}")
+            unknown = [pid for pid in finding["passage_ids"] if pid not in passage_ids]
+            if unknown:
+                errors.append(f"{where}: passage ids {unknown} are not in this episode's source")
+    return errors
+
+
+def source_check_findings(check: Dict[str, Any], passages: Mapping[str, str]) -> List[Dict[str, Any]]:
+    """Findings in the form the revision stage and the gate report use (all MEDIUM)."""
+    findings = []
+    for paragraph in check["paragraphs"]:
+        for finding in paragraph["findings"]:
+            claim_type, category = SOURCE_CHECK_KINDS[finding["kind"]]
+            cited = "; ".join(f"[{pid}] {passages.get(pid, '')[:160]}" for pid in finding["passage_ids"])
+            findings.append({
+                "unit_id": paragraph["unit_id"], "claim": finding["script_quote"],
+                "claim_type": claim_type, "failure_category": category, "severity": "MEDIUM",
+                "brief_refs": [], "source": "source_check", "kind": finding["kind"],
+                "passage_ids": finding["passage_ids"], "concepts": [], "phrases": [],
+                "explanation": finding["explanation"],
+                "suggested_fix": f"Sửa hoặc bỏ cho đúng nguyên tác: {cited}",
+            })
+    return findings
+
+
+def run_source_check(client: LLMClient, scope: StoryScope, units: List[Dict[str, str]],
+                     profile: NarrativeProfile, log: CallLog, max_repairs: int,
+                     version: int) -> Optional[Dict[str, Any]]:
+    """Check the script against the episode's own source text. None when the episode is too
+    long for one call (see SOURCE_CHECK_MAX_CHARS)."""
+    source = source_check_text(scope.chapters)
+    if len(source) > SOURCE_CHECK_MAX_CHARS:
+        return None
+    schema = load_schema("source_check_v0")
+    language = LANGUAGE_NAMES.get(scope.source_language, scope.source_language)
+    system = render("source_check_system", target_language_name=profile.target_language_name,
+                    source_language_name=language, schema=dump(schema))
+    unit_lines = "\n\n".join(f"<{u['unit_id']}>\n{u['text']}\n</{u['unit_id']}>" for u in units)
+    user = render("source_check_user", scope_label=scope.label(), source_language_name=language,
+                  source=source, unit_count=len(units), units=unit_lines)
+    ids = {p.passage_id for c in scope.chapters for p in c.passages}
+    return run_json_stage(client, stage="source_check", system=system, user=user, schema=schema,
+                          semantic_check=lambda c: source_check_errors(c, units, ids),
+                          max_repairs=max_repairs, log=log, request_suffix=f"v{version}")
+

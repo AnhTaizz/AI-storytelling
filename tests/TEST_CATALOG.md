@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 8 — test files: 54 — test functions: 992
+Suites: 8 — test files: 54 — test functions: 994
 
 ## canonical_story
 
@@ -1190,7 +1190,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `PrepareTests.test_invalid_input_is_rejected`
 - `PrepareTests.test_cli_reports_each_chapter`
 
-### test_story_pipeline_v0 (37)
+### test_story_pipeline_v0 (39)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
 
 - `test_profile`
@@ -1222,6 +1222,8 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `SemanticValidationTests.test_critic_unit_mismatch`
 - `FactsTests.test_valid_and_invalid`
 - `EndToEndTests.test_full_pipeline_with_revision`
+- `EndToEndTests.test_source_check_findings_go_to_revision_and_the_report` — The second verifier reads the script against the source text (live run 10).
+- `EndToEndTests.test_source_check_answers_are_validated`
 - `EndToEndTests.test_episode_with_memory_recap`
 - `EndToEndTests.test_memory_brief_failing_current_checks_is_regenerated`
 - `EndToEndTests.test_cli_episode_mode`

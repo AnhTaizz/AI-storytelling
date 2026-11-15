@@ -225,6 +225,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         revise_severities: Sequence[str] = ("CRITICAL", "HIGH", "MEDIUM"),
         stop_after: str = "revise", resume: bool = False,
         background: Sequence[Chapter] = (), memory: Optional[StoryMemory] = None,
+        source_check: bool = True,
         progress: Callable[[str], None] = lambda message: None) -> Dict[str, Any]:
     """`scope` is the episode. `background` are earlier chapters, summarised from memory as a
     recap (never later chapters). With `memory`, chapter briefs are reused across runs."""
@@ -245,7 +246,8 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         "memory": str(memory.directory) if memory else None,
         "brief_sources": {},
         "settings": {"max_repairs": max_repairs, "revision_rounds": revision_rounds,
-                     "revise_severities": list(revise_severities), "stop_after": stop_after},
+                     "revise_severities": list(revise_severities), "stop_after": stop_after,
+                     "source_check": source_check},
         "prompt_fingerprints": stages.prompt_fingerprints(),
         "language_checks": stages.audit_coverage(profile.target_language, profile.brief_language,
                                                  scope.source_language),
@@ -315,6 +317,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                                                   recap))
         (out_dir / "script_v1.md").write_text(script_markdown(script, "v1"), encoding="utf-8")
         critic: Optional[Dict[str, Any]] = None
+        verified: List[Dict[str, Any]] = []
         passages = {p.passage_id: p.text for c in [*background, *scope.chapters] for p in c.passages}
         version = 1
         if stop_after != "script":
@@ -330,6 +333,18 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                                             profile.brief_language)
                 audit += stages.attribution_audit(critic, briefs, units, passages, profile.target_language,
                                                   profile.brief_language)
+                verified: List[Dict[str, Any]] = []
+                if source_check:
+                    progress(f"source check v{version}")
+                    result = cached(out_dir / f"source_check_v{version}.json", resume,
+                                    lambda: stages.run_source_check(client, scope, units, profile, log,
+                                                                    max_repairs, version))
+                    if result is None:
+                        manifest["source_check_skipped"] = (f"episode source is longer than "
+                                                            f"{stages.SOURCE_CHECK_MAX_CHARS} characters")
+                    else:
+                        verified = stages.source_check_findings(result, passages)
+                audit += verified
                 write_json(out_dir / f"strength_audit_v{version}.json", audit)
                 problems = stages.findings_for_revision(critic, SEVERITY_ORDER) + audit
                 check = checks.check_script(script, profile.min_words, profile.max_words,
@@ -361,7 +376,8 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                        + stages.hedge_audit(critic, briefs, recap, final_units, profile.target_language,
                                             profile.brief_language)
                        + stages.attribution_audit(critic, briefs, final_units, passages, profile.target_language,
-                                                  profile.brief_language) if critic is not None else [])
+                                                  profile.brief_language)
+                       + verified if critic is not None else [])
         report = gate_report(critic, final_check, briefs, final_audit)
         report["source_hedge_review"] = [
             item for chapter, brief in zip(sorted([*background, *scope.chapters], key=lambda c: c.order), all_briefs)
@@ -395,6 +411,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--memory", default=str(DEFAULT_MEMORY_ROOT),
                         help="story memory directory; chapter briefs are reused across runs")
     parser.add_argument("--no-memory", action="store_true", help="do not read or write story memory")
+    parser.add_argument("--no-source-check", action="store_true",
+                        help="skip the second verifier that reads the script against the source text")
     parser.add_argument("--profile", default=str(DEFAULT_PROFILE_PATH), help="Narrative Profile YAML")
     parser.add_argument("--min-words", type=int, default=None, help="override profile minimum length")
     parser.add_argument("--max-words", type=int, default=None, help="override profile maximum length")
@@ -450,6 +468,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                    revision_rounds=args.revision_rounds,
                    revise_severities=[s.strip() for s in args.revise_severities.split(",") if s.strip()],
                    stop_after=args.stop_after, resume=resume, background=background, memory=memory,
+                   source_check=not args.no_source_check,
                    progress=lambda message: print(f"  ... {message}", flush=True))
     print(f"status: {manifest['status']}  calls: {manifest['model_calls']}  seconds: {manifest['seconds']}")
     if manifest.get("error"):

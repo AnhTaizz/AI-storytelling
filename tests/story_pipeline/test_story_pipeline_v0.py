@@ -153,6 +153,9 @@ class FakeModel:
         if stage == "critic":
             self.critic_calls += 1
             return json.dumps(critic_json(user, self.critic_calls == 1), ensure_ascii=False)
+        if stage == "source_check":
+            units = list(dict.fromkeys(re.findall(r"<(P\d{3})>", user)))
+            return json.dumps({"paragraphs": [{"unit_id": u, "findings": []} for u in units]})
         raise AssertionError(stage)
 
 
@@ -617,9 +620,11 @@ class EndToEndTests(unittest.TestCase):
             manifest = run(client, scope, test_profile(), out)
             self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
             stages_called = [c["stage"] for c in client.calls]
-            self.assertEqual(stages_called, ["brief", "brief", "plan", "script", "critic", "revise", "critic"])
+            self.assertEqual(stages_called, ["brief", "brief", "plan", "script", "critic", "source_check", "revise",
+                                             "critic", "source_check"])
             for name in ("briefs/chapter_001.json", "briefs/chapter_002.json", "plan.json", "script_v1.json",
-                         "critic_v1.json", "script_v2.json", "critic_v2.json", "script_final.md",
+                         "critic_v1.json", "source_check_v1.json", "script_v2.json", "critic_v2.json",
+                         "source_check_v2.json", "script_final.md",
                          "report.json", "report.md", "calls.jsonl", "run_manifest.json"):
                 self.assertTrue((out / name).is_file(), name)
             report = json.loads((out / "report.json").read_text(encoding="utf-8"))
@@ -637,6 +642,84 @@ class EndToEndTests(unittest.TestCase):
             resumed = run(resumed_client, scope, test_profile(), out, resume=True)
             self.assertEqual(resumed["status"], "COMPLETED")
             self.assertEqual(resumed_client.calls, [])
+
+    def test_source_check_findings_go_to_revision_and_the_report(self):
+        """The second verifier reads the script against the source text (live run 10)."""
+        scope = load_scope(DEFAULT_MANIFEST, (1, 1))
+
+        class SourceCheckModel(FakeModel):
+            """The first source check finds an invented detail; the critic finds nothing."""
+            def __init__(self):
+                super().__init__()
+                self.checks = 0
+                self.critic_calls = 1
+
+            def __call__(self, stage, system, user):
+                if stage != "source_check":
+                    return super().__call__(stage, system, user)
+                self.checks += 1
+                units = list(dict.fromkeys(re.findall(r"<(P\d{3})>", user)))
+                first = re.search(r"<P001>\n(.+?)\n</P001>", user, re.S).group(1)
+                findings = [{"script_quote": first[:12], "kind": "CONTRADICTS_SOURCE", "passage_ids": ["1.2"],
+                             "explanation": "the source says otherwise"}] if self.checks == 1 else []
+                return json.dumps({"paragraphs": [{"unit_id": u, "findings": findings if u == "P001" else []}
+                                                  for u in units]})
+
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "run"
+            model = SourceCheckModel()
+            prompts = []
+            client = ScriptedLLMClient(lambda stage, system, user: (prompts.append((stage, user)),
+                                                                     model(stage, system, user))[1])
+            manifest = run(client, scope, test_profile(), out)
+            self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
+            revise_prompt = next(user for stage, user in prompts if stage == "revise")
+            self.assertIn("the source says otherwise", revise_prompt)
+            self.assertIn("[1.2]", revise_prompt)  # the reviser sees the source passage
+            self.assertEqual([v["problem_claims"] for v in manifest["versions"]], [1, 0])
+
+            out2 = Path(tmp) / "skip"
+            client = ScriptedLLMClient(SourceCheckModel())
+            with mock.patch.object(stages, "SOURCE_CHECK_MAX_CHARS", 10):
+                manifest = run(client, scope, test_profile(), out2)
+            self.assertIn("longer than 10", manifest["source_check_skipped"])
+            self.assertNotIn("source_check", [c["stage"] for c in client.calls])
+
+            client = ScriptedLLMClient(SourceCheckModel())
+            manifest = run(client, scope, test_profile(), Path(tmp) / "off", source_check=False)
+            self.assertNotIn("source_check", [c["stage"] for c in client.calls])
+            self.assertFalse(manifest["settings"]["source_check"])
+
+    def test_source_check_answers_are_validated(self):
+        units = [{"unit_id": "P001", "sha256": "x", "text": "Cô bưng bát cháo nghi ngút khói."},
+                 {"unit_id": "P002", "sha256": "x", "text": "Cậu khen cháo ngon."}]
+        ids = {"3.81", "3.96"}
+
+        def answer(*paragraphs):
+            return {"paragraphs": [{"unit_id": u, "findings": f} for u, f in paragraphs]}
+
+        finding = {"script_quote": "nghi ngút  khói", "kind": "CONTRADICTS_SOURCE", "passage_ids": ["3.81"],
+                   "explanation": "no steam"}
+        cases = [
+            ("valid (whitespace-insensitive quote)", answer(("P001", [finding]), ("P002", [])), []),
+            ("paragraph missing", answer(("P001", [])), ["list every paragraph exactly once"]),
+            ("paragraph twice", answer(("P001", []), ("P001", []), ("P002", [])), ["exactly once"]),
+            ("quote not in paragraph", answer(("P001", [dict(finding, script_quote="bốc hơi")]), ("P002", [])),
+             ["not copied exactly"]),
+            ("passage outside the episode", answer(("P001", [dict(finding, passage_ids=["9.1"])]), ("P002", [])),
+             ["not in this episode's source"]),
+        ]
+        for label, check, expected in cases:
+            with self.subTest(label):
+                errors = stages.source_check_errors(check, units, ids)
+                self.assertEqual(len(errors), len(expected), errors)
+                for message, error in zip(expected, errors):
+                    self.assertIn(message, error)
+        converted = stages.source_check_findings(answer(("P001", [finding]), ("P002", [])),
+                                                 {"3.81": "湯気はたっていない"})
+        self.assertEqual([(f["claim_type"], f["failure_category"], f["severity"], f["source"]) for f in converted],
+                         [("CONTRADICTED_STORY_CLAIM", "FACTUAL_ERROR", "MEDIUM", "source_check")])
+        self.assertIn("湯気はたっていない", converted[0]["suggested_fix"])
 
     def test_episode_with_memory_recap(self):
         full = load_scope(DEFAULT_MANIFEST, (1, 3))
