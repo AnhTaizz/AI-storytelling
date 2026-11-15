@@ -515,6 +515,37 @@ What this shows:
 - The weak point is now recall. A single source-check call misses defects that another call catches. Five trial calls returned only real findings, so taking the union of two calls per version is the obvious next step (one more call per version).
 - The 「らしく」 case is another hedge-scope error, in the brief this time: a hedge on the worry is applied to the messages in the same sentence.
 
+**Pooled source check and one-statement labelled facts (added after run 14).**
+
+- **Pooled source check:** two independent source-check calls per version by default. Their findings are pooled, and findings on one paragraph with overlapping quotes count once.
+- **One-statement labelled facts:** a brief fact labelled anything but EXPLICIT may not join two statements (a soft check). Coordinated parts shorter than 5 words, such as nouns in a list, do not count as statements.
+
+  Tracing run 14 showed that the cause was not a hedge-scope error. The brief joined "reportedly worried" (5.8 「心配していたらしく」) and "sent messages" in one REPORTED fact, so the hedge audit asked for a hedge on the messages too.
+
+**2026-11-15, run 15 (chapters 2–5; chapters 2 and 5 re-briefed; 1 full revision and 2 patch rounds; pooled source check).**
+
+The run COMPLETED in 27 calls and 1,485 s. Findings for revision went 31 → 9 → 2 → 2.
+
+- **Briefs:**
+  - Chapter 2 needed three attempts. The first two failed on hedge labels (らしく, だろう), on too few events and on a quote that was not verbatim.
+  - Chapter 5's last attempt hit a hard hedge error, so the earlier soft-only attempt was used. That attempt still joins "reportedly worried" and "sent messages". The soft check asked for a split, but the fallback restored the joined fact.
+- **Source check:** two calls per version. Real findings by version:
+  - v1: the writer invented steaming porridge twice ("nóng hổi", "nghi ngút khói"), Mahiru "sitting" where 3.21 has her standing, an invented gel pack nearly dropped, and a cause for Itsuki noticing that the source does not give.
+  - v2: an invented "ask the teachers to go home early", and a reversed rumour.
+  - v4: "đỏ bừng" (3.47: faintly). This is the first time it was flagged, but the revision rounds were used up.
+- **Final script, checked by hand:**
+  - Fixed: the porridge, now in the source's own terms ("không hề bốc khói nghi ngút mà đã được cô cố tình làm nguội bớt"); the lost-child look, now a recollection; the "nghe nói" before the messages, now gone.
+  - Mahiru's reaction is now "ánh mắt lạnh ngắt và phản ứng gay gắt", closer to 4.32, though "gay gắt" is still a little strong.
+  - Remaining: "đỏ bừng" (flagged), a strong "dữ dội" for the headache (2.6 「ずきずき」), and an awkward "nghe nói chưa từng có đồn đại" (3.41).
+  - The run started before `review.html` existed. Its review page was rendered afterwards from its saved outputs.
+
+Across runs 10, 13, 14 and 15 on the same chapters:
+
+| | Run 10 | Run 13 | Run 14 | Run 15 |
+|---|---|---|---|---|
+| Medium defects found by hand in the final script | 3 | 1 (flagged) | 3 (unflagged) | 1 (flagged) |
+| Of which reported by the gates | 0 | 1 | 0 | 1 |
+
 ## Known limits
 
 - Brief paraphrase quality is not measured against gold. Quotes pin the evidence, but a
