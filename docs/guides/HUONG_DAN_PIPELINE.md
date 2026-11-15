@@ -99,7 +99,9 @@ python -m tools.story_pipeline.run_pipeline --chapters <như lần trước> --r
 ```
 
 - Pipeline sửa đúng các câu đó trong một vòng (chỉ sửa câu, không viết lại cả bài), rồi kiểm lại các đoạn vừa đổi.
-- `report.md` có mục "Góp ý của người duyệt" ghi từng lỗi: đã sửa, câu vẫn còn, hoặc không tìm thấy câu (thường do trích không đúng nguyên văn).
+- `report.md` có mục "Góp ý của người duyệt" ghi từng lỗi: đã sửa; đã sửa nhưng đoạn vẫn bị báo lỗi (câu mới vẫn có thể sai, hãy xem); câu vẫn còn; hoặc không tìm thấy câu (thường do trích không đúng nguyên văn).
+- Ghi rõ **điều đúng trong nguồn** ở phần lý do (ví dụ "cậu quên đo, chỉ đo sau khi Mahiru gõ cửa nhắc"), không chỉ "sai". Lý do càng cụ thể, câu sửa càng đúng.
+- Chạy lại với **đúng các tham số của lần chạy đó**, để pipeline dùng lại các bước đã có thay vì gọi model lại từ đầu.
 - Phiếu bạn đã chấm được giữ lại thành `review_form_reviewed_1.md`, và một phiếu trống mới được tạo cho bản đã sửa.
 - Với cả mùa: chạy lại lệnh `run_story` cùng các tham số cũ, thêm `--apply-review`. Chỉ những tập có lỗi chưa sửa mới được chạy lại.
 

@@ -194,7 +194,8 @@ def report_markdown(manifest: Dict[str, Any], report: Dict[str, Any]) -> str:
             lines.append(f"- {item['ref']}: {item['text'][:160]} — từ: {', '.join(item['phrases'])} "
                          f"(nguồn: {', '.join(item['evidence'])})")
     if report.get("owner_review"):
-        status_vi = {"applied": "đã sửa", "still_present": "CÂU VẪN CÒN", "not_found": "KHÔNG TÌM THẤY câu này"}
+        status_vi = {"applied": "đã sửa", "applied_but_flagged": "đã sửa, nhưng đoạn này vẫn bị báo lỗi (xem dưới)",
+                     "still_present": "CÂU VẪN CÒN", "not_found": "KHÔNG TÌM THẤY câu này"}
         lines += ["", "## Góp ý của người duyệt", "",
                   "Các lỗi trong phiếu chấm được sửa bằng một vòng patch, rồi các đoạn đã đổi được kiểm lại.", ""]
         for item in report["owner_review"]:
@@ -605,15 +606,23 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         report["brief_gaps"] = [{k: g[k] for k in ("unit_id", "claim", "claim_type", "explanation",
                                                     "source_explanation", "passage_ids")} for g in brief_gaps]
         final_text = stages._squash(checks.script_text(script))
+        # "applied" only means the quoted sentence is gone; a rewrite can still be wrong
+        # (live trial: one of five), so a paragraph with findings left is called out.
+        flagged = {f["unit_id"] for f in report["findings"]}
+
+        def owner_status(finding: Dict[str, Any]) -> str:
+            if stages._squash(finding["claim"]) in final_text:
+                return "still_present"
+            return "applied_but_flagged" if finding["unit_id"] in flagged else "applied"
+
         report["owner_review"] = [
-            {"quote": f["claim"], "why": f["explanation"], "unit_id": f["unit_id"],
-             "status": "still_present" if stages._squash(f["claim"]) in final_text else "applied"}
+            {"quote": f["claim"], "why": f["explanation"], "unit_id": f["unit_id"], "status": owner_status(f)}
             for f in owner_findings] + [{"quote": e["quote"], "why": e["why"], "unit_id": None,
                                          "status": "not_found"} for e in owner_unplaced]
         if owner_rounds:
-            manifest["owner_review"] = {"rounds": len(owner_rounds),
-                                        "applied": sum(1 for o in report["owner_review"] if o["status"] == "applied"),
-                                        "not_applied": sum(1 for o in report["owner_review"] if o["status"] != "applied")}
+            manifest["owner_review"] = {"rounds": len(owner_rounds), **{
+                status: sum(1 for o in report["owner_review"] if o["status"] == status)
+                for status in ("applied", "applied_but_flagged", "still_present", "not_found")}}
         report["final_version"] = version
         report["final_check"] = final_check
         write_json(out_dir / "report.json", report)

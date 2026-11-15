@@ -1011,11 +1011,22 @@ class EndToEndTests(unittest.TestCase):
         scope = load_scope(DEFAULT_MANIFEST, (1, 1))
 
         class OwnerModel(FakeModel):
+            """mode "fixed": the patch replaces the quote; "kept": it edits elsewhere; "flagged":
+            the recheck finds the rewrite wrong too."""
+            def __init__(self, mode="fixed"):
+                super().__init__()
+                self.mode = mode
+
             def __call__(self, stage, system, user):
                 if stage == "patch":
                     self.patch_prompt = user
-                    return json.dumps({"edits": [{"unit_id": "P002", "old": "chẳng nói thêm gì nhiều",
-                                                  "new": "không nói một lời"}]}, ensure_ascii=False)
+                    old, new = (("Bạn nghĩ sao", "Các bạn nghĩ sao") if self.mode == "kept"
+                                else ("chẳng nói thêm gì nhiều", "không nói một lời"))
+                    return json.dumps({"edits": [{"unit_id": "P002", "old": old, "new": new}]}, ensure_ascii=False)
+                if stage == "source_check" and self.mode == "flagged" and "không nói một lời" in user:
+                    return json.dumps({"paragraphs": [{"unit_id": "P002", "findings": [
+                        {"script_quote": "không nói một lời", "kind": "CONTRADICTS_SOURCE", "passage_ids": ["1.2"],
+                         "explanation": "vẫn sai"}]}], "critic_reviews": []})
                 return super().__call__(stage, system, user)
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -1038,7 +1049,8 @@ class EndToEndTests(unittest.TestCase):
             report = json.loads((out / "report.json").read_text(encoding="utf-8"))
             self.assertEqual([(o["status"], o["unit_id"]) for o in report["owner_review"]],
                              [("applied", "P002"), ("not_found", None)])
-            self.assertEqual(manifest["owner_review"], {"rounds": 1, "applied": 1, "not_applied": 1})
+            self.assertEqual(manifest["owner_review"], {"rounds": 1, "applied": 1, "applied_but_flagged": 0,
+                                                        "still_present": 0, "not_found": 1})
             self.assertIn("## Góp ý của người duyệt", (out / "report.md").read_text(encoding="utf-8"))
             # The filled form is kept; a fresh one is written for the corrected script.
             self.assertEqual((out / "review_form_reviewed_1.md").read_text(encoding="utf-8"), filled)
@@ -1051,6 +1063,16 @@ class EndToEndTests(unittest.TestCase):
                 replay = run(again, scope, test_profile(), out, resume=True, owner_review=flag)
                 self.assertEqual((again.calls, replay["versions"][-1]["version"]), ([], 3))
             self.assertFalse((out / "review_form_reviewed_2.md").exists())
+
+        for mode, status in (("kept", "still_present"), ("flagged", "applied_but_flagged")):
+            with self.subTest(mode), tempfile.TemporaryDirectory() as tmp:
+                out = Path(tmp) / "run"
+                run(ScriptedLLMClient(OwnerModel(mode)), scope, test_profile(), out)
+                (out / "review_form.md").write_text('Lỗi cụ thể:\n- "chẳng nói thêm gì nhiều" → sai\n', encoding="utf-8")
+                run(ScriptedLLMClient(OwnerModel(mode)), scope, test_profile(), out, resume=True,
+                    owner_review="review_form.md")
+                report = json.loads((out / "report.json").read_text(encoding="utf-8"))
+                self.assertEqual([o["status"] for o in report["owner_review"]], [status])
 
     def test_patch_edits_are_validated_and_applied_in_place(self):
         script = {"title_idea": "t", "sections": [

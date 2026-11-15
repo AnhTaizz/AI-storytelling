@@ -648,6 +648,14 @@ The run COMPLETED in 17 calls, 234,402 tokens and 357 s. S2's episode 2 took 31 
 - The round is recorded in `owner_review.json`, so later resumes replay it from the saved scripts. The filled form is kept as `review_form_reviewed_N.md`, and `review_summary` still counts it.
 - `run_story` with `--apply-review` reruns only completed episodes whose form has errors not yet applied.
 - Before this, a resumed run rewrote `review_form.md` and would have erased a filled form.
+- Status per error: fixed; fixed but the paragraph still has findings (a rewrite can be wrong too); quote still present; quote not found.
+
+**Live trial of `--apply-review` (a copy of run 17).** Run 17's final script had passed with one flag. Five of the defects that the grouped source check found in v1 were still in it. They were written into the form as an agent's test review, without scores, so `review_summary` does not count it.
+- The correction round took 4 calls, 53,822 tokens and 81 s. All five quoted sentences were replaced.
+- Three replacements are right: no "nhanh trí", "cháo" without the plum, "buổi tối".
+- The rumour sentence is now faithful to 3.41, but the hedge audit flags it. The brief labels "there is no rumour that she failed" as REPORTED, so the audit asks for "nghe nói". This is a brief error, not a script error.
+- The thermometer sentence is still wrong: "khi cô bước ra ngoài, cậu mới kẹp nhiệt kế". The recheck caught it, and the report marks it "fixed but still flagged". The owner's note should say what happened, not only what is wrong.
+- Settings: a resume reuses saved stage outputs only under the same source-check grouping. This copy of a run made before grouping was resumed with `--source-check-chunk 0 --source-check-samples 2`.
 
 ## Known limits
 
