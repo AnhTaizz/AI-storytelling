@@ -50,6 +50,7 @@ def evaluate_dev(probes_path, manifest_path, retrievers, k_values=(1, 5, 10)) ->
     for retriever in retrievers:
         rows = []
         by_language = defaultdict(list)
+        by_category = defaultdict(list)
         for probe in probes:
             hits = retrieve(RetrievalRequest(probe['query'], probe['cutoff_chapter'], max(1, len(passages))),
                             retriever, passages)
@@ -60,12 +61,17 @@ def evaluate_dev(probes_path, manifest_path, retrievers, k_values=(1, 5, 10)) ->
                          'metrics': metrics,
                          'ranking': [{'passage_id': h.passage_id, 'rank': h.rank} for h in hits[:max(k_values)]]})
             by_language[probe['language']].append(metrics)
+            if 'category' in probe:
+                by_category[probe['category']].append(metrics)
         result[retriever.name] = {
             'version': retriever.version,
             'overall': _means([row['metrics'] for row in rows]),
             'per_language': {lang: _means(values) for lang, values in sorted(by_language.items())},
             'per_probe': rows,
         }
+        if by_category:
+            result[retriever.name]['per_category'] = {
+                category: _means(values) for category, values in sorted(by_category.items())}
     return {'probe_count': len(probes), 'retrievers': result}
 
 
@@ -110,6 +116,7 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--retriever', nargs='+', choices=RETRIEVER_NAMES, default=['bm25'])
     parser.add_argument('--private-root', type=Path, default=DEFAULT_PRIVATE_ROOT)
+    parser.add_argument('--probes', type=Path, default=DEFAULT_PROBES)
     parser.add_argument('--cache-dir', type=Path)
     parser.add_argument('--json', action='store_true')
     try:
@@ -118,7 +125,7 @@ def main(argv=None) -> int:
         return int(exc.code)
     try:
         retrievers = [make_retriever(name, cache_dir=args.cache_dir) for name in args.retriever]
-        dev = evaluate_dev(DEFAULT_PROBES, DEFAULT_MANIFEST, retrievers)
+        dev = evaluate_dev(args.probes, DEFAULT_MANIFEST, retrievers)
         summary = {'dev': {'probe_count': dev['probe_count'], 'retrievers': {
             name: {key: value for key, value in values.items() if key != 'per_probe'}
             for name, values in dev['retrievers'].items()}},

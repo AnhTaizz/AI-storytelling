@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 54 — test functions: 995
+Suites: 9 — test files: 54 — test functions: 996
 
 ## canonical_story
 
@@ -1209,10 +1209,11 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 
 ## story_retrieval
 
-### test_evaluate_v0 (4)
-Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.source`, `tools.story_retrieval.evaluate_v0`, `tools.story_retrieval.retrieval_v0`, `tools.story_retrieval.retrieve`
+### test_evaluate_v0 (5)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_benchmark.multi_gold_metrics`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.source`, `tools.story_retrieval.evaluate_v0`, `tools.story_retrieval.retrieval_v0`, `tools.story_retrieval.retrieve`
 
 - `EvaluateV0Tests.test_dev_fixture_validity` — DEV gold is grounded in public passages within each varied cutoff.
+- `EvaluateV0Tests.test_dev_category_means_with_optional_categories` — Category means use only tagged probes, preserving language and overall means.
 - `EvaluateV0Tests.test_dev_metrics_and_safe_per_probe_rows` — Evaluation reports overall/language means and ranks without source text.
 - `EvaluateV0Tests.test_private_synthetic_mapping_cutoff_and_missing_files` — Chunk IDs map back correctly and future-only lexical evidence cannot be returned.
 - `EvaluateV0Tests.test_cli_aggregate_output_and_errors` — CLI emits aggregate-only JSON/text and handles dependency/argument errors.

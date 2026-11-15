@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 import yaml
 
+from tools.story_benchmark.multi_gold_metrics import normalize_gold_evidence_sets
 from tools.story_ingestion.light_novel_adapter_v0 import IngestionError
 from tools.story_pipeline.source import Passage
 from tools.story_retrieval.evaluate_v0 import DEFAULT_PROBES, evaluate_dev, evaluate_private, main
@@ -22,23 +23,70 @@ from tools.story_retrieval.retrieve import DEFAULT_MANIFEST
 class EvaluateV0Tests(unittest.TestCase):
     def test_dev_fixture_validity(self):
         """DEV gold is grounded in public passages within each varied cutoff."""
-        probes = yaml.safe_load(DEFAULT_PROBES.read_text(encoding='utf-8'))['probes']
-        self.assertTrue(8 <= len(probes) <= 12)
-        self.assertEqual({p['language'] for p in probes}, {'ja', 'vi'})
-        self.assertEqual({p['cutoff_chapter'] for p in probes}, set(range(1, 6)))
-        self.assertEqual(len({p['probe_id'] for p in probes}), len(probes))
         ids = {p.passage_id for p in build_corpus(DEFAULT_MANIFEST, 5)}
         required = {'probe_id', 'language', 'query', 'cutoff_chapter', 'gold_evidence_sets', 'note'}
-        for probe in probes:
-            with self.subTest(probe_id=probe['probe_id']):
-                self.assertTrue(required <= probe.keys())
-                self.assertTrue(probe['query'].strip() and probe['note'].strip())
-                self.assertTrue(probe['gold_evidence_sets'])
-                for gold in probe['gold_evidence_sets']:
-                    self.assertTrue(gold)
-                    self.assertEqual(len(set(gold)), len(gold))
-                    self.assertTrue(set(gold) <= ids)
-                    self.assertTrue(all(passage_chapter(pid) <= probe['cutoff_chapter'] for pid in gold))
+        for version, lower, upper in [('v0', 8, 12), ('v1', 28, 32)]:
+            with self.subTest(version=version):
+                path = DEFAULT_PROBES.with_name(f'dev_probes_{version}.yaml')
+                probes = yaml.safe_load(path.read_text(encoding='utf-8'))['probes']
+                self.assertTrue(lower <= len(probes) <= upper)
+                self.assertEqual({p['language'] for p in probes}, {'ja', 'vi'})
+                self.assertEqual({p['cutoff_chapter'] for p in probes}, set(range(1, 6)))
+                self.assertEqual(len({p['probe_id'] for p in probes}), len(probes))
+                if version == 'v1':
+                    self.assertEqual({p['category'] for p in probes},
+                                     {'character_fact', 'event', 'relationship', 'recap', 'boundary'})
+                    self.assertGreaterEqual(sum(all(len(g) >= 2 for g in p['gold_evidence_sets'])
+                                                for p in probes), 8)
+                    self.assertGreaterEqual(sum(p['category'] == 'boundary' for p in probes), 4)
+                    self.assertLessEqual(sum('pair_of' in p for p in probes), 3)
+                for probe in probes:
+                    with self.subTest(probe_id=probe['probe_id']):
+                        self.assertTrue((required | ({'category'} if version == 'v1' else set())) <= probe.keys())
+                        self.assertTrue(probe['query'].strip() and probe['note'].strip())
+                        self.assertIn(probe['cutoff_chapter'], range(1, 6))
+                        if version == 'v1' and probe['category'] == 'boundary':
+                            self.assertIsInstance(probe['tempting_chapter'], int)
+                            self.assertGreater(probe['tempting_chapter'], probe['cutoff_chapter'])
+                            self.assertLessEqual(probe['tempting_chapter'], 5)
+                        for gold in normalize_gold_evidence_sets(probe):
+                            self.assertTrue(set(gold) <= ids)
+                            self.assertTrue(all(passage_chapter(pid) <= probe['cutoff_chapter'] for pid in gold))
+
+    def test_dev_category_means_with_optional_categories(self):
+        """Category means use only tagged probes, preserving language and overall means."""
+        passages = [Passage('1.1', 'alpha'), Passage('1.2', 'beta')]
+        probes = [dict(probe_id='hit', language='ja', category='event', query='alpha',
+                       cutoff_chapter=1, gold_evidence_sets=[['1.1']]),
+                  dict(probe_id='miss', language='vi', category='event', query='alpha',
+                       cutoff_chapter=1, gold_evidence_sets=[['1.2']]),
+                  dict(probe_id='partial', language='ja', category='recap', query='alpha',
+                       cutoff_chapter=1, gold_evidence_sets=[['1.1', '1.2']]),
+                  dict(probe_id='untagged', language='vi', query='beta',
+                       cutoff_chapter=1, gold_evidence_sets=[['1.2']])]
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'probes.yaml'
+            for categorized in [False, True]:
+                with self.subTest(categorized=categorized), patch(
+                        'tools.story_retrieval.evaluate_v0.build_corpus', return_value=passages):
+                    rows = [dict(p) for p in probes]
+                    if not categorized:
+                        for row in rows:
+                            row.pop('category', None)
+                    path.write_text(yaml.safe_dump(rows), encoding='utf-8')
+                    values = evaluate_dev(path, DEFAULT_MANIFEST, [Bm25RetrieverV0()])['retrievers']['bm25_v0']
+                    self.assertEqual(values['overall']['recall@10'], .625)
+                    self.assertEqual(values['per_language']['ja']['recall@10'], .75)
+                    self.assertEqual(values['per_language']['vi']['recall@10'], .5)
+                    self.assertEqual('per_category' in values, categorized)
+                    if categorized:
+                        self.assertEqual(set(values['per_category']), {'event', 'recap'})
+                        for category, metrics in values['per_category'].items():
+                            for key, score in metrics.items():
+                                expected = (0 if key.startswith('spoiler_violation') else
+                                            .5 if category == 'event' or key.startswith('recall') else
+                                            0 if key.startswith('success') else 1)
+                                self.assertEqual(score, expected, (category, key))
 
     def test_dev_metrics_and_safe_per_probe_rows(self):
         """Evaluation reports overall/language means and ranks without source text."""
@@ -148,16 +196,20 @@ class EvaluateV0Tests(unittest.TestCase):
     def test_cli_aggregate_output_and_errors(self):
         """CLI emits aggregate-only JSON/text and handles dependency/argument errors."""
         with tempfile.TemporaryDirectory() as tmp:
-            for as_json in [True, False]:
-                with self.subTest(as_json=as_json), redirect_stdout(io.StringIO()) as output:
-                    args = ['--retriever', 'bm25', '--private-root', tmp] + (['--json'] if as_json else [])
-                    self.assertEqual(main(args), 0)
-                    text = output.getvalue()
-                    self.assertNotIn('per_probe', text)
-                    if as_json:
-                        self.assertIsNone(json.loads(text)['private'])
-                    else:
-                        self.assertIn('private: not run', text)
+            for path, count in [(None, 10), (DEFAULT_PROBES.with_name('dev_probes_v1.yaml'), 30)]:
+                for as_json in [True, False]:
+                    with self.subTest(probes=path, as_json=as_json), redirect_stdout(io.StringIO()) as output:
+                        args = ['--retriever', 'bm25', '--private-root', tmp] + (['--json'] if as_json else [])
+                        self.assertEqual(main(args + (['--probes', str(path)] if path else [])), 0)
+                        text = output.getvalue()
+                        self.assertNotIn('per_probe', text)
+                        if as_json:
+                            summary = json.loads(text)
+                            self.assertIsNone(summary['private'])
+                            self.assertEqual(summary['dev']['probe_count'], count)
+                            self.assertEqual('per_category' in summary['dev']['retrievers']['bm25_v0'], path is not None)
+                        else:
+                            self.assertIn('private: not run', text)
         for failure in [ImportError('missing encoder'), IngestionError('MANIFEST', 'invalid manifest')]:
             with self.subTest(failure=failure), patch(
                     'tools.story_retrieval.evaluate_v0.build_corpus', side_effect=failure):

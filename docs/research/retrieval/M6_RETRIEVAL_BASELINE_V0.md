@@ -326,3 +326,262 @@ are only five probes per language: a difference of one probe is 20 percentage
 points in that language (10 points overall). Dense models truncate at 512 tokens;
 the historical private pack has 77/97 passages above that limit. There is no
 reranker or Story Brief integration; phase 2 is not started.
+
+## Dev probe set v1
+
+The 2026-11-15 follow-up uses
+`tests/story_retrieval/fixtures/dev_probes_v1.yaml`. The implementer read all 353
+passages returned by `build_corpus(DEFAULT_MANIFEST, 5)`, authored the questions
+and gold without running a retriever on v1, then printed and reread every gold
+passage and checked its chapter against the cutoff. The fixture was locked before
+evaluation with SHA-256:
+
+`e7af4a47b0ef02b9847ce812cff28298c4356407dcecad344e0b48827caa1a36`
+
+This is still a small implementer-authored DEV set, not a sealed benchmark or an
+independent assessment of general multilingual retrieval. The Vietnamese questions
+ask different facts from the Japanese questions; there are zero deliberate
+cross-language pairs. Vietnamese wording follows recap/brief requests, using
+Amane, Mahiru and Itsuki or descriptive references. Language scores consequently
+compare different questions, rather than isolating a translation effect.
+
+| Category | ja | vi | Total |
+|---|---:|---:|---:|
+| character_fact | 3 | 3 | 6 |
+| event | 3 | 3 | 6 |
+| relationship | 3 | 3 | 6 |
+| recap | 3 | 3 | 6 |
+| boundary | 3 | 3 | 6 |
+| Total | 15 | 15 | 30 |
+
+Cutoff counts for chapters 1/2/3/4/5 are 7/7/6/5/5. Twelve probes specify a
+multi-passage answer (eight ja, four vi): eleven require two passages and one
+requires three. Two probes accept alternative singleton evidence sets: the
+temperature reading versus its spoken report, and initial caution expressed in
+eyes versus voice. The six boundary probes have tempting text in a later chapter
+but gold only at or before cutoff:
+
+| Probe | Cutoff | Tempting chapter | Earlier answer |
+|---|---:|---:|---|
+| v1_ja_13 | 1 | 4 | Her nearly tearful look and his troubled conscience motivate intervention. |
+| v1_ja_14 | 2 | 4 | She already says her presence caused his cold. |
+| v1_ja_15 | 4 | 5 | He already expects them to be mere acquaintances the next day. |
+| v1_vi_13 | 1 | 5 | He already separates attraction from romantic feelings. |
+| v1_vi_14 | 2 | 3 | His poor housekeeping and messy room are already described. |
+| v1_vi_15 | 2 | 5 | His reply already identifies Itsuki as having a girlfriend. |
+
+Gold corrections after lock: **none**. The locked fixture remains unchanged.
+The v0 fixture and recorded v0 results above are unchanged. The CLI now accepts
+`--probes PATH`, defaulting to v0, and reports `per_category` means only when
+categories are present. Untagged probes still contribute to overall/language
+means but not category means. Per-probe output and metric definitions are unchanged.
+
+Reproduction in an environment with torch and sentence-transformers, with both
+model snapshots already cached:
+
+```
+HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 python -m tools.story_retrieval.evaluate_v0 --probes tests/story_retrieval/fixtures/dev_probes_v1.yaml --retriever bm25 dense_e5 dense_e5_large hybrid hybrid_large --cache-dir .local/story_retrieval/embedding_cache --private-root .local/none --json
+```
+
+The run indexes all 353 passages and filters eligible IDs at each cutoff; the
+nonexistent private root skips private evaluation. Hit and full MRR use the union
+of acceptable gold passages. Recall uses the best-matching gold set; Success
+requires every passage of any one gold set. MRR below covers the full positive
+eligible ranking, not just ten hits. Spoiler violation is measured at 1, 5 and 10.
+Raw JSON, per-probe ranks and local profiling logs stay under
+`.local/m6_dev_v1/`; passage embeddings stay under the requested ignored cache.
+
+### V1 results
+
+Labels below correspond to the existing v0 retriever names and pinned revisions
+above. SV is the maximum spoiler violation across depths 1/5/10; each individual
+depth is also zero. The first table groups by language, the second by category,
+and the third isolates the twelve multi-passage probes. Percentages are probe
+means, including best-set Recall; MRR is untruncated.
+
+| Group | Retriever | Hit@1 | Hit@5 | Hit@10 | Recall@10 | Success@10 | MRR (full) | SV |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| Overall (30) | BM25 | 33.33% | 36.67% | 36.67% | 36.67% | 36.67% | 0.3461 | 0 |
+| Overall (30) | E5-small | 23.33% | 50.00% | 66.67% | 57.22% | 46.67% | 0.3841 | 0 |
+| Overall (30) | E5-large | 43.33% | 70.00% | 76.67% | 68.33% | 60.00% | 0.5522 | 0 |
+| Overall (30) | Hybrid-small | 36.67% | 53.33% | 60.00% | 52.22% | 43.33% | 0.4616 | 0 |
+| Overall (30) | Hybrid-large | 43.33% | 66.67% | 73.33% | 65.00% | 56.67% | 0.5524 | 0 |
+| ja (15) | BM25 | 66.67% | 73.33% | 73.33% | 73.33% | 73.33% | 0.6923 | 0 |
+| ja (15) | E5-small | 20.00% | 60.00% | 86.67% | 76.67% | 66.67% | 0.4139 | 0 |
+| ja (15) | E5-large | 46.67% | 73.33% | 80.00% | 73.33% | 66.67% | 0.5857 | 0 |
+| ja (15) | Hybrid-small | 46.67% | 66.67% | 73.33% | 66.67% | 60.00% | 0.5689 | 0 |
+| ja (15) | Hybrid-large | 46.67% | 66.67% | 73.33% | 66.67% | 60.00% | 0.5861 | 0 |
+| vi (15) | BM25 | 0.00% | 0.00% | 0.00% | 0.00% | 0.00% | 0.0000 | 0 |
+| vi (15) | E5-small | 26.67% | 40.00% | 46.67% | 37.78% | 26.67% | 0.3544 | 0 |
+| vi (15) | E5-large | 40.00% | 66.67% | 73.33% | 63.33% | 53.33% | 0.5186 | 0 |
+| vi (15) | Hybrid-small | 26.67% | 40.00% | 46.67% | 37.78% | 26.67% | 0.3544 | 0 |
+| vi (15) | Hybrid-large | 40.00% | 66.67% | 73.33% | 63.33% | 53.33% | 0.5186 | 0 |
+
+| Group | Retriever | Hit@1 | Hit@5 | Hit@10 | Recall@10 | Success@10 | MRR (full) | SV |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| character_fact (6) | BM25 | 33.33% | 33.33% | 33.33% | 33.33% | 33.33% | 0.3349 | 0 |
+| character_fact (6) | E5-small | 16.67% | 66.67% | 66.67% | 66.67% | 66.67% | 0.4015 | 0 |
+| character_fact (6) | E5-large | 100.00% | 100.00% | 100.00% | 100.00% | 100.00% | 1.0000 | 0 |
+| character_fact (6) | Hybrid-small | 16.67% | 50.00% | 50.00% | 50.00% | 50.00% | 0.3547 | 0 |
+| character_fact (6) | Hybrid-large | 83.33% | 83.33% | 83.33% | 83.33% | 83.33% | 0.8444 | 0 |
+| event (6) | BM25 | 16.67% | 16.67% | 16.67% | 16.67% | 16.67% | 0.1798 | 0 |
+| event (6) | E5-small | 16.67% | 16.67% | 50.00% | 50.00% | 50.00% | 0.2223 | 0 |
+| event (6) | E5-large | 33.33% | 33.33% | 66.67% | 58.33% | 50.00% | 0.3876 | 0 |
+| event (6) | Hybrid-small | 16.67% | 16.67% | 33.33% | 33.33% | 33.33% | 0.2018 | 0 |
+| event (6) | Hybrid-large | 16.67% | 16.67% | 50.00% | 50.00% | 50.00% | 0.2398 | 0 |
+| relationship (6) | BM25 | 50.00% | 50.00% | 50.00% | 50.00% | 50.00% | 0.5000 | 0 |
+| relationship (6) | E5-small | 16.67% | 50.00% | 83.33% | 66.67% | 50.00% | 0.3382 | 0 |
+| relationship (6) | E5-large | 33.33% | 83.33% | 83.33% | 75.00% | 66.67% | 0.5250 | 0 |
+| relationship (6) | Hybrid-small | 66.67% | 66.67% | 83.33% | 75.00% | 66.67% | 0.6854 | 0 |
+| relationship (6) | Hybrid-large | 66.67% | 100.00% | 100.00% | 83.33% | 66.67% | 0.8056 | 0 |
+| recap (6) | BM25 | 33.33% | 50.00% | 50.00% | 50.00% | 50.00% | 0.3750 | 0 |
+| recap (6) | E5-small | 50.00% | 83.33% | 100.00% | 69.44% | 33.33% | 0.6905 | 0 |
+| recap (6) | E5-large | 16.67% | 83.33% | 83.33% | 58.33% | 33.33% | 0.4040 | 0 |
+| recap (6) | Hybrid-small | 66.67% | 100.00% | 100.00% | 69.44% | 33.33% | 0.7917 | 0 |
+| recap (6) | Hybrid-large | 16.67% | 83.33% | 83.33% | 58.33% | 33.33% | 0.4179 | 0 |
+| boundary (6) | BM25 | 33.33% | 33.33% | 33.33% | 33.33% | 33.33% | 0.3409 | 0 |
+| boundary (6) | E5-small | 16.67% | 33.33% | 33.33% | 33.33% | 33.33% | 0.2680 | 0 |
+| boundary (6) | E5-large | 33.33% | 50.00% | 50.00% | 50.00% | 50.00% | 0.4443 | 0 |
+| boundary (6) | Hybrid-small | 16.67% | 33.33% | 33.33% | 33.33% | 33.33% | 0.2745 | 0 |
+| boundary (6) | Hybrid-large | 33.33% | 50.00% | 50.00% | 50.00% | 50.00% | 0.4541 | 0 |
+
+| Group | Retriever | Hit@1 | Hit@5 | Hit@10 | Recall@10 | Success@10 | MRR (full) | SV |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| Multi all (12) | BM25 | 58.33% | 66.67% | 66.67% | 66.67% | 66.67% | 0.6042 | 0 |
+| Multi all (12) | E5-small | 41.67% | 75.00% | 91.67% | 68.06% | 41.67% | 0.5963 | 0 |
+| Multi all (12) | E5-large | 33.33% | 83.33% | 83.33% | 62.50% | 41.67% | 0.5062 | 0 |
+| Multi all (12) | Hybrid-small | 66.67% | 91.67% | 91.67% | 72.22% | 50.00% | 0.7719 | 0 |
+| Multi all (12) | Hybrid-large | 41.67% | 91.67% | 91.67% | 70.83% | 50.00% | 0.6117 | 0 |
+| Multi ja (8) | BM25 | 87.50% | 100.00% | 100.00% | 100.00% | 100.00% | 0.9062 | 0 |
+| Multi ja (8) | E5-small | 25.00% | 75.00% | 100.00% | 81.25% | 62.50% | 0.5179 | 0 |
+| Multi ja (8) | E5-large | 50.00% | 87.50% | 87.50% | 75.00% | 62.50% | 0.6333 | 0 |
+| Multi ja (8) | Hybrid-small | 62.50% | 100.00% | 100.00% | 87.50% | 75.00% | 0.7812 | 0 |
+| Multi ja (8) | Hybrid-large | 62.50% | 100.00% | 100.00% | 87.50% | 75.00% | 0.7917 | 0 |
+| Multi vi (4) | BM25 | 0.00% | 0.00% | 0.00% | 0.00% | 0.00% | 0.0000 | 0 |
+| Multi vi (4) | E5-small | 75.00% | 75.00% | 75.00% | 41.67% | 0.00% | 0.7532 | 0 |
+| Multi vi (4) | E5-large | 0.00% | 75.00% | 75.00% | 37.50% | 0.00% | 0.2519 | 0 |
+| Multi vi (4) | Hybrid-small | 75.00% | 75.00% | 75.00% | 41.67% | 0.00% | 0.7532 | 0 |
+| Multi vi (4) | Hybrid-large | 0.00% | 75.00% | 75.00% | 37.50% | 0.00% | 0.2519 | 0 |
+
+### V1 CPU cost and pipeline recommendation
+
+A local-only profiling wrapper called the same evaluation CLI entry point and
+factory, timing the existing lazy loader and encoder without changing their
+outputs. It evaluated each retriever sequentially with the same corpus and
+queries. The primary timing run finished before the quality gate started.
+Torch used eight CPU threads, with the pinned models and ML versions recorded
+above. Initial torch/sentence-transformers imports cost **25.062 s**, separately
+from the model-load times below. The profiled CLI body took **257.746 s**,
+excluding those imports. BM25's corpus loading/indexing and 30 searches took
+**0.343 s**. These are single local wall-time measurements, not controlled
+hardware benchmarks or production latency guarantees.
+
+| Retriever | Model load | Missing unique passage texts / encode | 30 query encodes | Mean / median query encode | Evaluation wall |
+|---|---:|---:|---:|---:|---:|
+| E5-small | 6.486 s | 107 / 5.657 s | 4.120 s | 0.137 / 0.134 s | 17.408 s |
+| E5-large | 15.117 s | 353 / 153.226 s | 21.874 s | 0.729 / 0.681 s | 192.805 s |
+| Hybrid-small | 6.243 s | 0 / 0 s (warm) | 4.603 s | 0.153 / 0.131 s | 11.790 s |
+| Hybrid-large | 14.956 s | 0 / 0 s (warm) | 18.623 s | 0.621 / 0.577 s | 35.256 s |
+
+Model-load timing excludes dependency imports and includes model construction,
+configuration and deterministic setup. Encode timing is inside the existing
+encoder, excluding Python vector normalization and cosine scoring. Passage cache
+coverage differs, so the two cold/partial-cache evaluation wall times are not a
+fair model-speed ratio. The same thirty uncached queries give the useful comparison:
+large query encoding averages about **5.3 times** small in the dense runs, and
+about **4.0 times** small in the warm hybrid runs. Large model loading is about
+2.3 times small. Keeping a retriever alive avoids repeated model loading; the
+passage cache does not cache query embeddings.
+
+**Recommend `dense_e5_large` as the provisional default for the story pipeline**,
+whose briefs commonly use Vietnamese, with `dense_e5` as the explicitly selected
+lower-latency CPU option. Large retrieves some gold for 11/15 Vietnamese probes
+at rank ten versus 7/15 for small, and completes 8/15 versus 4/15; Vietnamese
+Recall@10 rises from 37.78% to 63.33%. Overall Recall/Success@10 rises from
+57.22%/46.67% to 68.33%/60.00%, and full MRR from 0.3841 to 0.5522. This quality
+gain supports paying the measured load and query-encoding cost for that use case.
+
+Large does **not** dominate multi-passage retrieval: small's multi-passage
+Recall@10 is 68.06% versus large's 62.50%, with both completing only 5/12.
+Hybrid-small is strongest there on recall (72.22%, 6/12 complete), while
+hybrid-large reaches 70.83% and also 6/12. Both dense variants and both hybrids
+complete **zero of the four Vietnamese multi-passage probes**; small has higher
+partial recall there (41.67% versus 37.50%). This is evidence against treating a
+top-ten hit as sufficient context for a recap, and it leaves multi-evidence
+completion unresolved for the later pipeline integration. Category results also
+favor small on recap recall, while large's advantage is strongest on character
+facts. Only 3/6 boundary probes have a gold hit at ten with large, despite all
+six remaining spoiler-safe.
+
+The current equal-weight RRF variants are not the default recommendation:
+hybrid-large has lower overall Hit/Recall/Success@10 than dense-large
+(73.33%/65.00%/56.67% versus 76.67%/68.33%/60.00%), with nearly identical MRR.
+Neither hybrid improves Vietnamese metrics over its dense component because BM25
+returns no Vietnamese matches. BM25 remains cheap and strong on these Japanese
+multi-passage questions, but its 0/15 Vietnamese hits rule it out as a common
+multilingual default. No retriever or pipeline behavior was tuned or changed in
+response to these results.
+
+One probe still changes an overall score by 3.33 percentage points and a language
+score by 6.67 points; the multi-passage Vietnamese subset has only four probes.
+The Japanese and Vietnamese multi-passage mixes are also unequal (8 versus 4).
+The default recommendation is therefore provisional, based on this small public
+DEV set, the measured CPU cost, and the pipeline's Vietnamese query use case.
+
+### V1 verification
+
+The direct `-m tools.story_retrieval.evaluate_v0` command above exited **0**.
+Its aggregate JSON, including all five retriever versions and the skipped private
+section, exactly equals the profiling run's JSON. This warm-cache check overlapped
+the gate and is used for output verification only, not the timing comparison.
+Raw outputs are `.local/m6_dev_v1/evaluation_cli.json`, `evaluation.json` and
+`per_probe.json`; timings are `timings.json`. The local timing wrapper's initial
+PowerShell invocation reported status 1 after formatting stderr progress as native
+errors, although it produced complete JSON; the subsequent direct CLI check removes
+that shell-status ambiguity. No model download, Gemini or other LLM call occurred.
+
+On the Windows development machine, the gate in an environment without torch
+(`python -m tools.ci.check --coverage`) passes compile,
+test policy and all nine suites: **890 tests, zero failures/skips, seven declared
+environment gates**. Exact suite lines:
+
+```text
+  OK   canonical_story    ran   99  failed   0  skipped   0  gated   0  9.18s
+  OK   ci                 ran   26  failed   0  skipped   0  gated   0  43.23s
+  OK   script_quality     ran   64  failed   0  skipped   0  gated   0  7.37s
+  OK   story_benchmark    ran  193  failed   0  skipped   0  gated   6  32.81s
+  OK   story_extraction   ran  362  failed   0  skipped   0  gated   0  50.93s
+  OK   story_ingestion    ran   79  failed   0  skipped   0  gated   1  4.46s
+  OK   story_memory       ran    7  failed   0  skipped   0  gated   0  0.04s
+  OK   story_pipeline     ran   40  failed   0  skipped   0  gated   0  2.41s
+  OK   story_retrieval    ran   20  failed   0  skipped   0  gated   0  14.37s
+```
+
+The unchanged Windows guard still misreads relative backslash coverage keys:
+
+```text
+diff coverage: 0.0% of 523 changed executable lines under tools/
+QUALITY GATE: FAIL (guards)
+```
+
+The gate therefore exits **1**, solely for this known false diff-coverage failure;
+it is not an overall gate pass. The guard was neither changed nor bypassed.
+Direct coverage from this gate's `.local/ci/coverage/.coverage` is:
+
+| Module | Covered statements | Coverage including branches |
+|---|---:|---:|
+| `evaluate_v0.py` | 99/100 | 98% |
+| `retrieval_v0.py` | 219/228 | 96% |
+| `retrieve.py` | 43/44 | 96% |
+| `__init__.py` | 0/0 | 100% |
+| Total | 361/372 (97.0%) | 97% |
+
+A read-only calculation using the guard's `diff_coverage_findings`, normalizing
+coverage keys to forward slashes and parsing `git diff HEAD -U0 -- tools/`, gives
+**7/7 changed executable lines covered (100.0%)**, exceeding the required 80%.
+Logs remain in `.local/m6_dev_v1/gate.log` and `direct_coverage.txt`. Tests extend
+the existing evaluation file with versioned fixture checks, optional category
+aggregation on synthetic probes, and default/explicit CLI probe selection; cases
+share bodies through `subTest`. The catalog was regenerated with the prescribed
+test-policy command and converted to LF. All changed files use LF. No commit,
+push, branch switch, private evaluation or pipeline integration was performed.
