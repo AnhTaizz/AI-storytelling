@@ -175,6 +175,7 @@ Useful flags:
 - `--revise-severities CRITICAL,HIGH`;
 - `--source-check-chunk N` (default 4 paragraphs per call; 0 sends the whole script) and `--source-check-samples N` (calls per group, default 1), or `--no-source-check`;
 - `--resume <run dir> --apply-review [FORM]`: fix the quoted errors of the owner's filled review form in one patch round (see "Owner corrections" below);
+- `--no-callbacks`: do not add earlier events found by brief retrieval to an episode's recap (see "Callbacks from brief retrieval");
 - `--full-recheck`: send every paragraph to the critic and the source check in every version. By default, a paragraph whose text is byte-identical to one in the previous version keeps that version's critic claims, source-check findings and brief gaps, and only changed paragraphs are checked again (`rechecked_units` per version in the manifest);
 - `--recap` (episode mode), `--no-memory`.
 
@@ -656,6 +657,13 @@ The run COMPLETED in 17 calls, 234,402 tokens and 357 s. S2's episode 2 took 31 
 - The rumour sentence is now faithful to 3.41, but the hedge audit flags it. The brief labels "there is no rumour that she failed" as REPORTED, so the audit asks for "nghe nói". This is a brief error, not a script error.
 - The thermometer sentence is still wrong: "khi cô bước ra ngoài, cậu mới kẹp nhiệt kế". The recheck caught it, and the report marks it "fixed but still flagged". The owner's note should say what happened, not only what is wrong.
 - Settings: a resume reuses saved stage outputs only under the same source-check grouping. This copy of a run made before grouping was resumed with `--source-check-chunk 0 --source-check-samples 2`. Since then the run manifest records its `invocation`, and `--resume <dir>` restores every option not given again (older runs are read from their scope and settings).
+
+**Callbacks from brief retrieval (M6 Phase 2).** An episode's recap carried only the CORE events of earlier chapters, so a plan could not call back to a SUPPORTING or MINOR setup (an umbrella lent in chapter 1, a rumour heard in chapter 2).
+
+- In recap mode, every event summary of the episode is used as one query to `tools/story_retrieval/brief_retrieval_v1.py`. The corpus is the background chapters' briefs only, with a cutoff of the chapter before the episode.
+- The two best earlier events per query that the recap does not already carry are pooled, up to 8. They are added to `memory_recap.json` as `callbacks`: ref, chapter, summary, importance, epistemic label, quote and evidence ids. The run manifest lists their refs (`callbacks`).
+- The plan may cite them like recap CORE events. The audits read their own epistemic label, so a recalled rumour must stay a rumour.
+- `--no-callbacks` turns this off. If the corpus cannot be built (for example a background brief cites a passage outside its chapter), the reason is recorded as `callbacks_skipped`, and the episode runs on without callbacks.
 
 ## Known limits
 

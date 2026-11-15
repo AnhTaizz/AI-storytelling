@@ -111,6 +111,8 @@ class ViewTests(unittest.TestCase):
         latest = {tuple(sorted(r["between"])): r for r in recap["relationships_latest"]}
         self.assertEqual(latest[("Amane", "Mahiru")]["as_of_chapter"], 2)
         self.assertEqual(mem.recap_event_refs(None), set())
+        recap["callbacks"] = [{"ref": "c1.E3", "summary": "x"}]  # retrieved earlier events (M6 Phase 2)
+        self.assertEqual(mem.recap_event_refs(recap), {"c1.E1", "c2.E1", "c1.E3"})
 
     def test_as_of_orders_and_cuts(self):
         self.assertEqual([b["chapter_order"] for b in mem.as_of(list(reversed(BRIEFS)), 2)], [1, 2])
