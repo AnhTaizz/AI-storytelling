@@ -25,12 +25,13 @@ if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
 from tools.story_memory import glossary_v0  # noqa: E402
-from tools.story_memory.memory_v0 import StoryMemory, build_roster, recap_context  # noqa: E402
+from tools.story_memory.memory_v0 import StoryMemory, build_roster, recap_context, recap_event_refs  # noqa: E402
 from tools.story_pipeline import PIPELINE_VERSION, checks, lexicon, review_page, review_summary, stages  # noqa: E402
 from tools.story_pipeline.facts import StoryFacts  # noqa: E402
 from tools.story_pipeline.llm import CallLog, LLMClient, StageFailed  # noqa: E402
 from tools.story_pipeline.profile import DEFAULT_PROFILE_PATH, NarrativeProfile, load_profile  # noqa: E402
 from tools.story_pipeline.source import Chapter, StoryScope, layout_warnings, load_scope, parse_range  # noqa: E402
+from tools.story_retrieval.brief_retrieval_v1 import build_brief_corpus, callback_candidates  # noqa: E402
 
 DEFAULT_MANIFEST = REPO / "data/sample/otonari_no_tenshi/wn_jp/LIGHT_NOVEL_SOURCE_MANIFEST_SAMPLE_V0.yaml"
 DEFAULT_OUT_ROOT = REPO / ".local" / "story_pipeline_runs"
@@ -343,6 +344,21 @@ def write_review_form(out_dir: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
+# --------------------------------------------------------------------------- callbacks (M6 Phase 2)
+
+def callback_events(all_briefs: Sequence[Dict[str, Any]], briefs: Sequence[Dict[str, Any]],
+                    background: Sequence[Chapter], scope: StoryScope, profile: NarrativeProfile,
+                    recap: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Earlier events the episode's events recall: one brief-retrieval query per episode event,
+    over the background chapters only (cutoff = the chapter before the episode), leaving out
+    events the recap already carries. Raises ValueError when the corpus cannot be built."""
+    corpus = build_brief_corpus(scope.story_id, [b for b in all_briefs if b["chapter_order"] < scope.first],
+                                [p for c in background for p in c.passages], scope.first - 1,
+                                profile.brief_language)
+    queries = [event["summary"] for brief in briefs for event in brief["events"]]
+    return callback_candidates(corpus, queries, per_query=2, limit=8, exclude=recap_event_refs(recap))
+
+
 # --------------------------------------------------------------------------- orchestration
 
 
@@ -353,6 +369,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         background: Sequence[Chapter] = (), memory: Optional[StoryMemory] = None,
         source_check: bool = True, source_check_samples: int = 1, full_revision_rounds: int = 1,
         full_recheck: bool = False, source_check_chunk: int = 4, owner_review: Optional[Path | str] = None,
+        callbacks: bool = True,
         invocation: Optional[Dict[str, Any]] = None, progress: Callable[[str], None] = lambda message: None) -> Dict[str, Any]:
     """`scope` is the episode. `background` are earlier chapters, summarised from memory as a
     recap (never later chapters). With `memory`, chapter briefs are reused across runs."""
@@ -375,7 +392,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         "settings": {"max_repairs": max_repairs, "revision_rounds": revision_rounds,
                      "revise_severities": list(revise_severities), "stop_after": stop_after,
                      "source_check": source_check, "source_check_samples": source_check_samples,
-                     "full_recheck": full_recheck, "source_check_chunk": source_check_chunk,
+                     "full_recheck": full_recheck, "source_check_chunk": source_check_chunk, "callbacks": callbacks,
                      "full_revision_rounds": full_revision_rounds},
         "invocation": invocation,
         "prompt_fingerprints": stages.prompt_fingerprints(),
@@ -431,6 +448,17 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
             all_briefs.append(cached(out_dir / "briefs" / f"chapter_{chapter.order:03d}.json", resume, produce))
         briefs = [b for b in all_briefs if b["chapter_order"] >= scope.first]
         recap = recap_context(all_briefs, scope.first) if background else None
+        if recap is not None and callbacks:
+            # Earlier events (any importance) that this episode's events recall, found by
+            # brief retrieval (M6 Phase 2, DEC-021), so a plan may call back to them.
+            try:
+                found = callback_events(all_briefs, briefs, background, scope, profile, recap)
+            except ValueError as exc:
+                manifest["callbacks_skipped"] = str(exc)
+            else:
+                manifest["callbacks"] = [c["ref"] for c in found]
+                if found:
+                    recap["callbacks"] = found
         if recap is not None:
             write_json(out_dir / "memory_recap.json", recap)
         if stop_after == "brief":
@@ -665,6 +693,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--apply-review", nargs="?", const="review_form.md", default=None, metavar="FORM",
                         help="with --resume: fix the quoted errors of a filled review form (default: the run's "
                              "review_form.md) in one patch round, then recheck the changed paragraphs")
+    parser.add_argument("--no-callbacks", action="store_true",
+                        help="do not add earlier events found by brief retrieval to an episode's recap")
     parser.add_argument("--full-recheck", action="store_true",
                         help="send every paragraph to the critic and the source check in every version "
                              "(default: only paragraphs that changed since the previous version)")
@@ -719,14 +749,14 @@ def run_options(args: argparse.Namespace) -> Dict[str, Any]:
             "stop_after": args.stop_after, "source_check": not args.no_source_check,
             "source_check_samples": args.source_check_samples, "source_check_chunk": args.source_check_chunk,
             "full_revision_rounds": args.full_revision_rounds, "full_recheck": args.full_recheck,
-            "owner_review": args.apply_review}
+            "owner_review": args.apply_review, "callbacks": not args.no_callbacks}
 
 
 # Options a resumed run takes from its own manifest unless given again on the command line.
 RESUMABLE_OPTIONS = ("manifest", "source_root", "chapters", "recap", "memory", "no_memory", "full_revision_rounds",
                      "source_check_samples", "source_check_chunk", "full_recheck", "no_source_check", "profile",
                      "min_words", "max_words", "model", "temperature", "facts", "max_repairs", "revision_rounds",
-                     "revise_severities", "stop_after")
+                     "revise_severities", "stop_after", "no_callbacks")
 
 
 def invocation_of(args: argparse.Namespace) -> Dict[str, Any]:

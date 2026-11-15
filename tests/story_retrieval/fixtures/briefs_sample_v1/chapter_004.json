@@ -1,0 +1,231 @@
+{
+ "chapter_order": 4,
+ "source_version": "6539b73367673a91cd99236d818811702982759cf033b5a179cdf001ae20f525",
+ "producer": "gemini:gemini-3.6-flash,gemini-3.5-flash,gemini-3-flash-preview,gemini-3.5-flash-lite",
+ "brief": {
+  "chapter_order": 4,
+  "chapter_summary": "Sau khi ăn xong, Mahiru cẩn thận chuẩn bị nước uống, khăn lau và miếng dán hạ sốt cho Amane trên bàn cạnh giường. Amane tranh thủ hỏi lý do Mahiru ngồi trên xích đu dưới mưa ngày hôm trước. Mahiru giải thích rằng cô chỉ muốn làm nguội đầu và phủ nhận việc có bạn trai, đồng thời phản ứng gay gắt khi Amane đùa về việc hẹn hò. Amane vội xin lỗi và khẳng định anh không hề có ý định dính líu hay lợi dụng cô sau này. Mahiru cúi chào rồi ra về. Amane ở lại một mình, xem sự việc hôm nay là bí mật của hai người và tự dặn lòng từ ngày mai họ sẽ trở lại làm những người quen xa lạ.",
+  "characters": [
+   {
+    "id": "CH1",
+    "name": "藤宮周",
+    "romanized_name": "Fujimiya Amane",
+    "aliases": [],
+    "facts": [
+     {
+      "text": "Amane cảm thấy cơn sốt có vẻ đã hạ bớt nhờ tác dụng của thuốc, dù sự mệt mỏi vẫn còn.",
+      "evidence": [
+       "4.11"
+      ],
+      "quote": "熱はすこし引いたように思える。",
+      "epistemic": "APPEARANCE"
+     },
+     {
+      "text": "Amane nghĩ rằng Mahiru có lẽ không thể ở lại nhà của người khác giới mới chỉ là người quen, và bản thân anh cũng thấy biết ơn vì sự chuẩn bị của cô.",
+      "evidence": [
+       "4.4"
+      ],
+      "quote": "流石に顔見知り程度の異性の家に泊まる訳にもいかない",
+      "epistemic": "SPECULATION"
+     },
+     {
+      "text": "Amane xin lỗi Mahiru ngay lập tức khi nhận ra mình đã lỡ chạm vào chủ đề nhạy cảm của cô.",
+      "evidence": [
+       "4.34"
+      ],
+      "quote": "「ごめん、そういうつもりじゃなかった。謝る」",
+      "epistemic": "EXPLICIT"
+     },
+     {
+      "text": "Amane xem việc Mahiru chăm sóc cho mình hôm nay là bí mật riêng giữa hai người.",
+      "evidence": [
+       "4.64"
+      ],
+      "quote": "今日あった事は、周と真昼だけの秘密だ。",
+      "epistemic": "EXPLICIT"
+     }
+    ]
+   },
+   {
+    "id": "CH2",
+    "name": "椎名真昼",
+    "romanized_name": "Shiina Mahiru",
+    "aliases": [
+     "天使様"
+    ],
+    "facts": [
+     {
+      "text": "Mahiru chuẩn bị nước uống thể thao, chậu nước, khăn và miếng dán hạ sốt đặt ở bàn cạnh giường cho Amane.",
+      "evidence": [
+       "4.3"
+      ],
+      "quote": "食後、真昼はせっせと未開封のスポーツドリンクや水を張った洗面器とタオル、予備の冷感シートを用意して",
+      "epistemic": "EXPLICIT"
+     },
+     {
+      "text": "Mahiru khẳng định cô không có bạn trai và cũng không có kế hoạch quen ai.",
+      "evidence": [
+       "4.21"
+      ],
+      "quote": "「生憎と、彼氏なんて居ませんし作る予定もありません」",
+      "epistemic": "EXPLICIT"
+     },
+     {
+      "text": "Amane nhận thấy Mahiru đứng đầu khối, giỏi thể thao, và suy đoán rằng có lẽ cô ấy cũng giỏi nấu ăn.",
+      "evidence": [
+       "4.27"
+      ],
+      "quote": "首席をキープしてスポーツも万能に出来て",
+      "epistemic": "SPECULATION"
+     },
+     {
+      "text": "Mahiru giải thích cô ngồi trên xích đu dưới mưa chỉ vì muốn làm nguội đầu.",
+      "evidence": [
+       "4.38"
+      ],
+      "quote": "「……とにかく、あの時のはそういった類いのではなく、ただ頭を冷やしたかったからです。",
+      "epistemic": "EXPLICIT"
+     },
+     {
+      "text": "Mahiru có vẻ ngại ngùng và không thích việc bị gọi là Thiên sứ.",
+      "evidence": [
+       "4.56"
+      ],
+      "quote": "どうやら天使と呼ばれているのは恥ずかしいらしく、不服そうな眼差しが継続している。",
+      "epistemic": "APPEARANCE"
+     }
+    ]
+   }
+  ],
+  "relationships": [
+   {
+    "between": [
+     "CH1",
+     "CH2"
+    ],
+    "state": "Amane xác định từ ngày mai hai người sẽ trở lại là những người quen xa lạ và không dính líu gì tới nhau nữa.",
+    "evidence": [
+     "4.66"
+    ],
+    "quote": "翌日からは、顔見知りの他人。",
+    "epistemic": "EXPLICIT"
+   }
+  ],
+  "events": [
+   {
+    "id": "E1",
+    "summary": "Mahiru chuẩn bị sẵn các vật dụng hạ sốt và nước uống trên bàn cạnh giường cho Amane.",
+    "participants": [
+     "CH1",
+     "CH2"
+    ],
+    "location": "Phòng của Amane",
+    "importance": "SUPPORTING",
+    "motivation": {
+     "text": "Mahiru chuẩn bị chu đáo để Amane tự chăm sóc vì cô không thể ở lại nhà một bạn nam mới chỉ là người quen.",
+     "status": "SUPPORTED_INFERENCE"
+    },
+    "consequence": "Amane có đầy đủ đồ dùng để tự chăm sóc sau khi Mahiru ra về.",
+    "evidence": [
+     "4.3"
+    ],
+    "quote": "食後、真昼はせっせと未開封のスポーツドリンクや水を張った洗面器とタオル、予備の冷感シートを用意して",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "id": "E2",
+    "summary": "Amane hỏi Mahiru lý do cô ngồi trên xích đu dưới mưa hôm qua và đoán cô cãi nhau với bạn trai.",
+    "participants": [
+     "CH1",
+     "CH2"
+    ],
+    "location": "Phòng của Amane",
+    "importance": "CORE",
+    "motivation": {
+     "text": "Amane thắc mắc về ánh mắt như trẻ lạc của Mahiru ngày hôm trước nên muốn hỏi cho biết.",
+     "status": "EXPLICIT"
+    },
+    "consequence": "Mahiru ngạc nhiên và bắt đầu phản hồi thắc mắc của Amane.",
+    "evidence": [
+     "4.15"
+    ],
+    "quote": "「なんで雨の中ブランコ漕いでたんだ。彼氏と揉めたりとかか」",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "id": "E3",
+    "summary": "Mahiru phủ nhận có bạn trai và biểu lộ sự giận dữ lạnh người khi Amane suy đoán cô có thể hẹn hò với nhiều người.",
+    "participants": [
+     "CH1",
+     "CH2"
+    ],
+    "location": "Phòng của Amane",
+    "importance": "CORE",
+    "motivation": {
+     "text": "Mahiru cảm thấy bị chạm tới giới hạn khi bị nghi ngờ thiếu chừng mực trong mối quan hệ tình cảm.",
+     "status": "SUPPORTED_INFERENCE"
+    },
+    "consequence": "Không khí trong phòng trở nên lạnh lẽo khiến Amane giật mình nhận ra mình đã lỡ lời.",
+    "evidence": [
+     "4.31"
+    ],
+    "quote": "「居ませんし、何人も交際するほど節度のない人間になった覚えはありません。絶対に、ありえないです」",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "id": "E4",
+    "summary": "Amane xin lỗi Mahiru và làm rõ rằng anh không hề có ý định dính líu hay đòi hỏi ơn nghĩa gì từ cô.",
+    "participants": [
+     "CH1",
+     "CH2"
+    ],
+    "location": "Phòng của Amane",
+    "importance": "CORE",
+    "motivation": {
+     "text": "Amane muốn xoa dịu không khí căng thẳng và trấn an Mahiru rằng anh không có ý đồ xấu.",
+     "status": "EXPLICIT"
+    },
+    "consequence": "Mahiru dịu lại và tỏ ra bất ngờ lẫn mỉm cười nhẹ trước sự thẳng thắn của Amane.",
+    "evidence": [
+     "4.42"
+    ],
+    "quote": "いくらお前が学年一の美人だの才女だの天使だの言われてるからって、どうこうするつもりはないよ。",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "id": "E5",
+    "summary": "Mahiru cúi chào Amane rồi ra về.",
+    "participants": [
+     "CH1",
+     "CH2"
+    ],
+    "location": "Nhà của Amane",
+    "importance": "SUPPORTING",
+    "motivation": {
+     "text": "Mahiru đã hoàn tất việc chăm sóc và trao đổi xong với Amane.",
+     "status": "SUPPORTED_INFERENCE"
+    },
+    "consequence": "Amane còn lại một mình trên giường và chìm vào giấc ngủ.",
+    "evidence": [
+     "4.60"
+    ],
+    "quote": "ぺこりと頭を下げて帰っていった真昼の事を思い出しながら、周はベッドでぼんやりと天井を見上げる。",
+    "epistemic": "EXPLICIT"
+   }
+  ],
+  "unknowns": [
+   "Lý do chi tiết khiến Mahiru cần phải ngồi làm nguội đầu (頭を冷やしたかった) dưới mưa vào ngày hôm trước."
+  ],
+  "forbidden_inferences": [
+   "Mahiru đã bắt đầu nảy sinh tình cảm lãng mạn với Amane.",
+   "Mahiru cố tình tìm cách tiếp cận Amane để trả ơn.",
+   "Amane và Mahiru đã thỏa thuận sẽ giả vờ không quen biết khi ở trường."
+  ],
+  "ending_state": "Amane nằm trên giường suy ngẫm về những việc diễn ra trong ngày, tự nhủ chuyện Mahiru chăm sóc anh là bí mật riêng giữa hai người và từ ngày mai họ sẽ lại là những người quen xa lạ, trước khi chìm dần vào giấc ngủ.",
+  "closing_hook": {
+   "text": null,
+   "quote": null,
+   "evidence": []
+  }
+ }
+}

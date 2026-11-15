@@ -1,0 +1,367 @@
+{
+ "chapter_order": 3,
+ "source_version": "9c907a851a0018c748613356a8c3ed9e699d4d7854077704d1b402f8db00973f",
+ "producer": "gemini:gemini-3.6-flash,gemini-3.5-flash,gemini-3-flash-preview,gemini-3.5-flash-lite",
+ "brief": {
+  "chapter_order": 3,
+  "chapter_summary": "Amane bị sốt và được Mahiru dìu về căn hộ của anh. Mặc dù phòng ngủ và phòng khách của Amane rất bừa bãi, Mahiru vẫn ở lại chăm sóc anh, tự mình mang tấm dán hạ nhiệt, nước uống thể thao từ nhà sang và tự tay nấu cháo mận cho anh. Trong quá trình chăm sóc, Mahiru lộ vẻ ngượng ngùng khi Amane cởi áo để kẹp nhiệt độ, nhưng cô cũng mỉm cười nhẹ nhõm dịu dàng khi Amane khen cháo cô nấu rất ngon.",
+  "characters": [
+   {
+    "id": "CH1",
+    "name": "藤宮周",
+    "romanized_name": "Fujimiya Amane",
+    "aliases": [],
+    "facts": [
+     {
+      "text": "Sống ở căn hộ 1SLDK rộng rãi do bố mẹ chọn cho vì an ninh và giao thông thuận tiện.",
+      "evidence": [
+       "3.3",
+       "3.4"
+      ],
+      "quote": "周が住むマンションは、１ＳＬＤＫ。",
+      "epistemic": "EXPLICIT"
+     },
+     {
+      "text": "Không giỏi dọn dẹp sắp xếp nên nhà cửa và phòng ngủ rất bừa bãi.",
+      "evidence": [
+       "3.6",
+       "3.7"
+      ],
+      "quote": "整理整頓が苦手な男だった。",
+      "epistemic": "EXPLICIT"
+     },
+     {
+      "text": "Bị sốt 38.3 độ.",
+      "evidence": [
+       "3.71"
+      ],
+      "quote": "三十八度三分と表示されている。",
+      "epistemic": "EXPLICIT"
+     },
+     {
+      "text": "Nghe nói chưa từng có tin đồn Mahiru thất bại trong tiết học nữ công gia chánh ở trường.",
+      "evidence": [
+       "3.41"
+      ],
+      "quote": "家庭科の授業で失敗しただのなんだのそういう噂は聞いた事がない",
+      "epistemic": "REPORTED"
+     },
+     {
+      "text": "Nhận thấy Mahiru có vẻ rất đáng yêu và bộc lộ nét con người khi bối rối ngượng ngùng.",
+      "evidence": [
+       "3.53"
+      ],
+      "quote": "妙に可愛らしかった。",
+      "epistemic": "APPEARANCE"
+     }
+    ]
+   },
+   {
+    "id": "CH2",
+    "name": "椎名真昼",
+    "romanized_name": "Shiina Mahiru",
+    "aliases": [
+     "天使様"
+    ],
+    "facts": [
+     {
+      "text": "Mang tấm dán hạ nhiệt và nước uống thể thao từ nhà mình sang cho Amane.",
+      "evidence": [
+       "3.28",
+       "3.29"
+      ],
+      "quote": "家から持ってきました",
+      "epistemic": "EXPLICIT"
+     },
+     {
+      "text": "Nấu cháo mận (đã bỏ hạt, điều chỉnh độ mặn dịu) cho Amane khi anh bị bệnh.",
+      "evidence": [
+       "3.36",
+       "3.79",
+       "3.82"
+      ],
+      "quote": "じゃあお粥作ってますからそちらをどうぞ",
+      "epistemic": "EXPLICIT"
+     },
+     {
+      "text": "Đỏ mặt ngượng ngùng và vội quay đi khi thấy Amane cởi cúc áo để kẹp nhiệt độ.",
+      "evidence": [
+       "3.45",
+       "3.47"
+      ],
+      "quote": "うっすらと頬が赤くなっている。",
+      "epistemic": "EXPLICIT"
+     },
+     {
+      "text": "Sống một mình và biết tự nấu ăn.",
+      "evidence": [
+       "3.88"
+      ],
+      "quote": "一人暮らししてるんですから当たり前です",
+      "epistemic": "EXPLICIT"
+     },
+     {
+      "text": "Mỉm cười dịu dàng nhẹ nhõm khi Amane khen cháo cô nấu ngon.",
+      "evidence": [
+       "3.96",
+       "3.98"
+      ],
+      "quote": "かすかな笑みが浮かんでいる。",
+      "epistemic": "EXPLICIT"
+     }
+    ]
+   }
+  ],
+  "relationships": [
+   {
+    "between": [
+     "CH1",
+     "CH2"
+    ],
+    "state": "Chỉ dừng ở mức người quen biết, nhưng Mahiru vẫn ở lại căn hộ của Amane chăm sóc anh khi bị sốt.",
+    "evidence": [
+     "3.11",
+     "3.33"
+    ],
+    "quote": "ほとんど顔見知り程度の男の家で二人きり",
+    "epistemic": "EXPLICIT"
+   }
+  ],
+  "events": [
+   {
+    "id": "E1",
+    "summary": "Mahiru dìu Amane vào phòng ngủ dù căn hộ của anh rất bừa bãi.",
+    "participants": [
+     "CH1",
+     "CH2"
+    ],
+    "location": "Phòng ngủ của Amane",
+    "importance": "SUPPORTING",
+    "motivation": {
+     "text": "Mahiru muốn đưa Amane bị sốt vào giường nằm nghỉ.",
+     "status": "EXPLICIT"
+    },
+    "consequence": "Amane nhận ra căn hộ của mình quá bừa bãi và cần phải dọn dẹp.",
+    "evidence": [
+     "3.11",
+     "3.12"
+    ],
+    "quote": "周を寝室に運ぶ。",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "id": "E2",
+    "summary": "Mahiru yêu cầu Amane thay quần áo trước khi cô rời phòng tạm thời, Amane thắc mắc cô có quay lại không và Mahiru đáp lại.",
+    "participants": [
+     "CH1",
+     "CH2"
+    ],
+    "location": "Phòng ngủ của Amane",
+    "importance": "MINOR",
+    "motivation": {
+     "text": "Mahiru muốn Amane mặc đồ thoải mái và cô không muốn bỏ mặc người ốm.",
+     "status": "EXPLICIT"
+    },
+    "consequence": "Amane không phản đối nữa và ngoan ngoãn thay đồ.",
+    "evidence": [
+     "3.13",
+     "3.14",
+     "3.15",
+     "3.16"
+    ],
+    "quote": "放って寝込まれても寝覚めが悪いので",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "id": "E3",
+    "summary": "Amane thay đồ xong, nằm xuống và dường như đã ngủ thiếp đi một lúc lúc nào không hay.",
+    "participants": [
+     "CH1"
+    ],
+    "location": "Phòng ngủ của Amane",
+    "importance": "MINOR",
+    "motivation": {
+     "text": "Amane bị mệt do cơn sốt.",
+     "status": "EXPLICIT"
+    },
+    "consequence": "Amane ngủ cho đến 7 giờ tối mới tỉnh dậy.",
+    "evidence": [
+     "3.17",
+     "3.20"
+    ],
+    "quote": "いつの間にか眠っていたらしく",
+    "epistemic": "APPEARANCE"
+   },
+   {
+    "id": "E4",
+    "summary": "Amane tỉnh dậy lúc 7 giờ tối và thấy Mahiru đang đứng nhìn mình, cô báo anh đã ngủ vài tiếng.",
+    "participants": [
+     "CH1",
+     "CH2"
+    ],
+    "location": "Phòng ngủ của Amane",
+    "importance": "MINOR",
+    "motivation": {
+     "text": null,
+     "status": "UNKNOWN"
+    },
+    "consequence": "Amane dậy mở mắt và nói chuyện với Mahiru.",
+    "evidence": [
+     "3.21",
+     "3.22",
+     "3.23"
+    ],
+    "quote": "午後七時ですね。数時間寝ていました",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "id": "E5",
+    "summary": "Mahiru đưa nước thể thao cho Amane và anh nhận ra cô đã mang cả miếng dán hạ nhiệt sang dán cho anh.",
+    "participants": [
+     "CH1",
+     "CH2"
+    ],
+    "location": "Phòng ngủ của Amane",
+    "importance": "SUPPORTING",
+    "motivation": {
+     "text": "Mahiru chuẩn bị những đồ hạ nhiệt cho Amane vì nhà anh không có.",
+     "status": "SUPPORTED_INFERENCE"
+    },
+    "consequence": "Amane cảm thấy thể trạng khá hơn một chút và cảm ơn Mahiru.",
+    "evidence": [
+     "3.24",
+     "3.28",
+     "3.29"
+    ],
+    "quote": "家から持ってきました",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "id": "E6",
+    "summary": "Mahiru thông báo đã nấu cháo mận và bảo Amane ăn để uống thuốc, Amane đồng ý xin ăn.",
+    "participants": [
+     "CH1",
+     "CH2"
+    ],
+    "location": "Phòng ngủ của Amane",
+    "importance": "CORE",
+    "motivation": {
+     "text": "Mahiru muốn Amane ăn lót bụng trước khi uống thuốc.",
+     "status": "EXPLICIT"
+    },
+    "consequence": "Mahiru đi chuẩn bị lấy cháo và đưa nhiệt kế cho Amane.",
+    "evidence": [
+     "3.34",
+     "3.36",
+     "3.37",
+     "3.39"
+    ],
+    "quote": "じゃあお粥作ってますからそちらをどうぞ",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "id": "E7",
+    "summary": "Mahiru đưa nhiệt kế cho Amane nhưng khi anh cởi cúc áo kẹp nhiệt kế thì cô vội quay đi bối rối ngượng ngùng bảo anh đo sau khi cô ra ngoài.",
+    "participants": [
+     "CH1",
+     "CH2"
+    ],
+    "location": "Phòng ngủ của Amane",
+    "importance": "SUPPORTING",
+    "motivation": {
+     "text": "Mahiru ngượng ngùng vì không quen nhìn nam giới cởi áo.",
+     "status": "SUPPORTED_INFERENCE"
+    },
+    "consequence": "Mahiru đỏ mặt và bối rối bước ra khỏi phòng.",
+    "evidence": [
+     "3.42",
+     "3.45",
+     "3.46",
+     "3.47"
+    ],
+    "quote": "私が部屋を出てからにしてくださいっ",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "id": "E8",
+    "summary": "Amane đo nhiệt độ được 38.3 độ và mời Mahiru bưng khay cháo mận vào phòng.",
+    "participants": [
+     "CH1",
+     "CH2"
+    ],
+    "location": "Phòng ngủ của Amane",
+    "importance": "SUPPORTING",
+    "motivation": {
+     "text": "Amane đã chỉnh lại trang phục và kiểm tra xong nhiệt độ.",
+     "status": "EXPLICIT"
+    },
+    "consequence": "Mahiru bưng nồi đất cháo mận vào phòng ngủ.",
+    "evidence": [
+     "3.71",
+     "3.72",
+     "3.75"
+    ],
+    "quote": "三十八度三分。薬飲んで寝たら治る",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "id": "E9",
+    "summary": "Mahiru hỏi kết quả đo nhiệt độ và dặn Amane phải nghỉ ngơi đầy đủ để hệ miễn dịch làm việc thay vì chỉ dựa vào thuốc.",
+    "participants": [
+     "CH1",
+     "CH2"
+    ],
+    "location": "Phòng ngủ của Amane",
+    "importance": "SUPPORTING",
+    "motivation": {
+     "text": "Mahiru lo lắng cho sức khỏe của Amane.",
+     "status": "SUPPORTED_INFERENCE"
+    },
+    "consequence": "Mahiru múc cháo ra bát cho Amane.",
+    "evidence": [
+     "3.74",
+     "3.75",
+     "3.76"
+    ],
+    "quote": "ちゃんと体を休めて免疫機能に仕事してもらってくださいよ",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "id": "E10",
+    "summary": "Amane ăn cháo mận và khen ngon, khiến Mahiru mỉm cười dịu dàng nhẹ nhõm.",
+    "participants": [
+     "CH1",
+     "CH2"
+    ],
+    "location": "Phòng ngủ của Amane",
+    "importance": "CORE",
+    "motivation": {
+     "text": "Amane thật lòng thấy cháo Mahiru nấu rất ngon hợp vị.",
+     "status": "EXPLICIT"
+    },
+    "consequence": "Mahiru mỉm cười và Amane ngắm nhìn nụ cười của cô rồi tiếp tục ăn cháo.",
+    "evidence": [
+     "3.96",
+     "3.98",
+     "3.103"
+    ],
+    "quote": "かすかな笑みが浮かんでいる。",
+    "epistemic": "EXPLICIT"
+   }
+  ],
+  "unknowns": [
+   "Lý do sâu xa khiến Mahiru chăm sóc Amane chu đáo vượt mức một người quen thông thường ngoài sự áy nấy và trách nhiệm mà Amane đoán."
+  ],
+  "forbidden_inferences": [
+   "Cho rằng Mahiru đã có tình cảm yêu đương với Amane.",
+   "Cho rằng hai người đã bắt đầu hẹn hò hoặc có quan hệ thân mật từ trước.",
+   "Cho rằng Mahiru thường xuyên qua nhà Amane nấu ăn hay dọn dẹp."
+  ],
+  "ending_state": "Amane ngồi trên giường ăn cháo mận Mahiru nấu, nhiệt độ cơ thể 38.3 độ, chuẩn bị uống thuốc và tiếp tục nghỉ ngơi. Mahiru đứng cạnh bên trong phòng ngủ của Amane.",
+  "closing_hook": {
+   "text": null,
+   "quote": null,
+   "evidence": []
+  }
+ }
+}

@@ -1125,8 +1125,15 @@ class EndToEndTests(unittest.TestCase):
             self.assertEqual(memory.stored_chapters(), [1, 2, 3])
             recap = json.loads((Path(tmp) / "ep1" / "memory_recap.json").read_text(encoding="utf-8"))
             self.assertEqual(recap["covers_chapters"], [1, 2])
+            # Brief retrieval adds earlier non-CORE events the episode recalls, with evidence.
+            core = {e["ref"] for c in recap["chapters"] for e in c["core_events"]}
+            self.assertTrue(manifest["callbacks"])
+            self.assertEqual([c["ref"] for c in recap["callbacks"]], manifest["callbacks"])
+            self.assertFalse(core & set(manifest["callbacks"]))
+            self.assertTrue(all(c["evidence"] and int(c["ref"][1]) < 3 for c in recap["callbacks"]))
             plan_prompt = model.plan_prompts[0]
             self.assertIn('"ref": "c1.E1"', plan_prompt)      # callback material from memory
+            self.assertIn(f'"ref": "{manifest["callbacks"][0]}"', plan_prompt)
             self.assertNotIn(chapter_4_text, plan_prompt)     # nothing past the episode
             report = json.loads((Path(tmp) / "ep1" / "report.json").read_text(encoding="utf-8"))
             # Coverage is required for the episode's chapter only, not for recapped chapters.
@@ -1138,6 +1145,16 @@ class EndToEndTests(unittest.TestCase):
                          memory=memory)
             self.assertEqual(second["brief_sources"], {"1": "memory", "2": "memory", "3": "memory"})
             self.assertNotIn("brief", [c["stage"] for c in again.calls])
+
+            # Callbacks can be turned off, and a corpus that cannot be built never fails the episode.
+            off = run(ScriptedLLMClient(FakeModel()), episode, test_profile(), Path(tmp) / "off",
+                      background=background, memory=memory, source_check=False, callbacks=False)
+            self.assertNotIn("callbacks", off)
+            self.assertNotIn("callbacks", json.loads((Path(tmp) / "off" / "memory_recap.json").read_text(encoding="utf-8")))
+            with mock.patch.object(run_pipeline, "build_brief_corpus", side_effect=ValueError("no brief for chapters [1]")):
+                broken = run(ScriptedLLMClient(FakeModel()), episode, test_profile(), Path(tmp) / "broken",
+                             background=background, memory=memory, source_check=False)
+            self.assertEqual((broken["status"], broken["callbacks_skipped"]), ("COMPLETED", "no brief for chapters [1]"))
 
             # The story's name glossary is kept with the memory; the owner's spelling is enforced.
             glossary_file = Path(tmp) / "memory" / full.story_id / "glossary.yaml"
@@ -1212,6 +1229,7 @@ class EndToEndTests(unittest.TestCase):
             self.assertTrue((Path(tmp) / "run" / "memory_recap.json").is_file())
             self.assertTrue(any((Path(tmp) / "mem").rglob("chapter_002.json")))
             self.assertEqual(manifest["invocation"]["source_check_chunk"], 1)
+            self.assertFalse(run_pipeline.run_options(run_pipeline.build_parser().parse_args(["--no-callbacks"]))["callbacks"])
 
             # `--resume <dir>` alone takes the run's own options, so every saved stage is reused;
             # a run made before invocations were recorded is read from its scope and settings.
@@ -1244,6 +1262,16 @@ class EndToEndTests(unittest.TestCase):
         plan["beats"][1]["event_refs"] = ["c2.E2"]
         errors = stages.plan_semantic_errors(plan, [brief_json(2)], profile, recap)
         self.assertTrue(any("CORE events not covered" in e and "c2.E1" in e for e in errors))
+
+        # Retrieved callbacks (M6 Phase 2) are citable earlier events that keep their own label.
+        recap["callbacks"] = [{"ref": "c1.E4", "summary": "Nghe đồn Mahiru chưa từng thất bại",
+                               "epistemic": "REPORTED", "evidence": ["1.3"]}]
+        plan["beats"][1]["event_refs"] = ["c2.E1", "c1.E4"]
+        self.assertEqual(stages.plan_semantic_errors(plan, [brief_json(2)], profile, recap), [])
+        self.assertEqual(stages.labelled_statements([], recap)["c1.E4"],
+                         [("Nghe đồn Mahiru chưa từng thất bại", "REPORTED")])
+        self.assertEqual(stages.labelled_statements([], recap)["c1.E1"], [("x", "EXPLICIT")])
+        self.assertEqual(stages.brief_item_texts([], recap)["c1.E4"], "Nghe đồn Mahiru chưa từng thất bại")
 
     def test_stage_failure_is_recorded(self):
         scope = load_scope(DEFAULT_MANIFEST, (1, 1))

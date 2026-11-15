@@ -1,0 +1,306 @@
+{
+ "chapter_order": 2,
+ "source_version": "fa3540edfb0aabfc38d58d7ee6e893c7a41274ebf734044393e5d40c7f1ac35e",
+ "producer": "gemini:gemini-3.6-flash,gemini-3.5-flash,gemini-3-flash-preview,gemini-3.5-flash-lite",
+ "brief": {
+  "chapter_order": 2,
+  "chapter_summary": "Ngày hôm sau, Amane bị cảm lạnh nặng do dầm mưa và lối sống không lành mạnh, dù anh cố chịu đựng trong giờ học với sự trêu chọc của bạn thân Itsuki. Khi về đến hành lang trước cửa căn hộ của mình, Amane gặp Mahiru đang đứng đợi để trả lại chiếc ô đã mượn. Mahiru nhận ra Amane bị sốt và tự trách bản thân khiến anh mắc bệnh. Dù Amane từ chối sự giúp đỡ, anh bị kiệt sức và ngã loạng choạng khi mở cửa nhà. Mahiru đã đỡ lấy Amane và quyết định đi vào nhà anh để chăm sóc nhằm trả ơn.",
+  "characters": [
+   {
+    "id": "CH1",
+    "name": "藤宮周",
+    "romanized_name": "Fujimiya Amane",
+    "aliases": [],
+    "facts": [
+     {
+      "text": "Amane bị cảm lạnh vào ngày hôm sau sau khi cho mượn ô dưới mưa.",
+      "evidence": [
+       "2.3"
+      ],
+      "quote": "翌日、風邪を引いたのは周の方だった。",
+      "epistemic": "EXPLICIT"
+     },
+     {
+      "text": "Amane bị nghẹt mũi, đau đầu dữ dội, sau đó có thêm triệu chứng đau họng và mệt mỏi toàn thân.",
+      "evidence": [
+       "2.6",
+       "2.40"
+      ],
+      "quote": "頭の奥からずきずきと痛みを訴えられていた。",
+      "epistemic": "EXPLICIT"
+     },
+     {
+      "text": "Amane đã uống thuốc mua ở hiệu thuốc nhưng không khỏi hoàn toàn.",
+      "evidence": [
+       "2.7"
+      ],
+      "quote": "一応で市販の薬は飲んできたものの",
+      "epistemic": "EXPLICIT"
+     },
+     {
+      "text": "Amane sống một mình nhưng rất vụng về trong việc dọn dẹp phòng ốc và có thói quen ăn uống kém lành mạnh.",
+      "evidence": [
+       "2.31",
+       "2.32"
+      ],
+      "quote": "整理整頓が苦手で部屋はぐちゃぐちゃだし",
+      "epistemic": "EXPLICIT"
+     },
+     {
+      "text": "Amane không có bạn gái.",
+      "evidence": [
+       "2.36",
+       "2.37"
+      ],
+      "quote": "彼女持ちは黙ってろ",
+      "epistemic": "EXPLICIT"
+     }
+    ]
+   },
+   {
+    "id": "CH2",
+    "name": "椎名真昼",
+    "romanized_name": "Shiina Mahiru",
+    "aliases": [
+     "天使様"
+    ],
+    "facts": [
+     {
+      "text": "Mahiru có vẻ khỏe mạnh và sắc mặt không tệ khi được nhìn thoáng qua ở trường.",
+      "evidence": [
+       "2.14"
+      ],
+      "quote": "真昼の方は学校でちらっと見た感じ顔色も悪くなく元気そうだったので",
+      "epistemic": "APPEARANCE"
+     },
+     {
+      "text": "Mahiru cầm chiếc ô gấp gọn gàng đến tận cửa nhà Amane để trả lại.",
+      "evidence": [
+       "2.51"
+      ],
+      "quote": "真昼の手には、先日押し付けた傘がきっちりと畳まれて握られている。",
+      "epistemic": "EXPLICIT"
+     },
+     {
+      "text": "Mahiru tự cho rằng mình là nguyên nhân khiến Amane bị cảm lạnh vì đã nhận ô từ anh.",
+      "evidence": [
+       "2.61",
+       "2.63"
+      ],
+      "quote": "私があそこに居たからあなたは風邪を引いてしまった訳で",
+      "epistemic": "EXPLICIT"
+     },
+     {
+      "text": "Mahiru quyết định giúp đỡ và bước vào nhà Amane để chăm sóc anh như một cách trả ơn.",
+      "evidence": [
+       "2.76",
+       "2.78",
+       "2.79"
+      ],
+      "quote": "借りは、返します",
+      "epistemic": "EXPLICIT"
+     }
+    ]
+   },
+   {
+    "id": "CH3",
+    "name": "赤澤樹",
+    "romanized_name": "Akazawa Itsuki",
+    "aliases": [],
+    "facts": [
+     {
+      "text": "Itsuki là bạn học và bạn thân (ác hữu) của Amane.",
+      "evidence": [
+       "2.4"
+      ],
+      "quote": "級友、というよりは悪友である赤澤樹いつきに指摘され",
+      "epistemic": "EXPLICIT"
+     },
+     {
+      "text": "Itsuki đã từng đến nhà Amane nên biết rõ lối sống bừa bãi của Amane.",
+      "evidence": [
+       "2.28"
+      ],
+      "quote": "お前の不摂生具合はお前んち行ったらすぐ分かるわ",
+      "epistemic": "EXPLICIT"
+     },
+     {
+      "text": "Itsuki đã có bạn gái.",
+      "evidence": [
+       "2.36",
+       "2.37"
+      ],
+      "quote": "彼女持ちは黙ってろ",
+      "epistemic": "EXPLICIT"
+     }
+    ]
+   }
+  ],
+  "relationships": [
+   {
+    "between": [
+     "CH1",
+     "CH3"
+    ],
+    "state": "Bạn thân trò chuyện thoải mái, Itsuki hay trêu chọc thói quen sinh hoạt bất cẩn của Amane nhưng vẫn bảo Amane về nhà nghỉ ngơi mau.",
+    "evidence": [
+     "2.4",
+     "2.28",
+     "2.34"
+    ],
+    "quote": "級友、というよりは悪友である赤澤樹いつきに指摘され",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "between": [
+     "CH1",
+     "CH2"
+    ],
+    "state": "Amane không muốn làm phiền hay khiến Mahiru bận tâm, nhưng Mahiru cảm thấy có trách nhiệm và quyết định vào nhà chăm sóc Amane.",
+    "evidence": [
+     "2.63",
+     "2.65",
+     "2.76",
+     "2.78"
+    ],
+    "quote": "私があそこに居たからあなたは風邪を引いてしまった訳で",
+    "epistemic": "EXPLICIT"
+   }
+  ],
+  "events": [
+   {
+    "id": "E1",
+    "summary": "Itsuki nhận ra Amane bị ngạt mũi và cảm lạnh ở trường, trêu chọc Amane vì đã đem cho người khác mượn ô và khuyên anh về nhà nghỉ sớm.",
+    "participants": [
+     "CH1",
+     "CH3"
+    ],
+    "location": "Trường học",
+    "importance": "SUPPORTING",
+    "motivation": {
+     "text": "Itsuki nhận thấy Amane bị ốm và nói chuyện trêu chọc lối sống của Amane.",
+     "status": "EXPLICIT"
+    },
+    "consequence": "Amane thừa nhận cho mượn ô nhưng giấu việc đưa cho Mahiru, đồng thời quyết định về nhà sớm sau giờ học.",
+    "evidence": [
+     "2.4",
+     "2.12",
+     "2.13",
+     "2.28",
+     "2.34"
+    ],
+    "quote": "級友、というよりは悪友である赤澤樹いつきに指摘され",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "id": "E2",
+    "summary": "Sau giờ học, triệu chứng cảm lạnh của Amane nghiêm trọng hơn khi anh đi về và bước vào thang máy chung cư.",
+    "participants": [
+     "CH1"
+    ],
+    "location": "Thang máy chung cư",
+    "importance": "SUPPORTING",
+    "motivation": {
+     "text": "Amane vội vã về nhà để nghỉ ngơi.",
+     "status": "EXPLICIT"
+    },
+    "consequence": "Amane mệt mỏi tiến về phía hành lang căn hộ của mình.",
+    "evidence": [
+     "2.39",
+     "2.40",
+     "2.42",
+     "2.47"
+    ],
+    "quote": "時が経つにつれて、体調は悪化の一途を辿っていた。",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "id": "E3",
+    "summary": "Amane ra khỏi thang máy và giật mình khi thấy Mahiru đứng chờ trước hành lang căn hộ của anh với chiếc ô trên tay.",
+    "participants": [
+     "CH1",
+     "CH2"
+    ],
+    "location": "Hành lang trước căn hộ của Amane",
+    "importance": "CORE",
+    "motivation": {
+     "text": "Mahiru mang chiếc ô mượn hôm trước đến trả lại cho Amane.",
+     "status": "EXPLICIT"
+    },
+    "consequence": "Mahiru phát hiện Amane đang bị sốt và bị cảm.",
+    "evidence": [
+     "2.47",
+     "2.48",
+     "2.51",
+     "2.56"
+    ],
+    "quote": "真昼の手には、先日押し付けた傘がきっちりと畳まれて握られている。",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "id": "E4",
+    "summary": "Mahiru hỏi thăm việc Amane bị sốt do nhường ô, nhưng Amane tìm cách gạt đi và định đóng cửa vào nhà thì bị trượt chân/ngả người vì kiệt sức.",
+    "participants": [
+     "CH1",
+     "CH2"
+    ],
+    "location": "Cửa căn hộ của Amane",
+    "importance": "CORE",
+    "motivation": {
+     "text": "Amane không muốn Mahiru bận tâm hay cảm thấy có lỗi, trong khi Mahiru lo lắng.",
+     "status": "EXPLICIT"
+    },
+    "consequence": "Amane sắp bị ngã thì được Mahiru nắm lấy tay kéo lại.",
+    "evidence": [
+     "2.61",
+     "2.63",
+     "2.68",
+     "2.70",
+     "2.73"
+    ],
+    "quote": "私があそこに居たからあなたは風邪を引いてしまった訳で",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "id": "E5",
+    "summary": "Mahiru giữ lấy Amane, khẳng định sẽ trả ơn và tự mở cửa cùng đỡ Amane bước vào nhà.",
+    "participants": [
+     "CH1",
+     "CH2"
+    ],
+    "location": "Trong căn hộ của Amane",
+    "importance": "CORE",
+    "motivation": {
+     "text": "Mahiru không thể bỏ mặc Amane bị bệnh do lỗi của mình nên muốn chăm sóc để trả ơn.",
+     "status": "EXPLICIT"
+    },
+    "consequence": "Mahiru đồng hành cùng Amane bước vào căn hộ của anh.",
+    "evidence": [
+     "2.74",
+     "2.76",
+     "2.78",
+     "2.79",
+     "2.81"
+    ],
+    "quote": "真昼は力が抜けかけている周の体を支えて周の家の扉を開けたのだから。",
+    "epistemic": "EXPLICIT"
+   }
+  ],
+  "unknowns": [
+   "Mahiru đã đứng chờ trước cửa căn hộ của Amane trong bao lâu.",
+   "Chi tiết thói quen chăm sóc sức khỏe hằng ngày của Mahiru."
+  ],
+  "forbidden_inferences": [
+   "Cho rằng Mahiru có tình cảm lãng mạn với Amane nên mới chăm sóc (văn bản chỉ ghi Mahiru thực hiện vì muốn trả ơn/trách nhiệm).",
+   "Cho rằng Amane bị cảm hoàn toàn là do cho Mahiru mượn ô (Amane tự nhận một phần nguyên nhân là do anh không tắm nước nóng cẩn thận và lối sống kém lành mạnh)."
+  ],
+  "ending_state": "Amane bị sốt nặng và kiệt sức, được Mahiru dìu bước vào bên trong căn hộ của anh để chăm sóc.",
+  "closing_hook": {
+   "text": "Amane tuy không có bạn gái chăm sóc khi ốm, nhưng hóa ra lại có một 'thiên thần' đến chăm sóc anh.",
+   "quote": "看病してくれる彼女は持ち合わせていなかったが、どうやら看病してくれる天使は居たようだ。",
+   "evidence": [
+    "2.82"
+   ]
+  }
+ }
+}

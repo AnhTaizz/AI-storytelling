@@ -178,4 +178,6 @@ def recap_context(briefs: Sequence[Dict[str, Any]], before: int) -> Optional[Dic
 def recap_event_refs(recap: Optional[Dict[str, Any]]) -> Set[str]:
     if not recap:
         return set()
-    return {e["ref"] for chapter in recap["chapters"] for e in chapter["core_events"]}
+    refs = {e["ref"] for chapter in recap["chapters"] for e in chapter["core_events"]}
+    # Earlier events found by brief retrieval (M6 Phase 2), any importance.
+    return refs | {c["ref"] for c in recap.get("callbacks", [])}

@@ -16,3 +16,4 @@ data/sample/otonari_no_tenshi/wn_jp/raw/chapter_*.txt
 
 # Python bytecode
 __pycache__/
+.claude/worktrees/

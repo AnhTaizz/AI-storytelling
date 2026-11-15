@@ -22,6 +22,8 @@ Rules:
    when there are none.
 8. If earlier-chapter memory is given, the episode may open with a short recap of it (at
    most about 10% of the words) and may call back to earlier CORE events by their refs.
+   `callbacks` in that memory are earlier events of any importance that this episode's
+   events recall (found by retrieval, with their evidence ids); they may be cited too.
    The beats must center on the episode's own chapters; only their CORE events must be
    covered.
 9. If the brief of the last chapter has a `closing_hook`, the final beat must land it, and

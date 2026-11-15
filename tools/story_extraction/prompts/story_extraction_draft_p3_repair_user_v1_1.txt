@@ -1,0 +1,19 @@
+STRUCTURAL REPAIR FOR {CASE_ID}
+
+This is the sole preregistered repair and is allowed only because the primary successful
+response failed deterministic JSON, Draft V1.1 schema, or compiler validation. Correct
+every listed structural blocker while preserving the intended extraction. Each blocker
+gives its phase, code and structural path only; no source text is echoed.
+Do not add facts because they appear missing. Do not use quality judgment, scores, gold,
+or expected answers. Return exactly one STORY_EXTRACTION_DRAFT_V1_1 JSON object.
+
+HOST_PREPARED_INPUT_JSON:
+{PREPARED_INPUT_JSON}
+
+PRIMARY_SUCCESSFUL_RESPONSE:
+{PRIMARY_RESPONSE}
+
+SANITIZED_STRUCTURAL_BLOCKERS_JSON:
+{FAILURE_JSON}
+
+Return the corrected Draft V1.1 JSON object and nothing else.

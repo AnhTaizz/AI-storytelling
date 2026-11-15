@@ -1,0 +1,306 @@
+{
+ "chapter_order": 5,
+ "source_version": "d7afe58aae4b5086c4ea88b99b9caee3cde4ee9fd26df5971b75a122fa345fd5",
+ "producer": "gemini:gemini-3.6-flash,gemini-3.5-flash,gemini-3-flash-preview,gemini-3.5-flash-lite",
+ "brief": {
+  "chapter_order": 5,
+  "chapter_summary": "Sau khi bình phục, Amane quay lại trường học và tiếp tục duy trì khoảng cách với Mahiru như những người xa lạ, dù cô có chào hỏi nhẹ nhàng khi họ tình cờ gặp nhau. Tại trường, Amane thảo luận với người bạn Itsuki về sự nổi tiếng của Mahiru (người được gọi là Thiên sứ) và khẳng định rằng cô là một tồn tại xa vời ở một thế giới khác. Tuy nhiên, định kiến về việc không bao giờ liên quan đến nhau nữa của Amane bị lung lay khi Mahiru bất ngờ bắt chuyện với anh từ ban công nhà cô trong lúc anh đang uống thạch trái cây.",
+  "characters": [
+   {
+    "id": "CH1",
+    "name": "藤宮周",
+    "romanized_name": "Fujimiya Amane",
+    "aliases": [],
+    "facts": [
+     {
+      "text": "Amane đã khỏe lại sau cơn ốm.",
+      "evidence": [
+       "5.3"
+      ],
+      "quote": "看病の翌日には元気になっていて",
+      "epistemic": "EXPLICIT"
+     },
+     {
+      "text": "Amane sống trong một căn phòng bừa bộn và thừa nhận cần phải dọn dẹp.",
+      "evidence": [
+       "5.10",
+       "5.13"
+      ],
+      "quote": "この土日で思い知ったから、近々片付けるよ",
+      "epistemic": "EXPLICIT"
+     },
+     {
+      "text": "Nghe nói Amane tự nhận thức mình là một người đàn ông tồi tệ.",
+      "evidence": [
+       "5.37"
+      ],
+      "quote": "自分でもだめ男の自覚がある周",
+      "epistemic": "REPORTED"
+     },
+     {
+      "text": "Amane cho rằng mình và Mahiru sống ở hai thế giới khác nhau.",
+      "evidence": [
+       "5.35"
+      ],
+      "quote": "元々住む世界が違うのだ",
+      "epistemic": "EXPLICIT"
+     }
+    ]
+   },
+   {
+    "id": "CH2",
+    "name": "椎名真昼",
+    "romanized_name": "Shiina Mahiru",
+    "aliases": [
+     "天使様"
+    ],
+    "facts": [
+     {
+      "text": "Nghe nói Mahiru được gọi là \"Thiên sứ\" tại trường.",
+      "evidence": [
+       "5.24"
+      ],
+      "quote": "何たって天使様だからな",
+      "epistemic": "REPORTED"
+     },
+     {
+      "text": "Mahiru dường như cảm thấy nhẹ nhõm khi thấy Amane đã khỏe lại.",
+      "evidence": [
+       "5.3"
+      ],
+      "quote": "元気そうな周に少し安堵したのは見えた",
+      "epistemic": "APPEARANCE"
+     },
+     {
+      "text": "Mahiru rất nổi tiếng và thường được bao quanh bởi nhiều học sinh khác.",
+      "evidence": [
+       "5.20",
+       "5.23"
+      ],
+      "quote": "相変わらずの人気っぷりというか、まあ美少女だからなあ",
+      "epistemic": "EXPLICIT"
+     },
+     {
+      "text": "Tính cách của Mahiru ở trường có vẻ khác hẳn với lúc cô chăm sóc Amane hôm trước.",
+      "evidence": [
+       "5.21"
+      ],
+      "quote": "先日の真昼とは全然キャラが違うな",
+      "epistemic": "APPEARANCE"
+     }
+    ]
+   },
+   {
+    "id": "CH3",
+    "name": "赤澤樹",
+    "romanized_name": "Akazawa Itsuki",
+    "aliases": [],
+    "facts": [
+     {
+      "text": "Itsuki đã lo lắng cho sức khỏe của Amane suốt cuối tuần.",
+      "evidence": [
+       "5.8"
+      ],
+      "quote": "土日は『死んでないか』というメッセージが来ていた",
+      "epistemic": "EXPLICIT"
+     },
+     {
+      "text": "Itsuki có một cô bạn gái tên là Chitose (thường gọi là Chii).",
+      "evidence": [
+       "5.27"
+      ],
+      "quote": "樹にはちぃ、正確には千歳という彼女が居る",
+      "epistemic": "EXPLICIT"
+     }
+    ]
+   }
+  ],
+  "relationships": [
+   {
+    "between": [
+     "CH1",
+     "CH2"
+    ],
+    "state": "Họ vẫn duy trì mối quan hệ là những người xa lạ có quen biết mặt nhau.",
+    "evidence": [
+     "5.2"
+    ],
+    "quote": "周と真昼は顔見知りの他人という関係のままだった",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "between": [
+     "CH1",
+     "CH2"
+    ],
+    "state": "Mahiru bắt đầu cúi chào nhẹ nhàng khi gặp Amane trên đường đi học.",
+    "evidence": [
+     "5.5"
+    ],
+    "quote": "通学の時に出会えばぺこりと会釈されるようになった",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "between": [
+     "CH1",
+     "CH3"
+    ],
+    "state": "Bạn bè thân thiết; Itsuki thường xuyên trêu chọc và lo lắng cho lối sống của Amane.",
+    "evidence": [
+     "5.8",
+     "5.10",
+     "5.29"
+    ],
+    "quote": "あんだけ体調悪そうにしてたらそりゃオレだって心配になるわ",
+    "epistemic": "EXPLICIT"
+   }
+  ],
+  "events": [
+   {
+    "id": "E1",
+    "summary": "Amane tình cờ gặp Mahiru tại cửa hàng tiện lợi sau khi khỏi bệnh nhưng hai người không nói chuyện.",
+    "participants": [
+     "CH1",
+     "CH2"
+    ],
+    "location": "Cửa hàng tiện lợi",
+    "importance": "MINOR",
+    "motivation": {
+     "text": "Amane đi mua đồ dự trữ.",
+     "status": "EXPLICIT"
+    },
+    "consequence": "Amane nhận thấy Mahiru có vẻ an tâm khi thấy anh khỏe lại.",
+    "evidence": [
+     "5.3"
+    ],
+    "quote": "コンビニに買い出しに行く際にたまたま真昼と顔を合わせた",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "id": "E2",
+    "summary": "Itsuki nghe nói đã rất lo lắng nên gặp Amane tại cổng trường để kiểm tra tình trạng sức khỏe của anh.",
+    "participants": [
+     "CH1",
+     "CH3"
+    ],
+    "location": "Cổng trường (昇降口)",
+    "importance": "SUPPORTING",
+    "motivation": {
+     "text": "Itsuki lo lắng vì Amane trông rất tệ vào cuối tuần trước.",
+     "status": "EXPLICIT"
+    },
+    "consequence": "Itsuki thở phào nhẹ nhõm khi thấy Amane đã hoàn toàn bình phục.",
+    "evidence": [
+     "5.8",
+     "5.9"
+    ],
+    "quote": "昇降口で会って早々に周の体調を窺っていた",
+    "epistemic": "REPORTED"
+   },
+   {
+    "id": "E3",
+    "summary": "Itsuki nhắc nhở Amane về lối sống bê bối và yêu cầu anh dọn dẹp phòng.",
+    "participants": [
+     "CH1",
+     "CH3"
+    ],
+    "location": "Trường học",
+    "importance": "MINOR",
+    "motivation": {
+     "text": "Itsuki muốn Amane có một cuộc sống tử tế hơn.",
+     "status": "EXPLICIT"
+    },
+    "consequence": "Amane hứa sẽ dọn dẹp trong tương lai gần vì đã nhận ra sự bừa bộn trong cuối tuần qua.",
+    "evidence": [
+     "5.10",
+     "5.13"
+    ],
+    "quote": "お前もう少しまともな生活しろよ。まず片付けろよ",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "id": "E4",
+    "summary": "Amane và Itsuki nhìn thấy Mahiru đang được vây quanh bởi các học sinh khác trong lớp học.",
+    "participants": [
+     "CH1",
+     "CH2",
+     "CH3"
+    ],
+    "location": "Hành lang trường học",
+    "importance": "SUPPORTING",
+    "motivation": {
+     "text": "Phòng học ồn ào thu hút sự chú ý của họ khi đi ngang qua.",
+     "status": "EXPLICIT"
+    },
+    "consequence": "Amane nhận ra sự khác biệt giữa hình ảnh công khai của Mahiru và con người cô khi ở riêng với anh.",
+    "evidence": [
+     "5.19",
+     "5.20",
+     "5.21"
+    ],
+    "quote": "男女問わず囲まれている",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "id": "E5",
+    "summary": "Amane khẳng định với Itsuki rằng Mahiru chỉ là một đối tượng để ngắm nhìn và không liên quan đến họ.",
+    "participants": [
+     "CH1",
+     "CH3"
+    ],
+    "location": "Trường học",
+    "importance": "SUPPORTING",
+    "motivation": {
+     "text": "Itsuki hỏi Amane có thấy Mahiru dễ thương không.",
+     "status": "EXPLICIT"
+    },
+    "consequence": "Củng cố niềm tin của Amane rằng anh và Mahiru thuộc về hai thế giới khác nhau.",
+    "evidence": [
+     "5.30",
+     "5.31",
+     "5.33"
+    ],
+    "quote": "関わる事なんてないし、見てるだけで充分だわ",
+    "epistemic": "EXPLICIT"
+   },
+   {
+    "id": "E6",
+    "summary": "Trong khi Amane đang ở ban công, Mahiru bất ngờ bắt chuyện với anh.",
+    "participants": [
+     "CH1",
+     "CH2"
+    ],
+    "location": "Ban công chung cư",
+    "importance": "CORE",
+    "motivation": {
+     "text": null,
+     "status": "UNKNOWN"
+    },
+    "consequence": "Phá vỡ suy nghĩ của Amane rằng họ sẽ không bao giờ tương tác với nhau nữa.",
+    "evidence": [
+     "5.38",
+     "5.39",
+     "5.40"
+    ],
+    "quote": "「……何食べてるんですか」",
+    "epistemic": "EXPLICIT"
+   }
+  ],
+  "unknowns": [
+   "Lý do Mahiru chủ động bắt chuyện với Amane tại ban công dù trước đó họ vẫn giữ khoảng cách như người lạ."
+  ],
+  "forbidden_inferences": [
+   "Amane có tình cảm lãng mạn với Mahiru (anh nói cô chỉ là đối tượng để ngắm nhìn).",
+   "Mahiru đang quan tâm đặc biệt đến Amane (cô chỉ thể hiện sự an tâm khi thấy anh khỏe lại).",
+   "Itsuki biết về việc Mahiru đã chăm sóc Amane (Amane đã lảng tránh khi Itsuki nhắc đến việc dọn dẹp)."
+  ],
+  "ending_state": "Amane đang ở ban công uống thạch trái cây thì bị Mahiru bắt chuyện, điều này đi ngược lại với dự đoán của anh rằng họ sẽ không bao giờ liên quan đến nhau.",
+  "closing_hook": {
+   "text": "Sự việc Mahiru bắt chuyện đã đảo lộn hoàn toàn niềm tin của Amane rằng họ sẽ không bao giờ tương tác với nhau.",
+   "quote": "それが覆されたのは、マンションのベランダでゼリー飲料を飲みながら外を眺めている時だった。",
+   "evidence": [
+    "5.40"
+   ]
+  }
+ }
+}
