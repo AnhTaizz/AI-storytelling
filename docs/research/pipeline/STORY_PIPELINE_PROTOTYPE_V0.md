@@ -565,6 +565,14 @@ Manual check of the three scripts:
 
 The tokens give a first cost estimate: about 175,000 tokens per chapter at these settings, so about 5.3 million for 30 chapters.
 
+**2026-11-15, run 16 (season episode 3 again, with the concrete no-invented-detail rule and glossary pronouns Amane "cậu" and Mahiru "cô").**
+
+The run COMPLETED in 17 calls, 323,269 tokens and 636 s. Findings went 17 → 4 → 6 → 3.
+
+- **Pronoun:** Amane is "anh" 2 times, against 13 in season S1's episode 3. One sentence at the very end still slips. The rule is prompt-only; no deterministic check follows it.
+- **Invented details:** the writer still added some, such as Mahiru "about to step out of the door" and a "gentle smile". The source check caught them in v1 and the revision removed them.
+- **Left (flagged):** Mahiru's "phản ứng rất gay gắt". It survived three rounds; each rewrite kept a strong word for 4.32's flat, cold refusal.
+
 ## Known limits
 
 - Brief paraphrase quality is not measured against gold. Quotes pin the evidence, but a
