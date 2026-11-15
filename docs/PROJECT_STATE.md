@@ -1025,6 +1025,37 @@ Owner decision on the M4 direction after FV1 (nothing authorized yet):
 - **Gold confirmation.** The FV1 gold is agent-drafted; a human review of a sample would tell how much of the gap is gold error.
 - The holdout stays closed, and M4-04C and M5 still need separate authorization.
 
+## M4-04B3I — FV1 COVERAGE DIAGNOSIS — COMPLETED — Status: M4_04B3I_FV1_DIAGNOSED
+
+- **Authorization.** Option 1 of the Next Candidate above, chosen by the agent under the owner's 2026-11-15 delegation. FV1 is development data. No model call; the holdout, the DEV2 gold and the protocol were not touched; no M4-04C or M5 work.
+- **Method.** `tools/story_extraction/diagnose_m4_04b3i_fv1_v1.py` rebuilds the frozen Snapshot V2 alignment and refuses any case whose rebuilt matching does not reproduce the M4-04B3H counts; all 9 compiled cases reproduce. Classes and miss causes are fixed rules. The 29 unmatched predictions were adjudicated by the agent, post hoc, on the preregistered scale (`M4_EXTRACTION_EVALUATION_PROTOCOL_V0` section 11). This is not a human review and does not change the M4-04B3H scores.
+- **Missed required assertions (41).** By cause:
+
+  | Cause | Count | Kind |
+  |---|---|---|
+  | `NAMING_NOT_EMITTED` (NamedAs never asserted; the predictions hold 1 NamedAs, the gold 13) | 12 | omission |
+  | `OTHER_OMISSION` (Possesses, Owns, IdentityKnown, EmotionToward, Occurred) | 7 | omission |
+  | `EVENT_NOT_ALIGNED` (two events typed ENCOUNTER against gold GENERIC; every assertion about them misses) | 7 | convention |
+  | `ROLE_LABEL` (THEME/PATIENT, SOURCE/RECIPIENT vs AGENT) | 5 | convention |
+  | `TEMPORAL_STRUCTURE` (AnchorDate, TemporalRelation) | 5 | omission |
+  | `MISSING_PARTICIPANT` | 3 | omission |
+  | `LITERAL_WORDING` (English literal for a source-language one) | 2 | convention |
+
+  So 27 of 41 are true omissions and 14 are representation or convention differences. Separately, all 13 missed entity resolutions are `MENTION_SPAN_DIFFERS`: the prediction resolved a shorter or longer phrase of the same text (for example the head noun of a "the room's door" compound).
+- **Unmatched predictions (29).** 23 are the other half of a miss above (15 same predicate and evidence, 8 RefersTo on a missed resolution). After adjudication: 14 `EQUIVALENT_REPRESENTATION`, 7 `OUT_OF_SCOPE_ASSERTION` (true, but outside the profile: body parts, rain as an entity, a place split out of a compound), 1 `VALID_ADDITIONAL_ASSERTION`, and 7 `UNSUPPORTED_ASSERTION`, all `LOW` (role labels and one over-specific location). **None is material.**
+- **Contract gap.** `predicate_registry_v0` lists participant roles and event kinds without definitions, so THEME/PATIENT and GENERIC/ENCOUNTER disagreements have no rule to settle them.
+- **Conclusion.** The extractor's precision problem is small: no material invention. Its recall problem is mostly omission, led by names. The P3 prompt never mentions NamedAs, literal language, role choice, event-kind choice or mention extent. About a third of the misses, and all missed resolutions, would vanish under a stated convention, without the extractor learning anything new.
+- **Records.** `benchmarks/m4_extraction/M4_04B3I_FV1_COVERAGE_DIAGNOSIS.yaml` (counts and hashes only); `tools/story_extraction/diagnose_m4_04b3i_fv1_v1.py` with `tests/story_extraction/test_diagnose_m4_04b3i_fv1_v1.py`. Per-item classes and adjudications stay private in `.local/story_extraction/M4_04B3I_FV1_DIAGNOSIS_V1/`.
+
+## Next Candidate
+
+Owner decision; the agent recommends, in this order (nothing authorized yet):
+
+1. **Conventions first (no model call).** Write definitions for participant roles and event kinds, and conventions for literal language and mention extent. A new versioned registry note or decision is needed, because `schemas/canonical_story/*` is frozen. Then check the FV1 gold against them. This settles 14 misses and 13 resolutions as gold or prediction errors, before any prompt is tuned against them.
+2. **P4 prompt** stating those conventions and asking for NamedAs on every named entity, plus participants, possession and temporal anchors. Develop it on FV1 and DEV2 (both open now). Then seal a **new fresh set (FV2)** and lock the protocol before any measurement that counts.
+3. **Human review of a sample of the FV1 gold**, because the gold is agent-drafted.
+- The holdout stays closed, and M4-04C and M5 still need separate authorization.
+
 ## M8 Narrative Planning — ACCEPTED as a baseline (DEC-023, 2026-11-15)
 
 - **Plan checks (`plan_review.py`):** refs are hard checks; a callback in the wrong order is a soft error. Pacing and new names or numbers in free text are advisory.

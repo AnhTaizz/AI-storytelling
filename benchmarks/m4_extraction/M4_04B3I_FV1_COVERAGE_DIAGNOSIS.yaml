@@ -1,0 +1,260 @@
+# M4-04B3I: diagnosis of the FV1 misses and unmatched predictions (counts only; private details in .local).
+artifact: M4_04B3I_FV1_COVERAGE_DIAGNOSIS
+status: M4_04B3I_FV1_DIAGNOSED
+date: '2026-11-15'
+authorization: Agent-chosen Next Candidate option 1 after M4-04B3H, under the Project Owner's 2026-11-15 delegation
+  ("tự lên kế hoạch và thực hiện").
+data_status: FV1 is development data since M4-04B3H opened its gold; nothing here is fresh validation.
+boundaries:
+  model_calls: 0
+  holdout_accessed: false
+  dev2_gold_accessed: false
+  protocol_changed: false
+  m4_04c_or_m5_work: false
+inputs_sha256:
+  m4_04b3h_private_evaluation: fbdc20cec28ce227089c1b03e9b92003444120ce93f7d323e1d43a8bea7d027e
+  prediction_set: 8e055962e5df600c87b7ea352a85636ece7efd3120059ce2cf64faa8816aff32
+  fv1_gold: 732a3555717c6d3426e6e379e43061cd1fd6d11df8798ec859f37248202ddc73
+private_outputs_sha256:
+  M4_04B3I_FV1_DIAGNOSIS_ITEMS_V1.json: a11d1714606ef028c0592b0a45895a568147bfead5695ce11484d0251b279f5b
+  M4_04B3I_FV1_ADJUDICATIONS_V1.json: 6f259650d6467b0c5803d7718db675350b1a394ae069efbe932efc4d8445789c
+method:
+  tool: tools/story_extraction/diagnose_m4_04b3i_fv1_v1.py
+  matching: Rebuilds the frozen Snapshot V2 alignment (evaluate_extraction_v0 internals, unchanged) and refuses
+    to classify a case whose rebuilt matching does not reproduce the M4-04B3H missed and unsupported counts. All
+    9 compiled cases reproduce.
+  mechanical: Missed classes, miss causes, missed-resolution classes and unmatched-prediction classes are deterministic
+    rules (see the module docstring); re-running the tool gives the same counts.
+  manual: The 29 unmatched predictions were adjudicated by the agent, post hoc, with the preregistered states and
+    severity scale of M4_EXTRACTION_EVALUATION_PROTOCOL_V0 section 11. This is not a human review and it does not
+    change the M4-04B3H scores.
+taxonomy:
+  missed_classes:
+    REFERENT_MISMATCH: same predicate on overlapping evidence; an entity/event/anchor argument differs
+    VALUE_MISMATCH: same predicate on overlapping evidence; a token, literal or nested value differs
+    POLARITY_MISMATCH: same proposition with the other polarity
+    OTHER_PREDICATE: the evidence was used only by predictions with other predicates
+    NOT_EXTRACTED: no prediction cites overlapping evidence
+  miss_causes:
+    EVENT_NOT_ALIGNED: an event's kind differs (gold GENERIC, prediction ENCOUNTER), so every assertion about it
+      misses
+    LITERAL_WORDING: a literal value in another language or wording (gold source-language, prediction English)
+    ROLE_LABEL: only the participant role differs (THEME/PATIENT, SOURCE/RECIPIENT vs AGENT)
+    MISSING_PARTICIPANT: another participant of the same event was never asserted
+    TEMPORAL_STRUCTURE: AnchorDate or TemporalRelation not asserted or anchored differently
+    NAMING_NOT_EMITTED: NamedAs never asserted for a named entity
+    OTHER_OMISSION: anything else not asserted
+  missed_resolution_classes:
+    MENTION_SPAN_DIFFERS: a predicted RefersTo covers an overlapping but different mention
+    ENTITY_DIFFERS: same mention resolved to another entity
+    NOT_EXTRACTED: no RefersTo on it
+  unsupported_classes:
+    PAIRED_WITH_MISSED_RESOLUTION: RefersTo on the evidence of a missed gold RefersTo
+    PAIRED_WITH_MISS: same predicate and evidence as a missed gold assertion
+    ON_GOLD_EVIDENCE: overlaps gold evidence with another predicate
+    NO_GOLD_ON_EVIDENCE: no gold assertion on its evidence
+results:
+  adjudication:
+    states:
+      EQUIVALENT_REPRESENTATION: 14
+      OUT_OF_SCOPE_ASSERTION: 7
+      UNSUPPORTED_ASSERTION: 7
+      VALID_ADDITIONAL_ASSERTION: 1
+    unsupported_severity:
+      LOW: 7
+  missed_by_cause:
+    EVENT_NOT_ALIGNED: 7
+    LITERAL_WORDING: 2
+    MISSING_PARTICIPANT: 3
+    NAMING_NOT_EMITTED: 12
+    OTHER_OMISSION: 7
+    ROLE_LABEL: 5
+    TEMPORAL_STRUCTURE: 5
+  missed_by_class:
+    NOT_EXTRACTED: 4
+    OTHER_PREDICATE: 19
+    REFERENT_MISMATCH: 12
+    VALUE_MISMATCH: 6
+  missed_predicates_by_class:
+    NOT_EXTRACTED:
+      EmotionToward: 1
+      Occurred: 1
+      Possesses: 2
+    OTHER_PREDICATE:
+      AnchorDate: 2
+      IdentityKnown: 1
+      NamedAs: 12
+      Owns: 1
+      Possesses: 1
+      TemporalRelation: 2
+    REFERENT_MISMATCH:
+      Occurred: 2
+      OccursAt: 1
+      Participates: 7
+      PhysicalCondition: 1
+      TemporalRelation: 1
+    VALUE_MISMATCH:
+      EmotionToward: 1
+      Participates: 5
+  missed_resolutions_by_class:
+    MENTION_SPAN_DIFFERS: 13
+  per_case:
+    FV1_01:
+      missed:
+        OTHER_PREDICATE: 2
+        REFERENT_MISMATCH: 3
+      missed_causes:
+        EVENT_NOT_ALIGNED: 3
+        NAMING_NOT_EMITTED: 2
+      missed_resolutions:
+        MENTION_SPAN_DIFFERS: 1
+      unsupported:
+        PAIRED_WITH_MISS: 3
+        PAIRED_WITH_MISSED_RESOLUTION: 1
+    FV1_02:
+      missed:
+        NOT_EXTRACTED: 1
+        OTHER_PREDICATE: 3
+        VALUE_MISMATCH: 3
+      missed_causes:
+        NAMING_NOT_EMITTED: 2
+        OTHER_OMISSION: 2
+        ROLE_LABEL: 3
+      missed_resolutions:
+        MENTION_SPAN_DIFFERS: 2
+      unsupported:
+        ON_GOLD_EVIDENCE: 1
+        PAIRED_WITH_MISS: 3
+        PAIRED_WITH_MISSED_RESOLUTION: 3
+    FV1_04:
+      missed:
+        NOT_EXTRACTED: 1
+        OTHER_PREDICATE: 1
+        REFERENT_MISMATCH: 2
+      missed_causes:
+        MISSING_PARTICIPANT: 2
+        NAMING_NOT_EMITTED: 1
+        OTHER_OMISSION: 1
+      missed_resolutions:
+        MENTION_SPAN_DIFFERS: 2
+      unsupported: {}
+    FV1_05:
+      missed:
+        OTHER_PREDICATE: 2
+      missed_causes:
+        NAMING_NOT_EMITTED: 2
+      missed_resolutions:
+        MENTION_SPAN_DIFFERS: 3
+      unsupported: {}
+    FV1_06:
+      missed:
+        NOT_EXTRACTED: 1
+        OTHER_PREDICATE: 2
+        REFERENT_MISMATCH: 1
+        VALUE_MISMATCH: 1
+      missed_causes:
+        LITERAL_WORDING: 1
+        MISSING_PARTICIPANT: 1
+        NAMING_NOT_EMITTED: 2
+        OTHER_OMISSION: 1
+      missed_resolutions:
+        MENTION_SPAN_DIFFERS: 2
+      unsupported:
+        PAIRED_WITH_MISS: 1
+    FV1_07:
+      missed:
+        NOT_EXTRACTED: 1
+        OTHER_PREDICATE: 7
+        REFERENT_MISMATCH: 4
+        VALUE_MISMATCH: 1
+      missed_causes:
+        EVENT_NOT_ALIGNED: 4
+        NAMING_NOT_EMITTED: 2
+        OTHER_OMISSION: 2
+        ROLE_LABEL: 1
+        TEMPORAL_STRUCTURE: 4
+      missed_resolutions:
+        MENTION_SPAN_DIFFERS: 1
+      unsupported:
+        PAIRED_WITH_MISS: 5
+        PAIRED_WITH_MISSED_RESOLUTION: 1
+    FV1_08:
+      missed:
+        OTHER_PREDICATE: 1
+        REFERENT_MISMATCH: 1
+      missed_causes:
+        LITERAL_WORDING: 1
+        NAMING_NOT_EMITTED: 1
+      missed_resolutions:
+        MENTION_SPAN_DIFFERS: 1
+      unsupported:
+        ON_GOLD_EVIDENCE: 2
+        PAIRED_WITH_MISS: 1
+        PAIRED_WITH_MISSED_RESOLUTION: 2
+    FV1_09:
+      missed:
+        REFERENT_MISMATCH: 1
+      missed_causes:
+        TEMPORAL_STRUCTURE: 1
+      missed_resolutions: {}
+      unsupported:
+        ON_GOLD_EVIDENCE: 3
+        PAIRED_WITH_MISS: 1
+    FV1_10:
+      missed:
+        OTHER_PREDICATE: 1
+        VALUE_MISMATCH: 1
+      missed_causes:
+        OTHER_OMISSION: 1
+        ROLE_LABEL: 1
+      missed_resolutions:
+        MENTION_SPAN_DIFFERS: 1
+      unsupported:
+        PAIRED_WITH_MISS: 1
+        PAIRED_WITH_MISSED_RESOLUTION: 1
+  unsupported_by_class:
+    ON_GOLD_EVIDENCE: 6
+    PAIRED_WITH_MISS: 15
+    PAIRED_WITH_MISSED_RESOLUTION: 8
+  unsupported_predicates_by_class:
+    ON_GOLD_EVIDENCE:
+      OccursAt: 1
+      Participates: 1
+      Possesses: 1
+      RefersTo: 3
+    PAIRED_WITH_MISS:
+      EmotionToward: 1
+      Occurred: 2
+      OccursAt: 1
+      Participates: 9
+      PhysicalCondition: 1
+      TemporalRelation: 1
+    PAIRED_WITH_MISSED_RESOLUTION:
+      RefersTo: 8
+summary:
+  missed_required_non_resolution: 41
+  missed_representation_or_convention:
+    count: 14
+    causes:
+    - EVENT_NOT_ALIGNED
+    - ROLE_LABEL
+    - LITERAL_WORDING
+  missed_true_omission:
+    count: 27
+    causes:
+    - NAMING_NOT_EMITTED
+    - OTHER_OMISSION
+    - TEMPORAL_STRUCTURE
+    - MISSING_PARTICIPANT
+  missed_resolutions:
+    count: 13
+    all: MENTION_SPAN_DIFFERS
+  unsupported:
+    count: 29
+    material_after_adjudication: 0
+    unsupported_low: 7
+    equivalent_representation: 14
+    out_of_scope: 7
+    valid_additional: 1
+  registry_gap: predicate_registry_v0 lists participant roles and event kinds without definitions, so THEME/PATIENT
+    and GENERIC/ENCOUNTER disagreements have no contract to settle them.
