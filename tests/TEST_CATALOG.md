@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 8 — test files: 58 — test functions: 1014
+Suites: 8 — test files: 58 — test functions: 1015
 
 ## canonical_story
 
@@ -1157,11 +1157,12 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 
 ## story_memory
 
-### test_glossary_v0 (3)
+### test_glossary_v0 (4)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.glossary_v0`
 
 - `GlossaryTests.test_sync_adds_characters_and_never_overwrites_the_owners_choice`
 - `GlossaryTests.test_other_spellings_of_a_character_are_flagged`
+- `GlossaryTests.test_pronoun_drift_is_flagged_only_where_the_glossary_decides` — Season S1 called Amane "cậu" in two episodes and "anh" in the third.
 - `GlossaryTests.test_bad_files_and_ids_are_rejected`
 
 ### test_memory_v0 (7)

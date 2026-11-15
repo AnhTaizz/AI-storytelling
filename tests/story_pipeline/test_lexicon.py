@@ -43,6 +43,7 @@ class LexiconFileTests(unittest.TestCase):
             "bad speech verbs": (lambda d: d.update(speech_verbs=["said", ""]), "speech_verbs"),
             "bad audience address": (lambda d: d.update(audience_address=["You Guys"]), "audience_address"),
             "bad coordinators": (lambda d: d.update(coordinators=[" and"]), "coordinators"),
+            "bad pronouns": (lambda d: d.update(third_person_pronouns=["He"]), "third_person_pronouns"),
         }
         for label, (mutate, message) in cases.items():
             with self.subTest(label):

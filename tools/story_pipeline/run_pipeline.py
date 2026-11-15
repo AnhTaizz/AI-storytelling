@@ -25,7 +25,7 @@ if str(REPO) not in sys.path:
 
 from tools.story_memory import glossary_v0  # noqa: E402
 from tools.story_memory.memory_v0 import StoryMemory, build_roster, recap_context  # noqa: E402
-from tools.story_pipeline import PIPELINE_VERSION, checks, review_page, stages  # noqa: E402
+from tools.story_pipeline import PIPELINE_VERSION, checks, lexicon, review_page, stages  # noqa: E402
 from tools.story_pipeline.facts import StoryFacts  # noqa: E402
 from tools.story_pipeline.llm import CallLog, LLMClient, StageFailed  # noqa: E402
 from tools.story_pipeline.profile import DEFAULT_PROFILE_PATH, NarrativeProfile, load_profile  # noqa: E402
@@ -219,6 +219,17 @@ USAGE_FIELDS = {"prompt": "prompt_token_count", "output": "candidates_token_coun
                 "thoughts": "thoughts_token_count", "total": "total_token_count"}
 
 
+def _glossary_findings(units: Sequence[Dict[str, str]], glossary: Optional[Dict[str, Any]],
+                       roster: Dict[str, Any], target_language: str) -> List[Dict[str, Any]]:
+    """Name spellings and pronouns that differ from the story's glossary."""
+    if not glossary:
+        return []
+    lex = lexicon.load(target_language)
+    pronouns = lex.third_person_pronouns if lex else ()
+    exceptions = lex.pronoun_exceptions if lex else ()
+    return glossary_v0.check(units, glossary, roster) + glossary_v0.pronoun_check(units, glossary, pronouns, exceptions)
+
+
 def usage_summary(entries: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
     """Calls and tokens per stage, from the provider's usage metadata (missing counts as 0)."""
     stages_: Dict[str, Dict[str, int]] = {}
@@ -386,7 +397,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                                             profile.brief_language)
                 audit += stages.attribution_audit(critic, briefs, units, passages, profile.target_language,
                                                   profile.brief_language)
-                audit += glossary_v0.check(units, glossary, roster) if glossary else []
+                audit += _glossary_findings(units, glossary, roster, profile.target_language)
                 verified: List[Dict[str, Any]] = []
                 if source_check:
                     progress(f"source check v{version}")
@@ -440,7 +451,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                                             profile.brief_language)
                        + stages.attribution_audit(critic, briefs, final_units, passages, profile.target_language,
                                                   profile.brief_language)
-                       + (glossary_v0.check(final_units, glossary, roster) if glossary else [])
+                       + _glossary_findings(final_units, glossary, roster, profile.target_language)
                        + verified if critic is not None else [])
         report = gate_report(critic, final_check, briefs, final_audit)
         report["source_hedge_review"] = [

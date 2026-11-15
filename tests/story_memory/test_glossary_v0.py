@@ -65,6 +65,27 @@ class GlossaryTests(unittest.TestCase):
         defaults = glossary_v0.sync(self.path, roster(LIN, AMANE))
         self.assertEqual(glossary_v0.check(units("Lin Wan'er và Amane."), defaults, roster(LIN, AMANE)), [])
 
+    def test_pronoun_drift_is_flagged_only_where_the_glossary_decides(self):
+        """Season S1 called Amane "cậu" in two episodes and "anh" in the third."""
+        glossary = {"format": glossary_v0.GLOSSARY_FORMAT, "characters": [
+            {"display": "Amane", "also_allowed": [], "source_names": ["周"], "pronoun": "cậu"},
+            {"display": "Mahiru", "also_allowed": [], "source_names": ["真昼"], "pronoun": "cô"},
+            {"display": "Itsuki", "also_allowed": [], "source_names": ["樹"], "pronoun": None}]}
+        pronouns = ["cậu", "anh", "cô", "hắn", "chàng", "nàng", "nó"]
+        exceptions = ["anh chàng", "cô nàng"]
+        cases = [
+            ("drift", "Về phần Amane, bản thân anh cũng tự thấy mình vô dụng.", ["anh"]),
+            ("unnamed character's pronoun", "Mahiru đỡ cậu vào phòng.", []),
+            ("noun that looks like a pronoun", "Amane đúng là một anh chàng vụng về.", []),
+            ("character without a pronoun", "Itsuki trêu Amane, anh cười lớn.", []),
+            ("nobody named", "Anh đinh ninh hai người sẽ không gặp lại.", []),
+        ]
+        for label, sentence, expected in cases:
+            with self.subTest(label):
+                found = glossary_v0.pronoun_check(units(sentence), glossary, pronouns, exceptions)
+                self.assertEqual([f["phrases"] for f in found], [expected] if expected else [])
+        self.assertEqual(glossary_v0.pronoun_check(units("Amane, anh."), glossary, []), [])  # no pronoun list
+
     def test_bad_files_and_ids_are_rejected(self):
         self.assertIsNone(glossary_v0.confirmed(glossary_v0.load(self.path)))  # missing file: empty glossary
         self.assertEqual(glossary_v0.rules(glossary_v0.load(self.path)), "")

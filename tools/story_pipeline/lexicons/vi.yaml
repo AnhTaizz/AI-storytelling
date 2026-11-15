@@ -7,6 +7,10 @@ chars_per_event: 1500
 clause_markers: [và, nhưng, sau khi, trước khi, khi, nếu, vì, rồi, mà, để]
 # Conjunctions that join statements of equal rank (for one-statement labelled facts).
 coordinators: [và, nhưng, rồi, còn, đồng thời]
+# Third-person references to a character, for the glossary's pronoun check; the exceptions
+# are nouns that start like a pronoun.
+third_person_pronouns: [cậu, anh, cô, hắn, chàng, nàng, nó]
+pronoun_exceptions: [anh chàng, anh trai, anh bạn, anh em, cô nàng, cô gái, cô bé, chàng trai, cậu bé]
 # Reported speech: a verb of saying, then (within one clause) the complementizer that
 # introduces what was said. "Amane giải thích rằng ..." (attribution audit, live run 10).
 speech_verbs: [nói, bảo, giải thích, đáp, trả lời, hỏi, kể, thốt lên, lên tiếng, phân trần, khẳng định,

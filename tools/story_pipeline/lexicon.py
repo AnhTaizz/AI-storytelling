@@ -46,6 +46,8 @@ class Lexicon:
     speech_complementizers: Tuple[str, ...] = ()  # what introduces reported content ("rằng", "that")
     audience_address: Tuple[str, ...] = ()  # the narrator talking to the viewers ("đúng không mọi người")
     coordinators: Tuple[str, ...] = ()  # conjunctions that join two statements of equal rank ("và", "and")
+    third_person_pronouns: Tuple[str, ...] = ()  # ways to refer to a character ("cậu", "anh", "cô")
+    pronoun_exceptions: Tuple[str, ...] = ()  # look like pronouns but are nouns ("anh chàng", "cô nàng")
 
     def coordinated_parts(self, text: str) -> List[str]:
         """Split at commas, semicolons and coordinating conjunctions only. Unlike `clauses`,
@@ -159,7 +161,8 @@ def validate(data: dict, expected_language: str) -> List[str]:
     if not isinstance(data.get("word_boundaries"), bool):
         problems.append("word_boundaries must be true or false")
     for field in ("clause_markers", "contrast_endings", "contrast_openers", "speech_verbs",
-                  "speech_complementizers", "audience_address", "coordinators"):
+                  "speech_complementizers", "audience_address", "coordinators", "third_person_pronouns",
+                  "pronoun_exceptions"):
         markers = data.get(field, [])
         if not isinstance(markers, list) or not all(
                 isinstance(m, str) and m.strip() and m == m.casefold().strip() for m in markers):
@@ -214,7 +217,8 @@ def load(language: str) -> Optional[Lexicon]:
                    tuple(data.get("clause_markers", [])), tuple(data.get("contrast_endings", [])),
                    tuple(data.get("contrast_openers", [])), tuple(data.get("speech_verbs", [])),
                    tuple(data.get("speech_complementizers", [])), tuple(data.get("audience_address", [])),
-                   tuple(data.get("coordinators", [])))
+                   tuple(data.get("coordinators", [])), tuple(data.get("third_person_pronouns", [])),
+                   tuple(data.get("pronoun_exceptions", [])))
 
 
 def missing_languages(*languages: str) -> FrozenSet[str]:

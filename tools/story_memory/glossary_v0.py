@@ -133,6 +133,51 @@ def check(units: Sequence[Dict[str, str]], glossary: Dict[str, Any], roster: Dic
     return findings
 
 
+_SENTENCE = re.compile(r"[^.!?…]+[.!?…]?")
+
+
+def pronoun_check(units: Sequence[Dict[str, str]], glossary: Dict[str, Any], pronouns: Sequence[str],
+                  exceptions: Sequence[str] = ()) -> List[Dict[str, Any]]:
+    """Sentences that refer to a named character with a pronoun the glossary does not give.
+
+    Season S1 called Amane "cậu" in two episodes and "anh" in the third. A sentence is judged
+    only when every glossary character it names has a pronoun, so a character whose pronoun
+    is not set never causes a finding; any pronoun the glossary assigns to someone is
+    allowed, since it may point at a character the sentence does not name. Nouns that start
+    like a pronoun ("anh chàng") are blanked out first. `pronouns` comes from the script
+    language's lexicon.
+    """
+    if not pronouns:
+        return []
+    findings = []
+    for unit in units:
+        for match in _SENTENCE.finditer(unit["text"]):
+            sentence = match.group(0).strip()
+            folded = sentence.casefold()
+            named = [e for e in glossary["characters"]
+                     if any(re.search(rf"(?<!\w){re.escape(n.casefold())}(?!\w)", folded)
+                            for n in [e["display"], *e.get("also_allowed", [])] if n)]
+            if not named or any(not e.get("pronoun") for e in named):
+                continue
+            for phrase in sorted(exceptions, key=len, reverse=True):
+                folded = re.sub(rf"(?<!\w){re.escape(phrase)}(?!\w)", " ", folded)
+            # A pronoun may point at a character the sentence does not name ("Mahiru đỡ cậu"),
+            # so every pronoun the glossary assigns is allowed; others are drift.
+            allowed = {e["pronoun"].casefold() for e in glossary["characters"] if e.get("pronoun")}
+            wrong = [p for p in pronouns if p not in allowed and re.search(rf"(?<!\w){re.escape(p)}(?!\w)", folded)]
+            if wrong:
+                expected = ", ".join(f"{e['display']} là \"{e['pronoun']}\"" for e in named)
+                findings.append({
+                    "unit_id": unit["unit_id"], "claim": sentence, "claim_type": "UNSUPPORTED_STORY_CLAIM",
+                    "failure_category": "OTHER", "severity": "MEDIUM", "brief_refs": [], "source": "glossary",
+                    "concepts": [], "phrases": wrong,
+                    "explanation": f"Câu dùng đại từ {', '.join(repr(w) for w in wrong)} trong khi bảng tên quy định "
+                                   f"{expected}; các tập phải gọi nhân vật giống nhau.",
+                    "suggested_fix": f"Đổi đại từ cho đúng bảng tên ({expected}).",
+                })
+    return findings
+
+
 def confirmed(glossary: Dict[str, Any]) -> Optional[bool]:
     """True when the owner confirmed every name, False when some are still defaults, None when empty."""
     if not glossary["characters"]:
