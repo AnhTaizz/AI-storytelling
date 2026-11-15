@@ -109,6 +109,21 @@ Quality gate (DEC-019, 2026-11-13): `python -m tools.ci.check` runs compile, tes
 
 Prototype (not frozen, not M5 completion): story memory v0 (`tools/story_memory/`, 2026-11-13) persists chapter briefs across runs with source/prompt fingerprint invalidation, merges a cross-chapter character roster, tracks relationship states per chapter, and feeds a spoiler-safe recap of earlier chapters into episode runs (`--recap`). Not yet run against a live model.
 
+*Update 2026-11-15 (pipeline and memory prototypes; still not milestone completions):*
+- **Live use:** both prototypes now run against live Gemini models (runs 1–16, three seasons).
+- **Seasons:** `tools/story_pipeline/run_story.py` runs a story episode by episode with shared memory, resume and quota pause, and writes a season index.
+- **Script checks:**
+  - deterministic: strength, hedge, attribution and glossary (name spellings and pronouns);
+  - an LLM source check that reads the script against the source text;
+  - findings go to revision, whose later rounds only patch sentences.
+- **Owner review:** each run writes `review.html`; `review_summary.py` collects filled forms.
+- **Other pieces:**
+  - a per-story name glossary with pronouns (`.local/story_memory/<story>/glossary.yaml`);
+  - source preparation for single-line-break (Korean and Chinese) files;
+  - lexicons for vi, ja, en, ko and zh.
+- **Limits:** the M1/M9 Script Quality Gate is still not evaluated, because it needs the owner's review. The pipeline still writes its own briefs, because no M4 extractor exists.
+- **Details:** `docs/research/pipeline/STORY_PIPELINE_PROTOTYPE_V0.md` and the owner's guide `docs/guides/HUONG_DAN_PIPELINE.md`.
+
 Story Extraction now has research-only validation/runtime tooling and the additive `STORY_EXTRACTION_DRAFT_V1` deterministic compiler prototype (M4-04B3A). No extraction model or end-to-end extractor is selected, locked, or production-qualified. Later application pipeline stages remain unimplemented.
 
 Not yet implemented:
