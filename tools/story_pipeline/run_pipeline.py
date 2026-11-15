@@ -380,6 +380,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                         lambda: stages.run_script(client, scope, briefs, plan, writer_profile, log, max_repairs,
                                                   recap))
         (out_dir / "script_v1.md").write_text(script_markdown(script, "v1"), encoding="utf-8")
+        declared_pronouns = script.get("pronouns")  # a full revision may drop them
         critic: Optional[Dict[str, Any]] = None
         verified: List[Dict[str, Any]] = []
         passages = {p.passage_id: p.text for c in [*background, *scope.chapters] for p in c.passages}
@@ -453,6 +454,12 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                                                   profile.brief_language)
                        + _glossary_findings(final_units, glossary, roster, profile.target_language)
                        + verified if critic is not None else [])
+        if glossary is not None:
+            lex = lexicon.load(profile.target_language)
+            adopted = glossary_v0.adopt_pronouns(memory.directory.parent / "glossary.yaml", script.get("pronouns") or declared_pronouns,
+                                                 lex.third_person_pronouns if lex else (), out_dir.name)
+            if adopted:
+                manifest["glossary"]["pronouns_adopted"] = adopted
         report = gate_report(critic, final_check, briefs, final_audit)
         report["source_hedge_review"] = [
             item for chapter, brief in zip(sorted([*background, *scope.chapters], key=lambda c: c.order), all_briefs)

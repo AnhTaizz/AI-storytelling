@@ -178,6 +178,39 @@ def pronoun_check(units: Sequence[Dict[str, str]], glossary: Dict[str, Any], pro
     return findings
 
 
+def adopt_pronouns(path: Path, declared: Optional[Dict[str, str]], allowed: Sequence[str],
+                   source: str = "") -> Dict[str, str]:
+    """Record the pronouns a script declared for characters whose pronoun is not set yet.
+
+    Without this every episode chose on its own: the Korean season called Ji-woo "cậu" in
+    episode 1 and "anh" in episode 2. Counting pronouns near names does not work (in a
+    two-person scene "Mahiru đỡ cậu" is about the other one), so the writer declares its
+    choices (`pronouns` in the script) and the first episode's choice becomes the rule. Set
+    pronouns are never changed; only pronouns from the language's list are accepted.
+    Returns display name -> pronoun for what was recorded.
+    """
+    if not declared or not path.is_file():
+        return {}
+    glossary = load(path)
+    allowed_keys = {p.casefold() for p in allowed}
+    filled = {}
+    for name, pronoun in declared.items():
+        pronoun = str(pronoun).strip().casefold()
+        if pronoun not in allowed_keys:
+            continue
+        entry = next((e for e in glossary["characters"]
+                      if _key(name) in {_key(n) for n in [e["display"], *e.get("also_allowed", []), *e["source_names"]]}),
+                     None)
+        if entry is not None and not entry.get("pronoun"):
+            entry["pronoun"] = pronoun
+            entry["pronoun_source"] = f"declared by {source}" if source else "declared by the writer"
+            filled[entry["display"]] = pronoun
+    if filled:
+        header = "".join(line for line in path.read_text(encoding="utf-8").splitlines(True) if line.startswith("#"))
+        path.write_text(header + yaml.safe_dump(glossary, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    return filled
+
+
 def confirmed(glossary: Dict[str, Any]) -> Optional[bool]:
     """True when the owner confirmed every name, False when some are still defaults, None when empty."""
     if not glossary["characters"]:

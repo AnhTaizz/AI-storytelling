@@ -36,7 +36,9 @@ Output requirements:
   (whitespace-separated words). Follow each beat's target_words approximately.
 - One section per plan beat, in plan order, with the beat id in `beat_id`.
 - Keep each character's pronoun and form of address the same throughout (do not switch
-  between, for example, "cậu" and "anh" for the same person). Vary sentence openings;
+  between, for example, "cậu" and "anh" for the same person), and return your choices in
+  `pronouns`, keyed by the name as you write it (for example {"Amane": "cậu"}); later
+  episodes will be held to them. Vary sentence openings;
   do not repeat the same phrase paragraph after paragraph.
 - End on the plan's `closing_hook` when it has one.
 - Section text is plain spoken narration ready to be read aloud: no headings, no

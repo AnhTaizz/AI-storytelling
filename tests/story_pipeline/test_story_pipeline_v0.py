@@ -910,14 +910,22 @@ class EndToEndTests(unittest.TestCase):
             data["characters"][0].update(display="Chu", also_allowed=[], confirmed=True)
             glossary_file.write_text(yaml.safe_dump(data, allow_unicode=True), encoding="utf-8")
             systems = []
-            renamed = ScriptedLLMClient(lambda stage, system, user: (systems.append((stage, system)),
-                                                                      FakeModel()(stage, system, user))[1])
+            declaring = dict(SCRIPT, pronouns={"Mahiru": "cô", "Amane": "ông", "Ghost": "nó"})
+
+            def renamed_model(stage, system, user):
+                systems.append((stage, system))
+                return json.dumps(declaring, ensure_ascii=False) if stage == "script" else FakeModel()(stage, system, user)
+            renamed = ScriptedLLMClient(renamed_model)
             third = run(renamed, episode, test_profile(), Path(tmp) / "ep3", background=background,
                         memory=memory, source_check=False)
             self.assertIn("藤宮周 → Chu", next(s for stage, s in systems if stage == "script"))
             report = json.loads((Path(tmp) / "ep3" / "report.json").read_text(encoding="utf-8"))
             self.assertIn(("glossary", "Amane"), [(f.get("source"), f["claim"]) for f in report["findings"]])
             self.assertEqual(third["glossary"]["confirmed"], False)  # Mahiru is still a default
+            # The writer's declared pronouns become the rule for later episodes: "ông" is not a
+            # Vietnamese third-person pronoun in the lexicon, and nobody is called Ghost.
+            self.assertEqual(third["glossary"]["pronouns_adopted"], {"Mahiru": "cô"})
+            self.assertEqual(yaml.safe_load(glossary_file.read_text(encoding="utf-8"))["characters"][1]["pronoun"], "cô")
 
     def test_memory_brief_failing_current_checks_is_regenerated(self):
         scope = load_scope(DEFAULT_MANIFEST, (1, 1))

@@ -86,6 +86,20 @@ class GlossaryTests(unittest.TestCase):
                 self.assertEqual([f["phrases"] for f in found], [expected] if expected else [])
         self.assertEqual(glossary_v0.pronoun_check(units("Amane, anh."), glossary, []), [])  # no pronoun list
 
+    def test_declared_pronouns_fill_only_unset_entries(self):
+        glossary_v0.sync(self.path, roster(LIN, AMANE))
+        data = yaml.safe_load(self.path.read_text(encoding="utf-8"))
+        data["characters"][1]["pronoun"] = "cậu"  # the owner's choice for Amane
+        self.path.write_text(yaml.safe_dump(data, allow_unicode=True), encoding="utf-8")
+        filled = glossary_v0.adopt_pronouns(self.path, {"Wan'er": "cô", "Amane": "anh", "Nobody": "nó"},
+                                            ["cậu", "anh", "cô", "nó"], "ep01")
+        self.assertEqual(filled, {"Lin Wan'er": "cô"})
+        saved = glossary_v0.load(self.path)
+        self.assertEqual([(e["pronoun"], e.get("pronoun_source")) for e in saved["characters"]],
+                         [("cô", "declared by ep01"), ("cậu", None)])
+        self.assertEqual(glossary_v0.adopt_pronouns(self.path, {"Wan'er": "ngài"}, ["cô"]), {})  # not a pronoun
+        self.assertEqual(glossary_v0.adopt_pronouns(self.path, None, ["cô"]), {})
+
     def test_bad_files_and_ids_are_rejected(self):
         self.assertIsNone(glossary_v0.confirmed(glossary_v0.load(self.path)))  # missing file: empty glossary
         self.assertEqual(glossary_v0.rules(glossary_v0.load(self.path)), "")
