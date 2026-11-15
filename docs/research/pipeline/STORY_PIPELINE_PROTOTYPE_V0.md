@@ -109,13 +109,26 @@ Replay on the saved live briefs (ja → vi):
 
 | Area | State |
 |---|---|
-| M3 ingestion | Accepts any language tag (`source_language: ko`). It splits paragraphs on blank lines. **Risk:** a file that separates lines with single newlines only becomes one segment per chapter. The adapter is frozen, so that case needs a new versioned adapter and a decision. Check this on the first real Korean chapter. |
+| M3 ingestion | Accepts any language tag (`source_language: ko`). It makes one passage per run of non-blank lines. **Checked on 2026-11-14** with an original Korean text: with blank lines between paragraphs it gives 12 passages; with single line breaks, the common web-novel layout, the whole chapter becomes 1 passage. The adapter is frozen, so `tools/story_pipeline/prepare_source.py` rewrites such files before M3 (see below). |
 | Lexicon `ko.yaml` | Substring matching, because particles and endings attach to words. Reported speech is caught through endings such as ‑다고 한다 and ‑라던데, appearance through ‑것 같다 and ‑듯했다, speculation through ‑지도 모른다 and 아마, and metaphor through 마치 and ‑처럼. Ambiguous stems are excluded, for example 늘 (it matches inside 늘어나다) and 것이다. |
 | Event minimum | Now counts source characters divided by the lexicon's `chars_per_event` (ja 550, ko 700, vi 1500, en 1600; rough, tunable) instead of counting passages. Korean web novels often put every sentence on its own line: 200 one-line passages now need 9 events instead of 14. |
 | Foreign script check | Driven by the target language's allowed writing systems. **Hangul was previously not detected**, so Korean left in a Vietnamese script passed. Languages written without spaces (ja, zh, th) count length in characters. |
 | Dialogue | ‘…’ is added to the quote characters; Korean novels use it for inner speech. |
 | Names | The profile's name policy is now script-neutral: standard romanization, no original script. |
 | Embeddings | The pipeline uses none. The M1 retrieval models (multilingual-e5, bge-reranker-v2-m3) are multilingual but were only benchmarked on Japanese. Measure them on a Korean probe set before relying on retrieval. |
+
+### Preparing a source: `prepare_source.py`
+
+```
+python -m tools.story_pipeline.prepare_source --input-dir <raw chapter files> \
+    --out .local/sources/<story> --story-id <id> --language ko
+```
+
+- **What it writes:** the chapter files, an M3 manifest (`manifest.yaml`) and `SOURCE_PREPARATION.json`, which keeps the hash of each original file and the layout decision. The prepared files are the source of record.
+- **Layout `auto`:** a file is split line by line only when its paragraphs average 4 or more lines **and** at least 70% of its lines end a sentence. Hard-wrapped prose fails the second test and is left alone, with a warning. `--layout lines` and `--layout keep` force either way.
+- **Pipeline warning:** a chapter that reaches the pipeline with 4 or more lines per passage is reported on the console, in the run manifest (`source_warnings`) and in `report.md`.
+
+Still unverified: a real Korean chapter. The check above used text written for the test.
 
 ## Integration seam for M4: `story_facts/v0`
 
@@ -363,6 +376,35 @@ New minor issues:
 - The closing line says Amane's belief "did not match what was about to happen". The source's 「その時は。」 only implies this; run 7's "đó chỉ là những gì cậu nghĩ vào lúc ấy" was more faithful.
 
 The LLM critic again reported no problems with the final script.
+
+**2026-11-14, run 10 (first episode run: chapters 2–5 with a recap of chapter 1, two revision rounds, 2,400–3,000 words).**
+
+The run COMPLETED in 24 calls and 1,787 s. All gates passed.
+
+- **Briefs:** chapter 1 came from memory; chapters 2–5 were generated, and each took all three attempts. The first attempts failed on too few events, on hedges (a guess, an appearance and a metaphor labelled EXPLICIT, hearsay stated as fact) and on a schema error.
+- **The run-8 repair fallback mattered:** the chapter-4 brief's last attempt had hard errors, and the attempt before it, with soft errors only, was used. Without the fallback the run would have failed.
+- **Audits:** 26 findings in v1, 1 in v2, 0 in v3. The second revision round removed the last finding, which one round had left in run 9.
+- **Episode mechanics:** the recap was used only for the umbrella callback. The script ends on chapter 5's closing line.
+
+Manual check of the final script against the source of chapters 2–5 found three medium defects that no automated check reported:
+
+- **An invented detail that contradicts the source.** The script says the porridge arrived "nghi ngút khói" (steaming). 3.81 says it gave off no steam and had been cooled on purpose. The writer added this in v1. It is not in the brief, and the critic passed it three times.
+- **A narrator's thought turned into speech.** The "lost child" look (4.18) is Amane's thought. The brief records it correctly as a FIGURATIVE fact about him. The script has Amane explain it to Mahiru.
+- **A cause dropped and a manner inverted.** In the source Mahiru answers the boyfriend question with exasperation and turns cold only at Amane's "one or two" (4.24, 4.30); 4.32 and 4.37 describe flat words and a chilling look, explicitly not heat. The brief keeps the trigger. The script merges the two events, drops the trigger and calls the reaction "dữ dội" (fierce).
+
+Eight small ones as well: strengthened wording ("đỏ bừng mặt" for a faint blush, "sốt nặng"), small invented details, the weekend compressed into "the next day", and a remark Amane says aloud told as a thought. The text also has a garbage token ("so me"), which v2 had removed and v3 brought back, four misspellings, and one "anh" for Amane, who is "cậu" everywhere else.
+
+What this run shows:
+
+- The hedge and strength checks hold on four new chapters: no hearsay or appearance was stated as fact.
+- The remaining defects are of kinds the lexicon checks cannot see: invented descriptive details, who says or thinks something, and merged events. All three entered at the script stage, and the briefs were right. The critic compares the script with the briefs and still missed them.
+- Revision can undo an earlier fix (the garbage token).
+
+Candidate next steps:
+
+- A second verification pass that checks script sentences against the cited source passages, not only against the briefs.
+- A deterministic check that speech and thought verbs in the script match the brief item's kind.
+- A check that each revision keeps the fixes of the one before it.
 
 ## Known limits
 
