@@ -1,0 +1,218 @@
+# DEV set, authored by the implementer, not a sealed benchmark.
+probes:
+  - probe_id: v1_ja_01
+    language: ja
+    category: character_fact
+    query: "真昼の定期考査の順位と体育での活躍はどう評されている？"
+    cutoff_chapter: 1
+    gold_evidence_sets: [['1.7']]
+    note: She always ranks first in exams and reportedly performs like an ace in PE.
+  - probe_id: v1_ja_02
+    language: ja
+    category: character_fact
+    query: "周のマンションの間取りと、親がそこを選んだ理由をまとめて。"
+    cutoff_chapter: 3
+    gold_evidence_sets: [['3.3', '3.4']]
+    note: His apartment is 1SLDK; his fairly wealthy parents chose it for security and transport access.
+  - probe_id: v1_ja_03
+    language: ja
+    category: character_fact
+    query: "樹の恋人の本名と、樹が使っている愛称を教えて。"
+    cutoff_chapter: 5
+    gold_evidence_sets: [['5.27']]
+    note: Itsuki's girlfriend is Chitose, nicknamed Chii.
+  - probe_id: v1_ja_04
+    language: ja
+    category: event
+    query: "公園で傘を差し出した後、周は真昼の返事を待ったのか？"
+    cutoff_chapter: 1
+    gold_evidence_sets: [['1.55']]
+    note: He pressed the umbrella on her and turned away before she could speak.
+  - probe_id: v1_ja_05
+    language: ja
+    category: event
+    query: "玄関で倒れかけた周に、真昼はどうやって体勢を戻させ、その後どうした？"
+    cutoff_chapter: 2
+    gold_evidence_sets: [['2.73', '2.78']]
+    note: She pulled his arm to restore his balance, then supported him and opened his door.
+  - probe_id: v1_ja_06
+    language: ja
+    category: event
+    query: "看病中、体温計で分かった周の熱は何度だった？"
+    cutoff_chapter: 3
+    gold_evidence_sets: [['3.71'], ['3.75']]
+    note: Both the thermometer reading and his spoken report give 38.3 degrees.
+  - probe_id: v1_ja_07
+    language: ja
+    category: relationship
+    query: "真昼本人は「天使」と呼ばれることをどう感じている？"
+    cutoff_chapter: 4
+    gold_evidence_sets: [['4.56']]
+    note: The narration says the angel nickname embarrasses her and she looks displeased.
+  - probe_id: v1_ja_08
+    language: ja
+    category: relationship
+    query: "看病中に恥じらう真昼を見て、周の美しさへの印象はそれまでとどう変わった？"
+    cutoff_chapter: 3
+    gold_evidence_sets: [['3.52', '3.53']]
+    note: Previously he saw an artwork-like beauty; her flustered embarrassment now looks human and endearing.
+  - probe_id: v1_ja_09
+    language: ja
+    category: relationship
+    query: "周は天使に看病された出来事を人に話すつもりか、誰の秘密として扱ったか？"
+    cutoff_chapter: 4
+    gold_evidence_sets: [['4.63', '4.64']]
+    note: He considers the nursing unbelievable and not something to tell; the day's events are their shared secret.
+  - probe_id: v1_ja_10
+    language: ja
+    category: recap
+    query: "雨の日の発見場面を、真昼がいた公園の位置と顔色の二点で振り返って。"
+    cutoff_chapter: 1
+    gold_evidence_sets: [['1.18', '1.23']]
+    note: She sits in the park between school and the apartment; her face looks pale and unhealthy.
+  - probe_id: v1_ja_11
+    language: ja
+    category: recap
+    query: "周の風邪は朝の頭と鼻の不調から、その後どんな症状が加わったのか整理して。"
+    cutoff_chapter: 2
+    gold_evidence_sets: [['2.6', '2.40']]
+    note: Congestion and a throbbing headache are followed by a sore throat and fatigue.
+  - probe_id: v1_ja_12
+    language: ja
+    category: recap
+    query: "お粥の味付けを、米と塩の加減、それを引き締める梅干しの役割に分けて説明して。"
+    cutoff_chapter: 3
+    gold_evidence_sets: [['3.93', '3.94']]
+    note: Restrained salt preserves the rice flavor; the crushed plum's mild acidity and salt balance it.
+  - probe_id: v1_ja_13
+    language: ja
+    category: boundary
+    query: "周が雨の公園で真昼を放っておけなかったのは、どんな表情を見て良心が痛んだから？"
+    cutoff_chapter: 1
+    gold_evidence_sets: [['1.26', '1.28']]
+    tempting_chapter: 4
+    note: Her nearly tearful expression makes walking past feel wrong; later he explicitly links her lost-child look to giving the umbrella.
+  - probe_id: v1_ja_14
+    language: ja
+    category: boundary
+    query: "真昼は自分と周の風邪の間にどんな責任を感じていた？"
+    cutoff_chapter: 2
+    gold_evidence_sets: [['2.63']]
+    tempting_chapter: 4
+    note: She says her presence there caused his cold; a later apology states this guilt more explicitly.
+  - probe_id: v1_ja_15
+    language: ja
+    category: boundary
+    query: "看病が終わった時点で、周は翌日から真昼とどんな間柄になると考えていた？"
+    cutoff_chapter: 4
+    gold_evidence_sets: [['4.66']]
+    tempting_chapter: 5
+    note: He expects them to be mere acquaintances from the next day; the later chapter confirms that relationship.
+  - probe_id: v1_vi_01
+    language: vi
+    category: character_fact
+    query: "Trong phần giới thiệu nhân vật, cậu bạn hay trêu Amane ở lớp tên đầy đủ là gì?"
+    cutoff_chapter: 2
+    gold_evidence_sets: [['2.4']]
+    note: His classmate and teasing friend is introduced as Akazawa Itsuki.
+  - probe_id: v1_vi_02
+    language: vi
+    category: character_fact
+    query: "Viết một nét phác họa ngoại hình Mahiru: tóc và làn da của cô được tả ra sao?"
+    cutoff_chapter: 1
+    gold_evidence_sets: [['1.5']]
+    note: She has glossy straight flaxen hair and smooth translucent milky skin.
+  - probe_id: v1_vi_03
+    language: vi
+    category: character_fact
+    query: "Amane thích kiểu mơ muối nào, và nếu khỏe thì cậu muốn ăn nó với gì?"
+    cutoff_chapter: 3
+    gold_evidence_sets: [['3.95']]
+    note: He dislikes very salty plums but likes this mildly sour, slightly sweet one with rice or tea over rice.
+  - probe_id: v1_vi_04
+    language: vi
+    category: event
+    query: "Lúc kết thúc buổi chăm bệnh, Mahiru chào ra về bằng cử chỉ nào?"
+    cutoff_chapter: 4
+    gold_evidence_sets: [['4.60']]
+    note: Amane remembers Mahiru bowing her head before leaving.
+  - probe_id: v1_vi_05
+    language: vi
+    category: event
+    query: "Cuối đoạn truyện, Amane đang ở đâu và dùng thứ gì khi cô hàng xóm lại bắt chuyện?"
+    cutoff_chapter: 5
+    gold_evidence_sets: [['5.40']]
+    note: He is looking outside on the apartment balcony while drinking a jelly beverage.
+  - probe_id: v1_vi_06
+    language: vi
+    category: event
+    query: "Sau lần chăm ốm, mỗi khi gặp trên đường đi học, cô hàng xóm có thêm cử chỉ nhỏ nào với Amane?"
+    cutoff_chapter: 5
+    gold_evidence_sets: [['5.5']]
+    note: She now gives him a small bow when they meet on the way to school.
+  - probe_id: v1_vi_07
+    language: vi
+    category: relationship
+    query: "Ngay lần đầu được hàng xóm bắt chuyện trong công viên, Mahiru có cởi mở hay còn dè chừng?"
+    cutoff_chapter: 1
+    gold_evidence_sets: [['1.35'], ['1.42']]
+    note: Her eyes show caution at the unexpected contact; her gentle but distant voice also keeps him out.
+  - probe_id: v1_vi_08
+    language: vi
+    category: relationship
+    query: "Để viết về tình bạn của hai cậu con trai, nêu Itsuki đã làm gì vào cuối tuần khi bạn ốm và phản ứng khi tận mắt thấy bạn khỏe lại."
+    cutoff_chapter: 5
+    gold_evidence_sets: [['5.8', '5.9']]
+    note: Itsuki sent concerned weekend messages and only seemed reassured on seeing Amane healthy in person.
+  - probe_id: v1_vi_09
+    language: vi
+    category: relationship
+    query: "Khi bị hỏi chuyện yêu đương, Mahiru nói gì về bạn trai hiện tại và ý định kiếm người yêu?"
+    cutoff_chapter: 4
+    gold_evidence_sets: [['4.21']]
+    note: She says she has no boyfriend and no plan to get one.
+  - probe_id: v1_vi_10
+    language: vi
+    category: recap
+    query: "Tóm tắt lúc Amane tỉnh giấc: mấy giờ rồi, Mahiru đưa đồ uống gì, và miếng dán trên trán cậu từ đâu ra?"
+    cutoff_chapter: 3
+    gold_evidence_sets: [['3.23', '3.24', '3.28']]
+    note: It is 7 pm; she hands him a sports drink and says she brought the cooling sheet from home.
+  - probe_id: v1_vi_11
+    language: vi
+    category: recap
+    query: "Kể ngắn gọn cảnh trả ô: cô gái cầm chiếc ô trong tình trạng nào và nêu nguyên tắc gì về đồ đi mượn?"
+    cutoff_chapter: 2
+    gold_evidence_sets: [['2.51', '2.54']]
+    note: Mahiru holds the neatly folded umbrella and says borrowed things should naturally be returned.
+  - probe_id: v1_vi_12
+    language: vi
+    category: recap
+    query: "Phác cảnh Mahiru ở lớp sau cuối tuần: ai vây quanh cô và cách cô tiếp chuyện khiến Amane thấy khác lần trước thế nào?"
+    cutoff_chapter: 5
+    gold_evidence_sets: [['5.20', '5.21']]
+    note: Both boys and girls surround her; her quiet public smile feels unlike her manner during the recent visit.
+  - probe_id: v1_vi_13
+    language: vi
+    category: boundary
+    query: "Ở đầu truyện, Amane có xem việc thấy Mahiru hấp dẫn là đồng nghĩa với đã yêu cô không?"
+    cutoff_chapter: 1
+    gold_evidence_sets: [['1.15']]
+    tempting_chapter: 5
+    note: He distinguishes attraction from romantic feelings and views her as someone to admire; later dialogue tersely says she is beautiful and that is all.
+  - probe_id: v1_vi_14
+    language: vi
+    category: boundary
+    query: "Đến lúc Amane bị cảm, căn phòng cho thấy cậu có giỏi tự thu dọn khi sống riêng không?"
+    cutoff_chapter: 2
+    gold_evidence_sets: [['2.31']]
+    tempting_chapter: 3
+    note: He is poor at tidying and his room is a mess; the next chapter gives a direct scene of clutter in both rooms.
+  - probe_id: v1_vi_15
+    language: vi
+    category: boundary
+    query: "Trước khi cô hàng xóm vào chăm bệnh, lời đáp của Amane cho biết Itsuki độc thân hay đã có người yêu?"
+    cutoff_chapter: 2
+    gold_evidence_sets: [['2.37']]
+    tempting_chapter: 5
+    note: Amane tells his friend with a girlfriend to be quiet; a later chapter explicitly identifies that girlfriend.
