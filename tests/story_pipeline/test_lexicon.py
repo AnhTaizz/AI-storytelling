@@ -75,6 +75,10 @@ class MatchingTests(unittest.TestCase):
             ("ko", "그녀는 고백을 자주 받는다고 한다", "hedge", {"reported"}),
             ("ko", "울 것 같았다", "hedge", {"appearance"}),
             ("ko", "작은 목소리가 들린 것 같았지만", "hedge", {"appearance"}),  # inflected ending
+            ("ko", "반에서는 늘 조용하다고들 한다", "hedge", {"reported"}),  # plural "they say"
+            ("ko", "의심스럽다는 듯 눈을 가늘게 떴다", "hedge", {"appearance"}),
+            ("ja", "熱はすこし引いたように思える", "hedge", {"appearance"}),
+            ("ja", "会釈されるようになった程度であろうか", "hedge", {"speculation"}),
             ("ko", "마치 천사처럼 보였다", "hedge", {"metaphor", "appearance"}),
             ("ko", "그는 집으로 돌아갔다", "hedge", set()),
             # Chinese: simplified and traditional forms; no single-character phrases.

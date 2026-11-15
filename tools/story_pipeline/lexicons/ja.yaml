@@ -22,6 +22,6 @@ strength:
   intensity_fill: [満ちた, あふれ]
 hedge:
   reported: [らしい, らしく, らしかった, そうだ, そうで, 噂, と言われ, とのこと]
-  appearance: [ように見え, ようだ, みたいだ, 気がする]
-  speculation: [かもしれない, だろう, はずだ, 恐らく, おそらく, 多分]
+  appearance: [ように見え, ようだ, みたいだ, 気がする, ように思え]
+  speculation: [かもしれない, だろう, はずだ, 恐らく, おそらく, 多分, であろう]
   metaphor: [比喩, まるで, のような]
