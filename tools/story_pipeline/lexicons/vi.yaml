@@ -33,7 +33,10 @@ strength:
   reputation: [biệt danh, nổi tiếng]
   intensity_fill: [nhuốm đầy, tràn đầy, đầy rẫy]
 hedge:
-  reported: [nghe nói, nghe đồn, lời đồn, theo lời đồn, được cho là, người ta nói, có tin]
+  # Attribution to a speaker also keeps a report a report ("theo lời X", "X cho biết").
+  # "…" stands for up to four words: "nghe … nói" matches "Nghe Thẩm Tri Ý nói".
+  reported: [nghe nói, nghe đồn, lời đồn, theo lời đồn, được cho là, người ta nói, có tin, theo lời, cho biết,
+             nói rằng, kể rằng, nghe … nói, nghe … kể]
   appearance: [có vẻ, dường như, trông như, hình như, như thể, như sắp, như muốn]
   speculation: [có lẽ, có thể, chắc là, phỏng đoán]
   metaphor: [ví như, được ví, tựa như, ẩn dụ, như là]
