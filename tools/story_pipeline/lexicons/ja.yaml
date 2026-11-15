@@ -17,8 +17,8 @@ strength:
   universality: [誰もが, 皆, みんな]
   frequency_always: [いつも, 常に, 決して]
   certainty: [絶対, 必ず, 間違いなく]
-  firmness: [きっぱり, 断固]
-  reputation: [あだ名, 有名]
+  firmness: [きっぱり, 断固, 有無を言わさ]
+  reputation: [あだ名, 有名, 評判, 人気, モテ]
   intensity_fill: [満ちた, あふれ]
 hedge:
   reported: [らしい, らしく, らしかった, そうだ, そうで, 噂, と言われ, とのこと]

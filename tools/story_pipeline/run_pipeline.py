@@ -184,6 +184,14 @@ def report_markdown(manifest: Dict[str, Any], report: Dict[str, Any]) -> str:
         for item in report["source_hedge_review"]:
             marks = ", ".join(f"{phrase} ({pid})" for _, phrase, pid in item["source_hedges"])
             lines.append(f"- {item['ref']}: {item['text'][:160]} — nguồn: {marks}")
+    if report.get("source_strength_review"):
+        lines += ["", "## Cần người xem: brief có thể mạnh hơn nguồn", "",
+                  "Mục brief có từ tăng mức độ (luôn luôn, chắc chắn, mọi người, nổi tiếng...) mà các passage "
+                  "được trích không có. Khoảng 4/10 là đúng; phần còn lại là cách nói nguồn có nhưng bộ từ vựng "
+                  "chưa biết. Lỗi ở brief thì critic không thấy, vì critic so kịch bản với brief. Không tự động sửa.", ""]
+        for item in report["source_strength_review"]:
+            lines.append(f"- {item['ref']}: {item['text'][:160]} — từ: {', '.join(item['phrases'])} "
+                         f"(nguồn: {', '.join(item['evidence'])})")
     if report["undetermined"]:
         lines += ["", "## Cần người xem (UNDETERMINED)", ""]
         for f in report["undetermined"]:
@@ -439,6 +447,10 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
             item for chapter, brief in zip(sorted([*background, *scope.chapters], key=lambda c: c.order), all_briefs)
             if chapter.order >= scope.first
             for item in stages.source_hedge_review(brief, chapter, scope.source_language, profile.brief_language)]
+        report["source_strength_review"] = [
+            item for chapter, brief in zip(sorted([*background, *scope.chapters], key=lambda c: c.order), all_briefs)
+            if chapter.order >= scope.first
+            for item in stages.source_strength_review(brief, chapter, scope.source_language, profile.brief_language)]
         report["final_version"] = version
         report["final_check"] = final_check
         write_json(out_dir / "report.json", report)

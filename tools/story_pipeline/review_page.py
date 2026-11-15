@@ -207,6 +207,16 @@ def render_review_page(manifest: Mapping[str, Any], report: Mapping[str, Any],
         parts.append(f"<section class='unit' id='{_esc(uid)}'><div>{''.join(left)}</div>"
                      f"<div>{''.join(right)}</div></section>")
 
+    advisory = [(item, "rào đón bị bỏ") for item in report.get("source_hedge_review", [])]
+    advisory += [(item, "mạnh hơn nguồn: " + ", ".join(item["phrases"]))
+                 for item in report.get("source_strength_review", [])]
+    if advisory:
+        parts.append("<h2>Brief cần xem</h2><p class='muted'>Lỗi nằm sẵn trong brief thì critic không thấy, "
+                     "vì critic so kịch bản với brief. Danh sách này chỉ để người đọc kiểm tra; khoảng một nửa "
+                     "là báo nhầm.</p><table><tr><th>Mục</th><th>Vì sao</th><th>Nội dung</th></tr>")
+        for item, why in advisory:
+            parts.append(f"<tr><td>{_esc(item['ref'])}</td><td>{_esc(why)}</td><td>{_esc(item['text'])}</td></tr>")
+        parts.append("</table>")
     parts.append(f"<h2>Phiếu chấm</h2><form id='review' data-run='{_esc(manifest['run_id'])}' "
                  f"data-questions='{_esc(json.dumps(list(questions), ensure_ascii=False))}' "
                  f"onsubmit='return false'>")

@@ -73,6 +73,16 @@ class ReviewPageTests(unittest.TestCase):
         self.assertIn("id='copy'", form)
         self.assertIn("Không dùng được", form)
 
+    def test_brief_items_for_a_person_are_listed(self):
+        report = dict(REPORT, source_hedge_review=[{"ref": "c3.E1", "text": "Cháo nóng", "source_hedges": []}],
+                      source_strength_review=[{"ref": "c3.CH1", "text": "Luôn luôn nấu cháo",
+                                               "phrases": ["luôn luôn"], "evidence": ["3.79"]}])
+        page = review_page.render_review_page(MANIFEST, report, UNITS, CRITIC, [BRIEF], PASSAGES, REVIEW_QUESTIONS)
+        section = page.split("<h2>Brief cần xem</h2>")[1].split("<h2>")[0]
+        self.assertIn("rào đón bị bỏ", section)
+        self.assertIn("mạnh hơn nguồn: luôn luôn", section)
+        self.assertNotIn("Brief cần xem", self.page)  # nothing listed, no section
+
     def test_page_without_a_critic_still_renders(self):
         page = review_page.render_review_page(MANIFEST, {"gates": {}, "findings": []}, UNITS, None, [BRIEF],
                                               PASSAGES, REVIEW_QUESTIONS)

@@ -574,6 +574,31 @@ class SemanticValidationTests(unittest.TestCase):
         self.assertEqual(review[0]["source_hedges"], [["reported", "らしい", "1.1"]])
         self.assertEqual(stages.source_hedge_review(brief, chapter, "xx", "vi"), [])
 
+    def test_source_strength_review_lists_briefs_stronger_than_their_source(self):
+        """A brief that already overstates passes the script audits (live run 10: "dữ dội")."""
+        chapter = Chapter(1, "doc", "t", (Passage("1.1", "学年問わず告白を受けているらしい。"),
+                                          Passage("1.2", "恐らく警戒を緩める事はないだろう。"),
+                                          Passage("1.3", "彼女の評判はよく聞く。")))
+        brief = brief_json(1, ["1.1"], "告白")
+        brief["characters"][1]["facts"] = [
+            {"text": "Nghe nói cô thường xuyên được tỏ tình", "evidence": ["1.1"], "quote": "x"},
+            {"text": "Cô nổi tiếng trong trường", "evidence": ["1.3"], "quote": "x"},  # 評判 backs it
+            {"text": "Nghe nói cô được tỏ tình", "evidence": ["1.1"], "quote": "x"},
+        ]
+        brief["characters"][0]["facts"] = []
+        brief["events"] = [dict(brief["events"][0], summary="Cô chắc chắn sẽ cảnh giác", consequence=None,
+                                evidence=["1.2"])]
+        review = stages.source_strength_review(brief, chapter, "ja", "vi")
+        self.assertEqual([(r["ref"], r["phrases"]) for r in review],
+                         [("c1.CH2", ["thường xuyên"]), ("c1.E1", ["chắc chắn"])])
+        self.assertEqual(stages.source_strength_review(brief, chapter, "xx", "vi"), [])
+        report = run_pipeline.report_markdown(
+            {"run_id": "r", "scope": {"label": "chapter 1", "story_id": "s"}, "client": "c",
+             "profile": {"profile_id": "p", "min_words": 1, "max_words": 2}, "model_calls": 0, "seconds": 0,
+             "status": "COMPLETED", "versions": []},
+            {"gates": {}, "claim_counts": {}, "findings": [], "undetermined": [], "source_strength_review": review})
+        self.assertIn("brief có thể mạnh hơn nguồn", report)
+
     def test_critic_must_extract_claims_at_paragraph_density(self):
         paragraph = " ".join(["từ"] * 95)  # 95 words -> at least 3 claims
         units = checks.split_units(paragraph + "\n\nNgắn thôi.")

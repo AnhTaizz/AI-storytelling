@@ -901,6 +901,33 @@ def source_hedge_review(brief: Dict[str, Any], chapter: Chapter, source_language
     return review
 
 
+def source_strength_review(brief: Dict[str, Any], chapter: Chapter, source_language: str,
+                           brief_language: str) -> List[Dict[str, Any]]:
+    """Advisory list for a person: brief items stronger than every passage they cite.
+
+    The strength audit compares the script with the briefs, so a brief that already
+    overstates ("thường xuyên nhận được lời tỏ tình" for 「学年問わず…らしく」, "chắc chắn" for
+    「恐らく」) passes it. On the saved briefs of runs 2-15 about 4 in 10 listed items are real; the
+    rest are wordings the source lexicon does not know, so nothing is sent back to the model.
+    """
+    src, dst = lexicon.load(source_language), lexicon.load(brief_language)
+    if src is None or dst is None:
+        return []
+    texts = {p.passage_id: p.text for p in chapter.passages}
+    n = brief["chapter_order"]
+    items = [(f"c{n}.{c['id']}", f["text"], f["evidence"]) for c in brief["characters"] for f in c["facts"]]
+    items += [(f"c{n}.{e['id']}", " ".join([e["summary"], e.get("consequence") or ""]), e["evidence"])
+              for e in brief["events"]]
+    review = []
+    for ref, text, evidence in items:
+        cited = src.concepts(" ".join(texts.get(pid, "") for pid in evidence), "strength")
+        extra = sorted({(concept, phrase) for concept, phrase in dst.find(text, "strength") if concept not in cited})
+        if extra:
+            review.append({"ref": ref, "text": text, "phrases": [phrase for _, phrase in extra],
+                           "concepts": [concept for concept, _ in extra], "evidence": list(evidence)})
+    return review
+
+
 def audit_coverage(script_language: str, brief_language: str, source_language: str) -> Dict[str, Any]:
     """Which deterministic language checks can run, so a missing lexicon is reported, not silent."""
     missing = sorted(lexicon.missing_languages(script_language, brief_language, source_language))
