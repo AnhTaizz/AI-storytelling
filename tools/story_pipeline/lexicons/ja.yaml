@@ -8,7 +8,9 @@ clause_markers: [けれど, けど, しかし, そして]
 # the rumour is only in the part after が. Endings close such a part; openers start one.
 # Conjunctive が follows a predicate (知らないが, 見たが); a bare が after a noun is the
 # subject particle, so only predicate endings are listed.
-contrast_endings: [るが, たが, いが, だが, すが, うが, けど, けれど, けれども, のに]
+# A cause clause closes a part too: in 「…噂は聞いた事がないので、ひどいという訳でもなさそうだ」
+# the そうだ of the second part does not reach the first (brief check, chapter 3).
+contrast_endings: [るが, たが, いが, だが, すが, うが, けど, けれど, けれども, のに, ので]
 contrast_openers: [しかし, だが]
 strength:
   degree_extreme: [非常に, とても, 極めて, すごく]
@@ -25,3 +27,5 @@ hedge:
   appearance: [ように見え, ようだ, みたいだ, 気がする, ように思え]
   speculation: [かもしれない, だろう, はずだ, 恐らく, おそらく, 多分, であろう]
   metaphor: [比喩, まるで, のような]
+# A denied rumour is a plain statement: 「…そういう噂は聞いた事がない」 (chapter 3) is EXPLICIT.
+negated_hedges: [噂は聞いた事がない, 噂は聞いたことがない, 噂を聞いた事がない, 噂を聞いたことがない, 噂は聞かない, 噂も聞かない]

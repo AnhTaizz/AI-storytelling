@@ -770,5 +770,5 @@ M7 is accepted on this evidence:
 LIMITS:
 - No sealed brief-fidelity benchmark exists. The precision figure is one agent's check on 7 chapters.
 - Briefs keep selected facts. The M6 DEV probes found 20% of questions whose evidence no brief item cites.
-- The hedge check misreads negated hearsay (「噂は聞いた事がない」), so such corrections wait for the reviewer.
+- The hedge check used to misread negated hearsay (「噂は聞いた事がない」) and a hedge after 「ので、」. Both are fixed: lexicons may list `negated_hedges`, and 「ので」 closes a hedge's scope. On the stored trial, 6 of 7 corrections now pass the brief checks; the last one waits for the reviewer.
 - Exhaustive extraction remains M4's.

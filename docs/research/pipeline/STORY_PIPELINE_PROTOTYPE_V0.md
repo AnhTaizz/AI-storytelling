@@ -693,7 +693,9 @@ The run COMPLETED in 17 calls, 234,402 tokens and 357 s. S2's episode 2 took 31 
   - Corrections that are not applied are listed for the reviewer in `brief_check.md` and the manifest (`brief_check`).
 - **Switches.** `--no-brief-check` turns the check off. A check that cannot answer is recorded and the episode goes on.
 - **Trial on stored briefs** (sample chapters 1–5 and the original Chinese story chapters 1–2): 7 calls and 174k tokens found 15 problems. On a manual check against the source, 14 are real and 1 is arguable (a nickname labelled REPORTED rather than FIGURATIVE). They include "đứng đầu kỳ thi" written as a rumour although 1.7 states it, "định đóng cửa", "như thể anh nói nhiều người" (4.32 says "one or two"), and six character statements in the Chinese story labelled REPORTED.
-- **Corrections blocked by the brief checks.** 5 of the 15 corrections were not applied. Most fail because the deterministic hedge check reads 噂 in "never heard a rumour that…" as hearsay. They stay for the reviewer.
+- **Corrections blocked by the brief checks.** At first, 5 of the 15 corrections were not applied. The deterministic hedge check read 噂 in "never heard a rumour that…" as hearsay, and let a 「…なさそうだ」 after 「ので、」 reach back to the first clause.
+  - Fixes: lexicons may list `negated_hedges` (ja, zh, vi), which are blanked before matching, and 「ので」 now closes a hedge's scope.
+  - Result: on the sample's stored corrections, 6 of 7 now apply. The remaining one, "always first in exams", waits for the reviewer.
 - **Live run** on chapters 2–3 (`--stop-after brief`): 2 calls. "định đóng cửa / trượt chân" was corrected before planning, and "no rumour" was listed for review. The run wrote `story_brief.html`, `story_brief.md`, `brief_check.md` and `brief_review_form.md`.
 
 ## Known limits

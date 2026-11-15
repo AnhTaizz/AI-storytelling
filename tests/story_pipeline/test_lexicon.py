@@ -87,6 +87,11 @@ class MatchingTests(unittest.TestCase):
             ("ko", "마치 천사처럼 보였다", "hedge", {"metaphor", "appearance"}),
             ("ko", "그는 집으로 돌아갔다", "hedge", set()),
             # Chinese: simplified and traditional forms; no single-character phrases.
+            # A denied rumour is not hearsay (the brief check's "no rumour" correction, chapter 3).
+            ("ja", "失敗しただのなんだのそういう噂は聞いた事がないので", "hedge", set()),
+            ("ja", "噂通りなら優等生らしい", "hedge", {"reported"}),
+            ("zh", "我从没听说过她失败", "hedge", set()),
+            ("vi", "Amane chưa từng nghe tin đồn Mahiru thất bại", "hedge", set()),
             ("zh", "据说她每次考试都是第一名", "hedge", {"reported"}),
             ("zh", "據說她每次考試都是第一名", "hedge", {"reported"}),
             ("zh", "她的眼睛似乎有点红", "hedge", {"appearance"}),
@@ -127,6 +132,8 @@ class ClauseTests(unittest.TestCase):
             ("ja", "周はクラスが違うので詳しくは知らないが、噂通りなら完璧超人だ。",
              ["周はクラスが違うので詳しくは知らないが、", "噂通りなら完璧超人だ。"]),
             ("ja", "真昼が、雨の中に座っていた。", ["真昼が、雨の中に座っていた。"]),  # subject が is no contrast
+            ("ja", "そういう噂は聞いた事がないので、ひどいという訳でもなさそうだ。",  # a cause clause closes a part
+             ["そういう噂は聞いた事がないので、", "ひどいという訳でもなさそうだ。"]),
             ("en", "I don't know her, but rumour says she is perfect.",
              ["I don't know her,", " but rumour says she is perfect."]),
             ("en", "Butter, eggs, flour.", ["Butter, eggs, flour."]),  # "but" inside a word

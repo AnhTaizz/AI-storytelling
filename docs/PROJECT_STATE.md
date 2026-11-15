@@ -999,7 +999,7 @@ M4-04B3H: score the locked FV1 predictions.
 - **Deliverable:** the episode Story Brief is written before planning: `story_brief.json/.md/.html`, built from evidence-quoted chapter briefs, the recap and the M6 callbacks.
 - **Brief check:** each chapter brief is checked against its source; corrections that pass every brief check are applied to the run's copy, and the rest go to `brief_check.md` for review. The trial found 15 problems in 7 chapters, 14 of them real.
 - **Owner review:** `brief_review_form.md` changes are applied before planning on `--resume`.
-- **Open:** there is no sealed brief-fidelity benchmark; brief coverage is about 80% of the DEV questions; the hedge check misreads negated hearsay.
+- **Open:** there is no sealed brief-fidelity benchmark; brief coverage is about 80% of the DEV questions; one stored correction still conflicts with the deterministic hedge check and waits for the reviewer.
 
 ## M6 Retrieval Baseline — ACCEPTED as a baseline over the brief memory (DEC-021, 2026-11-15)
 

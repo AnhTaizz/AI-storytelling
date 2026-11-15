@@ -40,3 +40,5 @@ hedge:
   appearance: [có vẻ, dường như, trông như, hình như, như thể, như sắp, như muốn]
   speculation: [có lẽ, có thể, chắc là, phỏng đoán]
   metaphor: [ví như, được ví, tựa như, ẩn dụ, như là]
+# A denied rumour is a plain statement ("chưa từng nghe tin đồn …").
+negated_hedges: [chưa từng nghe, không hề nghe, chưa từng có tin đồn, không có tin đồn]
