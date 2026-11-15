@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 63 — test functions: 1059
+Suites: 9 — test files: 64 — test functions: 1064
 
 ## canonical_story
 
@@ -1027,6 +1027,15 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_co
 - `M404B3CDev2PredictionRunnerTests.test_schema_failure_is_repair_eligible_category`
 - `M404B3CDev2PredictionRunnerTests.test_compiler_failure_is_repair_eligible_and_private_safe`
 - `M404B3CDev2PredictionRunnerTests.test_context_only_compiler_failure_remains_structural`
+
+### test_run_m4_04b3g_fv1_predictions_v1 (5)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_compiler_v1_1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.durable_research_executor_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.m4_04b3f_fv1_protocol_v1`, `tools.story_extraction.run_m4_04b3g_fv1_predictions_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `ValidationTests.test_structural_categories_carry_blockers_but_no_private_text`
+- `ValidationTests.test_runner_cannot_reach_gold_or_an_evaluator`
+- `RunTests.test_primary_repair_and_terminal_outcomes`
+- `RunTests.test_smoke_qualification_and_summary`
+- `RunTests.test_lock_mismatches_stop_before_any_call`
 
 ### test_story_extraction_contract_v0 (39)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.evaluate_extraction_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
