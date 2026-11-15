@@ -426,6 +426,45 @@ Candidate next steps:
 - A deterministic check that speech and thought verbs in the script match the brief item's kind.
 - A check that each revision keeps the fixes of the one before it.
 
+**Attribution audit and source check (added after run 10).**
+
+- **Attribution audit (deterministic, feeds revision).** It looks at the content of reported speech in the script ("X giải thích **rằng** |…"). If that content retells a brief statement better than any other, and the statement involves no speech at all, the sentence is a MEDIUM finding. A statement involves speech if its text has a verb of saying, or its quote or any cited passage has dialogue. Verbs and complementizers are optional lexicon fields (`speech_verbs`, `speech_complementizers`; vi and en so far). On the saved scripts of runs 2–10 (15 versions) it flags only run 10's "lost child" sentence. The first, looser prototype had 9 false positives for 1 catch.
+- **Source check (LLM, feeds revision).** A second verifier gets the episode's source text and every paragraph. It reports, quoting the script exactly:
+  - CONTRADICTS_SOURCE, NOT_IN_SOURCE and WRONG_SPEAKER;
+  - STRENGTHENED and WRONG_CAUSE.
+
+  Answers are rejected if a quote is not in its paragraph, a passage is outside the episode, or a paragraph is missing. It adds one call per script version, and is skipped (and recorded) above 60,000 source characters.
+- **Before integrating:** on run 10's final script, five trial calls in two designs returned 12 findings, all real:
+  - "steaming" porridge (4 of 5 calls);
+  - the lost-child speech (4/5);
+  - Itsuki's boast (3/5);
+  - "back at school the next day" (1/5);
+  - a strong blush (1/5);
+  - an "eat the whole bowl" instruction that the manual review had missed (1/5).
+
+  Giving the whole source worked better than giving each paragraph only its cited passages: the porridge passage (3.81) belonged to the next brief event. No trial call caught "fierce".
+
+**2026-11-15, run 13 (run 10's settings plus both checks).**
+
+The run COMPLETED in 14 calls and 875 s. All five briefs came from memory and passed the current checks. Findings for revision went 29 → 8 → 4.
+
+- **Source check:**
+  - v1: three real findings: the steaming porridge, Itsuki's boast, and Mahiru "calling his name" (5.39 has no name).
+  - v2: five real errors, all introduced by the first revision: Amane "falling flat on the floor" (2.71: he sways towards the wall), a scene moved to the shoe lockers, "two days ill in bed" (5.3: well the next day), and two smaller ones.
+  - v3: the WRONG_CAUSE "fierce" finding that no earlier check or trial call had caught, with the trigger (4.24) named.
+- **Attribution audit:** it flagged Amane "explaining" Mahiru's virtues (top of the year, good at sport). In the source those come from the narrator (4.26–4.27), and Amane only says she is popular (4.24). Partly true: the gist was spoken, but the list was not.
+- **Final script, checked by hand:**
+  - The steaming porridge and the lost-child speech are gone. The lost-child look is now Amane's recollection, as in the source.
+  - "Fierce" is still there, but the report now names it. It is no longer a silent pass.
+  - Remaining, unflagged: "đỏ bừng cả mặt" (3.47: faintly), "eat the whole bowl" (not in 3.76), and "nghe nói" for messages Amane himself received (5.8).
+  - The strength audit flagged "đúng không mọi người?", where "mọi người" addresses the audience. That is a false positive.
+- **Gates:** they now report GATE_FACTUAL_GROUNDING and GATE_EPISTEMIC_INTEGRITY as needing review, with four MEDIUM findings after the two revision rounds. Run 10 passed every gate with three real defects inside.
+
+What this shows:
+
+- Reading the script against the source catches the class of defect the brief-based critic cannot see, including errors that revision itself introduces.
+- Recall is still partial and varies from call to call, so the source check narrows the manual review but does not replace it.
+
 ## Known limits
 
 - Brief paraphrase quality is not measured against gold. Quotes pin the evidence, but a
