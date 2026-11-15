@@ -153,3 +153,18 @@ bao giờ bị ghi đè.
 - **`FAILED` ở bước brief:** xem `calls.jsonl` để biết lý do từng lần thử. Chạy lại với `--resume <thư mục lần chạy>` (không cần tham số khác) để không phải gọi lại các bước đã xong.
 - **Lỗi 503 / quá tải:** chuỗi model tự chuyển sang model sau. Nếu tất cả đều lỗi, chờ một lúc rồi chạy lại.
 - **Hết quota:** với `run_story`, chạy lại cùng lệnh hôm sau.
+
+## 8. Duyệt plan trước khi viết kịch bản (M8)
+
+1. Chạy đến bước plan:
+
+   ```
+   python -m tools.story_pipeline.run_pipeline --chapters <phạm vi> --recap --stop-after plan
+   ```
+2. Mở `plan_review.html`: mỗi beat (đoạn kể) nằm cạnh các sự kiện brief nó kể và mã passage bằng chứng; beat có cảnh báo (nhịp kể, tên lạ, con số lạ) được viền vàng. Bản chữ ở `plan.md`.
+3. Sửa `plan_review_form.md`, mỗi dòng một beat:
+   - `bỏ: [x]` để bỏ beat (beat có sự kiện CORE không bỏ được);
+   - đổi `vị trí:` để chuyển beat lên/xuống (1 = đầu tiên);
+   - đổi `số từ:` để kể dài hay ngắn hơn;
+   - viết sau `ghi chú:` điều người viết cần lưu ý.
+4. Chạy `--resume <thư mục lần chạy>`: plan đã sửa được dùng để viết kịch bản; `report` ghi lại mọi thay đổi và mục bị từ chối. Phiếu đã điền được giữ thành `plan_review_form_reviewed_1.md`.

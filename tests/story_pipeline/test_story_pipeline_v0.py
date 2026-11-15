@@ -1114,6 +1114,39 @@ class EndToEndTests(unittest.TestCase):
                 report = json.loads((out / "report.json").read_text(encoding="utf-8"))
                 self.assertEqual([o["status"] for o in report["owner_review"]], [status])
 
+    def test_plan_review_files_and_owner_beat_edits_before_the_script(self):
+        """M8: plan checks and review page on --stop-after plan; a filled plan_review_form.md is
+        applied on --resume before the script is written, and replayed afterwards."""
+        scope = load_scope(DEFAULT_MANIFEST, (1, 1))
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "run"
+            manifest = run(ScriptedLLMClient(FakeModel()), scope, test_profile(), out, stop_after="plan")
+            self.assertEqual(manifest["status"], "STOPPED_AFTER_PLAN")
+            for name in ("plan.md", "plan_review.html", "plan_review_form.md"):
+                self.assertTrue((out / name).is_file(), name)
+            self.assertEqual(manifest["plan_checks"]["coverage"]["core_covered"], 1)
+            form = (out / "plan_review_form.md").read_text(encoding="utf-8")
+            filled = (form.replace("`B1` bỏ: [ ]", "`B1` bỏ: [x]")
+                      .replace("vị trí: 2 | số từ: 30 | ghi chú: ", "vị trí: 2 | số từ: 60 | ghi chú: kể chậm lại"))
+            (out / "plan_review_form.md").write_text(filled, encoding="utf-8")
+            prompts = []
+            model = FakeModel()
+            client = ScriptedLLMClient(lambda stage, system, user: (prompts.append((stage, user)),
+                                                                     model(stage, system, user))[1])
+            manifest = run(client, scope, test_profile(), out, resume=True)
+            self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
+            script_prompt = next(user for stage, user in prompts if stage == "script")
+            self.assertIn("Ghi chú người duyệt: kể chậm lại", script_prompt)
+            self.assertIn("\"target_words\": 60", script_prompt)
+            review = manifest["plan_review"]
+            self.assertEqual(([c["change"] for c in review["changes"]], [r["beat"] for r in review["rejected"]]),
+                             (["words", "note"], ["B1"]))  # B1 holds the CORE event
+            self.assertEqual((out / "plan_review_form_reviewed_1.md").read_text(encoding="utf-8"), filled)
+            self.assertNotIn("kể chậm lại", json.loads((out / "plan.json").read_text(encoding="utf-8"))["beats"][1]["purpose"])
+            again = ScriptedLLMClient(FakeModel())
+            replay = run(again, scope, test_profile(), out, resume=True)
+            self.assertEqual((again.calls, replay["plan_review"]["rounds"]), ([], 1))
+
     def test_patch_edits_are_validated_and_applied_in_place(self):
         script = {"title_idea": "t", "sections": [
             {"beat_id": "B1", "text": "Cháo nghi ngút khói. Cậu ăn.\n\nCô cười."},

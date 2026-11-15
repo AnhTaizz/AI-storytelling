@@ -994,6 +994,44 @@ M4-04B3H: score the locked FV1 predictions.
 - Score the 9 compiled batches, and FV1_03 as a structural failure, with the frozen Snapshot V2 evaluator against the sealed gold.
 - No model call, repair or re-run after the gold opens. The holdout stays closed.
 
+## M4-04B3H — FV1 SCORING — COMPLETED — Status: M4_04B3H_FV1_SCORED
+
+- **Authorization.** The 2026-11-15 owner delegation.
+- **Before the gold opened.** Every private M4-04B3G artifact hashed to the prediction lock (raw responses, drafts, compiled batches, the terminal failure, manifest and result). The prediction set hash recomputed to `8e055962…`, and the lock was on `main` (`b3bf1fe`). The FV1 input, blindness manifest and gold hashed to the M4-04B3E seal (gold `732a3555…`), and the Snapshot V2 files were unchanged. The gold was opened at 2026-11-15T17:52:24Z; zero provider operations followed.
+- **Rules.** The frozen Snapshot V2 evaluator (`evaluate_extraction_guarded_v1`) in `REAL_SOURCE` mode with the sealed `COMPLETE_FOR_PROFILE` completeness; metrics from protocol section 12 and case outcome from section 13; FV1_03 as a failed case. Under complete gold the evaluator records unmatched predictions as UNSUPPORTED with severity UNRATED; nobody adjudicated them. No acceptance threshold was preregistered, so none is applied.
+- **Result** (`gemini-3.5-flash-lite`, Draft V1.1, 10 cases):
+
+  | Measure | Value |
+  |---|---|
+  | L0 structurally valid | 9/10 |
+  | Full canonical case success | **0/10** |
+  | Layers L1 grounding / L2 semantics / L3 referent structure / L4 coverage | 2 / 8 / 1 / 0 of 9 |
+  | Required assertions recovered (L0-valid cases) | 94/148 = 0.635 (94/168 = 0.560 counting FV1_03 as zero) |
+  | Micro assertion precision | 0.764 |
+  | Unsupported assertions | 29 (rate 0.236), all UNRATED, none adjudicated |
+  | Mean epistemic accuracy / evidence role accuracy / referent resolution | 1.000 / 0.884 / 0.750 |
+
+  Per-case recall ranges from 0.44 (FV1_07) to 0.93 (FV1_09). The dominant failure is `MISSED_REQUIRED_ASSERTION` (41), then `UNSUPPORTED_ASSERTION` (29), `MISSING_ENTITY_RESOLUTION` (13) and evidence span/role errors.
+- **Verdict.** Draft V1.1 is writable (9/10 compile, against 2/10 on DEV2 with V1), but the extraction is far from full case success: every compiled case misses required assertions. No extractor is lockable from this result, and the gold is agent-drafted, not human-confirmed.
+- **Boundaries.** No model call, repair or re-run; no protocol change; DEV2 gold and the holdout were not opened; no M4-04C or M5 work. FV1 is now an opened set and can no longer serve as fresh validation.
+- **Records.** `benchmarks/m4_extraction/M4_04B3H_FV1_SCORING_RESULT.yaml` (aggregate and per-case metrics, codes and hashes; no source text). The full evaluation and the gold-access record stay in the git-ignored `.local/story_extraction/M4_04B3H_FV1_SCORING_V1/`. Scorer: `tools/story_extraction/score_m4_04b3h_fv1_v1.py` with `tests/story_extraction/test_score_m4_04b3h_fv1_v1.py`.
+
+## Next Candidate
+
+Owner decision on the M4 direction after FV1 (nothing authorized yet):
+
+- **Coverage diagnosis on FV1 (now development data).** Classify the 41 missed required assertions and the 29 unsupported ones by predicate and failure layer, and adjudicate the unsupported ones for severity. No model call is needed.
+- **Prompt or model change.** Any change must be tested on a new sealed fresh set, because FV1's gold is now open. A `gemini-3.6-flash` arm, or a coverage-oriented prompt, would each be a new locked protocol.
+- **Gold confirmation.** The FV1 gold is agent-drafted; a human review of a sample would tell how much of the gap is gold error.
+- The holdout stays closed, and M4-04C and M5 still need separate authorization.
+
+## M8 Narrative Planning — ACCEPTED as a baseline (DEC-023, 2026-11-15)
+
+- **Plan checks (`plan_review.py`):** refs are hard checks; a callback in the wrong order is a soft error. Pacing and new names or numbers in free text are advisory.
+- **Owner review:** `plan_review.html` shows the plan, and `plan_review_form.md` edits are applied on `--resume` before writing.
+- **Offline scan of 28 plans:** 1 real pacing finding, and 11 false name warnings ("Thiên sứ").
+- **Open:** the judgement of hook and pacing quality stays with the owner's M1/M9 review.
+
 ## M7 Story Brief — ACCEPTED (DEC-022, 2026-11-15)
 
 - **Deliverable:** the episode Story Brief is written before planning: `story_brief.json/.md/.html`, built from evidence-quoted chapter briefs, the recap and the M6 callbacks.
