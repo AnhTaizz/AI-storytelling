@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 68 — test functions: 1083
+Suites: 9 — test files: 69 — test functions: 1088
 
 ## canonical_story
 
@@ -619,6 +619,15 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.analyze_
 - `M404B3DDiagnosticTests.test_analyzer_has_only_prediction_artifact_and_input_parameters`
 - `M404B3DDiagnosticTests.test_gold_and_holdout_paths_fail_before_access`
 - `M404B3DDiagnosticTests.test_attempt_is_mechanical_public_safe_and_compiles`
+
+### test_diagnose_m4_04b3i_fv1_v1 (5)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.diagnose_m4_04b3i_fv1_v1`, `tools.story_extraction.evaluate_extraction_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.score_m4_04b3h_fv1_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `DiagnosisTests.test_every_item_gets_its_class_and_cause`
+- `DiagnosisTests.test_the_rebuilt_matching_reproduces_the_frozen_evaluator`
+- `DiagnosisTests.test_cause_rules`
+- `DiagnosisTests.test_public_record_holds_counts_only`
+- `DiagnosisTests.test_diagnose_reads_the_private_files_and_checks_each_case`
 
 ### test_draft_compiler_v1 (28)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.extraction_contract_guard_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
