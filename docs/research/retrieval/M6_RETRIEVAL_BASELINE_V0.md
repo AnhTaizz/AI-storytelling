@@ -271,10 +271,11 @@ Hit@10, while private large has higher full-evidence completion and MRR.
 
 ## Verification and limits
 
-In CI (Linux, PR #5) `python -m tools.ci.check --coverage` passes; for the first
-version it reported diff coverage of 97.5% of 281 changed executable `tools/` lines.
-On the Windows development machine the same gate passes compile, test policy and all
-suites (886 tests, zero failures/skips, seven declared environment gates), but the
+In CI (Linux, PR #5) `python -m tools.ci.check --coverage` passes on every commit; at
+commit `ecf9e9d` it reported diff coverage of 97.0% of 366 changed executable `tools/`
+lines (97.5% of 281 for the first version). On the Windows development machine the same
+gate passes compile, test policy and all suites (889 tests at `ecf9e9d`, zero
+failures/skips, seven declared environment gates), but the
 protected diff-coverage guard reports 0%: coverage JSON keys there are relative paths
 with backslashes, which the guard does not normalise. The guard was not changed or
 bypassed; the figures below were computed with its own functions on normalised keys.
