@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 8 — test files: 55 — test functions: 1002
+Suites: 8 — test files: 56 — test functions: 1008
 
 ## canonical_story
 
@@ -1198,6 +1198,16 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `ReviewPageTests.test_text_is_escaped_and_the_page_is_self_contained`
 - `ReviewPageTests.test_review_form_lists_every_question`
 - `ReviewPageTests.test_page_without_a_critic_still_renders`
+
+### test_run_story (6)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.llm`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.run_story`
+
+- `PlanTests.test_episodes_cover_the_range_in_order`
+- `SeasonTests.test_episodes_run_in_order_with_earlier_chapters_as_background`
+- `SeasonTests.test_rerun_skips_completed_episodes_and_resumes_the_rest`
+- `SeasonTests.test_quota_pauses_and_failures_stop_unless_told_to_keep_going`
+- `SeasonTests.test_season_with_the_real_pipeline_and_shared_memory`
+- `CliTests.test_bad_episode_plan_is_rejected_before_any_call`
 
 ### test_story_pipeline_v0 (42)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`

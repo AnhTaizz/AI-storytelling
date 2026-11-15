@@ -16,7 +16,7 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Sequence
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 REPO = Path(__file__).resolve().parents[2]
 if str(REPO) not in sys.path:
@@ -148,6 +148,7 @@ def report_markdown(manifest: Dict[str, Any], report: Dict[str, Any]) -> str:
         f"- Profile: `{manifest['profile']['profile_id']}`, "
         f"{manifest['profile']['min_words']}–{manifest['profile']['max_words']} từ",
         f"- Số lần gọi mô hình: {manifest['model_calls']} — thời gian: {manifest['seconds']} giây",
+        _usage_line(manifest.get("usage")),
         f"- Trạng thái: **{manifest['status']}**",
         _language_line(manifest.get("language_checks")),
         *[f"- **Cảnh báo nguồn:** {warning}" for warning in manifest.get("source_warnings", [])],
@@ -202,6 +203,33 @@ REVIEW_QUESTIONS = [
     ("voice", "Đọc thành tiếng có tự nhiên, đúng giọng kênh không?"),
     ("usable", "Có dùng được làm kịch bản không? Cần sửa bao nhiêu phút?"),
 ]
+
+
+USAGE_FIELDS = {"prompt": "prompt_token_count", "output": "candidates_token_count",
+                "thoughts": "thoughts_token_count", "total": "total_token_count"}
+
+
+def usage_summary(entries: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
+    """Calls and tokens per stage, from the provider's usage metadata (missing counts as 0)."""
+    stages_: Dict[str, Dict[str, int]] = {}
+    for entry in entries:
+        row = stages_.setdefault(entry.get("stage", "?"), {"calls": 0, **{k: 0 for k in USAGE_FIELDS}})
+        row["calls"] += 1
+        usage = entry.get("usage") or {}
+        for key, field in USAGE_FIELDS.items():
+            row[key] += int(usage.get(field) or 0)
+    total = {"calls": sum(r["calls"] for r in stages_.values()),
+             **{k: sum(r[k] for r in stages_.values()) for k in USAGE_FIELDS}}
+    return {"by_stage": stages_, "total": total}
+
+
+def _usage_line(usage: Optional[Dict[str, Any]]) -> str:
+    if not usage or not usage["total"]["calls"]:
+        return "- Token: không có số liệu"
+    total = usage["total"]
+    biggest = max(usage["by_stage"].items(), key=lambda item: item[1]["total"])
+    return (f"- Token: {total['total']:,} tổng ({total['prompt']:,} vào, {total['output']:,} ra, "
+            f"{total['thoughts']:,} suy nghĩ) — tốn nhất: {biggest[0]} ({biggest[1]['total']:,})")
 
 
 def review_form(manifest: Dict[str, Any]) -> str:
@@ -263,6 +291,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         if error:
             manifest["error"] = error
         manifest["model_calls"] = len(log.entries)
+        manifest["usage"] = usage_summary(log.entries)
         manifest["seconds"] = round(time.time() - started, 1)
         write_json(out_dir / "run_manifest.json", manifest)
         calls_path = out_dir / "calls.jsonl"
@@ -449,27 +478,47 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: Optional[List[str]] = None) -> int:
-    args = build_parser().parse_args(argv)
-    start, end = parse_range(args.chapters)
-    background: List[Chapter] = []
-    if args.recap and start > 1:
-        full = load_scope(args.manifest, (1, end), args.source_root)
+def episode_scope(manifest_path: Path | str, start: int, end: int, source_root: Optional[str] = None,
+                  recap: bool = False) -> Tuple[StoryScope, List[Chapter]]:
+    """The episode's chapters, and in recap mode the earlier chapters as background."""
+    if recap and start > 1:
+        full = load_scope(manifest_path, (1, end), source_root)
         background = [c for c in full.chapters if c.order < start]
         scope = StoryScope(full.story_id, full.source_language, tuple(c for c in full.chapters if c.order >= start))
-    else:
-        scope = load_scope(args.manifest, (start, end), args.source_root)
-    memory = None if args.no_memory else StoryMemory(args.memory, scope.story_id)
-    profile = load_profile(args.profile).with_length(args.min_words, args.max_words)
-    facts = StoryFacts.load(args.facts) if args.facts else None
+        return scope, background
+    return load_scope(manifest_path, (start, end), source_root), []
 
+
+def make_client(args: argparse.Namespace) -> Optional[LLMClient]:
+    """The Gemini client for the CLI, or None (with a message) when keys are missing."""
     from tools.story_extraction.gemini_key_pool_v1 import GeminiConfigError
     from tools.story_pipeline.llm import GeminiLLMClient
     try:
-        client = GeminiLLMClient(args.model, dotenv_path=args.dotenv, temperature=args.temperature)
+        return GeminiLLMClient(args.model, dotenv_path=args.dotenv, temperature=args.temperature)
     except GeminiConfigError as exc:
         print(f"config error: {exc}. Copy .env.example to .env and fill GEMINI_API_KEY_1 "
               f"(and GEMINI_MODEL or --model).", file=sys.stderr)
+        return None
+
+
+def run_options(args: argparse.Namespace) -> Dict[str, Any]:
+    """Keyword arguments for `run` taken from the shared command-line options."""
+    return {"max_repairs": args.max_repairs, "revision_rounds": args.revision_rounds,
+            "revise_severities": [s.strip() for s in args.revise_severities.split(",") if s.strip()],
+            "stop_after": args.stop_after, "source_check": not args.no_source_check,
+            "source_check_samples": args.source_check_samples,
+            "full_revision_rounds": args.full_revision_rounds}
+
+
+def main(argv: Optional[List[str]] = None) -> int:
+    args = build_parser().parse_args(argv)
+    start, end = parse_range(args.chapters)
+    scope, background = episode_scope(args.manifest, start, end, args.source_root, args.recap)
+    memory = None if args.no_memory else StoryMemory(args.memory, scope.story_id)
+    profile = load_profile(args.profile).with_length(args.min_words, args.max_words)
+    facts = StoryFacts.load(args.facts) if args.facts else None
+    client = make_client(args)
+    if client is None:
         return 2
 
     if args.resume:
@@ -481,13 +530,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     print(f"run dir: {out_dir}", flush=True)
     for warning in layout_warnings([*background, *scope.chapters]):
         print(f"warning: {warning}", flush=True)
-    manifest = run(client, scope, profile, out_dir, facts=facts, max_repairs=args.max_repairs,
-                   revision_rounds=args.revision_rounds,
-                   revise_severities=[s.strip() for s in args.revise_severities.split(",") if s.strip()],
-                   stop_after=args.stop_after, resume=resume, background=background, memory=memory,
-                   source_check=not args.no_source_check, source_check_samples=args.source_check_samples,
-                   full_revision_rounds=args.full_revision_rounds,
-                   progress=lambda message: print(f"  ... {message}", flush=True))
+    manifest = run(client, scope, profile, out_dir, facts=facts, resume=resume, background=background,
+                   memory=memory, progress=lambda message: print(f"  ... {message}", flush=True),
+                   **run_options(args))
     print(f"status: {manifest['status']}  calls: {manifest['model_calls']}  seconds: {manifest['seconds']}")
     if manifest.get("error"):
         print(f"error: {manifest['error']}")
