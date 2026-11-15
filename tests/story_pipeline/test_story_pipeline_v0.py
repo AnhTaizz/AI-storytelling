@@ -112,6 +112,8 @@ PLAN = {
 
 SCRIPT = {"title_idea": "Chiếc ô", "sections": [{"beat_id": "B1", "text": SECTION_1},
                                                  {"beat_id": "B2", "text": SECTION_2}]}
+REVISED = {"title_idea": "Chiếc ô", "sections": [{"beat_id": "B1", "text": SECTION_1.replace("chiều", "tối")},
+                                                  {"beat_id": "B2", "text": SECTION_2}]}
 
 
 def claim(claim_type, severity=None, category=None):
@@ -150,8 +152,10 @@ class FakeModel:
             plan["beats"][0]["event_refs"] = refs[:1]
             plan["beats"][1]["event_refs"] = refs[1:]
             return json.dumps(plan, ensure_ascii=False)
-        if stage in ("script", "revise"):
+        if stage == "script":
             return "```json\n" + json.dumps(SCRIPT, ensure_ascii=False) + "\n```"
+        if stage == "revise":  # rewords the first paragraph, where the first critic found the problem
+            return json.dumps(REVISED, ensure_ascii=False)
         if stage == "critic":
             self.critic_calls += 1
             return json.dumps(critic_json(user, self.critic_calls == 1), ensure_ascii=False)
@@ -795,6 +799,60 @@ class EndToEndTests(unittest.TestCase):
             manifest = run(client, scope, test_profile(), Path(tmp) / "off", source_check=False)
             self.assertNotIn("source_check", [c["stage"] for c in client.calls])
             self.assertFalse(manifest["settings"]["source_check"])
+
+    def test_later_versions_recheck_only_the_paragraphs_that_changed(self):
+        """Patch rounds left 60-97% of paragraphs byte-identical in saved runs, yet every
+        version sent all of them to the critic and the source check again."""
+        scope = load_scope(DEFAULT_MANIFEST, (1, 1))
+
+        class Model(FakeModel):
+            """The first source check finds a problem in P002, which the revision leaves alone."""
+            checks = 0
+
+            def __call__(self, stage, system, user):
+                if stage != "source_check":
+                    return super().__call__(stage, system, user)
+                self.checks += 1
+                units = list(dict.fromkeys(re.findall(r"<(P\d{3})>", user)))
+                findings = [{"script_quote": "chiếc ô", "kind": "NOT_IN_SOURCE", "passage_ids": ["1.2"],
+                             "explanation": "không có trong nguồn"}] if self.checks == 1 else []
+                return json.dumps({"paragraphs": [{"unit_id": u, "findings": findings if u == "P002" else []}
+                                                  for u in units], "critic_reviews": critic_reviews(user, "NOT_IN_SOURCE")})
+
+        for full_recheck, rechecked, problems in ((False, [2, 1], [2, 1]), (True, [2, 2], [2, 0])):
+            with self.subTest(full_recheck=full_recheck), tempfile.TemporaryDirectory() as tmp:
+                prompts = []
+                model = Model()
+                client = ScriptedLLMClient(lambda stage, system, user: (prompts.append((stage, user)),
+                                                                         model(stage, system, user))[1])
+                manifest = run(client, scope, test_profile(), Path(tmp) / "run", full_recheck=full_recheck)
+                self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
+                self.assertEqual([v["rechecked_units"] for v in manifest["versions"]], rechecked)
+                self.assertEqual([v["problem_claims"] for v in manifest["versions"]], problems)
+                second_critic = [user for stage, user in prompts if stage == "critic"][1]
+                self.assertEqual("<P002>" in second_critic, full_recheck)
+                # The carried critic verdicts still cover every paragraph.
+                critic = json.loads((Path(tmp) / "run" / "critic_v2.json").read_text(encoding="utf-8"))
+                self.assertEqual([u["unit_id"] for u in critic["units"]], ["P001", "P002"])
+                report = json.loads((Path(tmp) / "run" / "report.json").read_text(encoding="utf-8"))
+                self.assertEqual([(f["unit_id"], f["source"]) for f in report["findings"]],
+                                 [] if full_recheck else [("P002", "source_check")])
+
+        # Matching is by text, so paragraphs that move keep their verdicts under the new id.
+        old = [{"unit_id": "P001", "sha256": "a", "text": "A"}, {"unit_id": "P002", "sha256": "b", "text": "B"},
+               {"unit_id": "P003", "sha256": "c", "text": "C"}]
+        new = [{"unit_id": "P001", "sha256": "z", "text": "Z"}, {"unit_id": "P002", "sha256": "a", "text": "A"},
+               {"unit_id": "P003", "sha256": "c", "text": "C"}]
+        carried = stages.unchanged_units(new, old)
+        self.assertEqual(carried, {"P002": "P001", "P003": "P003"})
+        previous = {"units": [{"unit_id": u, "claims": [claim("SUPPORTED_FACT")], "no_claim_reason": u}
+                              for u in ("P001", "P002", "P003")]}
+        fresh = {"units": [{"unit_id": "P001", "claims": [], "no_claim_reason": "fresh"}]}
+        merged = stages.merge_critic(new, fresh, previous, carried)
+        self.assertEqual([(u["unit_id"], u["no_claim_reason"]) for u in merged["units"]],
+                         [("P001", "fresh"), ("P002", "P001"), ("P003", "P003")])
+        findings = [{"unit_id": "P001", "claim": "A"}, {"unit_id": "P002", "claim": "B"}]
+        self.assertEqual(stages.carry_findings(findings, carried), [{"unit_id": "P002", "claim": "A"}])
 
     def test_critic_findings_the_source_supports_become_brief_gaps(self):
         """Season S2 episode 2: the critic flagged four details that the brief had left out

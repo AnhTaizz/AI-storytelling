@@ -174,6 +174,7 @@ Useful flags:
 - `--revision-rounds N` and `--full-revision-rounds K`: the first K rounds may rewrite the script, later rounds only patch sentences;
 - `--revise-severities CRITICAL,HIGH`;
 - `--source-check-samples N` (default 2), or `--no-source-check`;
+- `--full-recheck`: send every paragraph to the critic and the source check in every version. By default, a paragraph whose text is byte-identical to one in the previous version keeps that version's critic claims, source-check findings and brief gaps, and only changed paragraphs are checked again (`rechecked_units` per version in the manifest);
 - `--recap` (episode mode), `--no-memory`.
 
 A whole story, episode by episode:

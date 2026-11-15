@@ -283,7 +283,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         stop_after: str = "revise", resume: bool = False,
         background: Sequence[Chapter] = (), memory: Optional[StoryMemory] = None,
         source_check: bool = True, source_check_samples: int = 2, full_revision_rounds: int = 1,
-        progress: Callable[[str], None] = lambda message: None) -> Dict[str, Any]:
+        full_recheck: bool = False, progress: Callable[[str], None] = lambda message: None) -> Dict[str, Any]:
     """`scope` is the episode. `background` are earlier chapters, summarised from memory as a
     recap (never later chapters). With `memory`, chapter briefs are reused across runs."""
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -305,6 +305,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         "settings": {"max_repairs": max_repairs, "revision_rounds": revision_rounds,
                      "revise_severities": list(revise_severities), "stop_after": stop_after,
                      "source_check": source_check, "source_check_samples": source_check_samples,
+                     "full_recheck": full_recheck,
                      "full_revision_rounds": full_revision_rounds},
         "prompt_fingerprints": stages.prompt_fingerprints(),
         "language_checks": stages.audit_coverage(profile.target_language, profile.brief_language,
@@ -393,13 +394,22 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         verified: List[Dict[str, Any]] = []
         passages = {p.passage_id: p.text for c in [*background, *scope.chapters] for p in c.passages}
         version = 1
+        brief_gaps: List[Dict[str, Any]] = []
+        checked_units: List[Dict[str, str]] = []  # the previous version's paragraphs
         if stop_after != "script":
             while True:
                 units = checks.split_units(checks.script_text(script))
-                progress(f"critic v{version}")
+                # Paragraphs a patch round left untouched keep their earlier verdicts; only
+                # changed ones go to the critic and the source check again.
+                carried = {} if full_recheck or critic is None else stages.unchanged_units(units, checked_units)
+                fresh_units = [u for u in units if u["unit_id"] not in carried]
+                progress(f"critic v{version} ({len(fresh_units)}/{len(units)} paragraphs)")
+                previous_critic = critic
                 critic = cached(out_dir / f"critic_v{version}.json", resume,
-                                lambda: stages.run_critic(client, scope, briefs, units, profile,
-                                                          log, max_repairs, version, recap))
+                                lambda: stages.merge_critic(
+                                    units, stages.run_critic(client, scope, briefs, fresh_units, profile, log,
+                                                             max_repairs, version, recap) if fresh_units else None,
+                                    previous_critic, carried))
                 audit = stages.strength_audit(critic, briefs, recap, units, profile.target_language,
                                               profile.brief_language)
                 audit += stages.hedge_audit(critic, briefs, recap, units, profile.target_language,
@@ -407,18 +417,19 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                 audit += stages.attribution_audit(critic, briefs, units, passages, profile.target_language,
                                                   profile.brief_language)
                 audit += _glossary_findings(units, glossary, roster, profile.target_language)
-                verified: List[Dict[str, Any]] = []
-                brief_gaps = []
-                if source_check:
+                carried_verified = stages.carry_findings(verified, carried)
+                carried_gaps = stages.carry_findings(brief_gaps, carried)
+                verified, brief_gaps = [], []
+                if source_check and fresh_units:
                     progress(f"source check v{version}")
-                    flags = stages.critic_flags(critic)
+                    flags = [f for f in stages.critic_flags(critic) if f["unit_id"] not in carried]
                     samples, results = [], []
                     for sample in range(1, max(1, source_check_samples) + 1):
                         name = f"source_check_v{version}.json" if sample == 1 else f"source_check_v{version}_s{sample}.json"
                         try:
                             result = cached(out_dir / name, resume,
-                                            lambda: stages.run_source_check(client, scope, units, profile, log,
-                                                                            max_repairs, version, sample, flags))
+                                            lambda: stages.run_source_check(client, scope, fresh_units, profile,
+                                                                            log, max_repairs, version, sample, flags))
                         except StageFailed as exc:
                             # A second verifier that cannot answer must not sink the episode
                             # (season S2): record it and go on with the other checks.
@@ -435,8 +446,11 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                     # Critic findings the source does support are gaps in the brief, not
                     # errors in the script: they leave revision and the gates.
                     brief_gaps = stages.overturned_flags(results, flags)
-                    if brief_gaps:
-                        critic = stages.without_claims(critic, brief_gaps)
+                verified += carried_verified
+                brief_gaps += carried_gaps
+                if brief_gaps:
+                    critic = stages.without_claims(critic, brief_gaps)
+                checked_units = units
                 audit += verified
                 write_json(out_dir / f"strength_audit_v{version}.json", audit)
                 problems = stages.findings_for_revision(critic, SEVERITY_ORDER) + audit
@@ -445,7 +459,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                 manifest["versions"].append({
                     "version": version, "word_count": check["word_count"],
                     "problem_claims": len(problems), "strength_audit": len(audit),
-                    "critic_overturned": len(brief_gaps),
+                    "critic_overturned": len(brief_gaps), "rechecked_units": len(fresh_units),
                     "high_or_worse": sum(1 for p in problems if p["severity"] in ("CRITICAL", "HIGH"))})
                 to_fix = stages.findings_for_revision(critic, revise_severities) + \
                     [f for f in audit if f["severity"] in revise_severities]
@@ -530,6 +544,9 @@ def build_parser() -> argparse.ArgumentParser:
                         help="revision rounds that may rewrite the script; later rounds only patch sentences")
     parser.add_argument("--source-check-samples", type=int, default=2,
                         help="independent source-check calls per script version; their findings are pooled")
+    parser.add_argument("--full-recheck", action="store_true",
+                        help="send every paragraph to the critic and the source check in every version "
+                             "(default: only paragraphs that changed since the previous version)")
     parser.add_argument("--no-source-check", action="store_true",
                         help="skip the second verifier that reads the script against the source text")
     parser.add_argument("--profile", default=str(DEFAULT_PROFILE_PATH), help="Narrative Profile YAML")
@@ -580,7 +597,7 @@ def run_options(args: argparse.Namespace) -> Dict[str, Any]:
             "revise_severities": [s.strip() for s in args.revise_severities.split(",") if s.strip()],
             "stop_after": args.stop_after, "source_check": not args.no_source_check,
             "source_check_samples": args.source_check_samples,
-            "full_revision_rounds": args.full_revision_rounds}
+            "full_revision_rounds": args.full_revision_rounds, "full_recheck": args.full_recheck}
 
 
 def main(argv: Optional[List[str]] = None) -> int:

@@ -1011,6 +1011,43 @@ def run_critic(client: LLMClient, scope: StoryScope, briefs: Sequence[Dict[str, 
     return normalize_critic(critic)
 
 
+# --------------------------------------------------------------------------- incremental checks
+
+def unchanged_units(units: Sequence[Dict[str, str]], previous: Sequence[Dict[str, str]]) -> Dict[str, str]:
+    """Paragraphs whose text is byte-identical to a paragraph of the previous version:
+    new unit id -> previous unit id. Patch rounds leave most paragraphs untouched (60-97%
+    in saved runs), so their critic and source-check verdicts can be carried over."""
+    pool: Dict[str, List[str]] = {}
+    for unit in previous:
+        pool.setdefault(unit["sha256"], []).append(unit["unit_id"])
+    carried = {}
+    for unit in units:
+        ids = pool.get(unit["sha256"])
+        if ids:
+            carried[unit["unit_id"]] = ids.pop(0)
+    return carried
+
+
+def merge_critic(units: Sequence[Dict[str, str]], fresh: Optional[Dict[str, Any]],
+                 previous: Optional[Dict[str, Any]], carried: Mapping[str, str]) -> Dict[str, Any]:
+    """One critic result for every paragraph: the fresh verdicts for changed paragraphs and
+    the previous version's for carried ones, under their new ids, in script order."""
+    fresh_units = {u["unit_id"]: u for u in (fresh or {}).get("units", [])}
+    old_units = {u["unit_id"]: u for u in (previous or {}).get("units", [])}
+    merged = []
+    for unit in units:
+        uid = unit["unit_id"]
+        entry = dict(old_units[carried[uid]], unit_id=uid) if uid in carried else fresh_units[uid]
+        merged.append(entry)
+    return {"units": merged}
+
+
+def carry_findings(findings: Sequence[Dict[str, Any]], carried: Mapping[str, str]) -> List[Dict[str, Any]]:
+    """The previous version's findings on carried paragraphs, under their new ids."""
+    back = {old: new for new, old in carried.items()}
+    return [dict(f, unit_id=back[f["unit_id"]]) for f in findings if f["unit_id"] in back]
+
+
 # --------------------------------------------------------------------------- source check
 
 # Above this much source text the check is skipped (and recorded), so a long episode cannot
