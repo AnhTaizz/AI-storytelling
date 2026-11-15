@@ -1,0 +1,161 @@
+task: M4-04B3E
+date: 2026-11-15
+status: M4_04B3E_FRESH_VALIDATION_V1_SEALED_PENDING_ORCHESTRATOR_REVIEW
+scope: FRESH_VALIDATION_SET_CONSTRUCTION_AND_OFFLINE_REPRESENTATIONAL_VALIDATION_ONLY
+base_commit: d0869ed12ac407a25d3ee32b395720dd6639d445
+authorization: "project owner, 2026-11-14 (the Next Candidate recorded after M4-04B3D)"
+
+boundaries:
+  provider_calls: 0
+  Gemini_or_other_API_used: false
+  prediction_runs: 0
+  DEV1_text_accessed: false
+  DEV2_input_opened: false
+  DEV2_gold_opened: false
+  holdout_input_opened: false
+  holdout_gold_opened: false
+  M4_04C_started: false
+  draft_V1_modified: false
+  draft_V1_1_modified: false
+  deterministic_compilers_modified: false
+  snapshot_V1_modified: false
+  snapshot_V2_modified: false
+  extractor_or_model_selected: false
+
+freshness:
+  set_id: M4_04B3E_FRESH_VALIDATION_V1
+  source_family: ORIGINAL_JA_MINI_NARRATIVES_FV1
+  source_language: ja
+  source_units: 10
+  cases: 10
+  authored_for_this_task: true
+  copied_narrative_text: false
+  excluded_source_families: [corpus_30_chapters, DEV1, DEV2, sealed_holdout]
+  non_use_basis: >-
+    Process isolation. The authoring session had no DEV1, DEV2 or holdout input or gold
+    (none of those private artifacts exist in its environment). No byte comparison against
+    sealed text is claimed.
+  author_exposure: >-
+    The author had read tracked sample chapters 1-5 of the 30-chapter corpus for pipeline
+    work, and the public M4 records, including the DEV2 capability list. No sentence,
+    character or scene of the corpus is used.
+  claim_boundary: "fresh authored miniature-source representational validation, not model-quality validation"
+
+case_coverage:
+  FV1_01: alias_and_multiple_mentions_one_referent
+  FV1_02: similar_names_and_unresolved_identity_without_merge
+  FV1_03: later_explicit_same_as_preserves_earlier_placeholder
+  FV1_04: repeated_exact_quote_requires_occurrence
+  FV1_05: speech_belief_and_negation_without_world_truth_leak
+  FV1_06: suggested_state_and_explicit_state
+  FV1_07: state_validity_bounds_and_named_time
+  FV1_08: multi_evidence_sufficient_partial_and_corroborating
+  FV1_09: explicit_causality_negated_causality_and_adjacency
+  FV1_10: prior_context_context_only_and_as_of_boundary
+case_coverage_note: >-
+  The ten capabilities are the ones preregistered for DEV2, so that the Draft V1.1 result on
+  fresh text can be read against the DEV2 tuning diagnostic. Texts, names and scenes are new.
+
+ingestion:
+  contract: LIGHT_NOVEL_INGESTION/v0
+  manifests: 10
+  source_documents: 10
+  source_language_metadata: ja
+  cases_ingested: "10/10"
+  exact_source_available_to_compiler: true
+
+gold:
+  extraction_profile: STORY_UNDERSTANDING_CORE_V0
+  status: [AGENT_DRAFT_GOLD, NOT_HUMAN_CONFIRMED]
+  annotation_method: HUMAN_ANNOTATION
+  review_state: UNREVIEWED
+  human_review_performed: false
+  annotation_order: "canonical semantics first; draft-like projection and compiler round-trip second"
+  completeness: "10/10 COMPLETE_FOR_PROFILE"
+  required_assertions: 168
+  acceptable_optional_assertions: 0
+  record_counts:
+    evidence_refs: 97
+    mentions: 60
+    entities: 35
+    events: 25
+    temporal_anchors: 27
+    propositions: 168
+    extraction_provenance: 10
+    assertions: 168
+  predicate_counts:
+    AnchorDate: 2
+    Attitude: 1
+    Causes: 2
+    EmotionToward: 2
+    IdentityKnown: 2
+    NamedAs: 15
+    Occurred: 25
+    OccursAt: 6
+    Owns: 1
+    Participates: 40
+    PhysicalCondition: 1
+    Possesses: 6
+    RefersTo: 60
+    SameAs: 1
+    Says: 1
+    TemporalRelation: 3
+  epistemic_status: {EXPLICIT: 163, ENTAILED: 4, SUGGESTED: 1}
+  assertion_polarity: {AFFIRMED: 164, NEGATED: 2, OPEN: 2}
+  evidence_roles: {DEPICTION: 91, NARRATION_SUMMARY: 3, RETROSPECTIVE: 3}
+  evidence_set_labels: {SUFFICIENT: 163, PARTIAL: 1, CORROBORATING: 1}
+  derivations: 5
+  assertions_with_validity: 26
+  prior_context: "FV1_10 builds on a base document holding 9 earlier assertions; they are context, not required gold"
+  annotation_rules: "recorded in the private authoring script inside the gold package; one coverage note per evidence-eligible passage"
+  literal_variants: "recorded in the gold package for 3 free-text literals (two emotions, one physical condition)"
+
+offline_representational_verification:
+  path: "canonical gold -> STORY_EXTRACTION_DRAFT_V1_1 oracle projection -> deterministic compiler V1.1 -> canonical batch"
+  gold_batches_passing_frozen_validation: "10/10"
+  draft_schema_and_compile_pass: "10/10"
+  compiled_batches_passing_source_exact_validation: "10/10"
+  canonical_semantic_support_graph_alpha_equivalence: "10/10"
+  representable: "10/10"
+  gap_detected: false
+  compiler_or_schema_patch_performed: false
+  interpretation: "representational coverage only; the oracle projection is not an extractor prediction"
+
+private_packages:
+  input:
+    name: M4_04B3E_FRESH_VALIDATION_V1_INPUT.zip
+    sha256: 724041283cde55ccbce27844c9297cf66eed857c96cf18989dc97997fef55729
+    bytes: 95013
+    members: 61
+    contains_gold: false
+    extractor_surface: "prepared_draft_input.json members only"
+  gold:
+    name: M4_04B3E_FRESH_VALIDATION_V1_GOLD.zip
+    sha256: 732a3555717c6d3426e6e379e43061cd1fd6d11df8798ec859f37248202ddc73
+    bytes: 676290
+    members: 33
+  blindness_manifest:
+    name: M4_04B3E_FRESH_VALIDATION_V1_BLINDNESS_MANIFEST.json
+    sha256: cdb8c0dcc62d12e776b0061201f3ec984289007f6e11450266474cfe52a75ea8
+  shared_member_names: 0
+  compression: "stored members, fixed timestamps, name order (byte-identical on rebuild)"
+  location: "untracked; produced in a cloud session and handed to the project owner for private storage"
+
+verification:
+  deterministic_rebuild: "PASS (two builds, identical hashes for all three artifacts)"
+  verify_from_sealed_packages: "PASS (hashes, bound interface files, package separation, no gold in input, gate 10/10)"
+  after_cutoff_text_absent_from_prepared_input: true
+  mention_evidence_handle_absent_from_prepared_inputs: true
+  seal_tool: tools/story_extraction/fresh_validation_seal_v1.py
+  seal_tool_sha256: c1271a17c17463db5b1b1b09aa7b546616e8fcdf04d76662ef4cc1691c2f0dd0
+  seal_tool_tests: tests/story_extraction/test_fresh_validation_seal_v1.py
+
+limits:
+  - "Gold is one agent's draft and is not human-confirmed. A later review that finds an omitted in-profile fact must withdraw that case's completeness label, not rewrite the seal."
+  - "The author of the gold also wrote the seal tool. Annotation choices (roles, event kinds, which name forms get NamedAs) are one reading; they are recorded so a reviewer can contest them."
+  - "Ten miniature units of one to five passages. Nothing here measures extraction on real chapters."
+  - "The capabilities repeat DEV2's, so this set does not probe failure classes outside them."
+
+next:
+  - "Orchestrator review of this seal."
+  - "A separately authorized task may lock a Draft V1.1 prompt/runtime protocol against the input hash above and run blind predictions. Gold stays closed until those predictions are locked and hashed."

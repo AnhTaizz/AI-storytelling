@@ -917,6 +917,17 @@ M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02 are ACCEPTED. M4-03 is `FR
 - **Verification.** Full offline suites pass 902/902: canonical story 99, ingestion 79, extraction 362, script quality 64, and story benchmark 298 in strict offline mode. Protected V1 history, source-text, secret, and private-artifact scans pass.
 - **Records.** `benchmarks/m4_extraction/M4_04B3D_DRAFT_V1_1_REMEDIATION_RESULT.yaml` and `docs/research/m4/M4_DRAFT_INTERFACE_V1_1.md`.
 
+## M4-04B3E — FRESH VALIDATION V1 FOR DRAFT V1.1: CONSTRUCTION AND SEAL — COMPLETED — Status: M4_04B3E_FRESH_VALIDATION_V1_SEALED_PENDING_ORCHESTRATOR_REVIEW
+
+- **Authorization.** The project owner authorized the Next Candidate recorded after M4-04B3D on 2026-11-14.
+- **Fresh family.** Ten newly authored Japanese miniature story units were ingested independently under M3 as `ORIGINAL_JA_MINI_NARRATIVES_FV1`. No corpus, DEV1, DEV2 or holdout text was used; none of those private artifacts existed in the authoring environment. The ten cases repeat the capabilities preregistered for DEV2 on new text.
+- **Gold discipline.** Canonical semantics were annotated before any draft projection. Status is `AGENT_DRAFT_GOLD` / `NOT_HUMAN_CONFIRMED`; every assertion `UNREVIEWED`. All 10 cases are `COMPLETE_FOR_PROFILE`, with 168 required and zero optional assertions.
+- **Offline gate.** Gold → Draft V1.1 oracle projection → unchanged V1.1 compiler → canonical passes 10/10 frozen validation, 10/10 source-exact validation and 10/10 graph alpha-equivalence. No schema, compiler, snapshot or registry was changed.
+- **Private seal.** `M4_04B3E_FRESH_VALIDATION_V1_INPUT.zip` SHA-256 `724041283cde55ccbce27844c9297cf66eed857c96cf18989dc97997fef55729`; `M4_04B3E_FRESH_VALIDATION_V1_GOLD.zip` SHA-256 `732a3555717c6d3426e6e379e43061cd1fd6d11df8798ec859f37248202ddc73`; blindness manifest SHA-256 `cdb8c0dcc62d12e776b0061201f3ec984289007f6e11450266474cfe52a75ea8`. Input contains zero gold and shares no member name with gold. The packages were built in a cloud session and handed to the project owner; they are untracked.
+- **Verification.** Two builds gave identical hashes. Re-verification from the sealed files alone passes. The seal tool has synthetic tests only.
+- **Boundaries.** No provider request, prediction, DEV2 or holdout access, extractor or model selection, M4-04C or M5 work occurred.
+- **Records.** `benchmarks/m4_extraction/M4_04B3E_FRESH_VALIDATION_V1_SEAL_RESULT.yaml`; `docs/research/m4/M4_FRESH_VALIDATION_V1_PROTOCOL.md`; `tools/story_extraction/fresh_validation_seal_v1.py`.
+
 ## Next Candidate
 
-Author and seal a new independent fresh validation set for Draft V1.1 under separate authorization. Do not reuse DEV2 as fresh validation, open DEV2 gold, rerun predictions, access the holdout, begin M4-04C, or begin M5 without a separately authorized task.
+Orchestrator review of the M4-04B3E seal. After that, and under separate authorization: lock a Draft V1.1 prompt and runtime protocol against the fresh validation input hash, then run blind predictions. Do not open the fresh validation gold before those predictions are locked and hashed. Do not reuse DEV2 as fresh validation, open DEV2 gold, access the holdout, begin M4-04C, or begin M5 without a separately authorized task.

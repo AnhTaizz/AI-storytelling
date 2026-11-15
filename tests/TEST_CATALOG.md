@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 8 — test files: 53 — test functions: 982
+Suites: 8 — test files: 54 — test functions: 990
 
 ## canonical_story
 
@@ -757,6 +757,18 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.evaluate
 - `TestRequiredAndAcceptable.test_optional_assertion_adds_no_recall_denominator_and_is_not_unsupported`
 - `TestRequiredAndAcceptable.test_optional_assertion_must_still_be_grounded_when_predicted`
 - `TestCatalogueStillPasses.test_every_synthetic_case_succeeds_in_real_source_mode_too`
+
+### test_fresh_validation_seal_v1 (8)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.fresh_validation_seal_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `SealTests.test_seal_is_deterministic_separates_gold_and_verifies`
+- `SealTests.test_input_package_gives_the_extractor_only_the_prepared_surface`
+- `SealTests.test_problems_block_the_seal`
+- `SealTests.test_unrepresentable_gold_is_reported_by_code`
+- `SealTests.test_records_of_a_prior_base_document_are_reused_not_copied` — A case may build on records an earlier step put in the base document.
+- `SealTests.test_changes_after_sealing_are_detected`
+- `SealTests.test_gold_in_an_input_package_is_refused`
+- `SealTests.test_source_manifest_must_be_one_document`
 
 ### test_gemini_credential_qualification_v1 (7)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.gemini_key_pool_v1`, `tools.story_extraction.run_gemini_credential_qualification_v1`, `tools.story_ingestion.light_novel_adapter_v0`
