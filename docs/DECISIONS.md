@@ -721,3 +721,30 @@ Scripts for Chinese sources write character names in their Sino-Vietnamese readi
 1. The narrative profile's `name_readings.zh` tells the brief writer to give `romanized_name` and Latin aliases in this reading; titles and epithets are translated. The rule counts in the brief fingerprint only for Chinese, so stored Japanese and Korean briefs stay valid.
 2. The profile's `name_policy` tells the script writer the same. The per-story glossary starts from the brief's reading; the owner can still change any `display` name, and those edits are never overwritten.
 3. Japanese and Korean names keep their standard romanizations (Hepburn, Revised Romanization).
+
+---
+
+## DEC-021 — M6 Retrieval: Phase 2 Decisions and Baseline Acceptance
+
+STATUS: ACCEPTED (decided by the agent on the Project Owner's delegation of pending approvals and request to finish M6, 2026-11-15)
+
+CONTEXT:
+PR #5 (M6 retrieval baseline v0) left three owner decisions and thirteen Phase 2 questions (`docs/research/retrieval/M6_PHASE2_BRIEF_RETRIEVAL_PROPOSAL_V0.md`, section 5). Phase 2 was built and measured before deciding (`docs/research/retrieval/M6_PHASE2_BRIEF_RETRIEVAL_V1.md`).
+
+DECISION:
+1. **Item identity.** Events keep `c<N>.E<k>`; facts are `c<N>.CH<j>.F<k>`, relationships `c<N>.R<k>`. Refs are bound to one brief snapshot (`stamps`: chapter → sha256 of the brief's canonical JSON); no stability is promised across regeneration. No brief schema change.
+2. **Freshness.** The corpus is rebuilt from the run's own validated briefs on every run; retrieval results are not cached across runs. The content hash is recorded next to `source_version` and `brief_fingerprint`.
+3. **Scope.** All three kinds and all importance levels are indexed. Callbacks may cite any retrieved earlier event; the plan admits recap callbacks in addition to recap CORE events.
+4. **Language.** Items are rendered in the brief language without translation (`brief_render_v1`, versioned by retrieval).
+5. **Invalid input.** A missing chapter brief or an item whose evidence is missing or outside its own chapter rejects the corpus; nothing is trimmed. The pipeline records the reason and runs without callbacks.
+6. **Evidence time.** Same-chapter evidence only; cross-chapter evidence needs a new brief contract.
+7. **Relationships.** Historical observations are retrieved; the latest stated state stays the recap's deterministic view. Callbacks carry their own epistemic label into the audits.
+8. **Ownership and budget.** Retrieval owns its result formats. Delivery is measured in source passages: 30 by default, 50 when completeness matters more than cost. Support that does not fit is reported as overflow, never dropped silently.
+9. **Exhaustive entity evidence** (dossiers, "every mention of X") depends on M4 extraction and M5 persistence and moves to M10. Until then `entity_evidence` is always labelled `partial`.
+10. **Primary metric.** Recall and Full Evidence Success at the delivery depth, with Spoiler_Violation = 0. Acceptance on DEV v1: brief-then-passage Success@30 ≥ the best recorded Phase 1 retriever at the same depth, and 0 spoiler violations.
+11. **Dense retrievers** stay optional. A real-model gated test is not added now; dense code stays covered by injected encoders.
+12. **No LLM-assisted retrieval** (query translation, agentic search) in this milestone.
+13. **Windows diff-coverage path bug** in the protected `tools/ci/guards.py` stays with the Project Owner: an agent does not change the quality gate that checks its own work. The fix is to normalise `\` to `/` in the relative coverage keys (`coverage_data`); CI on Linux is unaffected.
+
+ACCEPTANCE:
+M6 is accepted as a retrieval **baseline over the brief memory**. Measured on DEV v1 (30 probes, pinned chapter 1–5 briefs, no model): brief-then-passage Success@30 90.0% overall; Vietnamese Success@10 80.0% against 0% for passage BM25 and 53.3% recorded for e5-large; 0 spoiler violations. Limits: DEV probes are not a sealed benchmark; 20% of probes need evidence that no brief item cites; the memory it reads is the M5 prototype, so exhaustive entity evidence remains open (item 9).

@@ -949,7 +949,13 @@ A concrete proposal for the next two M4 tasks is in `docs/research/m4/M4_04B3F_P
 
 Orchestrator review of the M4-04B3E seal. After that, and under separate authorization: lock a Draft V1.1 prompt and runtime protocol against the fresh validation input hash, then run blind predictions. Do not open the fresh validation gold before those predictions are locked and hashed. Do not reuse DEV2 as fresh validation, open DEV2 gold, access the holdout, begin M4-04C, or begin M5 without a separately authorized task.
 
-## M6 Retrieval Baseline v0 (spike) — IMPLEMENTED, PR pending owner review
+## M6 Retrieval Baseline — ACCEPTED as a baseline over the brief memory (DEC-021, 2026-11-15)
+
+- **Phase 1** (PR #5, merged 2026-11-15): cutoff-safe passage retrieval; details below.
+- **Phase 2** (brief retrieval v1): brief items with complete evidence expansion, entity evidence (partial) and episode callback candidates. DEV v1, no model: Vietnamese Success@10 80.0% (passage BM25 0%, e5-large 53.3%); brief-then-passage Success@30 90.0% overall (best Phase 1: hybrid-large 86.7%); 0 spoiler violations. Details: `docs/research/retrieval/M6_PHASE2_BRIEF_RETRIEVAL_V1.md`.
+- **Open:** exhaustive entity evidence depends on M4/M5 and moves to M10; the probes are DEV, not sealed; the Windows diff-coverage path bug in the protected gate is left to the owner.
+
+### Phase 1 record (spike, as merged)
 
 - Pinned CPU E5 small/large and BM25+dense RRF variants now run offline with inclusive cutoff checks. Spoiler violations remain zero. This spike does not complete M6.
 - DEV Hit@10 (overall / ja / vi): BM25 50% / 100% / 0%; small and hybrid-small 80% / 100% / 60%; large and hybrid-large 100% / 100% / 100%. Five probes/language: one probe is 20 points.

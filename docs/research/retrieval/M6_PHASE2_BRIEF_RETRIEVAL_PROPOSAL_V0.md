@@ -1,6 +1,6 @@
 # M6 Phase 2 — Story Brief retrieval interface proposal v0
 
-Status: **PROPOSAL — not agreed, no implementation; needs owner + pipeline agreement.**
+Status: **DECIDED** in `docs/DECISIONS.md` DEC-021 (2026-11-15); implemented as `M6_PHASE2_BRIEF_RETRIEVAL_V1.md`. The text below is the original proposal.
 
 This document proposes the interface requested by `M6_RETRIEVAL_BASELINE_SPEC_V0.md:Phase 2`. All interfaces below are
 proposed unless explicitly described as current. Agreement is required before implementation.
