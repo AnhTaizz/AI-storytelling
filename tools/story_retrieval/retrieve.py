@@ -33,6 +33,7 @@ def main(argv=None) -> int:
     parser.add_argument('--chapters')
     parser.add_argument('--manifest', type=Path, default=DEFAULT_MANIFEST)
     parser.add_argument('--source-root', type=Path)
+    parser.add_argument('--cache-dir', type=Path)
     parser.add_argument('--json', action='store_true')
     try:
         args = parser.parse_args(argv)
@@ -42,7 +43,7 @@ def main(argv=None) -> int:
         request = RetrievalRequest(args.query, args.cutoff, args.k,
                                    parse_range(args.chapters) if args.chapters else None)
         passages = build_corpus(args.manifest, args.cutoff, args.source_root)
-        retriever = make_retriever(args.retriever)
+        retriever = make_retriever(args.retriever, cache_dir=args.cache_dir)
         hits = retrieve(request, retriever, passages)
         if args.json:
             write_stdout(json.dumps(result_to_dict(request, retriever, passages, hits),

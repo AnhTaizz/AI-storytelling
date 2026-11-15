@@ -143,12 +143,14 @@ class EvaluateV0Tests(unittest.TestCase):
             self.assertEqual(main(['--help']), 0)
         with tempfile.TemporaryDirectory() as tmp:
             for name in RETRIEVER_NAMES:
-                with self.subTest(retriever=name), patch(
-                        'tools.story_retrieval.evaluate_v0.make_retriever', return_value=Bm25RetrieverV0()) as factory:
-                    with redirect_stdout(io.StringIO()) as output:
-                        self.assertEqual(main(['--retriever', name, '--private-root', tmp, '--json']), 0)
-                    factory.assert_called_once_with(name)
-                    self.assertEqual(json.loads(output.getvalue())['dev']['retrievers']['bm25_v0']['version'], '0')
+                for cache in [None, Path(tmp) / 'embedding_cache']:
+                    with self.subTest(retriever=name, cache=cache), patch(
+                            'tools.story_retrieval.evaluate_v0.make_retriever', return_value=Bm25RetrieverV0()) as factory:
+                        with redirect_stdout(io.StringIO()) as output:
+                            args = ['--retriever', name, '--private-root', tmp, '--json']
+                            self.assertEqual(main(args + (['--cache-dir', str(cache)] if cache else [])), 0)
+                        factory.assert_called_once_with(name, cache_dir=cache)
+                        self.assertEqual(json.loads(output.getvalue())['dev']['retrievers']['bm25_v0']['version'], '0')
 
 
 if __name__ == '__main__':

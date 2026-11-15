@@ -1,12 +1,15 @@
 """Behavioural contract for retrieval_v0 and its retrieve CLI."""
 
+import hashlib
 import io
 import json
 import os
 import subprocess
 import sys
+import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
+from pathlib import Path
 from unittest.mock import patch
 
 from jsonschema import Draft202012Validator
@@ -24,6 +27,21 @@ from tools.story_retrieval.retrieve import DEFAULT_MANIFEST, REPO, main
 def character_encoder(texts):
     return [[text.split(': ', 1)[1].casefold().count(c) for c in 'abcdefghijklmnopqrstuvwxyz']
             for text in texts]
+
+
+class CountingEncoder:
+    """Record batches while retaining the deterministic character-vector fixture."""
+
+    def __init__(self):
+        self.calls = []
+
+    def __call__(self, texts):
+        self.calls.append(list(texts))
+        return character_encoder(texts)
+
+    @property
+    def passages(self):
+        return [text for batch in self.calls for text in batch if text.startswith('passage: ')]
 
 
 class RankedRetriever:
@@ -241,6 +259,115 @@ class RetrievalV0Tests(unittest.TestCase):
         with self.assertRaises(ValueError):
             retriever.search('q', {'1.1'}, 10)
 
+    def test_embedding_cache_reuse_updates_and_cutoff(self):
+        """Cross-instance reuse preserves exact scores, text identity, batching and eligibility."""
+        passages = [Passage('1.1', 'apple'), Passage('2.1', 'banana'), Passage('3.1', 'secret banana')]
+        request = RetrievalRequest('secret banana', 2)
+        expected = retrieve(request, DenseE5RetrieverV0(character_encoder), passages)
+        with tempfile.TemporaryDirectory() as tmp:
+            cache = Path(tmp) / 'nested' / 'cache'
+            for warm in [False, True]:
+                with self.subTest(warm=warm):
+                    encoder = CountingEncoder()
+                    retriever = DenseE5RetrieverV0(encoder, cache_dir=str(cache))
+                    self.assertEqual(retrieve(request, retriever, passages), expected)
+                    self.assertEqual(encoder.passages, [] if warm else ['passage: ' + p.text for p in passages])
+                    self.assertEqual(encoder.calls[:-1], [] if warm else [['passage: ' + p.text for p in passages]])
+                    self.assertEqual(retrieve(request, retriever, list(passages)), expected)
+                    self.assertEqual(encoder.calls[-2:], [['query: secret banana']] * 2)
+                    self.assertTrue(expected)
+                    self.assertTrue(all(h.chapter <= 2 for h in expected))
+            # A smaller corpus must not resurrect cached IDs from later chapters.
+            encoder = CountingEncoder()
+            retriever = DenseE5RetrieverV0(encoder, cache_dir=cache)
+            self.assertEqual(retrieve(request, retriever, passages[:2]), expected)
+            self.assertEqual(encoder.passages, [])
+            changed = [passages[0], Passage('2.1', 'pear'), passages[2], Passage('2.9', 'pear')]
+            encoder = CountingEncoder()
+            retriever = DenseE5RetrieverV0(encoder, cache_dir=cache)
+            actual = retrieve(request, retriever, changed)
+            self.assertEqual(encoder.passages, ['passage: pear'])
+            self.assertEqual(actual, retrieve(request, DenseE5RetrieverV0(character_encoder), changed))
+            renamed = [Passage('1.99', 'pear')]
+            encoder.calls.clear()
+            retriever.index(renamed)
+            self.assertEqual(encoder.passages, [])
+            self.assertEqual([pid for pid, _ in retriever.search('pear', {'1.99'}, 10)], ['1.99'])
+            retriever.index([])
+            self.assertEqual(retriever.search('pear', {'1.99'}, 10), [])
+            data = json.loads(next(cache.glob('*.json')).read_text(encoding='utf-8'))
+            self.assertIn(hashlib.sha256(b'passage: pear').hexdigest(), data['vectors'])
+            self.assertEqual(len(list(cache.iterdir())), 1)
+
+    def test_embedding_cache_model_revision_isolation_and_opt_out(self):
+        """Model/revision pairs use safe distinct filenames; opting out never writes files."""
+        passages = [Passage('1.1', 'apple'), Passage('2.1', 'banana')]
+        with tempfile.TemporaryDirectory() as tmp:
+            cache = Path(tmp)
+            with patch('tools.story_retrieval.retrieval_v0.Path.open', side_effect=AssertionError('cache disabled')):
+                retriever = DenseE5RetrieverV0(character_encoder)
+                retriever.index(passages)
+                self.assertIsNone(retriever.cache_dir)
+                self.assertEqual(list(cache.iterdir()), [])
+            for model, revision in [('a/b', 'rev/one'), ('a/b', 'rev/two'), ('a_b', 'rev/one')]:
+                with self.subTest(model=model, revision=revision):
+                    before = set(cache.iterdir())
+                    encoder = CountingEncoder()
+                    retriever = DenseE5RetrieverV0(encoder, model_name=model, revision=revision, cache_dir=cache)
+                    retriever.index(passages)
+                    self.assertEqual(encoder.calls, [['passage: apple', 'passage: banana']])
+                    added = set(cache.iterdir()) - before
+                    self.assertEqual(len(added), 1)
+                    self.assertRegex(added.pop().name, r'^[0-9a-f]{64}\.json$')
+
+    def test_embedding_cache_corruption_and_dimension_recovery(self):
+        """Unreadable/invalid caches and stale dimensions rebuild without mixing vectors."""
+        passages = [Passage('1.1', 'apple'), Passage('2.1', 'banana')]
+        request = RetrievalRequest('apple', 2)
+        expected = retrieve(request, DenseE5RetrieverV0(character_encoder), passages)
+        key = hashlib.sha256(b'passage: apple').hexdigest()
+        bad_files = [b'not JSON', b'\xff', b'[]', b'{"vectors": []}',
+                     json.dumps({'dimension': 0, 'vectors': {}}).encode(),
+                     json.dumps({'dimension': 1, 'vectors': {'bad': [1]}}).encode(),
+                     json.dumps({'dimension': 1, 'vectors': {key: None}}).encode(),
+                     json.dumps({'dimension': 1, 'vectors': {key: [None]}}).encode(),
+                     json.dumps({'dimension': 1, 'vectors': {key: [10 ** 1000]}}).encode(),
+                     json.dumps({'dimension': 2, 'vectors': {key: [1]}}).encode(),
+                     json.dumps({'dimension': 1, 'vectors': {key: [float('inf')]}}).encode()]
+        with tempfile.TemporaryDirectory() as tmp:
+            cache = Path(tmp)
+            DenseE5RetrieverV0(character_encoder, cache_dir=cache).index(passages)
+            path = next(cache.iterdir())
+            for bad in bad_files:
+                with self.subTest(bad=bad):
+                    path.write_bytes(bad)
+                    encoder = CountingEncoder()
+                    self.assertEqual(retrieve(request, DenseE5RetrieverV0(encoder, cache_dir=cache), passages), expected)
+                    self.assertEqual(encoder.passages, ['passage: apple', 'passage: banana'])
+            # A structurally valid cache may have the wrong dimension for this encoder.
+            # Exercise detection via a new passage batch and via a warm query.
+            for cached_passages in [passages[:1], passages]:
+                with self.subTest(cached_count=len(cached_passages)):
+                    path.unlink()
+                    DenseE5RetrieverV0(lambda texts: [[1, 0] for _ in texts], cache_dir=cache).index(cached_passages)
+                    encoder = CountingEncoder()
+                    self.assertEqual(retrieve(request, DenseE5RetrieverV0(encoder, cache_dir=cache), passages), expected)
+                    self.assertEqual(encoder.calls[-1 if len(cached_passages) == 2 else -2],
+                                     ['passage: apple', 'passage: banana'])
+                    rebuilt = json.loads(path.read_text(encoding='utf-8'))
+                    self.assertEqual(rebuilt['dimension'], 26)
+                    self.assertTrue(all(len(row) == 26 for row in rebuilt['vectors'].values()))
+            with patch('tools.story_retrieval.retrieval_v0.Path.read_text', side_effect=PermissionError('unreadable')):
+                encoder = CountingEncoder()
+                self.assertEqual(retrieve(request, DenseE5RetrieverV0(encoder, cache_dir=cache), passages), expected)
+                self.assertEqual(len(encoder.passages), 2)
+            original = path.read_bytes()
+            with patch('tools.story_retrieval.retrieval_v0.os.replace', side_effect=OSError('replace failed')):
+                with self.assertRaises(OSError):
+                    DenseE5RetrieverV0(character_encoder, cache_dir=cache).index([Passage('1.9', 'pear')])
+            self.assertEqual(path.read_bytes(), original)
+            self.assertEqual(list(cache.iterdir()), [path])
+
     def test_rrf_hand_computed_ranks_depth_and_reindexing(self):
         """RRF K=60 fuses component ranks with natural ties and indexes each corpus once."""
         first = RankedRetriever([('1.2', 3), ('1.10', 2), ('1.3', 1), ('9.1', 99), ('1.4', 0)])
@@ -269,20 +396,23 @@ class RetrievalV0Tests(unittest.TestCase):
         expected_names = ['bm25_v0', 'dense_e5_small_v0', 'dense_e5_large_v0',
                           'hybrid_rrf_v0', 'hybrid_rrf_large_v0']
         for name, expected in zip(RETRIEVER_NAMES, expected_names):
-            with self.subTest(name=name):
-                retriever = make_retriever(name)
-                self.assertEqual(retriever.name, expected)
-                if name != 'bm25':
-                    dense = retriever.retrievers[1] if name.startswith('hybrid') else retriever
-                    large = name.endswith('large')
-                    self.assertEqual(dense.model_name, E5_LARGE_MODEL if large else E5_SMALL_MODEL)
-                    self.assertEqual(dense.revision, E5_LARGE_REVISION if large else E5_SMALL_REVISION)
-                    self.assertEqual(dense.batch_size, 4 if large else 32)
-                    self.assertIn(dense.version, retriever.version)
-                with patch('tools.story_retrieval.retrieve.make_retriever', return_value=Bm25RetrieverV0()) as factory:
-                    with redirect_stdout(io.StringIO()):
-                        self.assertEqual(main(['--cutoff', '1', '--query', 'q', '--retriever', name]), 0)
-                    factory.assert_called_once_with(name)
+            for cache in [None, Path('.local/story_retrieval/embedding_cache')]:
+                with self.subTest(name=name, cache=cache):
+                    retriever = make_retriever(name, cache_dir=cache)
+                    self.assertEqual(retriever.name, expected)
+                    if name != 'bm25':
+                        dense = retriever.retrievers[1] if name.startswith('hybrid') else retriever
+                        large = name.endswith('large')
+                        self.assertEqual(dense.model_name, E5_LARGE_MODEL if large else E5_SMALL_MODEL)
+                        self.assertEqual(dense.revision, E5_LARGE_REVISION if large else E5_SMALL_REVISION)
+                        self.assertEqual(dense.batch_size, 4 if large else 32)
+                        self.assertIn(dense.version, retriever.version)
+                        self.assertEqual(dense.cache_dir, cache)
+                    with patch('tools.story_retrieval.retrieve.make_retriever', return_value=Bm25RetrieverV0()) as factory:
+                        with redirect_stdout(io.StringIO()):
+                            args = ['--cutoff', '1', '--query', 'q', '--retriever', name]
+                            self.assertEqual(main(args + (['--cache-dir', str(cache)] if cache else [])), 0)
+                        factory.assert_called_once_with(name, cache_dir=cache)
         overridden = DenseE5RetrieverV0(revision='123456789')
         self.assertEqual(overridden.version, '0+1234567')
         with self.assertRaises(ValueError):

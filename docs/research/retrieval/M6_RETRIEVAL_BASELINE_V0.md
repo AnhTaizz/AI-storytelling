@@ -88,6 +88,48 @@ contains one rank, passage ID, score and short single-line snippet per hit.
 Invalid arguments/windows and missing optional dependencies report stderr and
 return exit code 2. Both modules expose `main(argv=None)`.
 
+### Embedding cache
+
+Passage caching is opt-in: `DenseE5RetrieverV0(..., cache_dir=None)` and
+`make_retriever(name, cache_dir=None)` preserve the previous behavior and write no
+cache files. Both CLIs accept `--cache-dir PATH`, including for either hybrid's
+dense component. Recommended ignored location: `.local/story_retrieval/embedding_cache/`.
+
+Each model/revision pair has one JSON file named by the SHA-256 of its serialized
+identity; entries hash the exact UTF-8 `passage: ` plus text, independent of IDs.
+Vectors are stored **after `_unit`**, as round-tripped Python floats (double
+precision), without normalizing again on load. Missing unique texts use one ordered
+batch. Saves use a same-directory temporary file and `os.replace`; concurrent
+writers may lose additions and cause extra encoding, but cannot expose partial
+files. Invalid/unreadable files or inconsistent dimensions rebuild; a changed
+dimension detected in a new batch or warm query also rebuilds all current vectors.
+Queries are never cached. Only supplied passage IDs enter the index, so cached
+later-chapter text cannot bypass allowed IDs or the inclusive cutoff.
+
+Offline CPU e5-small CLI timing on 2026-11-15, all 353 public passages, cutoff 5,
+`--json`, with the pinned model/environment below:
+
+| Cache state / query | Wall time |
+|---|---:|
+| Cold / Japanese `お粥 梅` | 21.566 s |
+| Warm / Vietnamese `Cháo có mơ muối khi bị ốm` | 18.595 s |
+| No cache / Japanese | 23.524 s |
+| No cache / Vietnamese | 22.343 s |
+
+Both cached JSON outputs equal fresh uncached runs exactly, including hits/scores;
+Unicode query echoes were checked. Timings include process start, torch import, model
+loading and query encoding, which dominate for e5-small on 353 passages: a warm cache
+saves only about 4 s (roughly 17%) per CLI call here. The cache matters more for larger
+corpora and for e5-large (not timed); for many queries, the bigger saving is to keep one
+process and one retriever alive, which this CLI does not do.
+Outputs/logs: `.local/m6_embedding_cache_check/utf8/` only.
+
+Verification: compile, policy and suites pass (889 tests, 19 retrieval tests, seven
+declared gates). The unchanged Windows diff-coverage guard reports 0% and exits 1.
+Direct coverage: 348/359 lines (96.9%; 97% including branches); normalized coverage
+of this change: 61/61 executable `tools/` lines (100%). Gate/coverage logs:
+`.local/m6_embedding_cache_check/`.
+
 ### Real-model environment
 
 The 2026-11-15 runs used a separate Python 3.13 environment with CPU inference:

@@ -6,11 +6,16 @@ Dense dependencies are optional and loaded only when an encoder is first needed.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import math
+import os
 import re
+import tempfile
 from collections import defaultdict
 from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass
+from pathlib import Path
 from typing import AbstractSet, Protocol
 
 from tools.story_benchmark.bm25_lexical_v1 import BM25LexicalV1
@@ -162,11 +167,14 @@ def _unit(vector: Sequence[float]) -> tuple[float, ...]:
 
 
 class DenseE5RetrieverV0:
-    """Pinned E5; unknown model IDs use dense_e5_custom_v0 and require a revision."""
+    """Pinned E5; unknown model IDs require a revision and use dense_e5_custom_v0.
+
+    Optional JSON caching preserves post-_unit Python floats without renormalizing.
+    """
 
     def __init__(self, encoder: Encoder | None = None,
                  model_name: str = E5_SMALL_MODEL, revision: str | None = None,
-                 batch_size: int = 32):
+                 batch_size: int = 32, cache_dir: Path | str | None = None):
         models = {E5_SMALL_MODEL: ('dense_e5_small_v0', E5_SMALL_REVISION),
                   E5_LARGE_MODEL: ('dense_e5_large_v0', E5_LARGE_REVISION)}
         self.name, default_revision = models.get(model_name, ('dense_e5_custom_v0', None))
@@ -176,6 +184,7 @@ class DenseE5RetrieverV0:
         self.version = '0+' + self.revision[:7]
         self.model_name = model_name
         self.batch_size = batch_size
+        self.cache_dir = Path(cache_dir) if cache_dir is not None else None
         self._encoder = encoder
         self._passages = None
         self._vectors = {}
@@ -188,11 +197,65 @@ class DenseE5RetrieverV0:
             raise ValueError('encoder returned inconsistent vector count or dimensions')
         return vectors
 
+    def _cache_path(self) -> Path:
+        identity = json.dumps([self.model_name, self.revision], ensure_ascii=True)
+        return self.cache_dir / (hashlib.sha256(identity.encode('utf-8')).hexdigest() + '.json')
+
+    def _load_cache(self) -> dict[str, tuple[float, ...]]:
+        try:
+            data = json.loads(self._cache_path().read_text(encoding='utf-8'))
+            if not isinstance(data, dict) or not isinstance(data.get('vectors'), dict):
+                raise ValueError('invalid embedding cache')
+            dimension = data.get('dimension')
+            if not isinstance(dimension, int) or dimension < 1:
+                raise ValueError('invalid cache dimension')
+            vectors = {}
+            for key, row in data['vectors'].items():
+                if not re.fullmatch(r'[0-9a-f]{64}', key) or not isinstance(row, list):
+                    raise ValueError('invalid cache entry')
+                vector = tuple(float(value) for value in row)
+                if len(vector) != dimension or not all(math.isfinite(v) for v in vector):
+                    raise ValueError('inconsistent cache dimensions or values')
+                vectors[key] = vector
+            return vectors
+        except (OSError, ValueError, TypeError, OverflowError):
+            return {}
+
+    def _save_cache(self, vectors: dict[str, tuple[float, ...]]) -> None:
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        path = self._cache_path()
+        # Same-directory replacement never exposes a partially written JSON file.
+        stream = tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', newline='\n',
+                                            dir=self.cache_dir, delete=False)
+        temporary = Path(stream.name)
+        try:
+            with stream:
+                json.dump({'dimension': len(next(iter(vectors.values()))), 'vectors': vectors},
+                          stream, allow_nan=False)
+            os.replace(temporary, path)
+        finally:
+            temporary.unlink(missing_ok=True)
+
+    def _passage_vectors(self, texts: Sequence[str], rebuild: bool = False) -> list[tuple[float, ...]]:
+        if self.cache_dir is None:
+            return self._encode(texts) if texts else []
+        cached = {} if rebuild else self._load_cache()
+        keys = [hashlib.sha256(text.encode('utf-8')).hexdigest() for text in texts]
+        missing = dict((key, text) for key, text in zip(keys, texts) if key not in cached)
+        if missing:
+            encoded = self._encode(list(missing.values()))
+            if cached and len(next(iter(cached.values()))) != len(encoded[0]):
+                # The encoder's dimension changed: discard every old vector.
+                return self._passage_vectors(texts, rebuild=True)
+            cached.update(zip(missing, encoded))
+            self._save_cache(cached)
+        return [cached[key] for key in keys]
+
     def index(self, passages: Sequence[Passage]) -> None:
         snapshot = tuple(passages)
         if snapshot == self._passages:
             return
-        vectors = self._encode(['passage: ' + p.text for p in snapshot]) if snapshot else []
+        vectors = self._passage_vectors(['passage: ' + p.text for p in snapshot])
         self._vectors = dict(zip((p.passage_id for p in snapshot), vectors))
         self._passages = snapshot
 
@@ -200,6 +263,9 @@ class DenseE5RetrieverV0:
         if not self._vectors or not allowed_ids:
             return []
         q_vector = self._encode(['query: ' + query])[0]
+        if self.cache_dir is not None and len(q_vector) != len(next(iter(self._vectors.values()))):
+            vectors = self._passage_vectors(['passage: ' + p.text for p in self._passages], rebuild=True)
+            self._vectors = dict(zip((p.passage_id for p in self._passages), vectors))
         if len(q_vector) != len(next(iter(self._vectors.values()))):
             raise ValueError('query and passage embedding dimensions differ')
         scores = ((pid, sum(a * b for a, b in zip(q_vector, vector)))
@@ -238,14 +304,14 @@ class HybridRrfRetrieverV0:
         return _rank(scores.items(), k)
 
 
-def make_retriever(name: str) -> Retriever:
+def make_retriever(name: str, cache_dir: Path | str | None = None) -> Retriever:
     if name == 'bm25':
         return Bm25RetrieverV0()
     if name not in RETRIEVER_NAMES:
         raise ValueError(f'unknown retriever: {name}')
     large = name in ('dense_e5_large', 'hybrid_large')
-    dense = (DenseE5RetrieverV0(model_name=E5_LARGE_MODEL, batch_size=4)
-             if large else DenseE5RetrieverV0())
+    dense = (DenseE5RetrieverV0(model_name=E5_LARGE_MODEL, batch_size=4, cache_dir=cache_dir)
+             if large else DenseE5RetrieverV0(cache_dir=cache_dir))
     if name in ('dense_e5', 'dense_e5_large'):
         return dense
     return HybridRrfRetrieverV0([Bm25RetrieverV0(), dense],

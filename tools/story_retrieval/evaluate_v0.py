@@ -107,13 +107,14 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--retriever', nargs='+', choices=RETRIEVER_NAMES, default=['bm25'])
     parser.add_argument('--private-root', type=Path, default=DEFAULT_PRIVATE_ROOT)
+    parser.add_argument('--cache-dir', type=Path)
     parser.add_argument('--json', action='store_true')
     try:
         args = parser.parse_args(argv)
     except SystemExit as exc:
         return int(exc.code)
     try:
-        retrievers = [make_retriever(name) for name in args.retriever]
+        retrievers = [make_retriever(name, cache_dir=args.cache_dir) for name in args.retriever]
         dev = evaluate_dev(DEFAULT_PROBES, DEFAULT_MANIFEST, retrievers)
         summary = {'dev': {'probe_count': dev['probe_count'], 'retrievers': {
             name: {key: value for key, value in values.items() if key != 'per_probe'}
