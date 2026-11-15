@@ -708,3 +708,16 @@ Every change is verified by one command, `python -m tools.ci.check`, run locally
 4. Tracked files are scanned for credentials and local-only data. Lines changed under `tools/` must be at least 80% covered by tests in CI.
 5. Agent rules live in `CLAUDE.md`; a Claude Code hook (`.claude/hooks/guard_bash.py`) blocks pushes to `main`, force-pushes and commits of local-only files.
 6. `.gitattributes` checks out the two hash-bound M4 V1 files (`schemas/story_extraction/story_extraction_draft_v1.schema.json`, `tools/story_extraction/draft_compiler_v1.py`) with CRLF line endings. Their locked hashes were computed on CRLF working copies, so LF checkouts (Linux, macOS, CI) failed the bindings. Repository content is unchanged; only the checkout representation is pinned.
+
+---
+
+## DEC-020 — Chinese Character Names Use Sino-Vietnamese Readings
+
+STATUS: ACCEPTED (decided by the agent on the Project Owner's delegation of pending approvals, 2026-11-15)
+
+DECISION:
+Scripts for Chinese sources write character names in their Sino-Vietnamese reading (âm Hán-Việt: 林婉儿 → Lâm Uyển Nhi, 萧炎 → Tiêu Viêm), not pinyin. Vietnamese readers know Chinese novels by these names.
+
+1. The narrative profile's `name_readings.zh` tells the brief writer to give `romanized_name` and Latin aliases in this reading; titles and epithets are translated. The rule counts in the brief fingerprint only for Chinese, so stored Japanese and Korean briefs stay valid.
+2. The profile's `name_policy` tells the script writer the same. The per-story glossary starts from the brief's reading; the owner can still change any `display` name, and those edits are never overwritten.
+3. Japanese and Korean names keep their standard romanizations (Hepburn, Revised Romanization).

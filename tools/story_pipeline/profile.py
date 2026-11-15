@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, replace
+from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import Any, Dict
 
@@ -28,6 +28,12 @@ class NarrativeProfile:
     max_words: int
     call_to_action: bool
     name_policy: str
+    # How briefs spell names, by source language (a rule for `romanized_name`). Vietnamese
+    # viewers know Chinese novels by Sino-Vietnamese names (Lâm Uyển Nhi), not pinyin.
+    name_readings: Dict[str, str] = field(default_factory=dict)
+
+    def name_reading(self, source_language: str) -> str:
+        return self.name_readings.get(source_language, "")
 
     @property
     def target_language_name(self) -> str:

@@ -66,6 +66,11 @@ class MatchingTests(unittest.TestCase):
              {"degree_extreme", "universality"}),
             ("vi", "được ví như thiên thần", "hedge", {"metaphor"}),
             ("vi", "đầy đủ thông tin, nổi tiếngx", "strength", set()),  # word boundaries respected
+            # Chinese season: a character's own account, attributed to them, stays a report.
+            ("vi", "Theo lời Thẩm Tri Ý nói, cuốn sách bị bán ba năm trước", "hedge", {"reported"}),
+            ("vi", "Nghe Thẩm Tri Ý nói, cuốn sách bị bán ba năm trước", "hedge", {"reported"}),
+            ("vi", "Nghe tiếng mưa rơi suốt đêm, cô không nói gì", "hedge", set()),  # gap of 4 words at most
+            ("vi", "Thẩm Tri Ý cho biết cuốn sách bị bán", "hedge", {"reported"}),
             ("ja", "告白やアプローチを受けているらしく", "hedge", {"reported"}),
             ("ja", "どこか泣きそうに歪んだように見えて", "hedge", {"appearance"}),  # no spaces: substrings
             ("en", "She was extremely wary, or so it seemed", "strength", {"degree_extreme"}),

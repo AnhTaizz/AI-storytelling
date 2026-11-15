@@ -144,6 +144,10 @@ class Lexicon:
         return {concept for concept, _ in self.find(text, kind)}
 
     def _occurs(self, phrase: str, folded: str) -> bool:
+        if "…" in phrase:  # a gap of up to four words (languages written with spaces)
+            gap = r"(?:\s+\S+){1,4}\s+" if self.word_boundaries else r".{1,12}?"
+            pattern = gap.join(re.escape(part.strip()) for part in phrase.split("…"))
+            return re.search(rf"(?<!\w){pattern}(?!\w)" if self.word_boundaries else pattern, folded) is not None
         if not self.word_boundaries:
             return phrase in folded
         return re.search(rf"(?<!\w){re.escape(phrase)}(?!\w)", folded) is not None

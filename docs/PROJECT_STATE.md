@@ -116,7 +116,7 @@ Prototype (not frozen, not M5 completion): story memory v0 (`tools/story_memory/
   - deterministic: strength, hedge, attribution and glossary (name spellings and pronouns);
   - an LLM source check that reads the script against the source text, and overrules critic findings that the source supports (reported as brief gaps);
   - findings go to revision, whose later rounds only patch sentences.
-- **Owner review:** each run writes `review.html`; `review_summary.py` collects filled forms.
+- **Owner review:** each run writes `review.html`; `review_summary.py` collects filled forms; `--apply-review` fixes the errors the owner quotes in a form.
 - **Other pieces:**
   - a per-story name glossary with pronouns (`.local/story_memory/<story>/glossary.yaml`);
   - source preparation for single-line-break (Korean and Chinese) files;

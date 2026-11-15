@@ -64,6 +64,18 @@ class ReviewSummaryTests(unittest.TestCase):
                 review_summary.main([str(Path(tmp) / "empty")])
             self.assertEqual(printed.getvalue().count("Chưa có phiếu nào."), 2)
 
+    def test_quoted_errors_are_read_from_the_form(self):
+        text = review_form(MANIFEST).replace(
+            "- \n", '- "Cậu dán miếng hạ nhiệt lên trán" → Mahiru dán, lúc cậu ngủ\n'
+                    '* “buổi chiều”->nguồn nói 7 giờ tối\n'
+                    '- Nhịp đoạn cuối hơi chậm\n', 1)
+        self.assertEqual(review_summary.parse_errors(text), [
+            {"quote": "Cậu dán miếng hạ nhiệt lên trán", "why": "Mahiru dán, lúc cậu ngủ"},
+            {"quote": "buổi chiều", "why": "nguồn nói 7 giờ tối"},
+            {"quote": None, "why": "Nhịp đoạn cuối hơi chậm"}])
+        self.assertEqual(review_summary.parse_errors(review_form(MANIFEST)), [])  # blank form
+        self.assertEqual(review_summary.parse_errors("no section"), [])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -41,15 +41,48 @@ def parse_form(text: str) -> Dict[str, Any]:
     return {"scores": scores, "verdict": verdict, "reviewer": reviewer}
 
 
+_QUOTE = re.compile(r'["“”„«»]([^"“”„«»]+)["“”„«»]')
+_ARROW = re.compile(r"\s*(?:→|->|=>)\s*")
+
+
+def parse_errors(text: str) -> List[Dict[str, Optional[str]]]:
+    """The reviewer's error list ("Lỗi cụ thể") from one review_form.md.
+
+    Each line is `- "câu trong kịch bản" → vì sao sai`. The quote is what a correction round
+    edits; a line without a quote is a general note (quote None) that no round can apply.
+    """
+    errors: List[Dict[str, Optional[str]]] = []
+    inside = False
+    for line in text.splitlines():
+        if line.startswith("Lỗi cụ thể"):
+            inside = True
+            continue
+        if not inside:
+            continue
+        if line.startswith("Kết luận"):
+            break
+        item = re.sub(r"^\s*[-*]\s*", "", line).strip()
+        if not item:
+            continue
+        match = _QUOTE.search(item)
+        quote = match.group(1).strip() if match else None
+        rest = item[match.end():] if match else item
+        why = _ARROW.sub("", rest, count=1).strip() if match else rest
+        errors.append({"quote": quote or None, "why": why or None})
+    return errors
+
+
 def collect(roots: Sequence[Path]) -> List[Dict[str, Any]]:
     forms = []
     for root in roots:
         if not root.is_dir():
             continue
-        for path in sorted(root.rglob("review_form.md")):
+        # review_form_reviewed_N.md: a filled form kept when a later run rewrote the form.
+        for path in sorted(root.rglob("review_form*.md")):
             parsed = parse_form(path.read_text(encoding="utf-8"))
             if parsed["reviewer"] is not None:
-                forms.append({"run": str(path.parent.relative_to(root.parent)), **parsed})
+                run = str(path.parent.relative_to(root.parent))
+                forms.append({"run": run if path.name == "review_form.md" else f"{run} ({path.stem})", **parsed})
     return forms
 
 

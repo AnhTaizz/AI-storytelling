@@ -173,7 +173,9 @@ Useful flags:
 - `--stop-after brief|plan|script|critic`, `--profile <yaml>`, `--temperature`;
 - `--revision-rounds N` and `--full-revision-rounds K`: the first K rounds may rewrite the script, later rounds only patch sentences;
 - `--revise-severities CRITICAL,HIGH`;
-- `--source-check-samples N` (default 2), or `--no-source-check`;
+- `--source-check-chunk N` (default 4 paragraphs per call; 0 sends the whole script) and `--source-check-samples N` (calls per group, default 1), or `--no-source-check`;
+- `--resume <run dir> --apply-review [FORM]`: fix the quoted errors of the owner's filled review form in one patch round (see "Owner corrections" below);
+- `--full-recheck`: send every paragraph to the critic and the source check in every version. By default, a paragraph whose text is byte-identical to one in the previous version keeps that version's critic claims, source-check findings and brief gaps, and only changed paragraphs are checked again (`rechecked_units` per version in the manifest);
 - `--recap` (episode mode), `--no-memory`.
 
 A whole story, episode by episode:
@@ -190,7 +192,8 @@ python -m tools.story_pipeline.run_story --chapters 1-30 --episode-size 3 --mode
 A source whose paragraphs end with a single line break (common in Korean and Chinese web novels) is prepared first with `python -m tools.story_pipeline.prepare_source` (see below), then run with `--manifest <prepared manifest>`.
 
 Each run writes to `.local/story_pipeline_runs/<run id>/` (git-ignored):
-- `briefs/`, `plan.json`, `script_v*.json|md`, `critic_v*.json`, `source_check_v*.json`, `strength_audit_v*.json`, `script_final.md`;
+- `briefs/`, `plan.json`, `script_v*.json|md`, `critic_v*.json`, `source_check_v*[_cK][_sN].json` (per group K and sample N), `strength_audit_v*.json`, `script_final.md`;
+- `script_final.txt`: the narration alone, for a voice-over tool (a season also writes `season_script.md`, every episode in order);
 - `report.md` and `report.json`;
 - `review.html`: the owner's review page. Each paragraph sits next to its cited brief items and source passages, with findings marked. It ends with the review form, whose button copies a filled `review_form.md`;
 - `review_form.md`;
@@ -613,6 +616,46 @@ The season COMPLETED in three invocations; the season runner resumed episode 3 t
   - All four false positives were overturned by both samples, citing 2.34, 3.8/3.18, 3.65–3.69 and 3.65/3.68. A manual check of those passages agrees.
   - Negative control: four wrong statements were added as critic claims. They were run 10's real "steaming porridge" defect (contradicted by 3.81), an invented piggyback home, an invented confession and a fever "so high he fainted" (strengthened). Both samples answered NOT_IN_SOURCE for all four, and three of the four answers cited the passage that contradicts the claim.
   - Result: 8 of 8 verdicts correct in both samples. This is one episode; the verifier can still be wrong, which is why a single dissent keeps a finding.
+
+**2026-11-15, run 17 (chapters 2–3 again, briefs from S2's memory, incremental checks; `gemini-3.6-flash` throughout).**
+
+The run COMPLETED in 17 calls, 234,402 tokens and 357 s. S2's episode 2 took 31 calls and 653,295 tokens.
+
+- **Where the difference comes from:** mostly not from incremental checks. This run needed no fallback model and almost no repairs, while S2's episode 2 ran three source checks on `gemini-3-flash-preview` at 32–71k tokens each and repeated four critic calls. S2's briefs (83k) were also reused from memory here.
+- **What incremental checks saved:** paragraphs checked by version were 14 → 7 → 1 → 1. A call's prompt is mostly the briefs (critic) or the source (source check), so one paragraph still costs about half a full call: the critic went 23.9k (v1) → 17.5k → 12.6k → 11.4k, and the source check about 15k → 9k. Against full rechecks of v2–v4, this saves about 55k tokens, or 19% of the run.
+- **Findings by version:** 9 → 1 → 1 → 1.
+  - v1: the source check caught "Mahiru chẳng hề phàn nàn", which contradicts 3.18 where she does complain. In S2 the critic had wrongly flagged the faithful version of the same detail.
+  - Left: "Rất nhanh trí" (quick-witted) for 2.73, where she only pulls his arm. A small embellishment, flagged for the reader.
+- **Recall depends on how much a call sees.** Paragraph P006 contained three defects from v1 on: "trượt chân" (2.71: he sways toward the wall), Amane refusing help (2.81: he has no strength to resist) and "rất nhanh trí". Both whole-script checks of v1 missed all three. P006 was then rechecked alone in each later version, and each recheck found one of them. Incremental checks keep that focus on changed paragraphs, but give unchanged paragraphs fewer looks. A chunked source check is being measured next.
+
+**Chunked source check (added after run 17).** On run 17's v1 script, the same source check was run with fewer paragraphs per call:
+
+| Paragraphs per call | Calls | Defects found | Tokens |
+|---|---|---|---|
+| all 14, 2 samples (old default) | 2 | 2 | about 30k |
+| 4, 1 sample | 4 | 7 | about 42k |
+| 4, 2 samples pooled | 8 | 8 | about 84k |
+| 2, 1 sample | 7 | 5 | about 73k |
+
+- Seven of the eight defects are real. They include "cháo mận" announced before Amane sees it, a reversed rumour (3.41: he never heard she failed, not "heard she never failed"), "buổi chiều" for 7 p.m. (3.23) and a measurement 3.69–3.70 says did not happen then. The eighth ("định đóng cửa") is borderline.
+- The two whole-script samples found only the two P008 contradictions, which every grouped call also found. Smaller groups are not better without limit: two paragraphs per call found fewer than four.
+- The default is now 4 paragraphs per call and 1 sample. Each group is cached as `source_check_v{n}_c{k}.json`. With one sample, a critic finding is overturned on a single IN_SOURCE verdict; the adjudication trial had 8 of 8 single-sample verdicts right.
+
+**Owner corrections (`--apply-review`).** The owner writes errors in `review_form.md` as `- "câu trong kịch bản" → vì sao sai` (review.html's copy button produces the same).
+
+- Rerunning with `--resume <run dir> --apply-review` places each quote in the final script's paragraph (whitespace-insensitive) and fixes them in one patch round, first in the list and at HIGH severity. Only the paragraphs that changed are checked again.
+- `report.md` lists each error as fixed, still present, or not found; lines without a quote are notes no round can apply.
+- The round is recorded in `owner_review.json`, so later resumes replay it from the saved scripts. The filled form is kept as `review_form_reviewed_N.md`, and `review_summary` still counts it.
+- `run_story` with `--apply-review` reruns only completed episodes whose form has errors not yet applied.
+- Before this, a resumed run rewrote `review_form.md` and would have erased a filled form.
+- Status per error: fixed; fixed but the paragraph still has findings (a rewrite can be wrong too); quote still present; quote not found.
+
+**Live trial of `--apply-review` (a copy of run 17).** Run 17's final script had passed with one flag. Five of the defects that the grouped source check found in v1 were still in it. They were written into the form as an agent's test review, without scores, so `review_summary` does not count it.
+- The correction round took 4 calls, 53,822 tokens and 81 s. All five quoted sentences were replaced.
+- Three replacements are right: no "nhanh trí", "cháo" without the plum, "buổi tối".
+- The rumour sentence is now faithful to 3.41, but the hedge audit flags it. The brief labels "there is no rumour that she failed" as REPORTED, so the audit asks for "nghe nói". This is a brief error, not a script error.
+- The thermometer sentence is still wrong: "khi cô bước ra ngoài, cậu mới kẹp nhiệt kế". The recheck caught it, and the report marks it "fixed but still flagged". The owner's note should say what happened, not only what is wrong.
+- Settings: a resume reuses saved stage outputs only under the same source-check grouping. This copy of a run made before grouping was resumed with `--source-check-chunk 0 --source-check-samples 2`. Since then the run manifest records its `invocation`, and `--resume <dir>` restores every option not given again (older runs are read from their scope and settings).
 
 ## Known limits
 

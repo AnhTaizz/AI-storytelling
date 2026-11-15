@@ -162,7 +162,9 @@ def run_season(client: LLMClient, manifest_path: Path | str, ranges: Sequence[Tu
         scope, background = run_pipeline.episode_scope(manifest_path, chapters[0], chapters[1], source_root,
                                                        recap=True)
         story_id = scope.story_id
-        if previous and previous.get("status") == "COMPLETED":
+        review = (options or {}).get("owner_review")
+        if previous and previous.get("status") == "COMPLETED" and not (
+                review and run_pipeline.pending_owner_errors(path, review)):
             progress(f"episode {index} (chapters {chapters[0]}-{chapters[1]}): already completed")
             rows.append(_episode_row(index, chapters, path, previous, season_dir, skipped=True))
             continue
@@ -205,7 +207,19 @@ def _write_season(season_dir: Path, story_id: Optional[str], ranges: Sequence[Tu
                                             encoding="utf-8")
     (season_dir / "season.md").write_text(season_markdown(season), encoding="utf-8")
     (season_dir / "season.html").write_text(season_html(season), encoding="utf-8")
+    (season_dir / "season_script.md").write_text(season_script(season_dir, rows), encoding="utf-8")
     return season
+
+
+def season_script(season_dir: Path, rows: Sequence[Dict[str, Any]]) -> str:
+    """Every finished episode's narration in order, to read the season as viewers hear it."""
+    parts = ["# Kịch bản cả mùa", ""]
+    for row in rows:
+        path = season_dir / row["dir"] / "script_final.txt"
+        label = f"## Tập {row['episode']} (chương {row['chapters'][0]}–{row['chapters'][1]})"
+        body = path.read_text(encoding="utf-8").strip() if path.is_file() else "_(chưa có kịch bản)_"
+        parts += [label, "", body, ""]
+    return "\n".join(parts)
 
 
 def build_parser() -> argparse.ArgumentParser:

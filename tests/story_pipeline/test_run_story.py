@@ -39,6 +39,7 @@ class StubRun:
         out_dir.mkdir(parents=True, exist_ok=True)
         (out_dir / "run_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
         if status == "COMPLETED":
+            (out_dir / "script_final.txt").write_text(f"Lời dẫn tập bắt đầu ở chương {start}.\n", encoding="utf-8")
             (out_dir / "report.json").write_text(json.dumps({
                 "gates": {"GATE_FACTUAL_GROUNDING": {"status": "FLAG"}, "GATE_SPOILER_DISCIPLINE": {"status": "PASS"}},
                 "findings": [{"x": 1}], "final_check": {"word_count": 950}}), encoding="utf-8")
@@ -83,6 +84,8 @@ class SeasonTests(unittest.TestCase):
         self.assertIn("href='ep02_ch2-3/review.html'", page)
         self.assertIn("FACTUAL_GROUNDING", page)
         self.assertEqual(json.loads((self.season_dir / "season.json").read_text(encoding="utf-8")), season)
+        script = (self.season_dir / "season_script.md").read_text(encoding="utf-8")
+        self.assertIn("## Tập 2 (chương 2–3)\n\nLời dẫn tập bắt đầu ở chương 2.", script)
 
     def test_rerun_skips_completed_episodes_and_resumes_the_rest(self):
         self.season(StubRun({2: ("FAILED", "stage plan failed after 3 attempt(s): bad JSON")}))
@@ -91,6 +94,16 @@ class SeasonTests(unittest.TestCase):
         self.assertEqual([(c["start"], c["resume"]) for c in stub.calls], [(2, True), (4, False)])
         self.assertTrue(season["episodes"][0]["skipped_as_completed"])
         self.assertEqual(season["status"], "COMPLETED")
+
+    def test_apply_review_resumes_completed_episodes_with_unapplied_errors(self):
+        self.season(StubRun({}))
+        form = self.season_dir / "ep02_ch2-3" / "review_form.md"
+        form.write_text('Lỗi cụ thể (trích câu):\n\n- "câu sai" → vì sao\n\nKết luận: ☐ Sửa nhẹ\n', encoding="utf-8")
+        stub = StubRun({})
+        self.season(stub)
+        self.assertEqual(stub.calls, [])  # without --apply-review nothing reruns
+        self.season(stub, options={"owner_review": "review_form.md"})
+        self.assertEqual([(c["start"], c["resume"]) for c in stub.calls], [(2, True)])
 
     def test_quota_pauses_and_failures_stop_unless_told_to_keep_going(self):
         cases = [

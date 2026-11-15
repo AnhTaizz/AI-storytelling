@@ -37,14 +37,28 @@ def render(name: str, **values: Any) -> str:
     return Template(load_prompt(name)).substitute(**values)
 
 
-def brief_fingerprint(profile: NarrativeProfile) -> str:
-    """Identity of everything that shapes a chapter brief except the model and the source."""
+def brief_fingerprint(profile: NarrativeProfile, source_language: str = "") -> str:
+    """Identity of everything that shapes a chapter brief except the model and the source.
+    A name-reading rule counts only for the language it applies to, so adding one for
+    Chinese does not invalidate stored Japanese briefs."""
     digest = hashlib.sha256()
     for path in (PROMPT_DIR / "brief_system.md", PROMPT_DIR / "brief_user.md",
                  SCHEMA_DIR / "story_brief_v0.schema.json"):
         digest.update(path.read_bytes())
     digest.update(profile.brief_language.encode("utf-8"))
+    reading = profile.name_reading(source_language)
+    if reading:
+        digest.update(b"\0name reading\0" + reading.encode("utf-8"))
     return digest.hexdigest()
+
+
+def brief_system_prompt(profile: NarrativeProfile, source_language: str, example_id: str, schema: Any) -> str:
+    system = render("brief_system", source_language_name=LANGUAGE_NAMES.get(source_language, source_language),
+                    example_id=example_id, brief_language_name=profile.brief_language_name, schema=dump(schema))
+    reading = profile.name_reading(source_language)
+    if reading:
+        system += f"\n\nName reading for this story: `romanized_name` and Latin aliases use {reading}\n"
+    return system
 
 
 def prompt_fingerprints() -> Dict[str, str]:
@@ -365,11 +379,7 @@ def run_brief(client: LLMClient, scope: StoryScope, chapter: Chapter, profile: N
             facts_block = ("\nUpstream extraction hints for this chapter (may be incomplete or "
                            "wrong: keep only what the source passages confirm, and cite them):\n"
                            f"{rendered}\n")
-    system = render("brief_system",
-                    source_language_name=LANGUAGE_NAMES.get(scope.source_language, scope.source_language),
-                    example_id=f"{chapter.order}.12",
-                    brief_language_name=profile.brief_language_name,
-                    schema=dump(schema))
+    system = brief_system_prompt(profile, scope.source_language, f"{chapter.order}.12", schema)
     user = render("brief_user", story_id=scope.story_id, chapter_order=chapter.order,
                   chapter_title=chapter.title, known_characters=known_characters_text(earlier_briefs),
                   facts_block=facts_block, chapter_text=chapter.render())
@@ -1011,6 +1021,64 @@ def run_critic(client: LLMClient, scope: StoryScope, briefs: Sequence[Dict[str, 
     return normalize_critic(critic)
 
 
+# --------------------------------------------------------------------------- owner review
+
+def locate_owner_errors(errors: Sequence[Dict[str, Optional[str]]], units: Sequence[Dict[str, str]]
+                        ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Optional[str]]]]:
+    """The reviewer's quoted errors as revision findings on the paragraph that contains the
+    quote (whitespace-insensitive), and the errors that could not be placed."""
+    located, unplaced = [], []
+    for error in errors:
+        quote = error.get("quote")
+        unit = next((u for u in units if quote and _squash(quote) in _squash(u["text"])), None)
+        if unit is None:
+            unplaced.append(dict(error))
+            continue
+        why = error.get("why") or "Người duyệt đánh dấu câu này là sai."
+        located.append({"unit_id": unit["unit_id"], "claim": quote, "claim_type": "OWNER_REVIEW",
+                        "failure_category": "OTHER", "severity": "HIGH", "brief_refs": [], "source": "owner",
+                        "concepts": [], "phrases": [], "explanation": why,
+                        "suggested_fix": f"Sửa theo góp ý của người duyệt: {why}"})
+    return located, unplaced
+
+
+# --------------------------------------------------------------------------- incremental checks
+
+def unchanged_units(units: Sequence[Dict[str, str]], previous: Sequence[Dict[str, str]]) -> Dict[str, str]:
+    """Paragraphs whose text is byte-identical to a paragraph of the previous version:
+    new unit id -> previous unit id. Patch rounds leave most paragraphs untouched (60-97%
+    in saved runs), so their critic and source-check verdicts can be carried over."""
+    pool: Dict[str, List[str]] = {}
+    for unit in previous:
+        pool.setdefault(unit["sha256"], []).append(unit["unit_id"])
+    carried = {}
+    for unit in units:
+        ids = pool.get(unit["sha256"])
+        if ids:
+            carried[unit["unit_id"]] = ids.pop(0)
+    return carried
+
+
+def merge_critic(units: Sequence[Dict[str, str]], fresh: Optional[Dict[str, Any]],
+                 previous: Optional[Dict[str, Any]], carried: Mapping[str, str]) -> Dict[str, Any]:
+    """One critic result for every paragraph: the fresh verdicts for changed paragraphs and
+    the previous version's for carried ones, under their new ids, in script order."""
+    fresh_units = {u["unit_id"]: u for u in (fresh or {}).get("units", [])}
+    old_units = {u["unit_id"]: u for u in (previous or {}).get("units", [])}
+    merged = []
+    for unit in units:
+        uid = unit["unit_id"]
+        entry = dict(old_units[carried[uid]], unit_id=uid) if uid in carried else fresh_units[uid]
+        merged.append(entry)
+    return {"units": merged}
+
+
+def carry_findings(findings: Sequence[Dict[str, Any]], carried: Mapping[str, str]) -> List[Dict[str, Any]]:
+    """The previous version's findings on carried paragraphs, under their new ids."""
+    back = {old: new for new, old in carried.items()}
+    return [dict(f, unit_id=back[f["unit_id"]]) for f in findings if f["unit_id"] in back]
+
+
 # --------------------------------------------------------------------------- source check
 
 # Above this much source text the check is skipped (and recorded), so a long episode cannot
@@ -1154,7 +1222,7 @@ def merge_source_findings(samples: Sequence[Sequence[Dict[str, Any]]]) -> List[D
 def run_source_check(client: LLMClient, scope: StoryScope, units: List[Dict[str, str]],
                      profile: NarrativeProfile, log: CallLog, max_repairs: int,
                      version: int, sample: int = 1,
-                     flags: Sequence[Dict[str, Any]] = ()) -> Optional[Dict[str, Any]]:
+                     flags: Sequence[Dict[str, Any]] = (), chunk: int = 0) -> Optional[Dict[str, Any]]:
     """Check the script against the episode's own source text, and answer for each critic
     flag (see critic_flags) whether the source says it. None when the episode is too long
     for one call (see SOURCE_CHECK_MAX_CHARS)."""
@@ -1172,5 +1240,6 @@ def run_source_check(client: LLMClient, scope: StoryScope, units: List[Dict[str,
     return run_json_stage(client, stage="source_check", system=system, user=user, schema=schema,
                           semantic_check=lambda c: source_check_errors(c, units, ids, flags),
                           max_repairs=max_repairs, log=log,
-                          request_suffix=f"v{version}" if sample == 1 else f"v{version}s{sample}")
+                          request_suffix=f"v{version}" + (f"c{chunk}" if chunk else "")
+                          + (f"s{sample}" if sample > 1 else ""))
 

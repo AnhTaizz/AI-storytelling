@@ -13,4 +13,7 @@ length_words:
   min: 900
   max: 1100
 call_to_action: false
-name_policy: "Dùng tên phiên âm Latin theo cách phiên âm chuẩn của ngôn ngữ gốc (ví dụ tiếng Nhật: Amane, Mahiru; tiếng Hàn: Ji-woo, Seo-yeon). Không để chữ viết gốc (kanji, kana, Hangul...) trong kịch bản."
+name_policy: "Dùng tên phiên âm Latin theo cách phiên âm chuẩn của ngôn ngữ gốc (ví dụ tiếng Nhật: Amane, Mahiru; tiếng Hàn: Ji-woo, Seo-yeon); truyện Trung dùng âm Hán-Việt (ví dụ Lâm Uyển Nhi, Tiêu Viêm). Không để chữ viết gốc (kanji, kana, Hangul, chữ Hán...) trong kịch bản."
+# DEC-020: Chinese names are read in Sino-Vietnamese (âm Hán-Việt), as Vietnamese readers know them.
+name_readings:
+  zh: "the Sino-Vietnamese reading (âm Hán-Việt) of the Chinese characters, with Vietnamese diacritics and each syllable capitalised, never pinyin: 林婉儿 → Lâm Uyển Nhi, 萧炎 → Tiêu Viêm, 小婉 → Tiểu Uyển. Translate titles and epithets instead of transliterating them."

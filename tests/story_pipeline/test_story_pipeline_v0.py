@@ -29,7 +29,7 @@ from tools.story_pipeline.llm import (  # noqa: E402
 )
 from tools.story_pipeline.profile import load_profile  # noqa: E402
 from tools.story_pipeline import run_pipeline  # noqa: E402
-from tools.story_pipeline.run_pipeline import DEFAULT_MANIFEST, gate_report, run  # noqa: E402
+from tools.story_pipeline.run_pipeline import DEFAULT_MANIFEST, gate_report, pending_owner_errors, run  # noqa: E402
 from tools.story_memory.memory_v0 import StoryMemory  # noqa: E402
 from tools.story_pipeline.source import (  # noqa: E402
     Chapter, Passage, StoryScope, layout_warnings, load_scope, parse_range,
@@ -112,6 +112,8 @@ PLAN = {
 
 SCRIPT = {"title_idea": "Chiếc ô", "sections": [{"beat_id": "B1", "text": SECTION_1},
                                                  {"beat_id": "B2", "text": SECTION_2}]}
+REVISED = {"title_idea": "Chiếc ô", "sections": [{"beat_id": "B1", "text": SECTION_1.replace("chiều", "tối")},
+                                                  {"beat_id": "B2", "text": SECTION_2}]}
 
 
 def claim(claim_type, severity=None, category=None):
@@ -150,8 +152,10 @@ class FakeModel:
             plan["beats"][0]["event_refs"] = refs[:1]
             plan["beats"][1]["event_refs"] = refs[1:]
             return json.dumps(plan, ensure_ascii=False)
-        if stage in ("script", "revise"):
+        if stage == "script":
             return "```json\n" + json.dumps(SCRIPT, ensure_ascii=False) + "\n```"
+        if stage == "revise":  # rewords the first paragraph, where the first critic found the problem
+            return json.dumps(REVISED, ensure_ascii=False)
         if stage == "critic":
             self.critic_calls += 1
             return json.dumps(critic_json(user, self.critic_calls == 1), ensure_ascii=False)
@@ -714,12 +718,12 @@ class EndToEndTests(unittest.TestCase):
             manifest = run(client, scope, test_profile(), out)
             self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
             stages_called = [c["stage"] for c in client.calls]
-            # Two source-check calls per version by default; their findings are pooled.
+            # One source-check call per four paragraphs by default (this script has two).
             self.assertEqual(stages_called, ["brief", "brief", "plan", "script", "critic", "source_check",
-                                             "source_check", "revise", "critic", "source_check", "source_check"])
+                                             "revise", "critic", "source_check"])
             for name in ("briefs/chapter_001.json", "briefs/chapter_002.json", "plan.json", "script_v1.json",
-                         "critic_v1.json", "source_check_v1.json", "source_check_v1_s2.json", "script_v2.json",
-                         "critic_v2.json", "source_check_v2.json", "script_final.md",
+                         "critic_v1.json", "source_check_v1.json", "script_v2.json",
+                         "critic_v2.json", "source_check_v2.json", "script_final.md", "script_final.txt",
                          "report.json", "report.md", "calls.jsonl", "run_manifest.json"):
                 self.assertTrue((out / name).is_file(), name)
             report = json.loads((out / "report.json").read_text(encoding="utf-8"))
@@ -727,6 +731,8 @@ class EndToEndTests(unittest.TestCase):
             self.assertEqual(report["gates"]["GATE_OUTPUT_INTEGRITY"]["status"], "PASS")
             self.assertEqual([v["problem_claims"] for v in manifest["versions"]], [1, 0])
             self.assertIn("ĐẠT", (out / "report.md").read_text(encoding="utf-8"))
+            self.assertEqual((out / "script_final.txt").read_text(encoding="utf-8"),
+                             checks.script_text(REVISED).strip() + "\n")
             self.assertTrue((out / "review_form.md").is_file())
             self.assertIn("<form id='review'", (out / "review.html").read_text(encoding="utf-8"))
             coverage = report["gates"]["GATE_NECESSARY_COVERAGE"]
@@ -755,9 +761,9 @@ class EndToEndTests(unittest.TestCase):
                     return super().__call__(stage, system, user)
                 self.checks += 1
                 units = list(dict.fromkeys(re.findall(r"<(P\d{3})>", user)))
-                first = re.search(r"<P001>\n(.+?)\n</P001>", user, re.S).group(1)
-                findings = [{"script_quote": first[:12], "kind": "CONTRADICTS_SOURCE", "passage_ids": ["1.2"],
-                             "explanation": "the source says otherwise"}] if self.checks == 1 else []
+                first = re.search(r"<P001>\n(.+?)\n</P001>", user, re.S)
+                findings = [{"script_quote": first.group(1)[:12], "kind": "CONTRADICTS_SOURCE", "passage_ids": ["1.2"],
+                             "explanation": "the source says otherwise"}] if self.checks == 1 and first else []
                 return json.dumps({"paragraphs": [{"unit_id": u, "findings": findings if u == "P001" else []}
                                                   for u in units], "critic_reviews": []})
 
@@ -791,10 +797,76 @@ class EndToEndTests(unittest.TestCase):
             self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
             self.assertIn("list every paragraph", manifest["source_check_failed"][0]["error"])
 
+            # Smaller groups: one call per paragraph, each seeing only its own paragraph; pooled samples.
+            prompts = []
+            model = SourceCheckModel()
+            client = ScriptedLLMClient(lambda stage, system, user: (prompts.append((stage, user)),
+                                                                     model(stage, system, user))[1])
+            manifest = run(client, scope, test_profile(), Path(tmp) / "chunked", source_check_chunk=1,
+                           source_check_samples=2, stop_after="critic")
+            checks_seen = [re.findall(r"^<(P\d{3})>$", user, re.M) for stage, user in prompts if stage == "source_check"]
+            self.assertEqual(checks_seen, [["P001"], ["P001"], ["P002"], ["P002"]])
+            self.assertTrue((Path(tmp) / "chunked" / "source_check_v1_c2_s2.json").is_file())
+            self.assertEqual(manifest["versions"][0]["problem_claims"], 1)  # the first sample's finding on P001
+
             client = ScriptedLLMClient(SourceCheckModel())
             manifest = run(client, scope, test_profile(), Path(tmp) / "off", source_check=False)
             self.assertNotIn("source_check", [c["stage"] for c in client.calls])
             self.assertFalse(manifest["settings"]["source_check"])
+
+    def test_later_versions_recheck_only_the_paragraphs_that_changed(self):
+        """Patch rounds left 60-97% of paragraphs byte-identical in saved runs, yet every
+        version sent all of them to the critic and the source check again."""
+        scope = load_scope(DEFAULT_MANIFEST, (1, 1))
+
+        class Model(FakeModel):
+            """The first source check finds a problem in P002, which the revision leaves alone."""
+            checks = 0
+
+            def __call__(self, stage, system, user):
+                if stage != "source_check":
+                    return super().__call__(stage, system, user)
+                self.checks += 1
+                units = list(dict.fromkeys(re.findall(r"<(P\d{3})>", user)))
+                findings = [{"script_quote": "chiếc ô", "kind": "NOT_IN_SOURCE", "passage_ids": ["1.2"],
+                             "explanation": "không có trong nguồn"}] if self.checks == 1 else []
+                return json.dumps({"paragraphs": [{"unit_id": u, "findings": findings if u == "P002" else []}
+                                                  for u in units], "critic_reviews": critic_reviews(user, "NOT_IN_SOURCE")})
+
+        for full_recheck, rechecked, problems in ((False, [2, 1], [2, 1]), (True, [2, 2], [2, 0])):
+            with self.subTest(full_recheck=full_recheck), tempfile.TemporaryDirectory() as tmp:
+                prompts = []
+                model = Model()
+                client = ScriptedLLMClient(lambda stage, system, user: (prompts.append((stage, user)),
+                                                                         model(stage, system, user))[1])
+                manifest = run(client, scope, test_profile(), Path(tmp) / "run", full_recheck=full_recheck)
+                self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
+                self.assertEqual([v["rechecked_units"] for v in manifest["versions"]], rechecked)
+                self.assertEqual([v["problem_claims"] for v in manifest["versions"]], problems)
+                second_critic = [user for stage, user in prompts if stage == "critic"][1]
+                self.assertEqual("<P002>" in second_critic, full_recheck)
+                # The carried critic verdicts still cover every paragraph.
+                critic = json.loads((Path(tmp) / "run" / "critic_v2.json").read_text(encoding="utf-8"))
+                self.assertEqual([u["unit_id"] for u in critic["units"]], ["P001", "P002"])
+                report = json.loads((Path(tmp) / "run" / "report.json").read_text(encoding="utf-8"))
+                self.assertEqual([(f["unit_id"], f["source"]) for f in report["findings"]],
+                                 [] if full_recheck else [("P002", "source_check")])
+
+        # Matching is by text, so paragraphs that move keep their verdicts under the new id.
+        old = [{"unit_id": "P001", "sha256": "a", "text": "A"}, {"unit_id": "P002", "sha256": "b", "text": "B"},
+               {"unit_id": "P003", "sha256": "c", "text": "C"}]
+        new = [{"unit_id": "P001", "sha256": "z", "text": "Z"}, {"unit_id": "P002", "sha256": "a", "text": "A"},
+               {"unit_id": "P003", "sha256": "c", "text": "C"}]
+        carried = stages.unchanged_units(new, old)
+        self.assertEqual(carried, {"P002": "P001", "P003": "P003"})
+        previous = {"units": [{"unit_id": u, "claims": [claim("SUPPORTED_FACT")], "no_claim_reason": u}
+                              for u in ("P001", "P002", "P003")]}
+        fresh = {"units": [{"unit_id": "P001", "claims": [], "no_claim_reason": "fresh"}]}
+        merged = stages.merge_critic(new, fresh, previous, carried)
+        self.assertEqual([(u["unit_id"], u["no_claim_reason"]) for u in merged["units"]],
+                         [("P001", "fresh"), ("P002", "P001"), ("P003", "P003")])
+        findings = [{"unit_id": "P001", "claim": "A"}, {"unit_id": "P002", "claim": "B"}]
+        self.assertEqual(stages.carry_findings(findings, carried), [{"unit_id": "P002", "claim": "A"}])
 
     def test_critic_findings_the_source_supports_become_brief_gaps(self):
         """Season S2 episode 2: the critic flagged four details that the brief had left out
@@ -934,6 +1006,74 @@ class EndToEndTests(unittest.TestCase):
             self.assertTrue(after[0]["text"].startswith("Câu đã sửa."))
             self.assertEqual([u["text"] for u in before[1:]], [u["text"] for u in after[1:]])  # untouched
 
+    def test_owner_review_errors_are_fixed_in_a_patch_round(self):
+        """The owner's quoted errors in review_form.md become one patch round (--apply-review)."""
+        scope = load_scope(DEFAULT_MANIFEST, (1, 1))
+
+        class OwnerModel(FakeModel):
+            """mode "fixed": the patch replaces the quote; "kept": it edits elsewhere; "flagged":
+            the recheck finds the rewrite wrong too."""
+            def __init__(self, mode="fixed"):
+                super().__init__()
+                self.mode = mode
+
+            def __call__(self, stage, system, user):
+                if stage == "patch":
+                    self.patch_prompt = user
+                    old, new = (("Bạn nghĩ sao", "Các bạn nghĩ sao") if self.mode == "kept"
+                                else ("chẳng nói thêm gì nhiều", "không nói một lời"))
+                    return json.dumps({"edits": [{"unit_id": "P002", "old": old, "new": new}]}, ensure_ascii=False)
+                if stage == "source_check" and self.mode == "flagged" and "không nói một lời" in user:
+                    return json.dumps({"paragraphs": [{"unit_id": "P002", "findings": [
+                        {"script_quote": "không nói một lời", "kind": "CONTRADICTS_SOURCE", "passage_ids": ["1.2"],
+                         "explanation": "vẫn sai"}]}], "critic_reviews": []})
+                return super().__call__(stage, system, user)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "run"
+            model = OwnerModel()
+            self.assertEqual(run(ScriptedLLMClient(model), scope, test_profile(), out)["status"], "COMPLETED")
+            form = (out / "review_form.md").read_text(encoding="utf-8")
+            filled = form.replace("- \n", (
+                '- "chẳng nói thêm gì  nhiều" → nguồn: cậu không nói gì\n'
+                '- "câu không có trong kịch bản" → x\n- nhịp hơi chậm\n'), 1).replace("☐ Sửa nhẹ", "☑ Sửa nhẹ")
+            (out / "review_form.md").write_text(filled, encoding="utf-8")
+            self.assertEqual(len(pending_owner_errors(out)), 2)
+
+            client = ScriptedLLMClient(model)
+            manifest = run(client, scope, test_profile(), out, resume=True, owner_review="review_form.md")
+            self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
+            self.assertEqual([c["stage"] for c in client.calls], ["patch", "critic", "source_check"])
+            self.assertIn("nguồn: cậu không nói gì", model.patch_prompt)
+            self.assertTrue((out / "script_v3.json").is_file())
+            report = json.loads((out / "report.json").read_text(encoding="utf-8"))
+            self.assertEqual([(o["status"], o["unit_id"]) for o in report["owner_review"]],
+                             [("applied", "P002"), ("not_found", None)])
+            self.assertEqual(manifest["owner_review"], {"rounds": 1, "applied": 1, "applied_but_flagged": 0,
+                                                        "still_present": 0, "not_found": 1})
+            self.assertIn("## Góp ý của người duyệt", (out / "report.md").read_text(encoding="utf-8"))
+            # The filled form is kept; a fresh one is written for the corrected script.
+            self.assertEqual((out / "review_form_reviewed_1.md").read_text(encoding="utf-8"), filled)
+            self.assertNotIn("☑", (out / "review_form.md").read_text(encoding="utf-8"))
+            self.assertEqual(pending_owner_errors(out), [])
+
+            # A later resume replays the round from the saved files, with or without the flag.
+            for flag in (None, "review_form.md"):
+                again = ScriptedLLMClient(OwnerModel())
+                replay = run(again, scope, test_profile(), out, resume=True, owner_review=flag)
+                self.assertEqual((again.calls, replay["versions"][-1]["version"]), ([], 3))
+            self.assertFalse((out / "review_form_reviewed_2.md").exists())
+
+        for mode, status in (("kept", "still_present"), ("flagged", "applied_but_flagged")):
+            with self.subTest(mode), tempfile.TemporaryDirectory() as tmp:
+                out = Path(tmp) / "run"
+                run(ScriptedLLMClient(OwnerModel(mode)), scope, test_profile(), out)
+                (out / "review_form.md").write_text('Lỗi cụ thể:\n- "chẳng nói thêm gì nhiều" → sai\n', encoding="utf-8")
+                run(ScriptedLLMClient(OwnerModel(mode)), scope, test_profile(), out, resume=True,
+                    owner_review="review_form.md")
+                report = json.loads((out / "report.json").read_text(encoding="utf-8"))
+                self.assertEqual([o["status"] for o in report["owner_review"]], [status])
+
     def test_patch_edits_are_validated_and_applied_in_place(self):
         script = {"title_idea": "t", "sections": [
             {"beat_id": "B1", "text": "Cháo nghi ngút khói. Cậu ăn.\n\nCô cười."},
@@ -1041,18 +1181,55 @@ class EndToEndTests(unittest.TestCase):
             reused = run(again, scope, test_profile(), Path(tmp) / "run2", memory=memory)
             self.assertEqual(reused["brief_sources"], {"1": "memory"})
 
+    def test_chinese_names_use_sino_vietnamese_readings_without_touching_other_languages(self):
+        """DEC-020: the profile's name reading reaches Chinese briefs only."""
+        profile = load_profile()
+        for language in ("ja", "ko"):
+            with self.subTest(language):
+                self.assertEqual(stages.brief_fingerprint(profile, language), stages.brief_fingerprint(profile))
+                self.assertNotIn("Sino-Vietnamese", stages.brief_system_prompt(profile, language, "1.12", {}))
+        self.assertNotEqual(stages.brief_fingerprint(profile, "zh"), stages.brief_fingerprint(profile))
+        self.assertIn("林婉儿 → Lâm Uyển Nhi", stages.brief_system_prompt(profile, "zh", "1.12", {}))
+        self.assertIn("Hán-Việt", profile.name_policy)
+
     def test_cli_episode_mode(self):
+        clients = []
+
+        def client(*args, **kwargs):
+            clients.append(ScriptedLLMClient(FakeModel()))
+            return clients[-1]
+
         with tempfile.TemporaryDirectory() as tmp, \
-                mock.patch("tools.story_pipeline.llm.GeminiLLMClient",
-                           lambda *a, **k: ScriptedLLMClient(FakeModel())), \
+                mock.patch("tools.story_pipeline.llm.GeminiLLMClient", client), \
                 mock.patch("sys.stdout", new_callable=io.StringIO) as out:
             code = run_pipeline.main(["--chapters", "2", "--recap", "--memory", str(Path(tmp) / "mem"),
-                                      "--out", str(Path(tmp) / "run"), "--min-words", "20", "--max-words", "200"])
+                                      "--out", str(Path(tmp) / "run"), "--min-words", "20", "--max-words", "200",
+                                      "--source-check-chunk", "1"])
             self.assertEqual(code, 0, out.getvalue())
-            manifest = json.loads((Path(tmp) / "run" / "run_manifest.json").read_text(encoding="utf-8"))
+            manifest_path = Path(tmp) / "run" / "run_manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
             self.assertEqual((manifest["scope"]["chapters"], manifest["background_chapters"]), ([2], [1]))
             self.assertTrue((Path(tmp) / "run" / "memory_recap.json").is_file())
             self.assertTrue(any((Path(tmp) / "mem").rglob("chapter_002.json")))
+            self.assertEqual(manifest["invocation"]["source_check_chunk"], 1)
+
+            # `--resume <dir>` alone takes the run's own options, so every saved stage is reused;
+            # a run made before invocations were recorded is read from its scope and settings.
+            for label in ("recorded", "legacy"):
+                with self.subTest(label):
+                    if label == "legacy":
+                        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                        del manifest["invocation"]
+                        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+                    code = run_pipeline.main(["--resume", str(Path(tmp) / "run"), "--memory", str(Path(tmp) / "mem")])
+                    self.assertEqual((code, clients[-1].calls), (0, []), out.getvalue())
+                    self.assertIn("resume: using the run's own chapters, recap", out.getvalue())
+            # An option given again wins over the recorded one.
+            args = run_pipeline.build_parser().parse_args(["--resume", "x", "--chapters", "3"])
+            restored = run_pipeline.restore_invocation(args, {"resume", "chapters"}, Path(tmp) / "run")
+            self.assertEqual(args.chapters, "3")
+            self.assertNotIn("chapters", restored)
+            self.assertEqual(run_pipeline.restore_invocation(args, set(), Path(tmp) / "missing"), [])
 
     def test_plan_may_call_back_to_recap_but_must_cover_episode(self):
         profile = test_profile()
