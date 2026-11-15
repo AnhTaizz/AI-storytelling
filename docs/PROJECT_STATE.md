@@ -967,6 +967,33 @@ M4-04B3G, the blind run under the M4-04B3F lock (authorized under the same owner
 - Hash, commit and push the raw primary and repair outputs and the compiled batches or terminal structural failures before anyone opens the FV1 gold. Scoring is M4-04B3H.
 - Do not open the FV1 gold or the DEV2 gold, access the holdout, change the lock, add a model arm, begin M4-04C, or begin M5.
 
+## M4-04B3G — BLIND FV1 PREDICTION RUN — COMPLETED — Status: M4_04B3G_FV1_PREDICTIONS_LOCKED
+
+- **Authorization.** The 2026-11-15 owner delegation, confirmed the same day ("Oke bạn chạy tiếp đi, làm đi nhé").
+- **Before any call.**
+  - The private protocol was rebuilt in `.local/story_extraction/M4_04B3F_FV1_PROTOCOL_V1/`. It hashed to the lock (`b33d2c4d…`, validation `2ee86335…`).
+  - The FV1 input package and the blindness manifest matched the seal.
+  - The runner `tools/story_extraction/run_m4_04b3g_fv1_predictions_v1.py` (with offline tests) was committed first, as `f0d20cc`.
+- **Credential.** `gemini_slot_33` qualified with one M4-04B1K smoke call, which returned exactly `{"status":"ok"}`.
+- **Run.** `gemini-3.5-flash-lite`, FV1_01..FV1_10 in order: 12 of the 20 allowed semantic jobs and 13 provider operations, with no transport failure.
+  - 9 cases are STRUCTURAL_VALID.
+  - FV1_04 was repaired: its primary draft had two `QUOTE:AMBIGUOUS_QUOTE` blockers, and the repair compiled.
+  - FV1_03 is a STRUCTURAL_FAILURE: `CANONICAL_COMPILER:CANONICAL_CONFORMANCE_FAILURE` on both the primary draft and the repair.
+  - Tokens, including the smoke call: 170,421 in total (124,853 prompt, 45,568 output).
+- **Prediction lock.** Prediction set SHA-256 `8e055962e5df600c87b7ea352a85636ece7efd3120059ce2cf64faa8816aff32`.
+  - The private manifest is `00e989d4…`. Raw responses, drafts, compiled batches and the terminal failure stay in the git-ignored `.local/story_extraction/M4_04B3G_FV1_PREDICTIONS_V1/`, because the drafts quote the private FV1 text.
+  - `benchmarks/m4_extraction/M4_04B3G_FV1_PREDICTION_LOCK.yaml` binds each of them by SHA-256.
+- **Boundaries.** FV1 gold not opened or hashed, DEV2 gold not opened, holdout not accessed, no scoring, no protocol change, no second model arm, no M4-04C or M5 work.
+
+## Next Candidate
+
+M4-04B3H: score the locked FV1 predictions.
+
+- Only after the M4-04B3G record is committed **and pushed**, open the FV1 gold for the first time.
+- First verify that every private artifact hashes to `M4_04B3G_FV1_PREDICTION_LOCK.yaml`.
+- Score the 9 compiled batches, and FV1_03 as a structural failure, with the frozen Snapshot V2 evaluator against the sealed gold.
+- No model call, repair or re-run after the gold opens. The holdout stays closed.
+
 ## M6 Retrieval Baseline — ACCEPTED as a baseline over the brief memory (DEC-021, 2026-11-15)
 
 - **Phase 1** (PR #5, merged 2026-11-15): cutoff-safe passage retrieval; details below.
