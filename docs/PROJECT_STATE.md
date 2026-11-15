@@ -930,4 +930,6 @@ M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02 are ACCEPTED. M4-03 is `FR
 
 ## Next Candidate
 
+A concrete proposal for the next two M4 tasks is in `docs/research/m4/M4_04B3F_PROTOCOL_PROPOSAL_V0.md` (not authorized; nothing run).
+
 Orchestrator review of the M4-04B3E seal. After that, and under separate authorization: lock a Draft V1.1 prompt and runtime protocol against the fresh validation input hash, then run blind predictions. Do not open the fresh validation gold before those predictions are locked and hashed. Do not reuse DEV2 as fresh validation, open DEV2 gold, access the holdout, begin M4-04C, or begin M5 without a separately authorized task.
