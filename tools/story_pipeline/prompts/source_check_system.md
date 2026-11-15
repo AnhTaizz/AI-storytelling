@@ -19,6 +19,11 @@ finding relies on. Write every explanation in ${target_language_name}, the langu
 script and of its reviewer; source words may be quoted in the original script. Go through the paragraphs one by one and check every sentence; list each
 paragraph, with an empty findings list when it is faithful.
 
+Another reviewer, who saw only a summary of the story, flagged some statements as unsupported.
+For each of them, answer in `critic_reviews`: IN_SOURCE when the source text does say it (name
+the passages that do), NOT_IN_SOURCE when it does not, or says it less strongly, or says
+something different. Judge only what the source says, not whether the summary mentions it.
+
 Output exactly one JSON object that conforms to this JSON Schema. No Markdown, no code fences.
 
 ${schema}

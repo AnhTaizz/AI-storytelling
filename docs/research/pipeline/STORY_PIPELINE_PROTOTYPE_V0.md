@@ -604,11 +604,22 @@ The season COMPLETED in three invocations; the season runner resumed episode 3 t
 - **Not seen in this season:** invented steam, "đỏ bừng", "dữ dội" or the lost-child speech.
 - **Limit — critic false positives:** a LOW critic finding can be a faithful detail that the brief left out. The source check, which reads the source, did not flag these four.
 
+**Source check adjudicates the critic's findings (added after season S2).**
+
+- **Why:** the critic judges the script against the briefs, so a detail that the source says but the brief left out looks invented. All four findings left in S2's episode 2 were of this kind.
+- **How:** the source check, which already reads the whole episode, also receives the critic's problem claims (F1, F2…). For each it answers `IN_SOURCE` (naming the passages) or `NOT_IN_SOURCE` in `critic_reviews`. There is no extra call. Answers are rejected when a flag is unanswered or answered twice, when IN_SOURCE names no passage, or when a passage is outside the episode.
+- **Effect:** a critic finding is overturned only when every source-check sample that answered says IN_SOURCE; one dissent keeps it. Overturned findings leave revision and the gates. They are listed as brief gaps (`report.json` `brief_gaps`, "Brief bỏ sót" in `report.md` and `review.html`) with the cited passages, so a person can check them. Each version records `critic_overturned`.
+- **Live trial (S2 episode 2, v4 script and critic, `gemini-3.6-flash`, 2 samples, about 15,000 tokens a call):**
+  - All four false positives were overturned by both samples, citing 2.34, 3.8/3.18, 3.65–3.69 and 3.65/3.68. A manual check of those passages agrees.
+  - Negative control: four wrong statements were added as critic claims. They were run 10's real "steaming porridge" defect (contradicted by 3.81), an invented piggyback home, an invented confession and a fever "so high he fainted" (strengthened). Both samples answered NOT_IN_SOURCE for all four, and three of the four answers cited the passage that contradicts the claim.
+  - Result: 8 of 8 verdicts correct in both samples. This is one episode; the verifier can still be wrong, which is why a single dissent keeps a finding.
+
 ## Known limits
 
 - Brief paraphrase quality is not measured against gold. Quotes pin the evidence, but a
   wrong paraphrase of a correctly quoted passage still reaches the writer; the critic
-  judges the script only against the briefs.
+  judges the script only against the briefs (the source check reads the source and
+  overrules critic findings the source supports, but it does not correct the briefs).
 - The critic is a model and is known (H6/H6b) to miss violations; its PASS is weak evidence.
 - Word count is whitespace tokens (Vietnamese syllables), matching the M1 runs.
 - No human-review workflow yet; `UNDETERMINED` claims are listed in the report for a person.

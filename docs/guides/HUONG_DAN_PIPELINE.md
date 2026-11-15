@@ -63,6 +63,10 @@ Trong thư mục của lần chạy (`.local/story_pipeline_runs/<id>/` hoặc t
 
 **Gate "CẦN XEM" không có nghĩa là kịch bản hỏng.** Nó nghĩa là còn lỗi mà vòng sửa chưa xử lý hết, và báo cáo ghi rõ câu nào.
 
+**Mục "Brief bỏ sót"** liệt kê các câu mà critic báo là bịa (vì brief không có), nhưng bước đối chiếu nguồn
+tìm thấy trong nguyên văn, có dẫn passage. Các câu này được giữ nguyên và không tính là lỗi. Nên liếc qua
+passage được dẫn để chắc chắn.
+
 Các bộ kiểm tra vẫn có thể bỏ sót, nên hãy đọc cả đoạn, không chỉ chỗ được tô.
 
 ## 5. Chấm kịch bản (cần cho cổng chất lượng M1)

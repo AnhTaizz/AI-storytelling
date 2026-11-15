@@ -192,6 +192,14 @@ def report_markdown(manifest: Dict[str, Any], report: Dict[str, Any]) -> str:
         for item in report["source_strength_review"]:
             lines.append(f"- {item['ref']}: {item['text'][:160]} — từ: {', '.join(item['phrases'])} "
                          f"(nguồn: {', '.join(item['evidence'])})")
+    if report.get("brief_gaps"):
+        lines += ["", "## Brief bỏ sót (critic báo nhầm, nguồn xác nhận)", "",
+                  "Critic so kịch bản với brief nên báo các chi tiết này là bịa; bước đối chiếu nguồn tìm thấy "
+                  "chúng trong nguyên văn (mọi lần đối chiếu đều đồng ý), nên chúng không bị sửa và không tính "
+                  "vào gate. Nên xem lại passage được dẫn.", ""]
+        for gap in report["brief_gaps"]:
+            lines.append(f"- ({gap['unit_id']}) {gap['claim']} — nguồn: {', '.join(gap['passage_ids'])}: "
+                         f"{gap['source_explanation']}")
     if report["undetermined"]:
         lines += ["", "## Cần người xem (UNDETERMINED)", ""]
         for f in report["undetermined"]:
@@ -400,15 +408,17 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                                                   profile.brief_language)
                 audit += _glossary_findings(units, glossary, roster, profile.target_language)
                 verified: List[Dict[str, Any]] = []
+                brief_gaps = []
                 if source_check:
                     progress(f"source check v{version}")
-                    samples = []
+                    flags = stages.critic_flags(critic)
+                    samples, results = [], []
                     for sample in range(1, max(1, source_check_samples) + 1):
                         name = f"source_check_v{version}.json" if sample == 1 else f"source_check_v{version}_s{sample}.json"
                         try:
                             result = cached(out_dir / name, resume,
                                             lambda: stages.run_source_check(client, scope, units, profile, log,
-                                                                            max_repairs, version, sample))
+                                                                            max_repairs, version, sample, flags))
                         except StageFailed as exc:
                             # A second verifier that cannot answer must not sink the episode
                             # (season S2): record it and go on with the other checks.
@@ -420,7 +430,13 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                                                                 f"{stages.SOURCE_CHECK_MAX_CHARS} characters")
                             break
                         samples.append(stages.source_check_findings(result, passages))
+                        results.append(result)
                     verified = stages.merge_source_findings(samples)
+                    # Critic findings the source does support are gaps in the brief, not
+                    # errors in the script: they leave revision and the gates.
+                    brief_gaps = stages.overturned_flags(results, flags)
+                    if brief_gaps:
+                        critic = stages.without_claims(critic, brief_gaps)
                 audit += verified
                 write_json(out_dir / f"strength_audit_v{version}.json", audit)
                 problems = stages.findings_for_revision(critic, SEVERITY_ORDER) + audit
@@ -429,6 +445,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                 manifest["versions"].append({
                     "version": version, "word_count": check["word_count"],
                     "problem_claims": len(problems), "strength_audit": len(audit),
+                    "critic_overturned": len(brief_gaps),
                     "high_or_worse": sum(1 for p in problems if p["severity"] in ("CRITICAL", "HIGH"))})
                 to_fix = stages.findings_for_revision(critic, revise_severities) + \
                     [f for f in audit if f["severity"] in revise_severities]
@@ -476,6 +493,8 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
             item for chapter, brief in zip(sorted([*background, *scope.chapters], key=lambda c: c.order), all_briefs)
             if chapter.order >= scope.first
             for item in stages.source_strength_review(brief, chapter, scope.source_language, profile.brief_language)]
+        report["brief_gaps"] = [{k: g[k] for k in ("unit_id", "claim", "claim_type", "explanation",
+                                                    "source_explanation", "passage_ids")} for g in brief_gaps]
         report["final_version"] = version
         report["final_check"] = final_check
         write_json(out_dir / "report.json", report)

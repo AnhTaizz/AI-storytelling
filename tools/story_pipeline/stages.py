@@ -1035,10 +1035,47 @@ def source_check_text(chapters: Sequence[Chapter]) -> str:
     return "\n".join(f"[{p.passage_id}] {p.text}" for c in chapters for p in c.passages)
 
 
+def critic_flags(critic: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """The critic's problem claims, numbered F1, F2... for the source check to adjudicate.
+
+    The critic judges the script against the briefs, so a detail that the source does say
+    but the brief left out is reported as invented (season S2 episode 2: all four remaining
+    findings). The source check reads the whole episode and can tell the two apart."""
+    flags = []
+    for unit in (critic or {}).get("units", []):
+        for claim in unit["claims"]:
+            if claim["claim_type"] in PROBLEM_TYPES and claim["claim_type"] != "UNDETERMINED":
+                flags.append({"id": f"F{len(flags) + 1}", "unit_id": unit["unit_id"], **claim})
+    return flags
+
+
+_FLAG_KINDS = {"UNSUPPORTED_STORY_CLAIM": "not supported", "CONTRADICTED_STORY_CLAIM": "contradicted",
+               "STRENGTHENED_STORY_CLAIM": "stated more strongly than the summary"}
+
+
+def flagged_text(flags: Sequence[Dict[str, Any]]) -> str:
+    if not flags:
+        return "(none: return an empty critic_reviews list)"
+    return "\n".join(f"{f['id']} ({f['unit_id']}, {_FLAG_KINDS.get(f['claim_type'], 'questioned')}): {f['claim']}"
+                     for f in flags)
+
+
 def source_check_errors(check: Dict[str, Any], units: Sequence[Dict[str, str]],
-                        passage_ids: Set[str]) -> List[str]:
-    """Every paragraph listed once; quotes copied from their paragraph; passages in scope."""
+                        passage_ids: Set[str], flags: Sequence[Dict[str, Any]] = ()) -> List[str]:
+    """Every paragraph listed once; quotes copied from their paragraph; passages in scope;
+    every flagged statement answered once, IN_SOURCE with the passages that say it."""
     errors = []
+    reviews = check.get("critic_reviews") or []
+    answered = [r["id"].strip() for r in reviews]
+    expected = [f["id"] for f in flags]
+    if sorted(answered) != sorted(expected):
+        errors.append(f"critic_reviews: answer each flagged statement exactly once ({expected}), got {answered}")
+    for review in reviews:
+        unknown = [pid for pid in review["passage_ids"] if pid not in passage_ids]
+        if unknown:
+            errors.append(f"critic_reviews {review['id']}: passage ids {unknown} are not in this episode's source")
+        if review["verdict"] == "IN_SOURCE" and not review["passage_ids"]:
+            errors.append(f"critic_reviews {review['id']}: IN_SOURCE needs the passage ids that say it")
     unit_text = {u["unit_id"]: u["text"] for u in units}
     listed = [_unit_id(p["unit_id"]) for p in check["paragraphs"]]
     missing = [u for u in unit_text if u not in listed]
@@ -1076,6 +1113,30 @@ def source_check_findings(check: Dict[str, Any], passages: Mapping[str, str]) ->
     return findings
 
 
+def overturned_flags(checks: Sequence[Optional[Dict[str, Any]]],
+                     flags: Sequence[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Critic findings that the source check found in the source: every sample that answered
+    said IN_SOURCE (one dissent keeps the finding). They are brief gaps, not script errors."""
+    out = []
+    for flag in flags:
+        verdicts = [r for check in checks if check for r in check.get("critic_reviews") or []
+                    if r["id"].strip() == flag["id"]]
+        if verdicts and all(r["verdict"] == "IN_SOURCE" for r in verdicts):
+            passages = []
+            for review in verdicts:
+                passages += [p for p in review["passage_ids"] if p not in passages]
+            out.append({**flag, "passage_ids": passages, "source_explanation": verdicts[0]["explanation"]})
+    return out
+
+
+def without_claims(critic: Dict[str, Any], drop: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
+    """The critic result without the given claims (matched by paragraph, text and type)."""
+    keys = {(f["unit_id"], f["claim"], f["claim_type"]) for f in drop}
+    return {**critic, "units": [{**unit, "claims": [c for c in unit["claims"]
+                                                     if (unit["unit_id"], c["claim"], c["claim_type"]) not in keys]}
+                                for unit in critic["units"]]}
+
+
 def merge_source_findings(samples: Sequence[Sequence[Dict[str, Any]]]) -> List[Dict[str, Any]]:
     """Union of several source-check calls. One call misses defects another catches (live
     runs 13-14), and in trials every reported finding was real, so findings are pooled; two
@@ -1092,9 +1153,11 @@ def merge_source_findings(samples: Sequence[Sequence[Dict[str, Any]]]) -> List[D
 
 def run_source_check(client: LLMClient, scope: StoryScope, units: List[Dict[str, str]],
                      profile: NarrativeProfile, log: CallLog, max_repairs: int,
-                     version: int, sample: int = 1) -> Optional[Dict[str, Any]]:
-    """Check the script against the episode's own source text. None when the episode is too
-    long for one call (see SOURCE_CHECK_MAX_CHARS)."""
+                     version: int, sample: int = 1,
+                     flags: Sequence[Dict[str, Any]] = ()) -> Optional[Dict[str, Any]]:
+    """Check the script against the episode's own source text, and answer for each critic
+    flag (see critic_flags) whether the source says it. None when the episode is too long
+    for one call (see SOURCE_CHECK_MAX_CHARS)."""
     source = source_check_text(scope.chapters)
     if len(source) > SOURCE_CHECK_MAX_CHARS:
         return None
@@ -1104,10 +1167,10 @@ def run_source_check(client: LLMClient, scope: StoryScope, units: List[Dict[str,
                     source_language_name=language, schema=dump(schema))
     unit_lines = "\n\n".join(f"<{u['unit_id']}>\n{u['text']}\n</{u['unit_id']}>" for u in units)
     user = render("source_check_user", scope_label=scope.label(), source_language_name=language,
-                  source=source, unit_count=len(units), units=unit_lines)
+                  source=source, unit_count=len(units), units=unit_lines, flagged=flagged_text(flags))
     ids = {p.passage_id for c in scope.chapters for p in c.passages}
     return run_json_stage(client, stage="source_check", system=system, user=user, schema=schema,
-                          semantic_check=lambda c: source_check_errors(c, units, ids),
+                          semantic_check=lambda c: source_check_errors(c, units, ids, flags),
                           max_repairs=max_repairs, log=log,
                           request_suffix=f"v{version}" if sample == 1 else f"v{version}s{sample}")
 

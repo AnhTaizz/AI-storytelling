@@ -114,7 +114,7 @@ Prototype (not frozen, not M5 completion): story memory v0 (`tools/story_memory/
 - **Seasons:** `tools/story_pipeline/run_story.py` runs a story episode by episode with shared memory, resume and quota pause, and writes a season index.
 - **Script checks:**
   - deterministic: strength, hedge, attribution and glossary (name spellings and pronouns);
-  - an LLM source check that reads the script against the source text;
+  - an LLM source check that reads the script against the source text, and overrules critic findings that the source supports (reported as brief gaps);
   - findings go to revision, whose later rounds only patch sentences.
 - **Owner review:** each run writes `review.html`; `review_summary.py` collects filled forms.
 - **Other pieces:**

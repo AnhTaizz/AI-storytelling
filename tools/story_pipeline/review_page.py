@@ -207,6 +207,18 @@ def render_review_page(manifest: Mapping[str, Any], report: Mapping[str, Any],
         parts.append(f"<section class='unit' id='{_esc(uid)}'><div>{''.join(left)}</div>"
                      f"<div>{''.join(right)}</div></section>")
 
+    gaps = report.get("brief_gaps", [])
+    if gaps:
+        parts.append("<h2>Brief bỏ sót</h2><p class='muted'>Critic báo các câu này là bịa vì brief không có; "
+                     "đối chiếu nguồn tìm thấy chúng trong nguyên văn, nên chúng được giữ và không tính lỗi. "
+                     "Hãy kiểm tra passage được dẫn.</p><table><tr><th>Đoạn</th><th>Câu</th><th>Nguồn</th></tr>")
+        for gap in gaps:
+            cited = "".join(f"<div class='src'><b>[{_esc(pid)}]</b> {_esc(passages.get(pid, '(không có)'))}</div>"
+                            for pid in gap["passage_ids"])
+            parts.append(f"<tr><td><a href='#{_esc(gap['unit_id'])}'>{_esc(gap['unit_id'])}</a></td>"
+                         f"<td>{_esc(gap['claim'])}<br><span class='muted'>{_esc(gap['source_explanation'])}</span></td>"
+                         f"<td>{cited}</td></tr>")
+        parts.append("</table>")
     advisory = [(item, "rào đón bị bỏ") for item in report.get("source_hedge_review", [])]
     advisory += [(item, "mạnh hơn nguồn: " + ", ".join(item["phrases"]))
                  for item in report.get("source_strength_review", [])]

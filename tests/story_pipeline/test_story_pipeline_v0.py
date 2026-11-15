@@ -157,8 +157,18 @@ class FakeModel:
             return json.dumps(critic_json(user, self.critic_calls == 1), ensure_ascii=False)
         if stage == "source_check":
             units = list(dict.fromkeys(re.findall(r"<(P\d{3})>", user)))
-            return json.dumps({"paragraphs": [{"unit_id": u, "findings": []} for u in units]})
+            return json.dumps({"paragraphs": [{"unit_id": u, "findings": []} for u in units],
+                               "critic_reviews": critic_reviews(user, self.flag_verdict)})
         raise AssertionError(stage)
+
+    flag_verdict = "NOT_IN_SOURCE"
+
+
+def critic_reviews(user, verdict):
+    """An answer for every critic statement the source-check prompt lists."""
+    return [{"id": flag, "verdict": verdict, "passage_ids": ["1.2"] if verdict == "IN_SOURCE" else [],
+             "explanation": "nguồn nói vậy" if verdict == "IN_SOURCE" else "nguồn không có"}
+            for flag in re.findall(r"^(F\d+) \(", user, re.MULTILINE)]
 
 
 def test_profile():
@@ -749,7 +759,7 @@ class EndToEndTests(unittest.TestCase):
                 findings = [{"script_quote": first[:12], "kind": "CONTRADICTS_SOURCE", "passage_ids": ["1.2"],
                              "explanation": "the source says otherwise"}] if self.checks == 1 else []
                 return json.dumps({"paragraphs": [{"unit_id": u, "findings": findings if u == "P001" else []}
-                                                  for u in units]})
+                                                  for u in units], "critic_reviews": []})
 
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp) / "run"
@@ -786,6 +796,33 @@ class EndToEndTests(unittest.TestCase):
             self.assertNotIn("source_check", [c["stage"] for c in client.calls])
             self.assertFalse(manifest["settings"]["source_check"])
 
+    def test_critic_findings_the_source_supports_become_brief_gaps(self):
+        """Season S2 episode 2: the critic flagged four details that the brief had left out
+        but the source does say. The source check adjudicates them; supported ones are not
+        revised, do not count in the gates, and are listed as brief gaps."""
+        scope = load_scope(DEFAULT_MANIFEST, (1, 1))
+        model = FakeModel()
+        model.flag_verdict = "IN_SOURCE"
+        prompts = []
+        client = ScriptedLLMClient(lambda stage, system, user: (prompts.append((stage, user)),
+                                                                 model(stage, system, user))[1])
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "run"
+            manifest = run(client, scope, test_profile(), out)
+            self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
+            check_prompt = next(user for stage, user in prompts if stage == "source_check")
+            self.assertIn("F1 (P001, not supported): x", check_prompt)
+            self.assertNotIn("revise", [stage for stage, _ in prompts])
+            self.assertEqual([(v["problem_claims"], v["critic_overturned"]) for v in manifest["versions"]], [(0, 1)])
+            report = json.loads((out / "report.json").read_text(encoding="utf-8"))
+            self.assertEqual(report["findings"], [])
+            self.assertEqual(report["gates"]["GATE_FACTUAL_GROUNDING"]["status"], "PASS")
+            self.assertEqual([(g["unit_id"], g["claim"], g["passage_ids"]) for g in report["brief_gaps"]],
+                             [("P001", "x", ["1.2"])])
+            self.assertIn("SUPPORTED_FACT", report["claim_counts"])  # the critic's other claims stay
+            self.assertIn("## Brief bỏ sót", (out / "report.md").read_text(encoding="utf-8"))
+            self.assertIn("<h2>Brief bỏ sót</h2>", (out / "review.html").read_text(encoding="utf-8"))
+
     def test_source_check_answers_are_validated(self):
         units = [{"unit_id": "P001", "sha256": "x", "text": "Cô bưng bát cháo nghi ngút khói."},
                  {"unit_id": "P002", "sha256": "x", "text": "Cậu khen cháo ngon."}]
@@ -812,6 +849,45 @@ class EndToEndTests(unittest.TestCase):
                 self.assertEqual(len(errors), len(expected), errors)
                 for message, error in zip(expected, errors):
                     self.assertIn(message, error)
+
+        # Verdicts on the critic's flags: one per flag, and IN_SOURCE names its passages.
+        critic = {"units": [{"unit_id": "P001", "claims": [claim("SUPPORTED_FACT"),
+                                                           claim("UNSUPPORTED_STORY_CLAIM", "LOW", "UNSUPPORTED_INVENTION"),
+                                                           claim("UNDETERMINED")]},
+                            {"unit_id": "P002", "claims": [claim("STRENGTHENED_STORY_CLAIM", "LOW", "EPISTEMIC_ERROR")]}]}
+        flags = stages.critic_flags(critic)
+        self.assertEqual([(f["id"], f["unit_id"], f["claim_type"]) for f in flags],
+                         [("F1", "P001", "UNSUPPORTED_STORY_CLAIM"), ("F2", "P002", "STRENGTHENED_STORY_CLAIM")])
+        self.assertEqual(stages.flagged_text(flags).splitlines(),
+                         ["F1 (P001, not supported): x", "F2 (P002, stated more strongly than the summary): x"])
+        self.assertIn("empty critic_reviews", stages.flagged_text([]))
+
+        def review(flag, verdict="IN_SOURCE", passage_ids=("3.81",)):
+            return {"id": flag, "verdict": verdict, "passage_ids": list(passage_ids), "explanation": "e"}
+
+        base = answer(("P001", []), ("P002", []))
+        cases = [
+            ("every flag answered", [review("F1"), review("F2", "NOT_IN_SOURCE", ())], []),
+            ("a flag left unanswered", [review("F1")], ["answer each flagged statement exactly once"]),
+            ("IN_SOURCE without passages", [review("F1", passage_ids=()), review("F2")], ["needs the passage ids"]),
+            ("passage outside the episode", [review("F1", passage_ids=("9.1",)), review("F2")],
+             ["not in this episode's source"]),
+        ]
+        for label, reviews, expected in cases:
+            with self.subTest(label):
+                errors = stages.source_check_errors(dict(base, critic_reviews=reviews), units, ids, flags)
+                self.assertEqual(len(errors), len(expected), errors)
+                for message, error in zip(expected, errors):
+                    self.assertIn(message, error)
+
+        # Overturned only when every sample that answered says IN_SOURCE.
+        agree = dict(base, critic_reviews=[review("F1"), review("F2")])
+        dissent = dict(base, critic_reviews=[review("F1", passage_ids=("3.96",)), review("F2", "NOT_IN_SOURCE", ())])
+        overturned = stages.overturned_flags([agree, dissent, None, base], flags)
+        self.assertEqual([(f["id"], f["passage_ids"]) for f in overturned], [("F1", ["3.81", "3.96"])])
+        kept = stages.without_claims(critic, overturned)
+        self.assertEqual([[c["claim_type"] for c in u["claims"]] for u in kept["units"]],
+                         [["SUPPORTED_FACT", "UNDETERMINED"], ["STRENGTHENED_STORY_CLAIM"]])
         converted = stages.source_check_findings(answer(("P001", [finding]), ("P002", [])),
                                                  {"3.81": "湯気はたっていない"})
         self.assertEqual([(f["claim_type"], f["failure_category"], f["severity"], f["source"]) for f in converted],
