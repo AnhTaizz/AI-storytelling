@@ -1,0 +1,24 @@
+# Vietnamese lexicon for the story pipeline's deterministic checks.
+# Keys are language-independent concept ids (tools/story_pipeline/lexicon.py); values are
+# lowercase phrases. Matching is case-insensitive and respects word boundaries.
+language: vi
+word_boundaries: true
+chars_per_event: 1500
+clause_markers: [và, nhưng, sau khi, trước khi, khi, nếu, vì, rồi, mà, để]
+# A hedge does not reach across a contrast. Openers start such a part.
+contrast_openers: [nhưng, tuy nhiên, song]
+strength:
+  degree_extreme: [vô cùng, cực kỳ, cực kì, tột độ, hết sức]
+  completeness: [hoàn toàn, tuyệt đối, toàn thân, từ đầu đến chân]
+  quantity_large: [rất nhiều, vô số, vô vàn]
+  universality: [mọi người, ai ai, ai cũng, tất cả mọi]
+  frequency_always: [luôn luôn, lúc nào cũng, thường xuyên, không bao giờ, chưa bao giờ]
+  certainty: [chắc chắn, nhất định, tin chắc]
+  firmness: [kiên quyết, dứt khoát, thẳng thừng]
+  reputation: [biệt danh, nổi tiếng]
+  intensity_fill: [nhuốm đầy, tràn đầy, đầy rẫy]
+hedge:
+  reported: [nghe nói, nghe đồn, lời đồn, theo lời đồn, được cho là, người ta nói, có tin]
+  appearance: [có vẻ, dường như, trông như, hình như, như thể, như sắp, như muốn]
+  speculation: [có lẽ, có thể, chắc là, phỏng đoán]
+  metaphor: [ví như, được ví, tựa như, ẩn dụ, như là]

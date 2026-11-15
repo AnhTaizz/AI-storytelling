@@ -107,6 +107,8 @@ Prototype (not frozen, not a milestone completion): `STORY_PIPELINE_PROTOTYPE/v0
 
 Quality gate (DEC-019, 2026-11-13): `python -m tools.ci.check` runs compile, test policy (no shadowed or duplicated tests, no untested new modules, generated `tests/TEST_CATALOG.md`), every suite with declared environment gates, and repository guards (append-only protected paths, secret/private-data scan, changed-line coverage in CI). CI: `.github/workflows/ci.yml`. Agent rules: `CLAUDE.md`. See `docs/engineering/QUALITY_GATES.md`.
 
+Prototype (not frozen, not M5 completion): story memory v0 (`tools/story_memory/`, 2026-11-13) persists chapter briefs across runs with source/prompt fingerprint invalidation, merges a cross-chapter character roster, tracks relationship states per chapter, and feeds a spoiler-safe recap of earlier chapters into episode runs (`--recap`). Not yet run against a live model.
+
 Story Extraction now has research-only validation/runtime tooling and the additive `STORY_EXTRACTION_DRAFT_V1` deterministic compiler prototype (M4-04B3A). No extraction model or end-to-end extractor is selected, locked, or production-qualified. Later application pipeline stages remain unimplemented.
 
 Not yet implemented:

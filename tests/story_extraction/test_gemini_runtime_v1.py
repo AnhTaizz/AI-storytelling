@@ -5,12 +5,14 @@ from __future__ import annotations
 from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
+from unittest import mock
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
@@ -165,18 +167,25 @@ class TestConfiguration(unittest.TestCase):
         self.assertEqual(loaded.credentials[0].project_label, "file")
 
     def test_config_check_never_constructs_a_client(self):
-        with tempfile.TemporaryDirectory() as directory:
+        with tempfile.TemporaryDirectory() as directory, _without_gemini_environment():
             summary = T.check_config(Path(directory) / ".env")
         self.assertEqual(summary["credential_slots"], 0)
 
     def test_cli_waiting_output_has_counts_and_no_secret(self):
-        with tempfile.TemporaryDirectory() as directory:
+        with tempfile.TemporaryDirectory() as directory, _without_gemini_environment():
             output = StringIO()
             with redirect_stdout(output):
                 code = T.main(["--check-config", "--env-file", str(Path(directory) / ".env")])
         self.assertEqual(code, 0)
         self.assertIn("WAITING_FOR_USER_CREDENTIALS", output.getvalue())
         self.assertNotIn("API_KEY_", output.getvalue())
+
+
+def _without_gemini_environment():
+    """Hide real GEMINI_* variables of the machine running the tests (for example a key set on
+    a cloud environment), so these tests describe an unconfigured runtime wherever they run."""
+    kept = {name: value for name, value in os.environ.items() if not name.startswith("GEMINI_")}
+    return mock.patch.dict(os.environ, kept, clear=True)
 
 
 class TestPoolScheduling(unittest.TestCase):

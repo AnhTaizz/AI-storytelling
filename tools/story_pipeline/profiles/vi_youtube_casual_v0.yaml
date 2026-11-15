@@ -13,4 +13,4 @@ length_words:
   min: 900
   max: 1100
 call_to_action: false
-name_policy: "Dùng tên phiên âm Latin (ví dụ: Amane, Mahiru, Fujimiya, Shiina). Không dùng chữ Nhật (kanji/kana) trong kịch bản."
+name_policy: "Dùng tên phiên âm Latin theo cách phiên âm chuẩn của ngôn ngữ gốc (ví dụ tiếng Nhật: Amane, Mahiru; tiếng Hàn: Ji-woo, Seo-yeon). Không để chữ viết gốc (kanji, kana, Hangul...) trong kịch bản."
