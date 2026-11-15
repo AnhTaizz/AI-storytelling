@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 8 — test files: 56 — test functions: 1008
+Suites: 8 — test files: 57 — test functions: 1011
 
 ## canonical_story
 
@@ -1156,6 +1156,13 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `TestParagraphPack.test_aggregate_failure_returns_false`
 
 ## story_memory
+
+### test_glossary_v0 (3)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.glossary_v0`
+
+- `GlossaryTests.test_sync_adds_characters_and_never_overwrites_the_owners_choice`
+- `GlossaryTests.test_other_spellings_of_a_character_are_flagged`
+- `GlossaryTests.test_bad_files_and_ids_are_rejected`
 
 ### test_memory_v0 (7)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`

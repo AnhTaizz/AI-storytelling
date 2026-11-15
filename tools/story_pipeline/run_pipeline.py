@@ -11,6 +11,7 @@ to reuse stage outputs already written there (saves API calls after a failure).
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import json
 import sys
 import time
@@ -22,7 +23,8 @@ REPO = Path(__file__).resolve().parents[2]
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
-from tools.story_memory.memory_v0 import StoryMemory, recap_context  # noqa: E402
+from tools.story_memory import glossary_v0  # noqa: E402
+from tools.story_memory.memory_v0 import StoryMemory, build_roster, recap_context  # noqa: E402
 from tools.story_pipeline import PIPELINE_VERSION, checks, review_page, stages  # noqa: E402
 from tools.story_pipeline.facts import StoryFacts  # noqa: E402
 from tools.story_pipeline.llm import CallLog, LLMClient, StageFailed  # noqa: E402
@@ -335,6 +337,19 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         if stop_after == "brief":
             return finish("STOPPED_AFTER_BRIEF")
 
+        # One spelling per character (tools/story_memory/glossary_v0.py), kept with the memory.
+        roster = build_roster(all_briefs)
+        glossary = None
+        writer_profile = profile
+        if memory is not None:
+            glossary_file = memory.directory.parent / "glossary.yaml"
+            glossary = glossary_v0.sync(glossary_file, roster)
+            manifest["glossary"] = {"path": str(glossary_file), "characters": len(glossary["characters"]),
+                                    "confirmed": glossary_v0.confirmed(glossary)}
+            name_rules = glossary_v0.rules(glossary)
+            if name_rules:
+                writer_profile = dataclasses.replace(profile, name_policy=f"{profile.name_policy}\n{name_rules}")
+
         progress("plan")
         plan = cached(out_dir / "plan.json", resume,
                       lambda: stages.run_plan(client, scope, briefs, profile, log, max_repairs, recap))
@@ -343,7 +358,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
 
         progress("script v1")
         script = cached(out_dir / "script_v1.json", resume,
-                        lambda: stages.run_script(client, scope, briefs, plan, profile, log, max_repairs,
+                        lambda: stages.run_script(client, scope, briefs, plan, writer_profile, log, max_repairs,
                                                   recap))
         (out_dir / "script_v1.md").write_text(script_markdown(script, "v1"), encoding="utf-8")
         critic: Optional[Dict[str, Any]] = None
@@ -363,6 +378,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                                             profile.brief_language)
                 audit += stages.attribution_audit(critic, briefs, units, passages, profile.target_language,
                                                   profile.brief_language)
+                audit += glossary_v0.check(units, glossary, roster) if glossary else []
                 verified: List[Dict[str, Any]] = []
                 if source_check:
                     progress(f"source check v{version}")
@@ -399,9 +415,9 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                 progress(f"{'patch' if patching else 'revise'} -> v{version} ({len(to_fix)} findings)")
                 script = cached(out_dir / f"script_v{version}.json", resume,
                                 lambda: stages.run_patch(client, scope, briefs, previous, to_fix, previous_units,
-                                                         profile, log, max_repairs, version) if patching
+                                                         writer_profile, log, max_repairs, version) if patching
                                 else stages.run_revision(client, scope, briefs, plan, previous,
-                                                         to_fix, previous_units, profile, log,
+                                                         to_fix, previous_units, writer_profile, log,
                                                          max_repairs, version, recap))
                 (out_dir / f"script_v{version}.md").write_text(script_markdown(script, f"v{version}"),
                                                               encoding="utf-8")
@@ -416,6 +432,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                                             profile.brief_language)
                        + stages.attribution_audit(critic, briefs, final_units, passages, profile.target_language,
                                                   profile.brief_language)
+                       + (glossary_v0.check(final_units, glossary, roster) if glossary else [])
                        + verified if critic is not None else [])
         report = gate_report(critic, final_check, briefs, final_audit)
         report["source_hedge_review"] = [

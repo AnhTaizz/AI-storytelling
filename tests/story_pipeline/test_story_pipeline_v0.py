@@ -12,6 +12,8 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+import yaml
+
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
 
@@ -875,6 +877,22 @@ class EndToEndTests(unittest.TestCase):
                          memory=memory)
             self.assertEqual(second["brief_sources"], {"1": "memory", "2": "memory", "3": "memory"})
             self.assertNotIn("brief", [c["stage"] for c in again.calls])
+
+            # The story's name glossary is kept with the memory; the owner's spelling is enforced.
+            glossary_file = Path(tmp) / "memory" / full.story_id / "glossary.yaml"
+            self.assertEqual(second["glossary"]["characters"], 2)
+            data = yaml.safe_load(glossary_file.read_text(encoding="utf-8"))
+            data["characters"][0].update(display="Chu", also_allowed=[], confirmed=True)
+            glossary_file.write_text(yaml.safe_dump(data, allow_unicode=True), encoding="utf-8")
+            systems = []
+            renamed = ScriptedLLMClient(lambda stage, system, user: (systems.append((stage, system)),
+                                                                      FakeModel()(stage, system, user))[1])
+            third = run(renamed, episode, test_profile(), Path(tmp) / "ep3", background=background,
+                        memory=memory, source_check=False)
+            self.assertIn("藤宮周 → Chu", next(s for stage, s in systems if stage == "script"))
+            report = json.loads((Path(tmp) / "ep3" / "report.json").read_text(encoding="utf-8"))
+            self.assertIn(("glossary", "Amane"), [(f.get("source"), f["claim"]) for f in report["findings"]])
+            self.assertEqual(third["glossary"]["confirmed"], False)  # Mahiru is still a default
 
     def test_memory_brief_failing_current_checks_is_regenerated(self):
         scope = load_scope(DEFAULT_MANIFEST, (1, 1))
