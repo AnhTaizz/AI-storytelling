@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 8 — test files: 57 — test functions: 1013
+Suites: 8 — test files: 58 — test functions: 1014
 
 ## canonical_story
 
@@ -1206,6 +1206,11 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `ReviewPageTests.test_review_form_lists_every_question`
 - `ReviewPageTests.test_brief_items_for_a_person_are_listed`
 - `ReviewPageTests.test_page_without_a_critic_still_renders`
+
+### test_review_summary (1)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.review_summary`, `tools.story_pipeline.run_pipeline`
+
+- `ReviewSummaryTests.test_forms_are_parsed_and_owner_and_agent_kept_apart`
 
 ### test_run_story (6)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.llm`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.run_story`
