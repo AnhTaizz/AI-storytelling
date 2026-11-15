@@ -1,0 +1,27 @@
+# Chinese lexicon, simplified and traditional forms side by side (据说/據說). Chinese has no
+# spaces, so phrases are matched as substrings; keep them two characters or longer so they
+# do not match inside unrelated words (像 alone would match 图像 and 想像).
+language: zh
+word_boundaries: false
+# Chinese carries about as much story per character as Japanese kanji-kana text with fewer
+# characters; rough and tunable, like the other densities.
+chars_per_event: 420
+clause_markers: [但是, 可是, 然而, 而且, 于是, 於是, 然后, 然後]
+# A hedge does not reach across a contrast: 「我不太清楚，但据说她…」. Openers start such a part.
+contrast_openers: [但是, 可是, 然而, 不过, 不過, 但]
+strength:
+  degree_extreme: [非常, 极其, 極其, 十分, 无比, 無比]
+  completeness: [完全, 彻底, 徹底, 全身]
+  quantity_large: [无数, 無數, 许多, 許多, 大量]
+  universality: [所有人, 大家都, 人人, 每个人, 每個人]
+  frequency_always: [总是, 總是, 一直, 从来, 從來, 永远, 永遠]
+  certainty: [一定, 必定, 肯定, 绝对, 絕對]
+  firmness: [断然, 斷然, 坚决, 堅決, 毅然]
+  reputation: [绰号, 綽號, 外号, 外號, 有名, 出名]
+  intensity_fill: [充满, 充滿, 洋溢]
+hedge:
+  reported: [据说, 據說, 听说, 聽說, 传闻, 傳聞, 传言, 傳言, 据传, 據傳, 有人说, 有人說]
+  appearance: [似乎, 好像, 看起来, 看起來, 显得, 顯得, 看上去]
+  # 可能 is left out: it is inside 不可能 ("impossible"), which is not a hedge.
+  speculation: [也许, 也許, 或许, 或許, 大概, 恐怕]
+  metaphor: [比喻, 宛如, 犹如, 猶如, 仿佛, 彷彿, 如同, 般的]

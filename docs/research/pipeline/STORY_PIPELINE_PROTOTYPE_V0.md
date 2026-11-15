@@ -130,6 +130,26 @@ python -m tools.story_pipeline.prepare_source --input-dir <raw chapter files> \
 
 Still unverified: a real Korean chapter. The check above used text written for the test.
 
+**2026-11-15, runs 11 and 12 (the same original Korean text, prepared with `prepare_source`, 180–280 words).**
+
+- **Run 11 FAILED at the brief, a false positive.** 「눈가가 조금 붉어진 것처럼 보였다」 ("her eyes looked slightly reddened") contains the simile marker 처럼 inside an appearance construction. The check then required a figure of speech, and rejected "có vẻ hơi đỏ" three times. Now a metaphor is required only when the source marks nothing else.
+- **Run 12 COMPLETED** in 6 calls and 107 s, with every gate passed and no audit finding left:
+  - names romanized (Seo Ji-woo, Han So-yeon), no Hangul in the script;
+  - hearsay kept ("nghe nói ... đứng đầu toàn trường") and the appearance kept ("có vẻ hơi ửng đỏ").
+- **Manual check of run 12:**
+  - 「목소리가 들린 것 같았지만」 ("he seemed to hear a voice") became a plain "nghe thấy". The Korean lexicon listed only the dictionary forms (것 같다, 것 같았다), so the inflected 것 같았지만 matched nothing. It now lists stems (것 같, 듯하, 보였).
+  - The closing line again states that Ji-woo's belief "was wrong", where the source only says what he thought at the time (그때의 지우는 생각했다). This is the same over-commitment as in run 9.
+  - The brief's event E2 contains a Hangul word (붉어) inside Vietnamese text. Foreign script is checked only in the script, not in briefs.
+  - The test text itself contradicts itself: 같은 반 ("same class") and then 반이 달라서 ("different class"). The pipeline avoided both and wrote "cùng trường" (same school).
+
+### Chinese (`zh.yaml`, prepared without a Chinese sample)
+
+- **Lexicon:** simplified and traditional forms side by side (据说/據說, 似乎, 也许/也許, 宛如, 仿佛/彷彿). Phrases are matched as substrings, so every phrase has at least two characters: 像 alone would match 图像 and 想像. 可能 is left out because it is inside 不可能 ("impossible").
+- **Contrast openers:** 但是, 可是, 然而, 不过/不過.
+- **Event density:** `chars_per_event` 420.
+- **Source preparation:** Chinese web novels usually end paragraphs with a single line break and indent them with full-width spaces. `prepare_source` handles that layout, and the indentation is kept inside the passage text.
+- **Open product decision:** Vietnamese audiences know Chinese novels by their Sino-Vietnamese names (Hán-Việt, for example Lâm Uyển Nhi) rather than pinyin (Lin Wan'er). The profile's name policy says "standard romanization of the source language", which means pinyin. The owner should choose which convention to use.
+
 ## Integration seam for M4: `story_facts/v0`
 
 `tools/story_pipeline/facts.py` defines a small format (facts with kind, epistemic status

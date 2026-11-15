@@ -18,7 +18,7 @@ from tools.story_pipeline import lexicon  # noqa: E402
 class LexiconFileTests(unittest.TestCase):
     def test_every_lexicon_file_is_complete_and_loads(self):
         languages = lexicon.available_languages()
-        self.assertTrue({"vi", "ja", "en", "ko"} <= set(languages))
+        self.assertTrue({"vi", "ja", "en", "ko", "zh"} <= set(languages))
         for language in languages:
             with self.subTest(language=language):
                 data = yaml.safe_load((lexicon.LEXICON_DIR / f"{language}.yaml").read_text(encoding="utf-8"))
@@ -70,8 +70,16 @@ class MatchingTests(unittest.TestCase):
             ("ko", "모두가 그녀를 천사라고 불렀다", "strength", {"universality"}),
             ("ko", "그녀는 고백을 자주 받는다고 한다", "hedge", {"reported"}),
             ("ko", "울 것 같았다", "hedge", {"appearance"}),
+            ("ko", "작은 목소리가 들린 것 같았지만", "hedge", {"appearance"}),  # inflected ending
             ("ko", "마치 천사처럼 보였다", "hedge", {"metaphor", "appearance"}),
             ("ko", "그는 집으로 돌아갔다", "hedge", set()),
+            # Chinese: simplified and traditional forms; no single-character phrases.
+            ("zh", "据说她每次考试都是第一名", "hedge", {"reported"}),
+            ("zh", "據說她每次考試都是第一名", "hedge", {"reported"}),
+            ("zh", "她的眼睛似乎有点红", "hedge", {"appearance"}),
+            ("zh", "她宛如天使般的美丽", "hedge", {"metaphor"}),
+            ("zh", "他把图像挂在墙上", "hedge", set()),
+            ("zh", "所有人都非常喜欢她", "strength", {"universality", "degree_extreme"}),
         ]
         for language, text, kind, expected in cases:
             with self.subTest(language=language, text=text, kind=kind):
@@ -101,6 +109,7 @@ class ClauseTests(unittest.TestCase):
              ["I don't know her,", " but rumour says she is perfect."]),
             ("en", "Butter, eggs, flour.", ["Butter, eggs, flour."]),  # "but" inside a word
             ("ko", "잘 모르지만, 소문으로는 완벽하다고 한다.", ["잘 모르지만,", " 소문으로는 완벽하다고 한다."]),
+            ("zh", "我不太清楚，但据说她很完美。", ["我不太清楚，", "但据说她很完美。"]),
         ]
         for language, text, expected in cases:
             with self.subTest(language=language, text=text):
