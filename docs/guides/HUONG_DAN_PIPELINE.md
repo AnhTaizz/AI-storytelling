@@ -87,8 +87,14 @@ Sau lần chạy đầu tiên của một truyện, file `.local/story_memory/<m
 - display: Lin Wan'er          # tên sẽ đọc trong kịch bản
   also_allowed: [Wan'er]       # các cách gọi khác được chấp nhận
   source_names: [林婉儿, 婉儿]  # tên gốc trong truyện
+  pronoun: cô                  # đại từ dùng cho nhân vật này ở mọi tập
   confirmed: false
 ```
+
+**Đại từ (`pronoun`):** nếu để trống, tập đầu tiên sẽ tự ghi lại đại từ mà người viết đã dùng (có ghi chú
+`pronoun_source`). Từ tập sau, kịch bản phải theo đúng đại từ đó: câu nào gọi nhân vật bằng đại từ khác
+(ví dụ "anh" thay cho "cậu") sẽ bị báo để vòng sửa thay. Muốn đổi thì sửa `pronoun`; phần bạn sửa không
+bao giờ bị ghi đè.
 
 - **Đổi tên:** sửa `display` (ví dụ `Lâm Uyển Nhi` cho truyện Trung theo âm Hán-Việt), sửa `also_allowed` (ví dụ `[Uyển Nhi]`), rồi đặt `confirmed: true`.
 - **Pipeline không ghi đè phần bạn sửa.** Nó chỉ thêm nhân vật mới.
