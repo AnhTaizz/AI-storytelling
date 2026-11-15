@@ -45,6 +45,17 @@ class Lexicon:
     speech_verbs: Tuple[str, ...] = ()  # verbs of saying ("giải thích", "explain")
     speech_complementizers: Tuple[str, ...] = ()  # what introduces reported content ("rằng", "that")
     audience_address: Tuple[str, ...] = ()  # the narrator talking to the viewers ("đúng không mọi người")
+    coordinators: Tuple[str, ...] = ()  # conjunctions that join two statements of equal rank ("và", "and")
+
+    def coordinated_parts(self, text: str) -> List[str]:
+        """Split at commas, semicolons and coordinating conjunctions only. Unlike `clauses`,
+        a time or cause clause ("... khi ngẩng đầu") stays with its statement."""
+        parts = re.split(r"[,;，；、]+", text)
+        if self.coordinators:
+            alternatives = "|".join(re.escape(c) for c in sorted(self.coordinators, key=len, reverse=True))
+            pattern = rf"(?<!\w)(?:{alternatives})(?!\w)" if self.word_boundaries else f"(?:{alternatives})"
+            parts = [piece for part in parts for piece in re.split(pattern, part, flags=re.IGNORECASE)]
+        return [p.strip() for p in parts if p and p.strip()]
 
     def without_audience_address(self, text: str) -> str:
         """`text` with phrases that address the viewers blanked out, so that "mọi người" in
@@ -148,7 +159,7 @@ def validate(data: dict, expected_language: str) -> List[str]:
     if not isinstance(data.get("word_boundaries"), bool):
         problems.append("word_boundaries must be true or false")
     for field in ("clause_markers", "contrast_endings", "contrast_openers", "speech_verbs",
-                  "speech_complementizers", "audience_address"):
+                  "speech_complementizers", "audience_address", "coordinators"):
         markers = data.get(field, [])
         if not isinstance(markers, list) or not all(
                 isinstance(m, str) and m.strip() and m == m.casefold().strip() for m in markers):
@@ -202,7 +213,8 @@ def load(language: str) -> Optional[Lexicon]:
     return Lexicon(language, data["word_boundaries"], data["chars_per_event"], phrases,
                    tuple(data.get("clause_markers", [])), tuple(data.get("contrast_endings", [])),
                    tuple(data.get("contrast_openers", [])), tuple(data.get("speech_verbs", [])),
-                   tuple(data.get("speech_complementizers", [])), tuple(data.get("audience_address", [])))
+                   tuple(data.get("speech_complementizers", [])), tuple(data.get("audience_address", [])),
+                   tuple(data.get("coordinators", [])))
 
 
 def missing_languages(*languages: str) -> FrozenSet[str]:

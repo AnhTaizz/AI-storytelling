@@ -225,7 +225,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         revise_severities: Sequence[str] = ("CRITICAL", "HIGH", "MEDIUM"),
         stop_after: str = "revise", resume: bool = False,
         background: Sequence[Chapter] = (), memory: Optional[StoryMemory] = None,
-        source_check: bool = True, full_revision_rounds: int = 1,
+        source_check: bool = True, source_check_samples: int = 2, full_revision_rounds: int = 1,
         progress: Callable[[str], None] = lambda message: None) -> Dict[str, Any]:
     """`scope` is the episode. `background` are earlier chapters, summarised from memory as a
     recap (never later chapters). With `memory`, chapter briefs are reused across runs."""
@@ -247,7 +247,8 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         "brief_sources": {},
         "settings": {"max_repairs": max_repairs, "revision_rounds": revision_rounds,
                      "revise_severities": list(revise_severities), "stop_after": stop_after,
-                     "source_check": source_check, "full_revision_rounds": full_revision_rounds},
+                     "source_check": source_check, "source_check_samples": source_check_samples,
+                     "full_revision_rounds": full_revision_rounds},
         "prompt_fingerprints": stages.prompt_fingerprints(),
         "language_checks": stages.audit_coverage(profile.target_language, profile.brief_language,
                                                  scope.source_language),
@@ -336,14 +337,18 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                 verified: List[Dict[str, Any]] = []
                 if source_check:
                     progress(f"source check v{version}")
-                    result = cached(out_dir / f"source_check_v{version}.json", resume,
-                                    lambda: stages.run_source_check(client, scope, units, profile, log,
-                                                                    max_repairs, version))
-                    if result is None:
-                        manifest["source_check_skipped"] = (f"episode source is longer than "
-                                                            f"{stages.SOURCE_CHECK_MAX_CHARS} characters")
-                    else:
-                        verified = stages.source_check_findings(result, passages)
+                    samples = []
+                    for sample in range(1, max(1, source_check_samples) + 1):
+                        name = f"source_check_v{version}.json" if sample == 1 else f"source_check_v{version}_s{sample}.json"
+                        result = cached(out_dir / name, resume,
+                                        lambda: stages.run_source_check(client, scope, units, profile, log,
+                                                                        max_repairs, version, sample))
+                        if result is None:
+                            manifest["source_check_skipped"] = (f"episode source is longer than "
+                                                                f"{stages.SOURCE_CHECK_MAX_CHARS} characters")
+                            break
+                        samples.append(stages.source_check_findings(result, passages))
+                    verified = stages.merge_source_findings(samples)
                 audit += verified
                 write_json(out_dir / f"strength_audit_v{version}.json", audit)
                 problems = stages.findings_for_revision(critic, SEVERITY_ORDER) + audit
@@ -418,6 +423,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--no-memory", action="store_true", help="do not read or write story memory")
     parser.add_argument("--full-revision-rounds", type=int, default=1,
                         help="revision rounds that may rewrite the script; later rounds only patch sentences")
+    parser.add_argument("--source-check-samples", type=int, default=2,
+                        help="independent source-check calls per script version; their findings are pooled")
     parser.add_argument("--no-source-check", action="store_true",
                         help="skip the second verifier that reads the script against the source text")
     parser.add_argument("--profile", default=str(DEFAULT_PROFILE_PATH), help="Narrative Profile YAML")
@@ -475,7 +482,8 @@ def main(argv: Optional[List[str]] = None) -> int:
                    revision_rounds=args.revision_rounds,
                    revise_severities=[s.strip() for s in args.revise_severities.split(",") if s.strip()],
                    stop_after=args.stop_after, resume=resume, background=background, memory=memory,
-                   source_check=not args.no_source_check, full_revision_rounds=args.full_revision_rounds,
+                   source_check=not args.no_source_check, source_check_samples=args.source_check_samples,
+                   full_revision_rounds=args.full_revision_rounds,
                    progress=lambda message: print(f"  ... {message}", flush=True))
     print(f"status: {manifest['status']}  calls: {manifest['model_calls']}  seconds: {manifest['seconds']}")
     if manifest.get("error"):

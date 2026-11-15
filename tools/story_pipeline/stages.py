@@ -229,21 +229,43 @@ def brief_hedge_errors(brief: Dict[str, Any], chapter: Chapter, source_language:
 
 
 MAX_FACT_CLAUSES = 2
+# A coordinated part this long is a statement of its own; a shorter one is a noun or adjective
+# in a list ("trách nhiệm và cảm giác tội lỗi"). Words for spaced languages, else characters.
+MIN_STATEMENT_WORDS = 5
+MIN_STATEMENT_CHARS = 10
+
+
+def _statements(text: str, lex: "lexicon.Lexicon") -> List[str]:
+    """Coordinated parts of `text` that are long enough to be statements of their own."""
+    def long_enough(part: str) -> bool:
+        return (len(part.split()) >= MIN_STATEMENT_WORDS if lex.word_boundaries
+                else len(_squash(part)) >= MIN_STATEMENT_CHARS)
+    return [part for part in lex.coordinated_parts(text) if long_enough(part)]
 
 
 def brief_atomicity_errors(brief: Dict[str, Any], brief_language: Optional[str]) -> List[str]:
     """Soft check: one fact per item. A fact that joins several clauses ("tops every exam
-    and, reportedly, excels at sport") cannot carry one quote and one epistemic label."""
+    and, reportedly, excels at sport") cannot carry one quote and one epistemic label. A fact
+    labelled anything but EXPLICIT must be a single statement, because later checks treat the
+    label as covering the whole fact."""
     lex = lexicon.load(brief_language) if brief_language else None
     if lex is None:
         return []
     errors = []
     for character in brief["characters"]:
         for index, fact in enumerate(character["facts"]):
+            where = f"characters {character['id']} facts[{index}]"
             clauses = lex.clauses(fact["text"])
+            label = fact.get("epistemic", "EXPLICIT")
+            parts = _statements(fact["text"], lex)
             if len(clauses) > MAX_FACT_CLAUSES:
-                errors.append(f"characters {character['id']} facts[{index}]: joins {len(clauses)} clauses; "
-                              f"split it into separate facts, each with its own quote, evidence and epistemic")
+                errors.append(f"{where}: joins {len(clauses)} clauses; split it into separate facts, "
+                              f"each with its own quote, evidence and epistemic")
+            elif label != "EXPLICIT" and len(parts) > 1:
+                # Live run 14: "reportedly worried, and sent messages" made the plain half a rumour too.
+                errors.append(f"{where}: is {label} but joins {len(parts)} statements; a labelled fact must be "
+                              f"one statement. Keep the {label.lower()} part here and put each other statement "
+                              f"in its own fact with its own label")
     return errors
 
 
@@ -980,9 +1002,23 @@ def source_check_findings(check: Dict[str, Any], passages: Mapping[str, str]) ->
     return findings
 
 
+def merge_source_findings(samples: Sequence[Sequence[Dict[str, Any]]]) -> List[Dict[str, Any]]:
+    """Union of several source-check calls. One call misses defects another catches (live
+    runs 13-14), and in trials every reported finding was real, so findings are pooled; two
+    findings on one paragraph whose quotes overlap count once (the first is kept)."""
+    merged: List[Dict[str, Any]] = []
+    for findings in samples:
+        for finding in findings:
+            quote = _squash(finding["claim"])
+            if not any(f["unit_id"] == finding["unit_id"] and (quote in _squash(f["claim"]) or _squash(f["claim"]) in quote)
+                       for f in merged):
+                merged.append(finding)
+    return merged
+
+
 def run_source_check(client: LLMClient, scope: StoryScope, units: List[Dict[str, str]],
                      profile: NarrativeProfile, log: CallLog, max_repairs: int,
-                     version: int) -> Optional[Dict[str, Any]]:
+                     version: int, sample: int = 1) -> Optional[Dict[str, Any]]:
     """Check the script against the episode's own source text. None when the episode is too
     long for one call (see SOURCE_CHECK_MAX_CHARS)."""
     source = source_check_text(scope.chapters)
@@ -998,5 +1034,6 @@ def run_source_check(client: LLMClient, scope: StoryScope, units: List[Dict[str,
     ids = {p.passage_id for c in scope.chapters for p in c.passages}
     return run_json_stage(client, stage="source_check", system=system, user=user, schema=schema,
                           semantic_check=lambda c: source_check_errors(c, units, ids),
-                          max_repairs=max_repairs, log=log, request_suffix=f"v{version}")
+                          max_repairs=max_repairs, log=log,
+                          request_suffix=f"v{version}" if sample == 1 else f"v{version}s{sample}")
 

@@ -3,6 +3,7 @@ language: en
 word_boundaries: true
 chars_per_event: 1600
 clause_markers: [and, but, after, before, when, if, because, then, while]
+coordinators: [and, but]
 # Reported speech: a verb of saying, then (within one clause) "that".
 speech_verbs: [said, says, say, told, tells, tell, explained, explains, explain, replied, replies, answered,
                answers, asked, asks, insisted, insists, admitted, admits, promised, promises, complained]

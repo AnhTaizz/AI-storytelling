@@ -506,6 +506,24 @@ class SemanticValidationTests(unittest.TestCase):
         errors = stages.brief_atomicity_errors(brief, "vi")
         self.assertEqual(len(errors), 1)
         self.assertIn("CH2 facts[0]: joins 3 clauses", errors[0])
+        # A labelled fact must be one statement (live run 14: the plain half became a rumour too).
+        cases = [
+            ("rumour joined to a plain action", "Nghe nói Itsuki đã lo lắng cho Amane và gửi tin nhắn hỏi thăm cậu",
+             "REPORTED", 1),
+            ("time clause stays with its statement", "Vành mắt có vẻ hơi ửng đỏ khi ngẩng đầu nhìn cậu",
+             "APPEARANCE", 0),
+            ("nouns joined by và", "Có lẽ cô chăm sóc cậu do tinh thần trách nhiệm và cảm giác tội lỗi",
+             "SPECULATION", 0),
+            ("plain fact may join two statements", "Itsuki đã lo lắng cho Amane và gửi tin nhắn hỏi thăm cậu",
+             "EXPLICIT", 0),
+        ]
+        for label, text, epistemic, expected in cases:
+            with self.subTest(label):
+                brief["characters"][1]["facts"] = [{"text": text, "evidence": ["1.7"], "quote": "x",
+                                                    "epistemic": epistemic}]
+                errors = stages.brief_atomicity_errors(brief, "vi")
+                self.assertEqual(len(errors), expected, errors)
+                self.assertTrue(all("one statement" in e for e in errors))
         self.assertEqual(stages.brief_atomicity_errors(brief, "xx"), [])  # no lexicon: not judged
 
     def test_source_hedge_review_lists_items_for_a_person(self):
@@ -622,11 +640,12 @@ class EndToEndTests(unittest.TestCase):
             manifest = run(client, scope, test_profile(), out)
             self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
             stages_called = [c["stage"] for c in client.calls]
-            self.assertEqual(stages_called, ["brief", "brief", "plan", "script", "critic", "source_check", "revise",
-                                             "critic", "source_check"])
+            # Two source-check calls per version by default; their findings are pooled.
+            self.assertEqual(stages_called, ["brief", "brief", "plan", "script", "critic", "source_check",
+                                             "source_check", "revise", "critic", "source_check", "source_check"])
             for name in ("briefs/chapter_001.json", "briefs/chapter_002.json", "plan.json", "script_v1.json",
-                         "critic_v1.json", "source_check_v1.json", "script_v2.json", "critic_v2.json",
-                         "source_check_v2.json", "script_final.md",
+                         "critic_v1.json", "source_check_v1.json", "source_check_v1_s2.json", "script_v2.json",
+                         "critic_v2.json", "source_check_v2.json", "script_final.md",
                          "report.json", "report.md", "calls.jsonl", "run_manifest.json"):
                 self.assertTrue((out / name).is_file(), name)
             report = json.loads((out / "report.json").read_text(encoding="utf-8"))
@@ -722,6 +741,13 @@ class EndToEndTests(unittest.TestCase):
         self.assertEqual([(f["claim_type"], f["failure_category"], f["severity"], f["source"]) for f in converted],
                          [("CONTRADICTED_STORY_CLAIM", "FACTUAL_ERROR", "MEDIUM", "source_check")])
         self.assertIn("湯気はたっていない", converted[0]["suggested_fix"])
+
+        # Pooled calls: the same defect quoted a little differently counts once.
+        other = dict(finding, script_quote="nghi ngút", kind="STRENGTHENED")
+        second = stages.source_check_findings(answer(("P001", [other]), ("P002", [dict(finding, script_quote="ngon")])), {})
+        merged = stages.merge_source_findings([converted, second])
+        self.assertEqual([(f["unit_id"], f["claim"]) for f in merged],
+                         [("P001", "nghi ngút  khói"), ("P002", "ngon")])
 
     def test_later_revision_rounds_patch_only_the_sentences_at_fault(self):
         """Live run 13: a second full rewrite put new errors into correct text."""

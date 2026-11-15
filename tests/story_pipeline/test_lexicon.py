@@ -42,6 +42,7 @@ class LexiconFileTests(unittest.TestCase):
             "bad contrast openers": (lambda d: d.update(contrast_openers=["But"]), "contrast_openers"),
             "bad speech verbs": (lambda d: d.update(speech_verbs=["said", ""]), "speech_verbs"),
             "bad audience address": (lambda d: d.update(audience_address=["You Guys"]), "audience_address"),
+            "bad coordinators": (lambda d: d.update(coordinators=[" and"]), "coordinators"),
         }
         for label, (mutate, message) in cases.items():
             with self.subTest(label):
@@ -98,6 +99,15 @@ class ClauseTests(unittest.TestCase):
             ("en", "She smiled but he left", ["She smiled", "he left"]),
             ("ja", "雨が降った。しかし彼女はいた", ["雨が降った", "彼女はいた"]),
         ]
+        coordinated = [
+            # Only commas and coordinating conjunctions split; "khi" stays with its statement.
+            ("vi", "Cô lo lắng và gửi tin nhắn khi cậu ốm", ["Cô lo lắng", "gửi tin nhắn khi cậu ốm"]),
+            ("en", "She smiled but he left when it rained", ["She smiled", "he left when it rained"]),
+            ("ja", "雨が降った、彼女はいた", ["雨が降った", "彼女はいた"]),  # no coordinators listed yet
+        ]
+        for language, text, expected in coordinated:
+            with self.subTest(language=language, text=text, split="coordinated"):
+                self.assertEqual(lexicon.load(language).coordinated_parts(text), expected)
         for language, text, expected in cases:
             with self.subTest(language=language, text=text):
                 self.assertEqual(lexicon.load(language).clauses(text), expected)
