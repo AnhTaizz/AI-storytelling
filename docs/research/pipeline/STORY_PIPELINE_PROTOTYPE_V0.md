@@ -698,6 +698,25 @@ The run COMPLETED in 17 calls, 234,402 tokens and 357 s. S2's episode 2 took 31 
   - Result: on the sample's stored corrections, 6 of 7 now apply. The remaining one, "always first in exams", waits for the reviewer.
 - **Live run** on chapters 2–3 (`--stop-after brief`): 2 calls. "định đóng cửa / trượt chân" was corrected before planning, and "no rumour" was listed for review. The run wrote `story_brief.html`, `story_brief.md`, `brief_check.md` and `brief_review_form.md`.
 
+**Plan checks and plan review (M8).** The plan decides presentation (order, pacing, emphasis, hook, callbacks) and may not create story truth (`docs/TARGET_ARCHITECTURE.md`, section 5 item 6). Refs and CORE coverage were already hard checks. `tools/story_pipeline/plan_review.py` adds:
+
+- **Soft check:** a callback whose setup comes after its payoff is sent back to the plan's repair loop.
+- **Advisory checks**, recorded in `manifest["plan_checks"]` and `plan.md`:
+  - a beat holding a CORE event that gets under half the episode's average words per event;
+  - a beat with only MINOR events, or no event, that takes over 25% of the words;
+  - a capitalised name in the hook, commentary or emotional note that appears in no brief or glossary;
+  - a number that is not in the cited events.
+- **Coverage summary:** CORE covered, SUPPORTING used, and callbacks, including those that came from M6 retrieval.
+- **Review:** `--stop-after plan` writes `plan.md`, `plan_review.html` (each beat beside its events' brief text and evidence ids, with flagged beats highlighted) and `plan_review_form.md`.
+  - In the form the owner can drop or move a beat, change its word budget or add a note; the note is appended to the beat's purpose for the writer.
+  - On `--resume` the edits are applied before the script is written. A beat holding a CORE event is never dropped, and a dropped payoff beat takes its callback with it.
+  - `plan.json` stays the model's plan. Rounds are kept in `plan_review.json` and replayed, and the filled form is kept as `plan_review_form_reviewed_N.md`.
+- **Offline scan of the 28 saved plans** (runs 2–17, seasons S1/S2, Korean and Chinese runs):
+  - 11 name findings in 9 plans, all "Thiên" from "Thiên sứ". The briefs keep the epithet 天使 only in the original script, so these are false positives for story truth.
+  - 1 pacing finding: S2 episode 3, B1, 33 words per event against an average of 83, for a beat holding a CORE event. This is a real thin beat.
+  - No callback-order and no number findings.
+  - The free-text heuristics are therefore advisory only. A translated epithet is flagged, and a new fact without a name or number is not seen.
+
 ## Known limits
 
 - Brief paraphrase quality is not measured against gold. Quotes pin the evidence, but a

@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 66 — test functions: 1073
+Suites: 9 — test files: 67 — test functions: 1080
 
 ## canonical_story
 
@@ -1224,6 +1224,16 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `ClauseTests.test_contrast_parts_split_only_at_a_contrast`
 - `ReportedSpeechTests.test_reported_speech_content_starts_after_the_complementizer`
 
+### test_plan_review (6)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.plan_review`
+
+- `PlanChecksTests.test_callbacks_must_set_up_before_they_pay_off`
+- `PlanChecksTests.test_pacing_and_new_facts_are_advisory_findings`
+- `PlanChecksTests.test_coverage_counts_core_supporting_and_retrieved_callbacks`
+- `PlanReviewTests.test_an_unchanged_form_is_no_review_and_edits_are_applied`
+- `PlanReviewTests.test_dropping_the_payoff_beat_drops_its_callback`
+- `PlanReviewTests.test_review_pages_show_beats_events_and_findings`
+
 ### test_prepare_source (5)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.prepare_source`, `tools.story_pipeline.source`
 
@@ -1260,7 +1270,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `SeasonTests.test_season_with_the_real_pipeline_and_shared_memory`
 - `CliTests.test_bad_episode_plan_is_rejected_before_any_call`
 
-### test_story_pipeline_v0 (48)
+### test_story_pipeline_v0 (49)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.episode_brief`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
 
 - `test_profile`
@@ -1301,6 +1311,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `EndToEndTests.test_later_revision_rounds_patch_only_the_sentences_at_fault` — Live run 13: a second full rewrite put new errors into correct text.
 - `EndToEndTests.test_story_brief_is_written_for_review_and_owner_edits_reach_the_plan` — M7: the episode Story Brief is the reviewable boundary before planning.
 - `EndToEndTests.test_owner_review_errors_are_fixed_in_a_patch_round` — The owner's quoted errors in review_form.md become one patch round (--apply-review).
+- `EndToEndTests.test_plan_review_files_and_owner_beat_edits_before_the_script` — M8: plan checks and review page on --stop-after plan; a filled plan_review_form.md is
 - `EndToEndTests.test_patch_edits_are_validated_and_applied_in_place`
 - `EndToEndTests.test_episode_with_memory_recap`
 - `EndToEndTests.test_memory_brief_failing_current_checks_is_regenerated`

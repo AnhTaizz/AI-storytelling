@@ -471,9 +471,10 @@ def run_plan(client: LLMClient, scope: StoryScope, briefs: Sequence[Dict[str, An
                     target_language_name=profile.target_language_name, schema=dump(schema))
     user = render("plan_user", scope_label=scope.label(), profile=profile.render(),
                   briefs=briefs_for_prompt(briefs), background=background_text(recap))
+    from tools.story_pipeline.plan_review import plan_soft_errors  # M8 (imports this module's helpers)
     return run_json_stage(client, stage="plan", system=system, user=user, schema=schema,
                           semantic_check=lambda p: plan_semantic_errors(p, briefs, profile, recap),
-                          max_repairs=max_repairs, log=log)
+                          soft_check=plan_soft_errors, max_repairs=max_repairs, log=log)
 
 
 # --------------------------------------------------------------------------- script / revise

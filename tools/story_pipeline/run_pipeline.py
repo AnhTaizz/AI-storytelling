@@ -27,6 +27,7 @@ if str(REPO) not in sys.path:
 from tools.story_memory import glossary_v0  # noqa: E402
 from tools.story_memory.memory_v0 import StoryMemory, build_roster, recap_context, recap_event_refs  # noqa: E402
 from tools.story_pipeline import brief_check as brief_checker  # noqa: E402
+from tools.story_pipeline import plan_review  # noqa: E402
 from tools.story_pipeline import (PIPELINE_VERSION, checks, episode_brief, lexicon, review_page,  # noqa: E402
                                   review_summary, stages)
 from tools.story_pipeline.facts import StoryFacts  # noqa: E402
@@ -440,6 +441,53 @@ def story_brief_step(out_dir: Path, scope: StoryScope, briefs: List[Dict[str, An
     return briefs
 
 
+PLAN_REVIEW_FILE = "plan_review.json"
+PLAN_FORM = "plan_review_form.md"
+
+
+def plan_review_step(out_dir: Path, plan: Dict[str, Any], briefs: Sequence[Dict[str, Any]],
+                     recap: Optional[Dict[str, Any]], glossary: Optional[Dict[str, Any]],
+                     manifest: Dict[str, Any], resume: bool) -> Dict[str, Any]:
+    """M8: record the plan checks, apply the owner's recorded beat edits, then write plan.md,
+    plan_review.html and a review form. A filled form found on resume becomes a new round in
+    plan_review.json (later resumes replay it) and is kept as plan_review_form_reviewed_N.md.
+    plan.json stays the model's plan; the reviewed plan is what the script stage receives."""
+    events = plan_review.event_texts(briefs, recap)
+    record = out_dir / PLAN_REVIEW_FILE
+    rounds = json.loads(record.read_text(encoding="utf-8"))["rounds"] if record.is_file() else []
+    form = out_dir / PLAN_FORM
+    reviewed = plan
+    for review in rounds:
+        reviewed, _ = plan_review.apply_plan_review(reviewed, review["edits"], events)
+    if resume and form.is_file():
+        edits = plan_review.plan_review_edits(reviewed, plan_review.parse_plan_review(form.read_text(encoding="utf-8")))
+        if edits:
+            rounds.append({"edits": edits, "after_script": (out_dir / "script_v1.json").is_file()})
+            write_json(record, {"rounds": rounds})
+            index = 1
+            while (out_dir / f"plan_review_form_reviewed_{index}.md").exists():
+                index += 1
+            form.rename(out_dir / f"plan_review_form_reviewed_{index}.md")
+    reviewed, changes, rejected = plan, [], []
+    for review in rounds:
+        reviewed, report = plan_review.apply_plan_review(reviewed, review["edits"], events)
+        changes += report["changes"]
+        rejected += report["rejected"]
+    if rounds:
+        manifest["plan_review"] = {"rounds": len(rounds), "changes": changes, "rejected": rejected,
+                                   # A script written before the review is reused on resume.
+                                   "after_script": any(r.get("after_script") for r in rounds)}
+    checks = plan_review.plan_checks(reviewed, briefs, recap, glossary)
+    manifest["plan_checks"] = {"coverage": checks["coverage"],
+                               "findings": [{k: f[k] for k in ("kind", "where", "message")} for f in checks["findings"]]}
+    (out_dir / "plan.md").write_text(plan_review.render_markdown(reviewed, checks, events), encoding="utf-8")
+    (out_dir / "plan_review.html").write_text(plan_review.render_html(reviewed, checks, events), encoding="utf-8")
+    if not form.is_file() or not plan_review.plan_review_edits(reviewed, plan_review.parse_plan_review(
+            form.read_text(encoding="utf-8"))):
+        form.write_text(plan_review.plan_review_form(reviewed), encoding="utf-8")
+    return reviewed
+
+
 # --------------------------------------------------------------------------- orchestration
 
 
@@ -566,6 +614,8 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         progress("plan")
         plan = cached(out_dir / "plan.json", resume,
                       lambda: stages.run_plan(client, scope, briefs, profile, log, max_repairs, recap))
+        # M8: plan checks, the review page and the owner's beat edits (before the script).
+        plan = plan_review_step(out_dir, plan, briefs, recap, glossary, manifest, resume)
         if stop_after == "plan":
             return finish("STOPPED_AFTER_PLAN")
 
