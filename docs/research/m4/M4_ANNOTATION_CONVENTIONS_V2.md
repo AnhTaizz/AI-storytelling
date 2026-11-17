@@ -1,6 +1,6 @@
 # M4 Annotation Conventions V2
 
-Status: `PROPOSED` (M4-04B3K, 2026-11-17). Written by the agent at the project owner's request. It replaces V1 (DEC-025) once accepted, and V1 stays unchanged as a record.
+Status: `ACCEPTED` by the project owner on 2026-11-17 (DEC-026). Written by the agent in M4-04B3K at the owner's request. It replaces V1 (DEC-025); V1 stays unchanged as a record.
 
 ## 0. Changes from V1
 

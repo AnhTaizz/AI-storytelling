@@ -1,0 +1,63 @@
+# M4-04B3L: P4 prompt development on DEV2 (tuning data). Aggregates only; private artifacts in .local.
+artifact: M4_04B3L_P4_DEV2_DEVELOPMENT_RESULT
+status: M4_04B3L_P4_DEVELOPED_ON_DEV2
+date: '2026-11-17'
+authorization: Project Owner, 2026-11-17 ("Đồng ý V2, làm tiếp P4 đi").
+data_status: DEV2 is tuning data (gold opened in M4-04B3J). Nothing here is validation; P4 was revised after seeing these scores.
+boundaries:
+  holdout_accessed: false
+  fv1_accessed: false
+  locked_protocols_changed: false
+  m4_04c_or_m5_work: false
+setup:
+  runner: tools/story_extraction/run_m4_p4_dev_v1.py (development harness, not a lock)
+  model: gemini-3.5-flash-lite
+  credential_slot: gemini_slot_33
+  temperature: 0
+  structural_repairs_per_case: 1
+  scoring: Snapshot V2 guarded evaluator, REAL_SOURCE, COMPLETE_FOR_PROFILE, no adjudication
+  conventions: docs/research/m4/M4_ANNOTATION_CONVENTIONS_V2.md (DEC-026)
+  required_assertions_total: 119
+  credentials_note: the owner's .env repeats six keys under several slot numbers; the run de-duplicated them in memory
+    (lowest slot kept). .env was not changed.
+runs:
+  P3:
+    primary_system_sha256: db3a7b7e6cc9b4b72224c7f62546a0318f6af15da63150acf96bf59a1b7568fc
+    L0_structural_valid: 6
+    full_canonical_case_success: 0
+    required_recovered_all_10_cases: 48/119
+    assertion_recall_valid_cases: 0.6575
+    assertion_precision_valid_cases: 0.8136
+    unsupported_unrated: 11
+  P4_r1:
+    primary_system_sha256: 4970322befbdd32fa4416448cb7e7a061ab5b5a1a8bcc9c6a294d3c5d0380eb8
+    L0_structural_valid: 8
+    full_canonical_case_success: 0
+    required_recovered_all_10_cases: 66/119
+    assertion_recall_valid_cases: 0.6947
+    assertion_precision_valid_cases: 0.8571
+    unsupported_unrated: 11
+    main_failure: NamedAs emitted without validity (10 WRONG_VALIDITY_BOUND); inanimate participants not made entities
+  P4_r2:
+    primary_system_sha256: 1b38a2966e8acfe731f4b1206a4c1645a44e4a9e24fdbc9a5e843fde668af935
+    L0_structural_valid: 9
+    full_canonical_case_success: 0
+    required_recovered_all_10_cases: 88/119
+    assertion_recall_valid_cases: 0.8381
+    assertion_precision_valid_cases: 0.7857
+    unsupported_unrated: 23
+    changes_from_r1: inanimate participants are entities; stative assertions always carry validity; occurrence counting for
+      short quotes; one proposition per repeated content; one EVENT_TIME anchor per event; AnchorDate only for calendar dates
+structural_failure_causes_found:
+  - event anchor that is not the event's own EVENT_TIME anchor (P3 3 cases, P4_r2 0)
+  - two identical Says propositions for a repeated line (P3 1, P4_r1 1)
+  - AnchorDate with a STRING literal for a time of day (P4_r1 1)
+  - repeated short quote without occurrence (primary attempts only)
+interpretation:
+  - Required assertions recovered over all ten cases rose from 48 (P3) to 88 (P4_r2), mostly through structural validity
+    (6 to 9 cases) and NamedAs and participant coverage.
+  - Unsupported predictions doubled (11 to 23, all unrated). Some of them coincide with DEV2 gold items that are wrong under
+    V2 (two AnchorDate values with an invented year, a missing NamedAs, a missing beneficiary, an AFTER relation), so the
+    evaluator counts V2-conforming output as unsupported there. The rest include TemporalRelation over-generation (7 across
+    4 cases), which is a P4 issue to address.
+  - DEV2 is tuning data and P4 was revised on it, so these numbers overstate what a fresh set would show.

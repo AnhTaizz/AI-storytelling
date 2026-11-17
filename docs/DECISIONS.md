@@ -810,3 +810,23 @@ LIMITS:
 - V1 was written without reading any gold.
 - The holdout was annotated under its own sealed guideline, which was not compared with V1.
 - V1 covers Japanese source text only.
+
+---
+
+## DEC-026 — M4 Annotation Conventions V2 Replaces V1
+
+STATUS: ACCEPTED (Project Owner, 2026-11-17: "Đồng ý V2")
+
+DECISION:
+1. **V2 replaces V1.** `docs/research/m4/M4_ANNOTATION_CONVENTIONS_V2.md` replaces V1 (DEC-025) as the M4 annotation convention for new gold and for the P4 extraction prompt. V1 stays unchanged as a record.
+2. **What V2 changes.** It settles the four points that the DEV2 audit found unclear or questionable:
+   - general naming knowledge may decide `name_kind`;
+   - an inanimate participant that changes nothing in another participant is `PATIENT` if the event changes it, otherwise `THEME`;
+   - the place of an arrival or appearance is `OccursAt`;
+   - descriptive mentions keep plain adjectives.
+
+   It also states that no part of a date is ever filled in.
+
+LIMITS:
+- V2 was informed by the DEV2 gold, which is now tuning data. A fresh set (FV2) is needed to show that it holds.
+- The holdout guideline was not compared with V2.

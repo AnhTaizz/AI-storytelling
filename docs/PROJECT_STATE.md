@@ -1126,6 +1126,44 @@ Owner decision (nothing authorized yet):
 3. **FV1 gold check**, once its packages are restored.
 4. **Seal FV2** under V2.
 
+## M4-04B3L — P4 PROMPT DEVELOPED ON DEV2 — Status: M4_04B3L_P4_DEVELOPED_ON_DEV2
+
+- **Authorization.** The project owner accepted V2 on 2026-11-17 (DEC-026) and asked for P4 ("làm tiếp P4 đi").
+- **Prompt.** `tools/story_extraction/prompts/story_extraction_draft_p4_system_v1_1.txt` is the P3 preamble plus three additions:
+  - the V2 conventions, condensed for the model;
+  - the structural rules that the DEV2 runs showed failing;
+  - a coverage checklist.
+
+  The schemas, the registry, the user template and the repair template are the same as P3's.
+- **Harness.** `tools/story_extraction/run_m4_p4_dev_v1.py` is a development runner, not a lock. It runs a prompt variant on DEV2 through the durable Gemini path, compiles the drafts, scores them with the Snapshot V2 evaluator and runs the conventions checker. It was written by Codex and reviewed by the agent.
+- **Results.** `gemini-3.5-flash-lite`, 10 DEV2 cases with 119 required assertions:
+
+  | Variant | Structurally valid | Required recovered (all 10 cases) | Precision on valid cases | Unsupported (unrated) |
+  |---|---|---|---|---|
+  | P3 | 6 | 48 | 0.814 | 11 |
+  | P4, first draft | 8 | 66 | 0.857 | 11 |
+  | P4, revised | 9 | 88 | 0.786 | 23 |
+
+  No variant reached full case success on any case.
+- **Causes behind the revision.** The first draft emitted `NamedAs` without validity (10 `WRONG_VALIDITY_BOUND`) and made no entities for inanimate participants. The structural failures were:
+  - an event anchor that is not the event's own `EVENT_TIME` anchor;
+  - two identical `Says` propositions for a repeated line;
+  - `AnchorDate` written for a time of day;
+  - a repeated short quote without `occurrence`.
+- **Caveats.**
+  - Part of the rise in unsupported predictions is output that follows V2 where the DEV2 gold is wrong (an invented year, a missing `NamedAs`, a missing beneficiary, `AFTER`).
+  - Another part is `TemporalRelation` over-generation (7 in 4 cases), which is left for the next revision.
+  - DEV2 is tuning data and P4 was revised on it. These numbers are not validation.
+- **Records.** `benchmarks/m4_extraction/M4_04B3L_P4_DEV2_DEVELOPMENT_RESULT.yaml` (aggregates only). Raw responses, drafts and scores are in `.local/m4_p4_dev/` and `.local/m4_p4_dev_r2/`.
+
+## Next Candidate
+
+Owner decision (nothing authorized yet):
+
+1. **One more P4 revision.** Restrict `TemporalRelation` to an order stated by a connective. Check the remaining structural failure and the holder-relative leak. Rerun on DEV2.
+2. **Try P4 on DEV1** (development data) to see whether the gain holds beyond DEV2; on FV1 once its packages are restored.
+3. **Seal FV2 under V2** (new source text, gold written to V2) and lock a P4 protocol before any measurement that counts.
+
 ## M8 Narrative Planning — ACCEPTED as a baseline (DEC-023, 2026-11-15)
 
 - **Plan checks (`plan_review.py`):** refs are hard checks; a callback in the wrong order is a soft error. Pacing and new names or numbers in free text are advisory.
