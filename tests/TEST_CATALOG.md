@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 77 — test functions: 1150
+Suites: 9 — test files: 77 — test functions: 1153
 
 ## canonical_story
 
@@ -1077,9 +1077,11 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `M404B3FProtocolTests.test_requests_are_exact_and_only_structural_repairs_are_constructible`
 - `M404B3FProtocolTests.test_bindings_packages_and_the_written_protocol_are_checked`
 
-### test_m4_04b3n_fv2_protocol_v1 (4)
+### test_m4_04b3n_fv2_protocol_v1 (6)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.m4_04b3n_fv2_protocol_v1`, `tools.story_ingestion.light_novel_adapter_v0`
 
+- `ProtocolTests.test_default_protocol_matches_pre_task_bytes_with_identical_hash_inputs`
+- `ProtocolTests.test_host_repair_bindings_variant_selection_and_legacy_empty_lock`
 - `ProtocolTests.test_determinism_exact_settings_requests_and_binding_drift`
 - `ProtocolTests.test_protocol_file_pinning_canonical_bytes_and_refusals`
 - `ProtocolTests.test_seal_snapshot_and_request_policy_refusals`
@@ -1106,9 +1108,10 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_co
 - `RunTests.test_smoke_qualification_and_summary`
 - `RunTests.test_lock_mismatches_stop_before_any_call`
 
-### test_run_m4_04b3o_fv2_predictions_v1 (3)
+### test_run_m4_04b3o_fv2_predictions_v1 (4)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.fresh_validation_seal_v1`, `tools.story_extraction.m4_04b3n_fv2_protocol_v1`, `tools.story_extraction.run_m4_04b3o_fv2_predictions_v1`, `tools.story_ingestion.light_novel_adapter_v0`
 
+- `RunnerTests.test_validated_lock_threads_host_repairs_to_both_attempts_and_prediction_identity`
 - `RunnerTests.test_preflight_no_transport_no_gold_and_wrong_package_refused`
 - `RunnerTests.test_real_compiler_primary_repair_and_transport_outcomes`
 - `RunnerTests.test_smoke_failure_run_cli_and_guard`
