@@ -4,7 +4,7 @@
 
 *Header refreshed 2026-11-18; the dated sections below are history.*
 
-M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED; holdout closed, predictions NOT RUN. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. Annotation conventions V2: ACCEPTED (DEC-026). P4 development / FV2 status: see M4-04B3L2 and its Next Candidate.
+M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED; holdout closed, predictions NOT RUN. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. Annotation conventions V2: ACCEPTED (DEC-026). P4 development / FV2 status: see M4-04B3L2 and M4-04B3N.
 
 M0 — Product Foundation: CLOSED (see M0 Closure).
 
@@ -43,7 +43,7 @@ M14 — Voice / Video Automation: GATED behind the Script Quality Gate (DEC-009)
   - The contract defines the standard. It does not show that any current Writer or critic meets it. The M9 Script Quality Gate is not evaluated.
 - M2 — Canonical Story Model: capability COMPLETE / FROZEN (DEC-016). The expected capability has been established as `canonical_story/v0` + `predicate_registry/v0.1`. M2 ran under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015).
 - M3 — Light Novel Ingestion: COMPLETE / FROZEN — `LIGHT_NOVEL_INGESTION/v0`, DEC-018, freeze record `benchmarks/m3_ingestion/LIGHT_NOVEL_INGESTION_V0_FROZEN.yaml`. The roadmap is unchanged.
-- M4 — Story Extraction: IN PROGRESS (M4-01/M4-02 accepted; M4-03 holdout sealed and closed, predictions not run; no extractor/model selected; nothing frozen). V2 accepted (DEC-026); P4 development / FV2 status: see M4-04B3L2 and its Next Candidate.
+- M4 — Story Extraction: IN PROGRESS (M4-01/M4-02 accepted; M4-03 holdout sealed and closed, predictions not run; no extractor/model selected; nothing frozen). V2 accepted (DEC-026); P4 development / FV2 status: see M4-04B3L2 and M4-04B3N.
 - M5 — Persistent Story Memory: PROTOTYPE EXISTS; not frozen or M5 completion (see Implementation Status; DEC-021).
 - M6 — Retrieval: ACCEPTED BASELINE over brief memory (DEC-021, 2026-11-15).
 - M7 — Story Brief: ACCEPTED BASELINE (DEC-022, 2026-11-15).
@@ -1244,6 +1244,12 @@ Owner decision (nothing authorized yet):
 2. **Draft V1.2 prepared input exposing existing entity names** (the EN option). This is an interface change and needs a DEC. Without it, P4 under-uses existing entities on real prose.
 3. **Model check.** Run the same protocol with a stronger model as a comparison on DEV1/DEV2 before FV2.
 4. **Housekeeping for the owner.** The FV1 packages are still missing on this machine, and `.env` repeats six keys under several slot numbers.
+
+## M4-04B3N — FV2 LOCK BINDS P4R6 + QR + AM — Status: M4_04B3N_FV2_LOCK_BOUND_RUN_PENDING
+
+- **Authorization.** Option 1 of the Next Candidate above; the project owner asked for it on 2026-11-18 ("khóa P4R6 + QR + AM rồi chạy FV2 đi"). Recorded as DEC-027.
+- **Change.** `m4_04b3n_fv2_protocol_v1.py` binds `PROMPT_VARIANT = "P4R6"` and `HOST_REPAIRS = ("QR", "AM")`. Model, temperature, credential slot (`gemini_slot_33`), the one structural repair per case and the scoring are unchanged. A protocol without the `host_repairs` key is still read as having none.
+- **Run.** One blind FV2 run on slot 33, after its daily quota resets. The predictions are locked and hashed before the gold is opened.
 
 ## M8 Narrative Planning — ACCEPTED as a baseline (DEC-023, 2026-11-15)
 

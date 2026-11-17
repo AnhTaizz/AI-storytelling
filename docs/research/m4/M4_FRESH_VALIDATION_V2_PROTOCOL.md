@@ -168,9 +168,8 @@ The FV2 lock can bind deterministic host repairs `QR` (quote resolution) and `AM
 hashes and dependencies. The prediction runner applies only the validated lock's selection before
 validating primary and repair responses, and uses the resulting primary blockers
 for the repair request; prediction identities and summaries record the selection.
-Defaults remain `P4R4` with no host repairs (the legacy keyless protocol shape).
-Selecting a different binding remains the project owner's decision; this tooling
-preparation authorizes no lock creation or provider run.
+The owner bound `P4R6` with `QR` and `AM` on 2026-11-18 (DEC-027). A protocol
+without the `host_repairs` key is still read as having no host repairs.
 
 Representability does not establish extraction accuracy, generalization,
 unsupported-assertion safety or readiness for sealed holdout evaluation. The

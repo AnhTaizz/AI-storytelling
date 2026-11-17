@@ -19,8 +19,9 @@ from tools.story_extraction import run_m4_p4_dev_v1 as dev
 from tools.story_extraction.fresh_validation_seal_v1 import BOUND_FILES
 
 REPO_ROOT = fv1.REPO_ROOT
-PROMPT_VARIANT = "P4R4"
-HOST_REPAIRS: tuple[str, ...] = ()
+# Owner decision DEC-027 (2026-11-18): lock P4R6 with host repairs QR and AM for the FV2 run.
+PROMPT_VARIANT = "P4R6"
+HOST_REPAIRS: tuple[str, ...] = ("QR", "AM")
 PROTOCOL_ID = "M4_04B3N_FV2_PROTOCOL_V1"
 TASK_ID = "M4-04B3N-FV2-PROTOCOL-LOCK"
 FV2_SET_ID = "M4_04B3M_FRESH_VALIDATION_V2"

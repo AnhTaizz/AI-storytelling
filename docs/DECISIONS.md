@@ -844,3 +844,17 @@ DECISION:
 LIMITS:
 - V2 was informed by the DEV2 gold, which is now tuning data. A fresh set (FV2) is needed to show that it holds.
 - The holdout guideline was not compared with V2.
+
+---
+
+## DEC-027 — FV2 Lock Binds P4R6 With Host Repairs QR and AM
+
+STATUS: ACCEPTED (Project Owner, 2026-11-18: "khóa P4R6 + QR + AM rồi chạy FV2 đi")
+
+DECISION:
+1. **The FV2 protocol lock binds P4R6 with host repairs QR and AM.** In `tools/story_extraction/m4_04b3n_fv2_protocol_v1.py`, `PROMPT_VARIANT` is `P4R6` and `HOST_REPAIRS` is `("QR", "AM")`. The lock hashes the P4R6 prompt and both repair modules. Model, temperature, credential slot, the one structural repair per case and the scoring are unchanged.
+2. **FV2 is run once, blind.** The predictions are locked and hashed before the FV2 gold is opened. A second run, or any change to the prompt, the repairs or the scoring after the gold is opened, makes FV2 tuning data, as happened to DEV2.
+
+LIMITS:
+- P4R6, QR and AM were chosen on DEV1 and DEV2 (record `benchmarks/m4_extraction/M4_04B3L2_P4_REVISIONS_DEV1_AND_HOST_REPAIRS.yaml`). FV2 is the first set they have not seen.
+- The Draft V1.1 prepared input is unchanged; existing entity names are still not shown to the model.

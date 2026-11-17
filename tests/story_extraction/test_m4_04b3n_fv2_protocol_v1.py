@@ -14,21 +14,23 @@ from tests.story_extraction.test_run_m4_04b3g_fv1_predictions_v1 import syntheti
 
 
 class ProtocolTests(unittest.TestCase):
-    def test_default_protocol_matches_pre_task_bytes_with_identical_hash_inputs(self):
-        self.assertEqual((lock.PROMPT_VARIANT, lock.HOST_REPAIRS), ("P4R4", ()))
+    def test_owner_binding_and_legacy_p4r4_protocol_bytes_unchanged(self):
+        self.assertEqual((lock.PROMPT_VARIANT, lock.HOST_REPAIRS), ("P4R6", ("QR", "AM")))
         # Captured before Task H. Stable per-path hash inputs avoid self-binding
         # source edits (and checkout newline differences) changing this baseline.
         with mock.patch.object(lock, "file_sha256", side_effect=lambda p:
-                lock.sha256_bytes(p.relative_to(lock.REPO_ROOT).as_posix().encode())):
+                lock.sha256_bytes(p.relative_to(lock.REPO_ROOT).as_posix().encode())),                 mock.patch.object(lock, "PROMPT_VARIANT", "P4R4"), mock.patch.object(lock, "HOST_REPAIRS", ()):
             value = lock.build_protocol()
+            paths = lock.bound_paths()
         self.assertNotIn("host_repairs", value)
         self.assertEqual(lock.sha256_bytes(lock.canonical_json_bytes(value)),
                          "5c854d8609b9ce0f46db615b9039f66af9e66b0717024b8788fea8f2d2b33e25")
-        self.assertEqual(list(lock.bound_paths()), list(value["public_bindings"]))
-        self.assertEqual(value["public_bindings"], {p: lock.sha256_bytes(p.encode()) for p in lock.bound_paths()})
+        self.assertEqual(list(paths), list(value["public_bindings"]))
+        self.assertEqual(value["public_bindings"], {p: lock.sha256_bytes(p.encode()) for p in paths})
 
     def test_host_repair_bindings_variant_selection_and_legacy_empty_lock(self):
-        original_paths = set(lock.bound_paths())
+        with mock.patch.object(lock, "PROMPT_VARIANT", "P4R4"), mock.patch.object(lock, "HOST_REPAIRS", ()):
+            original_paths = set(lock.bound_paths())
         modules = {"QR": "tools/story_extraction/draft_quote_resolution_v1.py",
                    "AM": "tools/story_extraction/draft_mention_anchoring_v1.py"}
         case, _ = synthetic_case("FV2_01")
@@ -80,8 +82,9 @@ class ProtocolTests(unittest.TestCase):
         self.assertEqual(value["generation"]["credential_slot"], "gemini_slot_33")
         self.assertEqual(value["repair_policy"]["maximum_per_case"], 1)
         self.assertEqual(value["durable_execution"]["global_pacing_max_operations"], 6)
-        self.assertIn("P4R4", value["extractor_id"])
-        self.assertTrue(any("p4r4_system" in name for name in value["public_bindings"]))
+        self.assertIn("P4R6", value["extractor_id"])
+        self.assertEqual(value["host_repairs"], ["QR", "AM"])
+        self.assertTrue(any("p4r6_system" in name for name in value["public_bindings"]))
         lock.validate_protocol(value)
         real_hash = lock.file_sha256
         for changed in value["public_bindings"]:
@@ -91,7 +94,7 @@ class ProtocolTests(unittest.TestCase):
                     lock.validate_protocol(value)
         case, _ = synthetic_case("FV2_01")
         spec = lock.build_primary_spec(case.case_id, case.prepared_input)
-        self.assertEqual(spec.system_prompt, lock.dev.prompt_material("P4R4")["primary_system"])
+        self.assertEqual(spec.system_prompt, lock.dev.prompt_material("P4R6")["primary_system"])
         self.assertEqual(spec.credential_slot, "gemini_slot_33")
         failure = {"category": "JSON_PARSE_FAILURE", "blockers": [{"code": "INVALID_JSON", "phase": "JSON", "path": ""}]}
         repair = lock.build_repair_spec(case.case_id, case.prepared_input, "{", failure)
