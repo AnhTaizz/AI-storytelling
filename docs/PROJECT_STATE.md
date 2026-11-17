@@ -1056,6 +1056,33 @@ Owner decision; the agent recommends, in this order (nothing authorized yet):
 3. **Human review of a sample of the FV1 gold**, because the gold is agent-drafted.
 - The holdout stays closed, and M4-04C and M5 still need separate authorization.
 
+## M4-04B3J — ANNOTATION CONVENTIONS V1 — WRITTEN — Status: M4_04B3J_CONVENTIONS_PROPOSED
+
+- **Authorization.** Option 1 of the Next Candidate above, asked for by the project owner on 2026-11-17 ("viết conventions trước"). This step covers the writing only. No gold was opened, no source text was read and no model was called. The holdout, the DEV2 gold and every protocol were not touched.
+- **Deliverable.** `docs/research/m4/M4_ANNOTATION_CONVENTIONS_V1.md`, status `PROPOSED`. It contains:
+  - definitions of the seven participant roles;
+  - an ordered rule for choosing among the nine event kinds, and the roles each kind allows;
+  - mention extent for Japanese text: names keep their honorific suffix; descriptions keep demonstratives, の-chains and compounds;
+  - entity scope (body parts, weather and nested places are not entities);
+  - literals: source language, verbatim substring of the evidence, ISO dates;
+  - `NamedAs` coverage and `name_kind` choice;
+  - a single direction for `TemporalRelation`;
+  - the difference between `Possesses` and `Owns`.
+- **Rule types.** Each rule is marked MECHANICAL or JUDGED. The registry, the schema, Draft V1.1 and the evaluator are unchanged, because every rule chooses among forms the registry already allows.
+- **Not yet done: the gold check.**
+  - The FV1 private packages and the B3H/B3I outputs are not on the owner's machine; they were produced in a cloud session.
+  - The DEV2 gold is on the machine but unopened.
+  - The holdout's own annotation guideline was not compared with V1. Any difference is a known risk for a later holdout score.
+- **Not settled by V1:** which expressions receive a mention, event granularity, and source languages other than Japanese.
+
+## Next Candidate
+
+Owner decision (nothing authorized yet):
+
+1. **Accept, or correct, conventions V1.**
+2. **Gold check.** Restore the FV1 packages (input, gold, blindness manifest) and the B3I private outputs under a git-ignored directory, and verify their hashes. Then audit the FV1 gold against V1: MECHANICAL rules by a checker tool, JUDGED rules on the 14 convention misses, the 13 missed resolutions and a sample. Opening the DEV2 gold for the same audit needs a separate yes, because it is still unopened.
+3. **Then the P4 prompt and FV2**, as in the previous Next Candidate.
+
 ## M8 Narrative Planning — ACCEPTED as a baseline (DEC-023, 2026-11-15)
 
 - **Plan checks (`plan_review.py`):** refs are hard checks; a callback in the wrong order is a soft error. Pacing and new names or numbers in free text are advisory.
