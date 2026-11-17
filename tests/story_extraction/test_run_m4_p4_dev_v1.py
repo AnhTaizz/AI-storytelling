@@ -1,6 +1,7 @@
-"""Synthetic, offline behaviour tests for the DEV2 prompt development runner."""
+"""Synthetic, offline behaviour tests for the DEV1/DEV2 prompt development runner."""
 from contextlib import contextmanager, ExitStack, redirect_stdout, redirect_stderr
 from copy import deepcopy
+from dataclasses import replace
 import io
 import json
 from pathlib import Path
@@ -64,11 +65,52 @@ class DevelopmentRunnerTests(unittest.TestCase):
                            clock=clock, wait=clock.wait)
             yield options, loaded, manifest
 
-    def transport(self, variant="P3", script=None, smoke='{"status":"ok"}', slot=protocol.CREDENTIAL_SLOT):
-        values = {f"{runner.TASK_ID}_{variant}_SMOKE_{slot.upper()}": [smoke]}
+    def transport(self, variant="P3", script=None, smoke='{"status":"ok"}', slot=protocol.CREDENTIAL_SLOT,
+                  dataset="DEV2"):
+        prefix = f"{runner.TASK_ID}_{'DEV1_' if dataset == 'DEV1' else ''}{variant}"
+        values = {f"{prefix}_SMOKE_{slot.upper()}": [smoke]}
         for (cid, phase), raw in (script or {("DEV2_01", "PRIMARY"): self.good}).items():
-            values[f"{runner.TASK_ID}_{variant}_{cid}_{phase}"] = [raw]
+            values[f"{prefix}_{cid}_{phase}"] = [raw]
         return FakeTransport(values)
+
+    @contextmanager
+    def dev1_fixture(self, completeness=("COMPLETE_FOR_PROFILE", "UNCERTAIN")):
+        ids = runner.dev1_protocol.CASE_IDS[:len(completeness)]
+        with self.fixture() as (opts, _, _):
+            package = opts["dev2_input"].parent / "dev1.zip"
+            optional = self.gold["candidate_records"]["assertions"][-1]["id"]
+            rows = [{"case_id": cid, "as_of_position": self.context.as_of_position,
+                     "gold_completeness": status, "acceptable_assertions": [optional],
+                     "required_assertions": [a["id"] for a in self.gold["candidate_records"]["assertions"]
+                                             if a["id"] != optional],
+                     "narrow_span_segments": [self.gold["candidate_records"]["evidence_refs"][0]
+                                               ["segment_id"]],
+                     "literal_variants": [{"predicate": "Synthetic", "argument": "label",
+                                           "values": ["synthetic-a", "synthetic-b"]}]}
+                    for cid, status in zip(ids, completeness)]
+            members = {"base_canonical_document.json": json.dumps(self.context.base_document).encode(),
+                       "development_cases.jsonl": "\n".join(json.dumps(row) for row in rows).encode(),
+                       "source_passage_refs.jsonl": b""}
+            members.update({f"gold_batches/{cid}.json": json.dumps(self.gold).encode() for cid in ids})
+            def write_members(values):
+                manifest = {"files": {name: runner.dev1_protocol.sha256_bytes(raw)
+                                      for name, raw in values.items()}}
+                with ZipFile(package, "w") as bundle:
+                    bundle.writestr(runner.DEV1_PREFIX + "manifest.json", json.dumps(manifest))
+                    for name, raw in values.items():
+                        bundle.writestr(runner.DEV1_PREFIX + name, raw)
+            write_members(members)
+            loaded = (self.context.base_document,
+                      {row["case_id"]: runner.dev1_protocol.safe_case_projection(row) for row in rows},
+                      {cid: self.context.passage_inputs for cid in ids}, self.context.ingestion)
+            loader = Mock(return_value=loaded)
+            options = {key: value for key, value in opts.items()
+                       if key not in ("dev2_input", "dev2_gold", "case_loader")}
+            options.update(dataset="DEV1", cases=ids, dev1_package=package,
+                           dev1_ingestion_manifest=package.parent / "synthetic-manifest.json",
+                           dev1_source_root=package.parent, dev1_case_loader=loader)
+            with patch.object(runner, "DEV1_SHA256", protocol.file_sha256(package)):
+                yield options, members, rows, write_members
 
     def test_prompt_composition_sources_and_request_identity(self):
         locked = protocol.prompt_material()
@@ -83,11 +125,27 @@ class DevelopmentRunnerTests(unittest.TestCase):
             self.assertEqual(p4[key], locked[key])
         with self.fixture() as (opts, _, _), tempfile.TemporaryDirectory() as tmp:
             case = runner.load_cases(opts["dev2_input"], Path(tmp), opts["cases"], opts["case_loader"])[0]
+            prompt_root = Path(tmp) / "prompts"
+            prompt_root.mkdir()
+            for variant in ("P3", "P4", "P4R3"):
+                (prompt_root / f"story_extraction_draft_{variant.lower()}_system_v1_1.txt").write_bytes(
+                    f"SYNTHETIC {variant}\r\nPREAMBLE\r\n".encode())
             specs = []
-            for variant in ("P3", "P4"):
-                with self.subTest(variant=variant):
+            for variant in ("P3", "P4", "P4R3"):
+                with self.subTest(variant=variant), patch.object(runner, "PROMPT_ROOT", prompt_root):
                     spec = runner.build_primary_spec(variant, case, "custom-model", "custom_slot")
                     specs.append(spec)
+                    material = runner.prompt_material(variant)
+                    if variant == "P3":
+                        self.assertEqual(material, locked)
+                    else:
+                        preamble = protocol._normalized_text(
+                            prompt_root / f"story_extraction_draft_{variant.lower()}_system_v1_1.txt")
+                        self.assertEqual(material["primary_system"], preamble + locked["primary_system"][len(old):])
+                        self.assertEqual(material["repair_system"], material["primary_system"] + "\n\n"
+                                         + protocol.REPAIR_SYSTEM_SUFFIX)
+                        for key in ("primary_user_template", "repair_user_template"):
+                            self.assertEqual(material[key], locked[key])
                     self.assertEqual((spec.model, spec.credential_slot), ("custom-model", "custom_slot"))
                     self.assertEqual(spec.generation_config, {"temperature": 0, "max_output_tokens": 16384})
                     self.assertEqual(spec.schema_response_mode, protocol.SCHEMA_RESPONSE_MODE)
@@ -100,8 +158,11 @@ class DevelopmentRunnerTests(unittest.TestCase):
                                      protocol.sha256_text(spec.system_prompt))
             self.assertNotEqual(specs[0].job_id, specs[1].job_id)
             self.assertNotEqual(specs[0].request_fingerprint, specs[1].request_fingerprint)
-        with self.assertRaises(runner.DevelopmentError):
-            runner.prompt_material("P5")
+            for variant in ("P5", "p4", "P", "P4_1", "P4/../P3", "P4\n", "Pé"):
+                with self.subTest(invalid=variant), patch.object(runner, "PROMPT_ROOT", prompt_root):
+                    for call in (runner.prompt_material, runner.prompt_hashes):
+                        with self.subTest(call=call.__name__), self.assertRaises(runner.DevelopmentError):
+                            call(variant)
 
     def test_hash_refusal_and_selection_validation(self):
         with self.fixture() as (opts, _, _):
@@ -119,6 +180,21 @@ class DevelopmentRunnerTests(unittest.TestCase):
             self.assertEqual(runner.selected_cases(None), runner.CASE_IDS)
             with self.assertRaises(runner.DevelopmentError):
                 runner.execute(**opts, mode="invalid")
+            for overrides in ({"dataset": "UNKNOWN"}, {"dev2_input": None}, {"dev2_gold": None}):
+                with self.subTest(overrides=overrides), self.assertRaises(runner.DevelopmentError):
+                    runner.execute(**{**opts, **overrides})
+        with self.dev1_fixture() as (opts, _, _, _):
+            for key in ("dev1_package", "dev1_ingestion_manifest", "dev1_source_root"):
+                with self.subTest(missing=key), self.assertRaises(runner.DevelopmentError):
+                    runner.execute(**{**opts, key: None})
+            with patch.object(runner, "DEV1_SHA256", "0" * 64):
+                with self.assertRaisesRegex(runner.DevelopmentError, "hash mismatch"):
+                    runner.execute(**opts)
+            opts["dev1_case_loader"].assert_not_called()
+            self.assertEqual(runner.selected_cases(None, "DEV1"), runner.dev1_protocol.CASE_IDS)
+            for ids in ([], ["DEV2_01"], ["M4DEV_01", "M4DEV_01"]):
+                with self.subTest(dev1_ids=ids), self.assertRaises(runner.DevelopmentError):
+                    runner.selected_cases(ids, "DEV1")
 
     def test_preflight_selects_and_builds_one_spec_without_provider_work(self):
         with self.fixture(("DEV2_01", "DEV2_03")) as (opts, _, _):
@@ -228,6 +304,8 @@ class DevelopmentRunnerTests(unittest.TestCase):
                     "acceptable_assertion_ids": [optional], "adjudications": []})
             metrics = result["summary"]
             self.assertEqual(metrics["cases"], 3)
+            self.assertEqual(metrics["cases_by_completeness"],
+                             {"COMPLETE_FOR_PROFILE": 3, "INCOMPLETE": 0, "UNCERTAIN": 0})
             self.assertEqual(metrics["cases_structurally_invalid"], 1)
             self.assertEqual(metrics["full_canonical_case_success_count"], 2)
             self.assertEqual(metrics["assertion_recall"], 1.0)
@@ -253,6 +331,75 @@ class DevelopmentRunnerTests(unittest.TestCase):
                 runner.execute(**opts, mode="score", transport=no_provider)
             with self.assertRaisesRegex(runner.CheckpointIntegrityError, "request differs"):
                 runner.execute(**opts, mode="score", model="different-model", transport=no_provider)
+
+        for scenario in ("success", "repair", "structural failure", "missing source"):
+            with self.subTest(scenario=scenario), self.dev1_fixture() as (opts, _, rows, _):
+                ids = opts["cases"]
+                fake = self.transport(dataset="DEV1", script={
+                    (cid, phase): raw for cid in ids for phase, raw in (
+                        [("PRIMARY", self.good)] if scenario in ("success", "missing source") else
+                        [("PRIMARY", "{"), ("REPAIR_1", "{" if scenario == "structural failure" else self.good)])})
+                original_loader = runner.load_dev1_cases
+                def load(*args):
+                    cases, gold = original_loader(*args)
+                    for case in cases:
+                        self.assertEqual(case.compiler_context.profile_id, self.gold["scope"]["profile_id"])
+                        self.assertEqual(case.compiler_context.process_version, "v1.1")
+                        self.assertEqual(case.compiler_context.process_id, f"{runner.TASK_ID}_DEV1_P3")
+                        self.assertEqual(case.compiler_context.run_id, f"DEV1_P3_{case.case_id}_PRIMARY")
+                        self.assertEqual(case.sources, tuple(doc.source_bytes for doc in self.context.ingestion.documents))
+                        self.assertNotIn("gold_completeness", json.dumps(case.prepared_input))
+                    return ([replace(case, sources=()) for case in cases]
+                            if scenario == "missing source" else cases), gold
+                with patch.object(runner, "load_dev1_cases", side_effect=load), patch.object(
+                        runner.scoring.evaluator, "evaluate_case", wraps=runner.scoring.evaluator.evaluate_case) as evaluate:
+                    preflight = runner.execute(**opts, transport=fake)
+                    self.assertEqual((preflight["dataset"], preflight["case_count"]), ("DEV1", 2))
+                    self.assertFalse(fake.calls)
+                    self.assertFalse(opts["output_root"].exists())
+                    result = runner.execute(**opts, mode="run", transport=fake)
+                    calls = list(fake.calls)
+                    scored = runner.execute(**opts, mode="score", transport=fake)
+                    resumed = runner.execute(**opts, mode="run", transport=fake)
+                    self.assertEqual(fake.calls, calls)
+                self.assertEqual(scored["summary"], result["summary"])
+                self.assertEqual(resumed["summary"], result["summary"])
+                self.assertEqual(result["summary"]["cases_by_completeness"],
+                                 {"COMPLETE_FOR_PROFILE": 1, "INCOMPLETE": 0, "UNCERTAIN": 1})
+                if scenario == "structural failure":
+                    evaluate.assert_not_called()
+                else:
+                    for call, row in zip(evaluate.call_args_list, rows * 3):
+                        spec = call.kwargs["case_spec"]
+                        self.assertEqual(spec, {"mode": "REAL_SOURCE", "adjudications": [],
+                            "gold_completeness": row["gold_completeness"],
+                            "acceptable_assertion_ids": row["acceptable_assertions"],
+                            "narrow_span_segments": row["narrow_span_segments"],
+                            "literal_variants": row["literal_variants"]})
+                for row, expected in zip(result["rows"], rows):
+                    self.assertEqual(row["evaluation"]["gold_completeness"], expected["gold_completeness"])
+                    self.assertEqual(row["conventions"] is None,
+                                     scenario in ("missing source", "structural failure"))
+                    self.assertEqual(row["conventions_reason"],
+                                     "SOURCE_OR_SPAN_UNVERIFIABLE" if scenario == "missing source" else None)
+                public = runner.public_summary(result)
+                self.assertEqual(public["aggregate"]["cases_by_completeness"],
+                                 result["summary"]["cases_by_completeness"])
+                self.assertNotIn(ids[0], json.dumps(public))
+                root = opts["output_root"] / "DEV1" / "P3"
+                self.assertTrue((root / "score.json").is_file())
+                expected_jobs = {f"{runner.TASK_ID}_DEV1_P3_SMOKE_{protocol.CREDENTIAL_SLOT.upper()}"}
+                expected_jobs.update(f"{runner.TASK_ID}_DEV1_P3_{cid}_{phase}" for cid in ids
+                                     for phase in (["PRIMARY"] if scenario in ("success", "missing source")
+                                                   else ["PRIMARY", "REPAIR_1"]))
+                self.assertEqual({job for job, _ in fake.calls}, expected_jobs)
+                dev2 = self.transport()
+                with self.fixture() as (dev2_opts, _, _):
+                    dev2_result = runner.execute(**{**dev2_opts, "output_root": opts["output_root"]},
+                                                 mode="run", transport=dev2)
+                self.assertEqual(dev2_result["dataset"], "DEV2")
+                self.assertTrue((opts["output_root"] / "P3" / "score.json").is_file())
+                self.assertTrue(expected_jobs.isdisjoint(job for job, _ in dev2.calls))
 
     def test_input_loader_and_gold_refusals(self):
         for member in ("../escape.txt", "gold/leak.txt"):
@@ -281,26 +428,84 @@ class DevelopmentRunnerTests(unittest.TestCase):
                     bundle.writestr(manifest["cases"][0]["canonical_annotation_member"], json.dumps(self.gold))
                 with self.assertRaises(runner.DevelopmentError):
                     runner.read_gold(opts["dev2_gold"], opts["cases"])
+        for problem in ("input hash", "gold hash", "missing hash", "missing member", "duplicate member",
+                        "duplicate case", "missing case", "completeness", "loader cases", "loader refs"):
+            with self.subTest(dev1_problem=problem), self.dev1_fixture() as (opts, members, rows, write):
+                cid = opts["cases"][0]
+                if problem in ("duplicate case", "missing case", "completeness"):
+                    if problem == "duplicate case":
+                        rows += rows
+                    elif problem == "missing case":
+                        rows = []
+                    else:
+                        rows[0]["gold_completeness"] = "INVALID"
+                    members["development_cases.jsonl"] = "\n".join(json.dumps(row) for row in rows).encode()
+                write(members)
+                if problem in ("input hash", "gold hash", "missing hash", "missing member", "duplicate member"):
+                    member = "base_canonical_document.json" if problem == "input hash" else f"gold_batches/{cid}.json"
+                    prefix = runner.DEV1_PREFIX
+                    with ZipFile(opts["dev1_package"]) as bundle:
+                        content = {name: bundle.read(name) for name in bundle.namelist()}
+                    if problem in ("input hash", "gold hash"):
+                        content[prefix + member] = b"{}"
+                    elif problem == "missing hash":
+                        manifest = json.loads(content[prefix + "manifest.json"])
+                        del manifest["files"][member]
+                        content[prefix + "manifest.json"] = json.dumps(manifest).encode()
+                    elif problem == "missing member":
+                        del content[prefix + member]
+                    with ZipFile(opts["dev1_package"], "w") as bundle:
+                        for name, raw in content.items():
+                            bundle.writestr(name, raw)
+                        if problem == "duplicate member":
+                            with self.assertWarns(UserWarning):
+                                bundle.writestr(prefix + member, content[prefix + member])
+                elif problem in ("loader cases", "loader refs"):
+                    loaded = list(opts["dev1_case_loader"].return_value)
+                    loaded[1 if problem == "loader cases" else 2] = {}
+                    opts["dev1_case_loader"].return_value = tuple(loaded)
+                with patch.object(runner, "DEV1_SHA256", protocol.file_sha256(opts["dev1_package"])):
+                    with self.assertRaises(runner.DevelopmentError):
+                        runner.execute(**opts)
+                if problem not in ("loader cases", "loader refs"):
+                    opts["dev1_case_loader"].assert_not_called()
 
     def test_cli_modes_refusal_and_module_entrypoint(self):
         original = runner.execute
-        for mode in ("preflight", "run", "score"):
-            with self.subTest(mode=mode), self.fixture() as (opts, _, _):
-                fake = self.transport()
-                if mode == "score":
-                    original(**opts, mode="run", transport=fake)
-                argv = ["--variant", "P3", "--dev2-input", str(opts["dev2_input"]),
-                        "--dev2-gold", str(opts["dev2_gold"]), "--output-root", str(opts["output_root"]),
-                        "--cases", "DEV2_01", "--mode", mode]
-                def execute_cli(**kwargs):
-                    return original(**{**opts, **kwargs}, transport=fake)
-                output = io.StringIO()
-                with patch.object(runner, "execute", side_effect=execute_cli), redirect_stdout(output):
-                    self.assertEqual(runner.main(argv), 0)
-                self.assertIsInstance(json.loads(output.getvalue()), dict)
-                with patch.object(runner, "execute", side_effect=runner.DevelopmentError("private")), redirect_stdout(output):
-                    self.assertEqual(runner.main(argv), 2)
-                self.assertIn("M4_P4_DEV_STOPPED: DevelopmentError", output.getvalue())
+        for dataset in ("DEV1", "DEV2"):
+            for mode in ("preflight", "run", "score"):
+                fixture = self.dev1_fixture() if dataset == "DEV1" else self.fixture()
+                with self.subTest(dataset=dataset, mode=mode), fixture as values:
+                    opts = values[0]
+                    variant = "P4R3" if dataset == "DEV1" else "P3"
+                    opts["variant"] = variant
+                    prompt_root = opts["output_root"].parent / "prompts"
+                    prompt_root.mkdir()
+                    for name in ("P3", "P4R3"):
+                        (prompt_root / f"story_extraction_draft_{name.lower()}_system_v1_1.txt").write_text(
+                            f"SYNTHETIC {name} PREAMBLE", encoding="utf-8")
+                    fake = self.transport(variant, dataset=dataset,
+                                          script={(cid, "PRIMARY"): self.good for cid in opts["cases"]})
+                    argv = ["--variant", variant, "--output-root", str(opts["output_root"]),
+                            "--cases", ",".join(opts["cases"]), "--mode", mode]
+                    if dataset == "DEV1":
+                        argv += ["--dataset", dataset]
+                    for key in ("dev1_package", "dev1_ingestion_manifest", "dev1_source_root",
+                                "dev2_input", "dev2_gold"):
+                        if key in opts:
+                            argv += ["--" + key.replace("_", "-"), str(opts[key])]
+                    def execute_cli(**kwargs):
+                        return original(**{**opts, **kwargs}, transport=fake)
+                    output = io.StringIO()
+                    with patch.object(runner, "PROMPT_ROOT", prompt_root):
+                        if mode == "score":
+                            original(**opts, mode="run", transport=fake)
+                        with patch.object(runner, "execute", side_effect=execute_cli), redirect_stdout(output):
+                            self.assertEqual(runner.main(argv), 0)
+                        self.assertIsInstance(json.loads(output.getvalue()), dict)
+                        with patch.object(runner, "execute", side_effect=runner.DevelopmentError("private")), redirect_stdout(output):
+                            self.assertEqual(runner.main(argv), 2)
+                        self.assertIn("M4_P4_DEV_STOPPED: DevelopmentError", output.getvalue())
         with patch("sys.argv", [runner.__name__]), redirect_stderr(io.StringIO()):
             with self.assertRaises(SystemExit) as stopped:
                 runpy.run_module(runner.__name__, run_name="__main__")
