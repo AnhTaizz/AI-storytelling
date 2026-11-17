@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 69 — test functions: 1088
+Suites: 9 — test files: 70 — test functions: 1098
 
 ## canonical_story
 
@@ -619,6 +619,20 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.analyze_
 - `M404B3DDiagnosticTests.test_analyzer_has_only_prediction_artifact_and_input_parameters`
 - `M404B3DDiagnosticTests.test_gold_and_holdout_paths_fail_before_access`
 - `M404B3DDiagnosticTests.test_attempt_is_mechanical_public_safe_and_compiles`
+
+### test_check_annotation_conventions_v1 (10)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.check_annotation_conventions_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `AnnotationConventionsTests.test_every_finding_code_has_a_violating_and_conforming_case`
+- `AnnotationConventionsTests.test_role_frames_cover_every_allowed_and_disallowed_role`
+- `AnnotationConventionsTests.test_base_supplies_lookups_but_is_never_audited`
+- `AnnotationConventionsTests.test_only_affirmed_batch_assertions_affect_rules_and_counts`
+- `AnnotationConventionsTests.test_literal_evidence_is_pooled_over_the_assertions_of_a_proposition`
+- `AnnotationConventionsTests.test_nested_literals_use_outer_evidence_and_guard_cycles`
+- `AnnotationConventionsTests.test_suffix_and_date_boundaries_are_literal_mechanical_checks`
+- `AnnotationConventionsTests.test_unverifiable_spans_and_broken_references_are_refused`
+- `AnnotationConventionsTests.test_report_is_deterministic_sorted_and_does_not_mutate_inputs`
+- `AnnotationConventionsTests.test_cli_output_and_refusal_are_safe_and_have_documented_exit_codes`
 
 ### test_diagnose_m4_04b3i_fv1_v1 (5)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.diagnose_m4_04b3i_fv1_v1`, `tools.story_extraction.evaluate_extraction_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.score_m4_04b3h_fv1_v1`, `tools.story_ingestion.light_novel_adapter_v0`
