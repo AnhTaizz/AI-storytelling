@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 70 — test functions: 1098
+Suites: 9 — test files: 71 — test functions: 1107
 
 ## canonical_story
 
@@ -1059,6 +1059,19 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_co
 - `RunTests.test_primary_repair_and_terminal_outcomes`
 - `RunTests.test_smoke_qualification_and_summary`
 - `RunTests.test_lock_mismatches_stop_before_any_call`
+
+### test_run_m4_p4_dev_v1 (9)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_compiler_v1_1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.m4_04b3f_fv1_protocol_v1`, `tools.story_extraction.run_m4_p4_dev_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `DevelopmentRunnerTests.test_prompt_composition_sources_and_request_identity`
+- `DevelopmentRunnerTests.test_hash_refusal_and_selection_validation`
+- `DevelopmentRunnerTests.test_preflight_selects_and_builds_one_spec_without_provider_work`
+- `DevelopmentRunnerTests.test_run_outcomes_artifacts_and_locked_resume`
+- `DevelopmentRunnerTests.test_interrupted_artifact_write_resumes_locked_response_and_variants_are_isolated`
+- `DevelopmentRunnerTests.test_smoke_refusal_overrides_and_prompt_change_guard`
+- `DevelopmentRunnerTests.test_real_scoring_optional_ids_aggregation_conventions_and_public_summary`
+- `DevelopmentRunnerTests.test_input_loader_and_gold_refusals`
+- `DevelopmentRunnerTests.test_cli_modes_refusal_and_module_entrypoint`
 
 ### test_score_m4_04b3h_fv1_v1 (3)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.m4_04b3f_fv1_protocol_v1`, `tools.story_extraction.score_m4_04b3h_fv1_v1`, `tools.story_ingestion.light_novel_adapter_v0`
