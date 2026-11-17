@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 76 — test functions: 1142
+Suites: 9 — test files: 77 — test functions: 1150
 
 ## canonical_story
 
@@ -702,6 +702,17 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_co
 - `DraftCompilerV11Tests.test_collects_all_feasible_same_class_quote_blockers`
 - `DraftCompilerV11Tests.test_collects_independent_handle_blockers`
 
+### test_draft_mention_anchoring_v1 (7)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_mention_anchoring_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `MentionAnchoringTests.test_anchor_uses_evidence_position_and_local_overlapping_occurrences`
+- `MentionAnchoringTests.test_multiple_matching_spans_or_occurrences_and_non_reference_users_stay`
+- `MentionAnchoringTests.test_location_requires_eligibility_and_valid_occurrence`
+- `MentionAnchoringTests.test_ghost_pruning_keeps_other_records_and_handles_multiple_users`
+- `MentionAnchoringTests.test_pruning_checks_all_schema_reference_fields_but_not_literals`
+- `MentionAnchoringTests.test_only_located_cited_evidence_counts_and_own_ambiguity_never_prunes`
+- `MentionAnchoringTests.test_malformed_inputs_are_left_to_validation`
+
 ### test_draft_quote_resolution_v1 (8)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_quote_resolution_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
@@ -1102,7 +1113,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `RunnerTests.test_real_compiler_primary_repair_and_transport_outcomes`
 - `RunnerTests.test_smoke_failure_run_cli_and_guard`
 
-### test_run_m4_p4_dev_v1 (14)
+### test_run_m4_p4_dev_v1 (15)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_compiler_v1_1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.m4_04b3f_fv1_protocol_v1`, `tools.story_extraction.run_m4_p4_dev_v1`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `DevelopmentRunnerTests.test_prompt_composition_sources_and_request_identity`
@@ -1115,6 +1126,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_co
 - `DevelopmentRunnerTests.test_real_scoring_optional_ids_aggregation_conventions_and_public_summary`
 - `DevelopmentRunnerTests.test_input_loader_and_gold_refusals`
 - `DevelopmentRunnerTests.test_quote_options_isolate_jobs_save_raw_and_resolved_and_record_metadata`
+- `DevelopmentRunnerTests.test_anchoring_compiles_preserves_originals_and_replays_all_attempts`
 - `DevelopmentRunnerTests.test_rich_blockers_sanitize_values_extract_handles_and_restore_validator`
 - `DevelopmentRunnerTests.test_revalidation_is_offline_preserves_runs_and_reports_transitions`
 - `DevelopmentRunnerTests.test_revalidation_counts_remaining_blockers_and_resolution_over_all_attempts`
