@@ -1056,7 +1056,7 @@ Owner decision; the agent recommends, in this order (nothing authorized yet):
 3. **Human review of a sample of the FV1 gold**, because the gold is agent-drafted.
 - The holdout stays closed, and M4-04C and M5 still need separate authorization.
 
-## M4-04B3J — ANNOTATION CONVENTIONS V1 — WRITTEN — Status: M4_04B3J_CONVENTIONS_PROPOSED
+## M4-04B3J — ANNOTATION CONVENTIONS V1 — ACCEPTED, DEV2 GOLD AUDITED — Status: M4_04B3J_DEV2_GOLD_AUDITED
 
 - **Authorization.** Option 1 of the Next Candidate above, asked for by the project owner on 2026-11-17 ("viết conventions trước"). This step covers the writing only. No gold was opened, no source text was read and no model was called. The holdout, the DEV2 gold and every protocol were not touched.
 - **Deliverable.** `docs/research/m4/M4_ANNOTATION_CONVENTIONS_V1.md`, status `PROPOSED`. It contains:
@@ -1074,14 +1074,35 @@ Owner decision; the agent recommends, in this order (nothing authorized yet):
   - The DEV2 gold is on the machine but unopened.
   - The holdout's own annotation guideline was not compared with V1. Any difference is a known risk for a later holdout score.
 - **Not settled by V1:** which expressions receive a mention, event granularity, and source languages other than Japanese.
+- **Acceptance.** The owner accepted V1 on 2026-11-17 (DEC-025), and its status is now `ACCEPTED`.
+- **DEV2 gold audit** (the owner authorized opening the DEV2 gold on 2026-11-17):
+  - *Before opening:* both package hashes matched the M4-04B3B1 seal. The gold was opened at 2026-11-17T10:10:19Z and is now tuning data.
+  - *Mechanical check:* the new checker `tools/story_extraction/check_annotation_conventions_v1.py` covers the ten MECHANICAL rules; it has synthetic tests only. Across all 10 cases (117 affirmed assertions, 47 mentions, 16 literals) it found 1 issue: a `TemporalRelation` with `AFTER`.
+  - *Reading:* the agent read every case against the JUDGED rules. This is not a human review. It found 22 items:
+
+    | Verdict | Items | What |
+    |---|---|---|
+    | gold wrong under V1 | 10 | 2 objects that are only handled, typed `PATIENT` (V1 says `THEME`); a theft typed `GENERIC` (V1 says `TRANSFER`; 3 items); a missing beneficiary; a missing `NamedAs`; two `AnchorDate` values with a year the source never states; the `AFTER` relation |
+    | rule unclear | 9 | lone names typed `GIVEN` from general Japanese naming knowledge (7); the role of an inanimate, unchanged subject (1); `OccursAt` for an arrival (1) |
+    | rule questionable | 3 | descriptive mentions keep a distinguishing adjective that V1 leaves out |
+  - *Limit of the checker:* it checks the date format only, so it cannot see an invented year.
+  - *Seals:* the gold was not rewritten; the seals stand.
+  - *Records:* `benchmarks/m4_extraction/M4_04B3J_DEV2_CONVENTIONS_AUDIT.yaml` (counts and hashes only). The per-item audit and the checker reports stay in the git-ignored `.local/m4_04b3j_conventions/`.
+- **Reading.** The gold author's habit of typing an object that is only handled as `PATIENT` appears in DEV2 as well, so FV1 probably shares it. That would explain part of the FV1 `ROLE_LABEL` misses.
 
 ## Next Candidate
 
 Owner decision (nothing authorized yet):
 
-1. **Accept, or correct, conventions V1.**
-2. **Gold check.** Restore the FV1 packages (input, gold, blindness manifest) and the B3I private outputs under a git-ignored directory, and verify their hashes. Then audit the FV1 gold against V1: MECHANICAL rules by a checker tool, JUDGED rules on the 14 convention misses, the 13 missed resolutions and a sample. Opening the DEV2 gold for the same audit needs a separate yes, because it is still unopened.
-3. **Then the P4 prompt and FV2**, as in the previous Next Candidate.
+1. **Conventions V2.** It addresses the three unclear rules and the questionable one:
+   - general naming knowledge is allowed for `name_kind`;
+   - an inanimate, unchanged subject is `THEME`;
+   - `OccursAt` is used for the place of an arrival or appearance;
+   - descriptive mentions keep adjectives.
+
+   V2 is a new file, and it settles 12 of the 22 DEV2 items.
+2. **FV1 gold check.** Restore the FV1 packages and the B3I private outputs under a git-ignored directory, verify their hashes, then run the checker and the reading audit. The packages are not on the owner's machine.
+3. **P4 prompt** written from the conventions and developed on DEV1, DEV2 and FV1 (all open). Then seal FV2 under the conventions and lock the protocol.
 
 ## M8 Narrative Planning — ACCEPTED as a baseline (DEC-023, 2026-11-15)
 

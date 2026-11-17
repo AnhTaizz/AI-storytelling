@@ -792,3 +792,21 @@ Accepted as a baseline:
 LIMITS:
 - The free-text checks are heuristics and report only.
 - Plan quality (hook strength, pacing as felt by viewers) still needs the owner's review: it is part of the M1/M9 human verdict.
+
+---
+
+## DEC-025 — M4 Annotation Conventions V1
+
+STATUS: ACCEPTED (Project Owner, 2026-11-17: "Đồng ý V1")
+
+DECISION:
+1. **`docs/research/m4/M4_ANNOTATION_CONVENTIONS_V1.md` is the annotation convention for M4.** It covers participant roles, the choice of event kind, mention extent, entity scope, literals, `NamedAs`, the direction of `TemporalRelation`, and `Possesses` versus `Owns`. It binds:
+   - the gold of every new sealed set (FV2 onward);
+   - the P4 extraction prompt.
+2. **The frozen layers stay unchanged.** The registry, the schema, Draft V1.1, the evaluator and every existing seal and score are not changed. Every rule chooses among representations the registry already permits.
+3. **A change is a new version.** A rule that an audit shows to be wrong is changed in a new file (V2), never by editing V1.
+
+LIMITS:
+- V1 was written without reading any gold.
+- The holdout was annotated under its own sealed guideline, which was not compared with V1.
+- V1 covers Japanese source text only.
