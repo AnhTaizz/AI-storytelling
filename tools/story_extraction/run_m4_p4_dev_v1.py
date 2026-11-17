@@ -20,6 +20,8 @@ from zipfile import ZipFile
 from tools.story_extraction import m4_04b3f_fv1_protocol_v1 as protocol
 from tools.story_extraction import score_m4_04b3h_fv1_v1 as scoring
 from tools.story_extraction import m4_04b2_dev_protocol_v1 as dev1_protocol
+from tools.story_extraction import draft_compiler_v1 as compiler
+from tools.story_extraction.draft_quote_resolution_v1 import OUTCOMES, resolve_quotes
 from tools.story_extraction.check_annotation_conventions_v1 import RULE_IDS, check_batch
 from tools.story_extraction.draft_compiler_v1 import DraftCompilerContext
 from tools.story_extraction.draft_compiler_v1_1 import prepare_story_extraction_draft_v1_1
@@ -101,7 +103,47 @@ def selected_cases(cases: Sequence[str] | None, dataset: str = "DEV2") -> tuple[
 
 
 def _job_prefix(variant: str, dataset: str) -> str:
+    variant = variant.replace("+", "_")  # Durable job ids exclude '+'.
     return f"{TASK_ID}_DEV1_{variant}" if dataset == "DEV1" else f"{TASK_ID}_{variant}"
+
+
+def _run_variant(variant: str, quote_resolution: bool, rich_repair_blockers: bool,
+                 existing_names: bool = False) -> str:
+    return (variant + ("+QR" if quote_resolution else "") + ("+RB" if rich_repair_blockers else "")
+            + ("+EN" if existing_names else ""))
+
+
+def _with_existing_names(prepared: Mapping[str, Any], context: DraftCompilerContext) -> dict[str, Any]:
+    """Enrich model-facing entity handles using only affirmed prior-context facts."""
+    # V1.1 compilation takes the draft and trusted context separately, then delegates
+    # to V1, which rebuilds _context_maps(context). It never consumes this prepared
+    # input, so these model-facing additions do not change compiler context/mapping.
+    _, existing = compiler._context_maps(context)
+    base = context.base_document
+    propositions = {p["id"]: p for p in base["propositions"]}
+    mentions = {m["id"]: m["surface_form"] for m in base["mentions"]}
+    names: dict[str, set[tuple[str, str]]] = {}
+    forms: dict[str, set[str]] = {}
+    for assertion in base["assertions"]:
+        if assertion["polarity"] != "AFFIRMED":
+            continue
+        proposition = propositions[assertion["proposition_id"]]
+        predicate = proposition.get("predicate")
+        if predicate not in ("NamedAs", "RefersTo"):
+            continue
+        args = proposition["args"]
+        if predicate == "NamedAs":
+            names.setdefault(args["entity"]["ref"], set()).add(
+                (args["name"]["value"], args["name_kind"]["value"]))
+        else:
+            forms.setdefault(args["entity"]["ref"], set()).add(mentions[args["mention"]["ref"]])
+    records = dict(prepared["existing_context"])
+    for handle, (collection, rid) in existing.items():
+        if collection == "entities" and rid in names:
+            records[handle] = {**records[handle],
+                "names": [{"name": name, "name_kind": kind} for name, kind in sorted(names[rid])],
+                "mention_forms": sorted(forms.get(rid, set()))}
+    return {**prepared, "existing_context": records}
 
 
 def load_dev1_cases(archive: Path, input_root: Path, selected: Sequence[str],
@@ -179,20 +221,25 @@ def load_cases(archive: Path, input_root: Path, selected: Sequence[str],
 
 
 def build_primary_spec(variant: str, case: CaseInput, model: str = protocol.MODEL,
-                       credential_slot: str = protocol.CREDENTIAL_SLOT) -> DurableJobSpec:
+                       credential_slot: str = protocol.CREDENTIAL_SLOT, *,
+                       quote_resolution: bool = False, rich_repair_blockers: bool = False,
+                       existing_names: bool = False) -> DurableJobSpec:
     material = prompt_material(variant)
     user = protocol._render(material["primary_user_template"], {
         "CASE_ID": case.case_id,
         "PREPARED_INPUT_JSON": protocol.canonical_json_bytes(dict(case.prepared_input)).decode().rstrip(),
     })
-    return replace(protocol._spec(f"{_job_prefix(variant, case.dataset)}_{case.case_id}_PRIMARY",
+    label = _run_variant(variant, quote_resolution, rich_repair_blockers, existing_names)
+    return replace(protocol._spec(f"{_job_prefix(label, case.dataset)}_{case.case_id}_PRIMARY",
                                   material["primary_system"], user),
                    model=model, credential_slot=credential_slot, research_task_id=TASK_ID)
 
 
 def build_repair_spec(variant: str, case: CaseInput, primary_raw: str, validation: Mapping,
                       model: str = protocol.MODEL,
-                      credential_slot: str = protocol.CREDENTIAL_SLOT) -> DurableJobSpec:
+                      credential_slot: str = protocol.CREDENTIAL_SLOT, *,
+                      quote_resolution: bool = False, rich_repair_blockers: bool = False,
+                      existing_names: bool = False) -> DurableJobSpec:
     payload = protocol.sanitized_failure(validation["category"], validation["blockers"])
     material = prompt_material(variant)
     user = protocol._render(material["repair_user_template"], {
@@ -201,14 +248,89 @@ def build_repair_spec(variant: str, case: CaseInput, primary_raw: str, validatio
         "PRIMARY_RESPONSE": primary_raw,
         "FAILURE_JSON": protocol.canonical_json_bytes(payload).decode().rstrip(),
     })
-    primary = build_primary_spec(variant, case, model, credential_slot)
-    return replace(primary, job_id=f"{_job_prefix(variant, case.dataset)}_{case.case_id}_REPAIR_1",
+    primary = build_primary_spec(variant, case, model, credential_slot,
+                                 quote_resolution=quote_resolution, rich_repair_blockers=rich_repair_blockers,
+                                 existing_names=existing_names)
+    label = _run_variant(variant, quote_resolution, rich_repair_blockers, existing_names)
+    return replace(primary, job_id=f"{_job_prefix(label, case.dataset)}_{case.case_id}_REPAIR_1",
                    system_prompt=material["repair_system"], user_prompt=user)
+
+
+def _canonical_blockers(draft: Any, captures: list) -> list[dict[str, str]]:
+    # Lazy import: the diagnosis module itself imports this runner.
+    from tools.story_extraction import diagnose_m4_p4_dev_v1 as diagnosis
+
+    known = set(diagnosis.KNOWN_TEMPLATES.values()) | {code for _, code in diagnosis._VALUE_TEMPLATES}
+    handles = {record["handle"] for field in compiler.COLLECTIONS
+               for record in draft.get(field, [])
+               if re.fullmatch(r"[A-Z][A-Z_]*\d+", record["handle"])}
+    result = []
+    for batch, report in captures:
+        ids = {record["id"]: handle for records in batch["candidate_records"].values()
+               for record in records for handle in handles if record["id"].endswith("-" + handle)}
+        for section, check in report["checks"].items():
+            for issue in check["issues"]:
+                code = diagnosis.issue_code(section, issue)
+                # issue_code's unknown-template fallback can contain unquoted literals.
+                # Emit only its recognized codes; never pass that fallback to a model.
+                if (code.rsplit(":", 1)[-1] not in known or
+                        not re.fullmatch(r"[a-z_]+:[A-Z_]+", code)):
+                    code = "canonical:UNCLASSIFIED_ISSUE"
+                message = diagnosis._QUOTES.sub("", issue)
+                candidates = []
+                for value, handle in {**{h: h for h in handles}, **ids}.items():
+                    match = re.search(r"(?<![\w.:-])" + re.escape(value) + r"(?![\w.:-])", message)
+                    if match:
+                        candidates.append((match.start(), handle))
+                result.append({"phase": "CANONICAL", "code": code,
+                               "path": min(candidates)[1] if candidates else "canonical"})
+    return result
+
+
+def validate_attempt(raw: str, case: CaseInput, *, quote_resolution: bool = False,
+                     rich_repair_blockers: bool = False) -> tuple[Any, Any, Any, dict]:
+    """Validate one response, optionally resolving copies and capturing safe issues.
+
+    The temporary canonical-validator wrapper is single-threaded, like diagnosis.
+    Both the untouched draft and the draft actually validated are returned.
+    """
+    original_draft, report = None, None
+    if quote_resolution:
+        try:
+            original_draft = json.loads(raw)
+        except json.JSONDecodeError:
+            pass  # validate_raw retains the standard parse failure.
+        else:
+            resolved, report = resolve_quotes(original_draft, case.prepared_input)
+            raw = json.dumps(resolved, ensure_ascii=False)
+    captures = []
+    original_validator = compiler.validate_batch_guarded
+
+    def capture(batch, *args, **kwargs):
+        validation_report = original_validator(batch, *args, **kwargs)
+        captures.append((batch, validation_report))
+        return validation_report
+
+    if rich_repair_blockers:
+        compiler.validate_batch_guarded = capture
+    try:
+        draft, batch, validation = validate_raw(raw, case.compiler_context)
+    finally:
+        if rich_repair_blockers:
+            compiler.validate_batch_guarded = original_validator
+    if rich_repair_blockers and any(b["phase"] == "CANONICAL_COMPILER" and
+            b["code"] == "CANONICAL_CONFORMANCE_FAILURE" for b in validation["blockers"]):
+        validation["blockers"].extend(_canonical_blockers(draft, captures))
+    if report is not None:
+        validation["quote_resolution"] = report
+    return original_draft if quote_resolution else draft, draft, batch, validation
 
 
 def run_cases(cases: Sequence[CaseInput], specs: Sequence[DurableJobSpec], variant: str,
               executor: DurableResearchExecutor, transport: Transport, root: Path,
-              guard: Callable[[], None], wait: Callable[[float], None]) -> None:
+              guard: Callable[[], None], wait: Callable[[float], None], *,
+              quote_resolution: bool = False, rich_repair_blockers: bool = False,
+              existing_names: bool = False) -> None:
     for case, primary in zip(cases, specs):
         directory = root / "artifacts" / case.case_id
         attempts = []
@@ -226,14 +348,19 @@ def run_cases(cases: Sequence[CaseInput], specs: Sequence[DurableJobSpec], varia
                 attempt["validation"] = validation
                 break
             _write_text(directory / f"{phase}_raw.txt", raw)
-            draft, batch, validation = validate_raw(raw, case.compiler_context)
+            draft, resolved, batch, validation = validate_attempt(
+                raw, case, quote_resolution=quote_resolution, rich_repair_blockers=rich_repair_blockers)
             if draft is not None:
                 _write_json(directory / f"{phase}_draft.json", draft)
+                if quote_resolution:
+                    _write_json(directory / f"{phase}_resolved_draft.json", resolved)
             attempt["validation"] = validation
             if validation["pass"] or phase == "repair_1":
                 break
             # Only deterministic JSON/schema/compiler failures can reach this repair.
-            spec = build_repair_spec(variant, case, raw, validation, primary.model, primary.credential_slot)
+            spec = build_repair_spec(variant, case, raw, validation, primary.model, primary.credential_slot,
+                                     quote_resolution=quote_resolution, rich_repair_blockers=rich_repair_blockers,
+                                     existing_names=existing_names)
         compiled_sha256 = None
         if batch is not None:
             compiled_sha256 = _write_json(directory / "compiled_batch.json", batch)
@@ -338,6 +465,70 @@ def public_summary(score: Mapping[str, Any]) -> dict[str, Any]:
                 "conventions_cases_checked")}
 
 
+def revalidate_cases(cases: Sequence[CaseInput], source: Path, destination: Path, *,
+                     quote_resolution: bool, rich_repair_blockers: bool) -> dict:
+    """Replay saved attempts without touching checkpoints or original validations.
+
+    All saved attempts are inspected, even when the new primary passes. The new
+    terminal result is the first valid attempt, or the last recorded failure.
+    Missing drafts on transport failures retain their original failure status.
+    Counts include every replayed attempt, even after an earlier attempt passes.
+    """
+    rows = []
+    def statistics():
+        return {"remaining_blocker_counts": Counter(), "quote_resolution_report": {
+            kind: dict.fromkeys(OUTCOMES, 0) for kind in ("evidence", "mentions")}}
+
+    totals = statistics()
+    by_phase = {phase: statistics() for phase in ("primary", "repair_1")}
+    for case in cases:
+        directory = source / "artifacts" / case.case_id
+        saved = json.loads((directory / "validation.json").read_text(encoding="utf-8"))
+        attempts = []
+        terminal = None
+        for attempt in saved["attempts"]:
+            phase = attempt["phase"]
+            if phase not in ("primary", "repair_1"):
+                raise DevelopmentError("Unknown saved draft phase")
+            path = directory / f"{phase}_draft.json"
+            raw_path = directory / f"{phase}_raw.txt"
+            if path.is_file() or raw_path.is_file():
+                raw = (path if path.is_file() else raw_path).read_text(encoding="utf-8")
+                _, _, batch, validation = validate_attempt(raw, case, quote_resolution=quote_resolution,
+                                                          rich_repair_blockers=rich_repair_blockers)
+                status = "STRUCTURAL_VALID" if batch is not None else validation["category"]
+            elif attempt["validation"]["category"] == "TRANSPORT_FAILURE":
+                validation = attempt["validation"]
+                status = "TRANSPORT_FAILURE"
+            else:
+                raise DevelopmentError("Missing saved draft response")
+            attempts.append({"phase": phase, "terminal_status": status, "validation": validation})
+            for counts in (totals, by_phase[phase]):
+                counts["remaining_blocker_counts"].update(
+                    f"{b['phase']}:{b['code']}" for b in validation["blockers"])
+                for kind, outcomes in validation.get("quote_resolution", {}).items():
+                    for code, count in outcomes.items():
+                        counts["quote_resolution_report"][kind][code] += count
+            if terminal != "STRUCTURAL_VALID":
+                terminal = status
+        if not attempts:
+            raise DevelopmentError("Missing saved validation attempts")
+        rows.append({"case_id": case.case_id, "original_terminal_status": saved["terminal_status"],
+                     "new_terminal_status": terminal, "attempts": attempts})
+    transitions = Counter(f"{r['original_terminal_status']}->{r['new_terminal_status']}" for r in rows)
+    for counts in (totals, *by_phase.values()):
+        counts["remaining_blocker_counts"] = dict(sorted(counts["remaining_blocker_counts"].items()))
+    result = {"rows": rows, "totals": {"cases": len(rows),
+        "original_structurally_valid": sum(r["original_terminal_status"] == "STRUCTURAL_VALID" for r in rows),
+        "new_structurally_valid": sum(r["new_terminal_status"] == "STRUCTURAL_VALID" for r in rows),
+        "fixed": sum(r["original_terminal_status"] != "STRUCTURAL_VALID" and
+                     r["new_terminal_status"] == "STRUCTURAL_VALID" for r in rows),
+        "transitions": dict(sorted(transitions.items())), **totals, "by_phase": by_phase},
+        "quote_resolution": quote_resolution, "rich_repair_blockers": rich_repair_blockers}
+    _write_json(destination / "revalidation.json", result)
+    return result
+
+
 def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
             dev2_gold: Path | None = None, dataset: str = "DEV2",
             dev1_package: Path | None = None, dev1_ingestion_manifest: Path | None = None,
@@ -345,9 +536,14 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
             model: str = protocol.MODEL, credential_slot: str = protocol.CREDENTIAL_SLOT,
             cases: Sequence[str] | None = None, mode: str = "preflight",
             case_loader: Callable = load_case_inputs, transport: Transport | None = None,
-            wait: Callable = time.sleep, clock: Callable = time.time) -> dict[str, Any]:
-    if mode not in ("preflight", "run", "score"):
+            wait: Callable = time.sleep, clock: Callable = time.time,
+            quote_resolution: bool = False, rich_repair_blockers: bool = False,
+            existing_names: bool = False,
+            run_directory: Path | None = None) -> dict[str, Any]:
+    if mode not in ("preflight", "run", "score", "revalidate"):
         raise DevelopmentError("Unknown development mode")
+    if run_directory is not None and mode != "revalidate":
+        raise DevelopmentError("Run directory is only used for revalidation")
     selected = selected_cases(cases, dataset)
 
     def verify():
@@ -363,21 +559,35 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
 
     verify()
     hashes = prompt_hashes(variant)
-    root = (Path(output_root) / "DEV1" if dataset == "DEV1" else Path(output_root)) / variant
-    job_prefix = _job_prefix(variant, dataset)
+    label = _run_variant(variant, quote_resolution, rich_repair_blockers, existing_names)
+    identity = label.replace("+", "_")
+    base_root = Path(output_root) / "DEV1" if dataset == "DEV1" else Path(output_root)
+    root = base_root / label
+    job_prefix = _job_prefix(label, dataset)
     with tempfile.TemporaryDirectory() as tmp:
         if dataset == "DEV1":
             loaded, gold = load_dev1_cases(dev1_package, Path(tmp), selected, dev1_ingestion_manifest,
-                                          dev1_source_root, variant, dev1_case_loader)
+                                          dev1_source_root, identity, dev1_case_loader)
         else:
-            loaded = load_cases(dev2_input, Path(tmp), selected, case_loader, variant)
-        specs = [build_primary_spec(variant, case, model, credential_slot) for case in loaded]
+            loaded = load_cases(dev2_input, Path(tmp), selected, case_loader, identity)
+        if existing_names:
+            loaded = [replace(case, prepared_input=_with_existing_names(
+                case.prepared_input, case.compiler_context)) for case in loaded]
+        specs = [build_primary_spec(variant, case, model, credential_slot,
+                 quote_resolution=quote_resolution, rich_repair_blockers=rich_repair_blockers,
+                 existing_names=existing_names) for case in loaded]
         metadata = {"dataset": dataset, "variant": variant, "model": model, "credential_slot": credential_slot,
                     "case_count": len(loaded), "primary_specs": len(specs), "prompt_hashes": hashes,
                     "input_sha256": DEV1_SHA256 if dataset == "DEV1" else INPUT_SHA256,
-                    "gold_sha256": DEV1_SHA256 if dataset == "DEV1" else GOLD_SHA256}
+                    "gold_sha256": DEV1_SHA256 if dataset == "DEV1" else GOLD_SHA256,
+                    "quote_resolution": quote_resolution, "rich_repair_blockers": rich_repair_blockers,
+                    "existing_names": existing_names}
         if mode == "preflight":
             return {**metadata, "status": "PREFLIGHT_PASS"}
+        if mode == "revalidate":
+            # Explicit source wins; otherwise replay the selected configuration.
+            return revalidate_cases(loaded, Path(run_directory) if run_directory is not None else root, root,
+                                    quote_resolution=quote_resolution, rich_repair_blockers=rich_repair_blockers)
 
         def guard():
             verify()
@@ -401,8 +611,8 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
                 transport = GeminiDevWindowTransport(slots[0], pacer, guard)
                 secrets = tuple(c._api_key for c in config.credentials)
             executor = DurableResearchExecutor(root / "checkpoints" / "jobs",
-                                               protocol_id=(f"{TASK_ID}:DEV1:{variant}" if dataset == "DEV1"
-                                                            else f"{TASK_ID}:{variant}"), clock=clock,
+                                               protocol_id=(f"{TASK_ID}:DEV1:{label}" if dataset == "DEV1"
+                                                            else f"{TASK_ID}:{label}"), clock=clock,
                                                window_cooldown_seconds=protocol.WINDOW_COOLDOWN_SECONDS,
                                                forbidden_secrets=secrets)
             smoke = replace(smoke_spec(), job_id=f"{job_prefix}_SMOKE_{credential_slot.upper()}",
@@ -417,7 +627,9 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
             _write_json(root / "smoke.json", {"qualified": qualified, "transport": _telemetry(record)})
             if not qualified:
                 raise DevelopmentError("Credential smoke qualification failed")
-            run_cases(loaded, specs, variant, executor, transport, root, guard, wait)
+            run_cases(loaded, specs, variant, executor, transport, root, guard, wait,
+                      quote_resolution=quote_resolution, rich_repair_blockers=rich_repair_blockers,
+                      existing_names=existing_names)
         guard()
         score = score_cases(loaded, specs, gold if dataset == "DEV1" else read_gold(dev2_gold, selected), root)
         score.update(metadata)
@@ -440,11 +652,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--model", default=protocol.MODEL)
     parser.add_argument("--credential-slot", default=protocol.CREDENTIAL_SLOT)
     parser.add_argument("--cases", type=lambda value: value.split(","))
-    parser.add_argument("--mode", choices=("preflight", "run", "score"), default="preflight")
+    parser.add_argument("--quote-resolution", action="store_true")
+    parser.add_argument("--rich-repair-blockers", action="store_true")
+    parser.add_argument("--existing-names", action="store_true",
+                        help="Add affirmed prior-context names and mention forms to model input")
+    parser.add_argument("--run-directory", type=Path, help="Existing run directory to revalidate")
+    parser.add_argument("--mode", choices=("preflight", "run", "score", "revalidate"), default="preflight")
     args = parser.parse_args(argv)
     try:
         result = execute(**vars(args))
-        print(json.dumps(result if args.mode == "preflight" else public_summary(result), sort_keys=True))
+        public = result["totals"] if args.mode == "revalidate" else (
+            result if args.mode == "preflight" else public_summary(result))
+        print(json.dumps(public, sort_keys=True))
     except (DevelopmentError, Dev2PredictionError, dev1_protocol.DevBenchmarkProtocolError,
             CheckpointIntegrityError, OSError, ValueError, KeyError,
             protocol.Fv1ProtocolError) as error:

@@ -67,6 +67,7 @@ class DevelopmentRunnerTests(unittest.TestCase):
 
     def transport(self, variant="P3", script=None, smoke='{"status":"ok"}', slot=protocol.CREDENTIAL_SLOT,
                   dataset="DEV2"):
+        variant = variant.replace("+", "_")
         prefix = f"{runner.TASK_ID}_{'DEV1_' if dataset == 'DEV1' else ''}{variant}"
         values = {f"{prefix}_SMOKE_{slot.upper()}": [smoke]}
         for (cid, phase), raw in (script or {("DEV2_01", "PRIMARY"): self.good}).items():
@@ -209,6 +210,83 @@ class DevelopmentRunnerTests(unittest.TestCase):
                     self.assertEqual(result["status"], "PREFLIGHT_PASS")
             fake.assert_not_called()
             self.assertFalse(opts["output_root"].exists())
+
+    def test_existing_names_use_only_affirmed_base_facts_and_compiler_handles(self):
+        ingestion, base = fx.ingest_text("Mira greeted Captain Mira and the stranger. Niko watched.")
+        builder = fx.Builder(ingestion, base)
+        mira = builder.named(1, "Mira")
+        builder.named(1, "Captain Mira", entity=mira)
+        builder.named(1, "Mira", entity=mira)  # Duplicate surface forms collapse.
+        niko = builder.entity()
+        unnamed = builder.named(1, "the stranger")
+        for entity, name, kind, polarity in (
+                (mira, "Mira", "GIVEN", "AFFIRMED"),
+                (mira, "Captain Mira", "TITLE", "AFFIRMED"),
+                (mira, "Mira", "GIVEN", "AFFIRMED"),
+                (mira, "Mira", "NICKNAME", "AFFIRMED"),
+                (mira, "Wrong name", "GIVEN", "NEGATED"),
+                (mira, "Uncertain name", "GIVEN", "OPEN"),
+                (niko, "Niko", "GIVEN", "AFFIRMED"),
+                (unnamed, "Rejected name", "GIVEN", "NEGATED")):
+            builder.claim(builder.prop("NamedAs", entity=fx.E(entity), name=fx.S(name),
+                                      name_kind=fx.TOK("name_kind", kind)),
+                          [[builder.ev(1)]], polarity=polarity, validity=fx.OPEN)
+        builder.prop("NamedAs", entity=fx.E(mira), name=fx.S("Unasserted name"),
+                     name_kind=fx.TOK("name_kind", "GIVEN"))
+        for polarity in ("NEGATED", "OPEN"):
+            mention = builder.mention(1, "Niko")
+            builder.claim(builder.prop("RefersTo", entity=fx.E(mira), mention=fx.M(mention)),
+                          [[builder.ev(1)]], polarity=polarity)
+        builder.claim(builder.prop("IdentityKnown", entity=fx.E(mira)), [[builder.ev(1)]])
+        builder.records["propositions"].append({"id": "synthetic-placeholder", "placeholder": True})
+        builder.claim("synthetic-placeholder", [[builder.ev(1)]])
+        scope = builder.batch()["scope"]
+        for collection, records in builder.records.items():
+            base[collection].extend(records)
+        context = replace(self.context, base_document=base, ingestion=ingestion,
+                          passage_inputs=scope["passage_inputs"], as_of_position=scope["as_of_position"])
+        original = deepcopy(context)
+        prepared = runner.prepare_story_extraction_draft_v1_1(context)
+        _, mapping = runner.compiler._context_maps(context)
+        expected = deepcopy(prepared)
+        for handle, (collection, rid) in mapping.items():
+            if collection == "entities" and rid in (mira, niko):
+                expected["existing_context"][handle].update(
+                    names=([{"name": "Captain Mira", "name_kind": "TITLE"},
+                            {"name": "Mira", "name_kind": "GIVEN"},
+                            {"name": "Mira", "name_kind": "NICKNAME"}] if rid == mira else
+                           [{"name": "Niko", "name_kind": "GIVEN"}]),
+                    mention_forms=["Captain Mira", "Mira"] if rid == mira else [])
+            if collection == "entities" and rid == unnamed:
+                self.assertEqual(expected["existing_context"][handle], {"kind": "CHARACTER"})
+        # Reordering every base collection must preserve the compiler's handle identities.
+        for reverse in (False, True):
+            reordered = {key: list(reversed(value)) if reverse and isinstance(value, list) else value
+                         for key, value in base.items()}
+            reordered_context = replace(context, base_document=reordered)
+            for dataset in ("DEV1", "DEV2"):
+                fixture = self.dev1_fixture() if dataset == "DEV1" else self.fixture()
+                with self.subTest(reverse=reverse, dataset=dataset), fixture as values:
+                    opts = values[0]
+                    if dataset == "DEV1":
+                        old = opts["dev1_case_loader"].return_value
+                        opts["dev1_case_loader"].return_value = (
+                            reordered, old[1], {cid: context.passage_inputs for cid in opts["cases"]}, ingestion)
+                    else:
+                        opts["case_loader"].return_value = [runner.CaseInput(
+                            "DEV2_01", {}, reordered_context, ())]
+                    for enabled in (False, True):
+                        with self.subTest(enabled=enabled), patch.object(
+                                runner, "build_primary_spec", wraps=runner.build_primary_spec) as build:
+                            result = runner.execute(**opts, existing_names=enabled)
+                            self.assertEqual(result["existing_names"], enabled)
+                            for call in build.call_args_list:
+                                case = call.args[1]
+                                self.assertEqual(case.prepared_input, expected if enabled else prepared)
+                                self.assertEqual(case.compiler_context.base_document, reordered)
+                                self.assertEqual(runner.compiler._context_maps(case.compiler_context)[1], mapping)
+        self.assertEqual(context.base_document, original.base_document)
+        self.assertEqual(prepared, runner.prepare_story_extraction_draft_v1_1(context))
 
     def test_run_outcomes_artifacts_and_locked_resume(self):
         schema = {**self.draft, "unexpected": True}
@@ -470,39 +548,260 @@ class DevelopmentRunnerTests(unittest.TestCase):
                 if problem not in ("loader cases", "loader refs"):
                     opts["dev1_case_loader"].assert_not_called()
 
+    def test_quote_options_isolate_jobs_save_raw_and_resolved_and_record_metadata(self):
+        noisy = deepcopy(self.draft)
+        noisy["evidence"][0]["quote"] = "\n".join(noisy["evidence"][0]["quote"])
+        roots, jobs = set(), set()
+        with self.fixture() as (opts, _, _):
+            for qr, rb, en in ((qr, rb, en) for qr in (False, True)
+                               for rb in (False, True) for en in (False, True)):
+                with self.subTest(qr=qr, rb=rb, en=en):
+                    label = "P3" + ("+QR" if qr else "") + ("+RB" if rb else "") + ("+EN" if en else "")
+                    fake = self.transport(label, script={
+                        ("DEV2_01", "PRIMARY"): "{", ("DEV2_01", "REPAIR_1"): json.dumps(noisy)})
+                    score = runner.execute(**opts, mode="run", transport=fake,
+                                           quote_resolution=qr, rich_repair_blockers=rb, existing_names=en)
+                    self.assertEqual((score["quote_resolution"], score["rich_repair_blockers"]), (qr, rb))
+                    self.assertEqual(score["existing_names"], en)
+                    self.assertEqual(score["rows"][0]["terminal_status"],
+                                     "STRUCTURAL_VALID" if qr else "DRAFT_COMPILER_FAILURE")
+                    root = opts["output_root"] / label
+                    roots.add(root)
+                    new_jobs = {job for job, _ in fake.calls}
+                    self.assertEqual(new_jobs, {f"{runner.TASK_ID}_{label.replace('+', '_')}_{suffix}"
+                                               for suffix in (f"SMOKE_{protocol.CREDENTIAL_SLOT.upper()}",
+                                                              "DEV2_01_PRIMARY", "DEV2_01_REPAIR_1")})
+                    self.assertTrue(jobs.isdisjoint(new_jobs))
+                    jobs.update(new_jobs)
+                    saved = root / "artifacts" / "DEV2_01"
+                    self.assertEqual(json.loads((saved / "repair_1_draft.json").read_text()), noisy)
+                    validation = json.loads((saved / "validation.json").read_text())
+                    if qr:
+                        expected = deepcopy(self.draft)
+                        expected["evidence"][0].pop("occurrence", None)
+                        self.assertEqual(json.loads((saved / "repair_1_resolved_draft.json").read_text()), expected)
+                        self.assertEqual(validation["validation"]["quote_resolution"]["evidence"]
+                                         ["RESOLVED_NORMALIZED"], 1)
+                    else:
+                        self.assertNotIn("quote_resolution", validation["validation"])
+                        self.assertFalse((saved / "repair_1_resolved_draft.json").exists())
+                    stored_score = json.loads((root / "score.json").read_text())
+                    self.assertEqual(stored_score["quote_resolution"], qr)
+                    self.assertEqual(stored_score["existing_names"], en)
+                    calls = list(fake.calls)
+                    runner.execute(**opts, mode="score", transport=fake,
+                                   quote_resolution=qr, rich_repair_blockers=rb, existing_names=en)
+                    self.assertEqual(fake.calls, calls)
+            self.assertEqual(len(roots), 8)
+            primary_opts = {**opts, "output_root": opts["output_root"] / "primary"}
+            fake = self.transport("P3+QR", script={("DEV2_01", "PRIMARY"): json.dumps(noisy)})
+            runner.execute(**primary_opts, mode="run", quote_resolution=True, transport=fake)
+            saved = primary_opts["output_root"] / "P3+QR" / "artifacts" / "DEV2_01"
+            self.assertEqual(json.loads((saved / "primary_draft.json").read_text()), noisy)
+            self.assertEqual(json.loads((saved / "primary_resolved_draft.json").read_text()), expected)
+            self.assertFalse(json.loads((saved / "validation.json").read_text())["repair_used"])
+
+    def test_rich_blockers_sanitize_values_extract_handles_and_restore_validator(self):
+        bad = deepcopy(self.draft)
+        bad["assertions"][0]["support"] = {"evidence_sets": [], "derivations": []}
+        case = runner.CaseInput("DEV2_01", {}, self.context, ())
+        original = runner.compiler.validate_batch_guarded
+        _, _, batch, validation = runner.validate_attempt(json.dumps(bad), case, rich_repair_blockers=True)
+        self.assertIsNone(batch)
+        self.assertIs(runner.compiler.validate_batch_guarded, original)
+        rich = [b for b in validation["blockers"] if b["phase"] == "CANONICAL"]
+        self.assertIn({"phase": "CANONICAL", "code": "support_path_integrity:NO_SUPPORT_PATH",
+                       "path": bad["assertions"][0]["handle"]}, rich)
+        self.assertTrue(any(b["code"] == "CANONICAL_CONFORMANCE_FAILURE" for b in validation["blockers"]))
+        self.assertNotIn("SECRET_LITERAL", json.dumps(validation))
+        batch = {"candidate_records": {"assertions": [{"id": "draftv1-abc-A3"}],
+                                        "propositions": [{"id": "draftv1-abc-PROP12"}]}}
+        draft = {"assertions": [{"handle": "A3"}], "propositions": [{"handle": "PROP12"}]}
+        messages = ["reference_integrity: assertion draftv1-abc-A3 references unknown proposition draftv1-abc-PROP12",
+                    "predicate_integrity: proposition PROP12 uses unregistered predicate SECRET_VALUE",
+                    "unknown field SECRET_TEXT with 'A3' and 123", "SECRET_WITHOUT_QUOTES"]
+        captures = [(batch, {"checks": {"canonical": {"issues": messages}}})]
+        blockers = runner._canonical_blockers(draft, captures)
+        self.assertEqual([b["path"] for b in blockers], ["A3", "PROP12", "canonical", "canonical"])
+        self.assertEqual([b["code"] for b in blockers], ["reference_integrity:ASSERTION_UNKNOWN_PROPOSITION",
+                         "predicate_integrity:PREDICATE_UNREGISTERED",
+                         "canonical:UNCLASSIFIED_ISSUE", "canonical:UNCLASSIFIED_ISSUE"])
+        for failure in ("validator", "validation"):
+            with self.subTest(failure=failure):
+                target = runner.compiler if failure == "validator" else runner
+                name = "validate_batch_guarded" if failure == "validator" else "validate_raw"
+                with patch.object(target, name, side_effect=RuntimeError("private")) as replacement:
+                    before = runner.compiler.validate_batch_guarded
+                    if failure == "validation":
+                        with self.assertRaises(RuntimeError):
+                            runner.validate_attempt(self.good, case, rich_repair_blockers=True)
+                    else:
+                        _, _, _, result = runner.validate_attempt(self.good, case, rich_repair_blockers=True)
+                        self.assertTrue(any(b["code"] == "CANONICAL_VALIDATOR_EXCEPTION" for b in result["blockers"]))
+                    replacement.assert_called()
+                    self.assertIs(runner.compiler.validate_batch_guarded, before)
+        with self.fixture() as (opts, _, _):
+            fake = self.transport("P3+RB", script={("DEV2_01", "PRIMARY"): json.dumps(bad),
+                                                   ("DEV2_01", "REPAIR_1"): self.good})
+            repair = runner.build_repair_spec
+            def check_repair(*args, **kwargs):
+                self.assertTrue(any(b["phase"] == "CANONICAL" for b in args[3]["blockers"]))
+                spec = repair(*args, **kwargs)
+                self.assertIn("NO_SUPPORT_PATH", spec.user_prompt)
+                return spec
+            with patch.object(runner, "build_repair_spec", side_effect=check_repair):
+                runner.execute(**opts, mode="run", transport=fake, rich_repair_blockers=True)
+
+    def test_revalidation_is_offline_preserves_runs_and_reports_transitions(self):
+        noisy = deepcopy(self.draft)
+        noisy["evidence"][0]["quote"] = "\n".join(noisy["evidence"][0]["quote"])
+        ids = ("DEV2_01", "DEV2_02", "DEV2_03", "DEV2_04", "DEV2_05")
+        script = {(ids[0], "PRIMARY"): json.dumps(noisy), (ids[0], "REPAIR_1"): "{",
+                  (ids[1], "PRIMARY"): self.good, (ids[2], "PRIMARY"): "{", (ids[2], "REPAIR_1"): "{",
+                  (ids[3], "PRIMARY"): None, (ids[4], "PRIMARY"): "{", (ids[4], "REPAIR_1"): json.dumps(noisy)}
+        with self.fixture(ids) as (opts, _, _):
+            runner.execute(**opts, mode="run", transport=self.transport(script=script))
+            source = opts["output_root"] / "P3"
+            before = {p: p.read_bytes() for p in source.rglob("*") if p.is_file()}
+            no_provider = Mock(side_effect=AssertionError("revalidate called provider"))
+            replay = runner.execute(**opts, mode="revalidate", run_directory=source,
+                                    quote_resolution=True, rich_repair_blockers=True, transport=no_provider)
+            no_provider.assert_not_called()
+            status_keys = ('cases', 'original_structurally_valid', 'new_structurally_valid',
+                           'fixed', 'transitions')
+            self.assertEqual({k: replay["totals"][k] for k in status_keys},
+                {"cases": 5, "original_structurally_valid": 1,
+                "new_structurally_valid": 3, "fixed": 2, "transitions": {
+                    "DRAFT_COMPILER_FAILURE->STRUCTURAL_VALID": 1, "JSON_PARSE_FAILURE->STRUCTURAL_VALID": 1,
+                    "STRUCTURAL_VALID->STRUCTURAL_VALID": 1,
+                    "JSON_PARSE_FAILURE->JSON_PARSE_FAILURE": 1, "TRANSPORT_FAILURE->TRANSPORT_FAILURE": 1}})
+            self.assertEqual([a["terminal_status"] for a in replay["rows"][0]["attempts"]],
+                             ["STRUCTURAL_VALID", "JSON_PARSE_FAILURE"])
+            self.assertEqual({p: p.read_bytes() for p in before}, before)
+            destination = opts["output_root"] / "P3+QR+RB" / "revalidation.json"
+            self.assertEqual(json.loads(destination.read_text()), replay)
+            same = runner.execute(**opts, mode="revalidate", transport=no_provider)
+            self.assertEqual(same["totals"]["fixed"], 0)
+            with self.assertRaisesRegex(runner.DevelopmentError, "only used"):
+                runner.execute(**opts, run_directory=source)
+            path = source / "artifacts" / ids[0] / "validation.json"
+            saved = json.loads(path.read_text())
+            for attempts, error in (([], "Missing saved validation"),
+                                    ([{"phase": "../escape"}], "Unknown saved draft"),
+                                    ([{"phase": "primary", "validation": {"category": "JSON_PARSE_FAILURE"}}],
+                                     "Missing saved draft response")):
+                with self.subTest(error=error):
+                    (path.parent / "primary_draft.json").unlink(missing_ok=True)
+                    (path.parent / "primary_raw.txt").unlink(missing_ok=True)
+                    path.write_text(json.dumps({**saved, "attempts": attempts}))
+                    with self.assertRaisesRegex(runner.DevelopmentError, error):
+                        runner.execute(**opts, mode="revalidate", transport=no_provider)
+
+    def test_revalidation_counts_remaining_blockers_and_resolution_over_all_attempts(self):
+        missing, ambiguous, canonical, noisy = (deepcopy(self.draft) for _ in range(4))
+        missing['evidence'][0]['quote'] = 'ABSENT_SYNTHETIC_QUOTE'
+        # The synthetic source is "Mira opened the gate.": two occurrences of a,
+        # but only one mention. Ordered resolution must leave that blocker.
+        ambiguous['mentions'][0]['quote'] = 'a'
+        ambiguous['mentions'][0].pop('occurrence', None)
+        canonical['assertions'][0]['support'] = {'evidence_sets': [], 'derivations': []}
+        noisy['evidence'][0]['quote'] = '\n'.join(noisy['evidence'][0]['quote'])
+        prepared = runner.prepare_story_extraction_draft_v1_1(self.context)
+        cases = [runner.CaseInput(cid, prepared, self.context, ()) for cid in ('DEV2_01', 'DEV2_02')]
+        saved_drafts = ((missing, canonical), (noisy, ambiguous))
+        for enabled in (False, True):
+            with self.subTest(quote_resolution=enabled), tempfile.TemporaryDirectory() as tmp:
+                source, destination = Path(tmp) / 'source', Path(tmp) / 'destination'
+                expected_reports = {phase: {kind: dict.fromkeys(runner.OUTCOMES, 0)
+                    for kind in ('evidence', 'mentions')} for phase in ('primary', 'repair_1')}
+                for case, drafts in zip(cases, saved_drafts):
+                    directory = source / 'artifacts' / case.case_id
+                    directory.mkdir(parents=True)
+                    attempts = []
+                    for phase, draft in zip(('primary', 'repair_1'), drafts):
+                        (directory / f'{phase}_draft.json').write_text(json.dumps(draft), encoding='utf-8')
+                        attempts.append({'phase': phase, 'validation': {'category': 'OLD_FAILURE'}})
+                        if enabled:
+                            _, report = runner.resolve_quotes(draft, prepared)
+                            for kind, outcomes in report.items():
+                                for code, count in outcomes.items():
+                                    expected_reports[phase][kind][code] += count
+                    (directory / 'validation.json').write_text(json.dumps({
+                        'terminal_status': 'OLD_FAILURE', 'attempts': attempts}), encoding='utf-8')
+                before = {p: p.read_bytes() for p in source.rglob('*') if p.is_file()}
+                replay = runner.revalidate_cases(cases, source, destination,
+                    quote_resolution=enabled, rich_repair_blockers=True)
+                self.assertEqual({p: p.read_bytes() for p in before}, before)
+                self.assertEqual(json.loads((destination / 'revalidation.json').read_text()), replay)
+                totals = replay['totals']
+                phases = totals['by_phase']
+                self.assertEqual(phases['primary']['remaining_blocker_counts'],
+                    {'QUOTE:QUOTE_NOT_FOUND': 1 if enabled else 2})
+                self.assertEqual(phases['repair_1']['remaining_blocker_counts'], {
+                    'CANONICAL:canonical:UNCLASSIFIED_ISSUE': 1,
+                    'CANONICAL:support_path_integrity:NO_SUPPORT_PATH': 1,
+                    'CANONICAL_COMPILER:CANONICAL_CONFORMANCE_FAILURE': 1,
+                    'QUOTE:AMBIGUOUS_QUOTE': 1})
+                self.assertEqual(totals['remaining_blocker_counts'], {
+                    **phases['primary']['remaining_blocker_counts'],
+                    **phases['repair_1']['remaining_blocker_counts']})
+                for phase in phases:
+                    self.assertEqual(phases[phase]['quote_resolution_report'], expected_reports[phase])
+                self.assertEqual(totals['quote_resolution_report'], {
+                    kind: {code: sum(expected_reports[phase][kind][code] for phase in phases)
+                           for code in runner.OUTCOMES} for kind in ('evidence', 'mentions')})
+                # Even when the new primary passes, the saved repair contributes
+                # its ambiguous-quote blocker to the phase and overall totals.
+                self.assertEqual(replay['rows'][1]['new_terminal_status'],
+                                 'STRUCTURAL_VALID' if enabled else 'DRAFT_COMPILER_FAILURE')
+                self.assertEqual(replay['rows'][1]['attempts'][1]['terminal_status'],
+                                 'DRAFT_COMPILER_FAILURE')
+
     def test_cli_modes_refusal_and_module_entrypoint(self):
         original = runner.execute
         for dataset in ("DEV1", "DEV2"):
-            for mode in ("preflight", "run", "score"):
+            for mode in ("preflight", "run", "score", "revalidate"):
                 fixture = self.dev1_fixture() if dataset == "DEV1" else self.fixture()
                 with self.subTest(dataset=dataset, mode=mode), fixture as values:
                     opts = values[0]
                     variant = "P4R3" if dataset == "DEV1" else "P3"
                     opts["variant"] = variant
+                    opts["existing_names"] = True
                     prompt_root = opts["output_root"].parent / "prompts"
                     prompt_root.mkdir()
                     for name in ("P3", "P4R3"):
                         (prompt_root / f"story_extraction_draft_{name.lower()}_system_v1_1.txt").write_text(
                             f"SYNTHETIC {name} PREAMBLE", encoding="utf-8")
-                    fake = self.transport(variant, dataset=dataset,
+                    fake = self.transport(variant + "+EN", dataset=dataset,
                                           script={(cid, "PRIMARY"): self.good for cid in opts["cases"]})
                     argv = ["--variant", variant, "--output-root", str(opts["output_root"]),
-                            "--cases", ",".join(opts["cases"]), "--mode", mode]
+                            "--cases", ",".join(opts["cases"]), "--mode", mode, "--existing-names"]
                     if dataset == "DEV1":
                         argv += ["--dataset", dataset]
                     for key in ("dev1_package", "dev1_ingestion_manifest", "dev1_source_root",
                                 "dev2_input", "dev2_gold"):
                         if key in opts:
                             argv += ["--" + key.replace("_", "-"), str(opts[key])]
+                    returned = []
                     def execute_cli(**kwargs):
-                        return original(**{**opts, **kwargs}, transport=fake)
+                        result = original(**{**opts, **kwargs}, transport=fake)
+                        returned.append(result)
+                        return result
                     output = io.StringIO()
                     with patch.object(runner, "PROMPT_ROOT", prompt_root):
-                        if mode == "score":
+                        if mode in ("score", "revalidate"):
                             original(**opts, mode="run", transport=fake)
+                        if mode == "revalidate":
+                            source = opts["output_root"] / ("DEV1" if dataset == "DEV1" else "") / (variant + "+EN")
+                            argv += ["--quote-resolution", "--rich-repair-blockers", "--run-directory", str(source)]
                         with patch.object(runner, "execute", side_effect=execute_cli), redirect_stdout(output):
                             self.assertEqual(runner.main(argv), 0)
                         self.assertIsInstance(json.loads(output.getvalue()), dict)
+                        if mode == 'revalidate':
+                            self.assertEqual(json.loads(output.getvalue()), returned[-1]['totals'])
+                            self.assertIn('remaining_blocker_counts', returned[-1]['totals'])
+                            self.assertIn('quote_resolution_report', returned[-1]['totals'])
+                            self.assertEqual(set(returned[-1]['totals']['by_phase']), {'primary', 'repair_1'})
                         with patch.object(runner, "execute", side_effect=runner.DevelopmentError("private")), redirect_stdout(output):
                             self.assertEqual(runner.main(argv), 2)
                         self.assertIn("M4_P4_DEV_STOPPED: DevelopmentError", output.getvalue())

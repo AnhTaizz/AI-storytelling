@@ -2,15 +2,37 @@
 
 ## Current Milestone
 
-M4 — Story Extraction: IN PROGRESS. M4-01: ACCEPTED. M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED. Extractor/model: NOT SELECTED. Holdout predictions: NOT RUN. Nothing in M4 is frozen. M5: NOT STARTED.
+*Header refreshed 2026-11-18; the dated sections below are history.*
 
-M4-04B3A: `M4_04B3A_DRAFT_COMPILER_READY_FOR_FRESH_DEV_VALIDATION`. Offline failure forensics and an additive semantic-draft compiler prototype are complete. The B2 conclusion remains `M4_04B2_DEVELOPMENT_LEADER_NOT_LOCKABLE`. DEV1 is now TUNING DATA, not fresh validation. DEV2 is proposed, not selected or executed; M4-04C remains NOT STARTED.
+M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED; holdout closed, predictions NOT RUN. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. Annotation conventions V2: ACCEPTED (DEC-026). P4 development / FV2 status: see M4-04B3L and its Next Candidate.
+
+M0 — Product Foundation: CLOSED (see M0 Closure).
+
+M1 — Script Quality & Narrative Contract: COMPLETE / FROZEN (`SCRIPT_QUALITY_CONTRACT/v0`, DEC-017); M1/M9 Script Quality Gate: NOT YET EVALUATED.
+
+M2 — Canonical Story Model capability: COMPLETE / FROZEN (`canonical_story/v0` + `predicate_registry/v0.1`, DEC-016).
 
 M3 — Light Novel Ingestion: COMPLETE / FROZEN (`LIGHT_NOVEL_INGESTION/v0`, DEC-018).
 
-M1 — Script Quality & Narrative Contract: COMPLETE / FROZEN (`SCRIPT_QUALITY_CONTRACT/v0`, DEC-017).
+M5 — Persistent Story Memory: PROTOTYPE EXISTS; not frozen or M5 completion (see Implementation Status; DEC-021).
 
-M2 — Canonical Story Model capability: COMPLETE / FROZEN (Canonical Story Model v0: FROZEN / ACCEPTED, DEC-016).
+M6 — Retrieval: ACCEPTED BASELINE over brief memory (DEC-021, 2026-11-15).
+
+M7 — Story Brief: ACCEPTED BASELINE (DEC-022, 2026-11-15).
+
+M8 — Narrative Planning: ACCEPTED BASELINE (DEC-023, 2026-11-15).
+
+M9 — Script Generation / Validation: PROTOTYPE EXISTS; M1/M9 Script Quality Gate: NOT YET EVALUATED (DEC-017, DEC-023; see Implementation Status and Current Quality Gate).
+
+M10 — Advanced Retrieval: GATED behind the Script Quality Gate (DEC-009).
+
+M11 — Temporal / Graph Story Memory: GATED behind the Script Quality Gate (DEC-009).
+
+M12 — Manga: GATED behind the Script Quality Gate (DEC-009).
+
+M13 — Visual Production: GATED behind the Script Quality Gate (DEC-009).
+
+M14 — Voice / Video Automation: GATED behind the Script Quality Gate (DEC-009).
 
 ## Milestone Lifecycle
 
@@ -21,8 +43,13 @@ M2 — Canonical Story Model capability: COMPLETE / FROZEN (Canonical Story Mode
   - The contract defines the standard. It does not show that any current Writer or critic meets it. The M9 Script Quality Gate is not evaluated.
 - M2 — Canonical Story Model: capability COMPLETE / FROZEN (DEC-016). The expected capability has been established as `canonical_story/v0` + `predicate_registry/v0.1`. M2 ran under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015).
 - M3 — Light Novel Ingestion: COMPLETE / FROZEN — `LIGHT_NOVEL_INGESTION/v0`, DEC-018, freeze record `benchmarks/m3_ingestion/LIGHT_NOVEL_INGESTION_V0_FROZEN.yaml`. The roadmap is unchanged.
-- M4 — Story Extraction: IN PROGRESS (M4-01 accepted; M4-02 accepted; M4-03 fresh holdout V1 sealed; no extractor/model selected, no holdout predictions run, nothing frozen).
-- M5: NOT STARTED.
+- M4 — Story Extraction: IN PROGRESS (M4-01/M4-02 accepted; M4-03 holdout sealed and closed, predictions not run; no extractor/model selected; nothing frozen). V2 accepted (DEC-026); P4 development / FV2 status: see M4-04B3L and its Next Candidate.
+- M5 — Persistent Story Memory: PROTOTYPE EXISTS; not frozen or M5 completion (see Implementation Status; DEC-021).
+- M6 — Retrieval: ACCEPTED BASELINE over brief memory (DEC-021, 2026-11-15).
+- M7 — Story Brief: ACCEPTED BASELINE (DEC-022, 2026-11-15).
+- M8 — Narrative Planning: ACCEPTED BASELINE (DEC-023, 2026-11-15).
+- M9 — Script Generation / Validation: PROTOTYPE EXISTS; M1/M9 Script Quality Gate: NOT YET EVALUATED (DEC-017, DEC-023; see Implementation Status and Current Quality Gate).
+- M10–M14: gated behind the Script Quality Gate (DEC-009 in DECISIONS.md).
 
 *Correction (M2-02): an earlier version of this section labelled M1 "COMPLETED / CLOSED FOR CURRENT RESEARCH SCOPE". That overstated completion while the formal Script Quality Contract remains open. The M1 research program is closed; the contract is not.*
 
@@ -126,12 +153,14 @@ Prototype (not frozen, not M5 completion): story memory v0 (`tools/story_memory/
 
 Story Extraction now has research-only validation/runtime tooling and the additive `STORY_EXTRACTION_DRAFT_V1` deterministic compiler prototype (M4-04B3A). No extraction model or end-to-end extractor is selected, locked, or production-qualified. Later application pipeline stages remain unimplemented.
 
+Accepted baselines:
+- Retrieval — DEC-021; see M6 Retrieval Baseline below.
+- Story Brief generation — DEC-022; see M7 Story Brief below.
+- Narrative Planning — DEC-023; see M8 Narrative Planning below.
+
 Not yet implemented:
 - Selected/validated end-to-end Story Extraction
 - Persistent Story Memory implementation
-- Retrieval implementation
-- Story Brief generation
-- Narrative Planning
 - Script Generation
 - Validation pipeline
 - Temporal / Graph Story Memory
