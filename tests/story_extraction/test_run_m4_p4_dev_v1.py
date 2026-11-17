@@ -553,16 +553,17 @@ class DevelopmentRunnerTests(unittest.TestCase):
         noisy["evidence"][0]["quote"] = "\n".join(noisy["evidence"][0]["quote"])
         roots, jobs = set(), set()
         with self.fixture() as (opts, _, _):
-            for qr, rb, en in ((qr, rb, en) for qr in (False, True)
-                               for rb in (False, True) for en in (False, True)):
-                with self.subTest(qr=qr, rb=rb, en=en):
-                    label = "P3" + ("+QR" if qr else "") + ("+RB" if rb else "") + ("+EN" if en else "")
+            for qr, rb, en, am in ((qr, rb, en, am) for qr in (False, True)
+                                   for rb in (False, True) for en in (False, True) for am in (False, True)):
+                with self.subTest(qr=qr, rb=rb, en=en, am=am):
+                    label = "P3" + ("+QR" if qr else "") + ("+RB" if rb else "") + ("+EN" if en else "") + ("+AM" if am else "")
                     fake = self.transport(label, script={
                         ("DEV2_01", "PRIMARY"): "{", ("DEV2_01", "REPAIR_1"): json.dumps(noisy)})
                     score = runner.execute(**opts, mode="run", transport=fake,
-                                           quote_resolution=qr, rich_repair_blockers=rb, existing_names=en)
+                                           quote_resolution=qr, rich_repair_blockers=rb, existing_names=en, anchor_mentions=am)
                     self.assertEqual((score["quote_resolution"], score["rich_repair_blockers"]), (qr, rb))
                     self.assertEqual(score["existing_names"], en)
+                    self.assertEqual(score.get("anchor_mentions"), True if am else None)
                     self.assertEqual(score["rows"][0]["terminal_status"],
                                      "STRUCTURAL_VALID" if qr else "DRAFT_COMPILER_FAILURE")
                     root = opts["output_root"] / label
@@ -584,15 +585,20 @@ class DevelopmentRunnerTests(unittest.TestCase):
                                          ["RESOLVED_NORMALIZED"], 1)
                     else:
                         self.assertNotIn("quote_resolution", validation["validation"])
-                        self.assertFalse((saved / "repair_1_resolved_draft.json").exists())
+                        self.assertEqual((saved / "repair_1_resolved_draft.json").exists(), am)
+                    if am:
+                        self.assertEqual(validation["validation"]["mention_anchoring"]["mentions"]["ALREADY_LOCATED"],
+                                         len(self.draft["mentions"]))
+                    else:
+                        self.assertNotIn("mention_anchoring", validation["validation"])
                     stored_score = json.loads((root / "score.json").read_text())
                     self.assertEqual(stored_score["quote_resolution"], qr)
                     self.assertEqual(stored_score["existing_names"], en)
                     calls = list(fake.calls)
                     runner.execute(**opts, mode="score", transport=fake,
-                                   quote_resolution=qr, rich_repair_blockers=rb, existing_names=en)
+                                   quote_resolution=qr, rich_repair_blockers=rb, existing_names=en, anchor_mentions=am)
                     self.assertEqual(fake.calls, calls)
-            self.assertEqual(len(roots), 8)
+            self.assertEqual(len(roots), 16)
             primary_opts = {**opts, "output_root": opts["output_root"] / "primary"}
             fake = self.transport("P3+QR", script={("DEV2_01", "PRIMARY"): json.dumps(noisy)})
             runner.execute(**primary_opts, mode="run", quote_resolution=True, transport=fake)
@@ -600,6 +606,70 @@ class DevelopmentRunnerTests(unittest.TestCase):
             self.assertEqual(json.loads((saved / "primary_draft.json").read_text()), noisy)
             self.assertEqual(json.loads((saved / "primary_resolved_draft.json").read_text()), expected)
             self.assertFalse(json.loads((saved / "validation.json").read_text())["repair_used"])
+
+    def test_anchoring_compiles_preserves_originals_and_replays_all_attempts(self):
+        bad = deepcopy(self.draft)
+        bad["mentions"][0]["occurrence"] = 99
+        bad["mentions"].append({**bad["mentions"][0], "handle": "M99", "quote": "Synthetic ghost"})
+        # Keep an unreferenced entity and an unreferenced, located mention to
+        # establish the compiler's actual policy rather than assume it.
+        bad["entities"].append({"handle": "E_NEW_99", "kind": "CHARACTER"})
+        bad["mentions"].append({**self.draft["mentions"][0], "handle": "M98"})
+        bad["propositions"].append({"handle": "PROP99", "predicate": "RefersTo", "args": {
+            "mention": {"kind": "MENTION", "handle": "M99"},
+            "entity": {"kind": "ENTITY", "handle": "E_NEW_99"}}})
+        bad["assertions"].append({**deepcopy(bad["assertions"][0]), "handle": "A99",
+                                   "proposition_handle": "PROP99"})
+        prepared = runner.prepare_story_extraction_draft_v1_1(self.context)
+        case = runner.CaseInput("DEV2_01", prepared, self.context, ())
+        raw = json.dumps(bad)
+        _, _, initial = runner.validate_raw(raw, self.context)
+        self.assertFalse(initial["pass"])
+        for qr in (False, True):
+            with self.subTest(quote_resolution=qr):
+                original, resolved, batch, validation = runner.validate_attempt(
+                    raw, case, quote_resolution=qr, anchor_mentions=True)
+                self.assertEqual(original, bad)
+                self.assertTrue(validation["pass"], validation)
+                self.assertIsNotNone(batch)
+                self.assertEqual(validation["mention_anchoring"]["removed"],
+                                 {"mentions": 1, "propositions": 1, "assertions": 1})
+                self.assertEqual(validation["mention_anchoring"]["mentions"]["ANCHORED_TO_EVIDENCE"], 1)
+                self.assertIn({"handle": "E_NEW_99", "kind": "CHARACTER"}, resolved["entities"])
+                self.assertIn("M98", [m["handle"] for m in resolved["mentions"]])
+                self.assertTrue(runner.validate_raw(json.dumps(resolved), self.context)[2]["pass"])
+                # Both primary and repair validation must apply the transform.
+                for phase in ("primary", "repair_1"):
+                    with self.subTest(phase=phase), self.fixture() as (opts, _, _):
+                        flags = dict(quote_resolution=qr, anchor_mentions=True)
+                        label = "P3" + ("+QR" if qr else "") + "+AM"
+                        script = {("DEV2_01", "PRIMARY"): raw if phase == "primary" else "{",
+                                  ("DEV2_01", "REPAIR_1"): raw}
+                        score = runner.execute(**opts, **flags, mode="run", transport=self.transport(label, script=script))
+                        self.assertEqual(score["rows"][0]["terminal_status"], "STRUCTURAL_VALID")
+                        directory = opts["output_root"] / label / "artifacts" / "DEV2_01"
+                        self.assertEqual(json.loads((directory / f"{phase}_draft.json").read_text()), bad)
+                        self.assertEqual(json.loads((directory / f"{phase}_resolved_draft.json").read_text()), resolved)
+                        saved = json.loads((directory / "validation.json").read_text())
+                        self.assertEqual(saved["validation"]["mention_anchoring"], validation["mention_anchoring"])
+                        self.assertEqual(score["anchor_mentions"], True)
+                        # A legacy run records both failed attempts. Replay must
+                        # sum both even though the anchored primary now passes.
+                        runner.execute(**opts, mode="run", transport=self.transport(script={
+                            ("DEV2_01", "PRIMARY"): raw, ("DEV2_01", "REPAIR_1"): raw}))
+                        source = opts["output_root"] / "P3"
+                        before = {p: p.read_bytes() for p in source.rglob("*") if p.is_file()}
+                        replay = runner.execute(**opts, **flags, mode="revalidate", run_directory=source,
+                            transport=Mock(side_effect=AssertionError("offline replay")))
+                        self.assertEqual({p: p.read_bytes() for p in before}, before)
+                        self.assertTrue(replay["anchor_mentions"])
+                        self.assertEqual(replay["totals"]["fixed"], 1)
+                        report = validation["mention_anchoring"]
+                        for phase_counts in replay["totals"]["by_phase"].values():
+                            self.assertEqual(phase_counts["mention_anchoring_report"], report)
+                        self.assertEqual(replay["totals"]["mention_anchoring_report"], {
+                            kind: {code: count * 2 for code, count in counts.items()}
+                            for kind, counts in report.items()})
 
     def test_rich_blockers_sanitize_values_extract_handles_and_restore_validator(self):
         bad = deepcopy(self.draft)
@@ -767,15 +837,16 @@ class DevelopmentRunnerTests(unittest.TestCase):
                     variant = "P4R3" if dataset == "DEV1" else "P3"
                     opts["variant"] = variant
                     opts["existing_names"] = True
+                    opts["anchor_mentions"] = True
                     prompt_root = opts["output_root"].parent / "prompts"
                     prompt_root.mkdir()
                     for name in ("P3", "P4R3"):
                         (prompt_root / f"story_extraction_draft_{name.lower()}_system_v1_1.txt").write_text(
                             f"SYNTHETIC {name} PREAMBLE", encoding="utf-8")
-                    fake = self.transport(variant + "+EN", dataset=dataset,
+                    fake = self.transport(variant + "+EN+AM", dataset=dataset,
                                           script={(cid, "PRIMARY"): self.good for cid in opts["cases"]})
                     argv = ["--variant", variant, "--output-root", str(opts["output_root"]),
-                            "--cases", ",".join(opts["cases"]), "--mode", mode, "--existing-names"]
+                            "--cases", ",".join(opts["cases"]), "--mode", mode, "--existing-names", "--anchor-mentions"]
                     if dataset == "DEV1":
                         argv += ["--dataset", dataset]
                     for key in ("dev1_package", "dev1_ingestion_manifest", "dev1_source_root",
@@ -792,7 +863,7 @@ class DevelopmentRunnerTests(unittest.TestCase):
                         if mode in ("score", "revalidate"):
                             original(**opts, mode="run", transport=fake)
                         if mode == "revalidate":
-                            source = opts["output_root"] / ("DEV1" if dataset == "DEV1" else "") / (variant + "+EN")
+                            source = opts["output_root"] / ("DEV1" if dataset == "DEV1" else "") / (variant + "+EN+AM")
                             argv += ["--quote-resolution", "--rich-repair-blockers", "--run-directory", str(source)]
                         with patch.object(runner, "execute", side_effect=execute_cli), redirect_stdout(output):
                             self.assertEqual(runner.main(argv), 0)
@@ -801,6 +872,7 @@ class DevelopmentRunnerTests(unittest.TestCase):
                             self.assertEqual(json.loads(output.getvalue()), returned[-1]['totals'])
                             self.assertIn('remaining_blocker_counts', returned[-1]['totals'])
                             self.assertIn('quote_resolution_report', returned[-1]['totals'])
+                            self.assertIn('mention_anchoring_report', returned[-1]['totals'])
                             self.assertEqual(set(returned[-1]['totals']['by_phase']), {'primary', 'repair_1'})
                         with patch.object(runner, "execute", side_effect=runner.DevelopmentError("private")), redirect_stdout(output):
                             self.assertEqual(runner.main(argv), 2)

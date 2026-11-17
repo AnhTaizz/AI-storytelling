@@ -22,6 +22,7 @@ from tools.story_extraction import score_m4_04b3h_fv1_v1 as scoring
 from tools.story_extraction import m4_04b2_dev_protocol_v1 as dev1_protocol
 from tools.story_extraction import draft_compiler_v1 as compiler
 from tools.story_extraction.draft_quote_resolution_v1 import OUTCOMES, resolve_quotes
+from tools.story_extraction.draft_mention_anchoring_v1 import anchor_mentions as _anchor_mentions
 from tools.story_extraction.check_annotation_conventions_v1 import RULE_IDS, check_batch
 from tools.story_extraction.draft_compiler_v1 import DraftCompilerContext
 from tools.story_extraction.draft_compiler_v1_1 import prepare_story_extraction_draft_v1_1
@@ -108,9 +109,9 @@ def _job_prefix(variant: str, dataset: str) -> str:
 
 
 def _run_variant(variant: str, quote_resolution: bool, rich_repair_blockers: bool,
-                 existing_names: bool = False) -> str:
+                 existing_names: bool = False, anchor_mentions: bool = False) -> str:
     return (variant + ("+QR" if quote_resolution else "") + ("+RB" if rich_repair_blockers else "")
-            + ("+EN" if existing_names else ""))
+            + ("+EN" if existing_names else "") + ("+AM" if anchor_mentions else ""))
 
 
 def _with_existing_names(prepared: Mapping[str, Any], context: DraftCompilerContext) -> dict[str, Any]:
@@ -223,13 +224,13 @@ def load_cases(archive: Path, input_root: Path, selected: Sequence[str],
 def build_primary_spec(variant: str, case: CaseInput, model: str = protocol.MODEL,
                        credential_slot: str = protocol.CREDENTIAL_SLOT, *,
                        quote_resolution: bool = False, rich_repair_blockers: bool = False,
-                       existing_names: bool = False) -> DurableJobSpec:
+                       existing_names: bool = False, anchor_mentions: bool = False) -> DurableJobSpec:
     material = prompt_material(variant)
     user = protocol._render(material["primary_user_template"], {
         "CASE_ID": case.case_id,
         "PREPARED_INPUT_JSON": protocol.canonical_json_bytes(dict(case.prepared_input)).decode().rstrip(),
     })
-    label = _run_variant(variant, quote_resolution, rich_repair_blockers, existing_names)
+    label = _run_variant(variant, quote_resolution, rich_repair_blockers, existing_names, anchor_mentions)
     return replace(protocol._spec(f"{_job_prefix(label, case.dataset)}_{case.case_id}_PRIMARY",
                                   material["primary_system"], user),
                    model=model, credential_slot=credential_slot, research_task_id=TASK_ID)
@@ -239,7 +240,7 @@ def build_repair_spec(variant: str, case: CaseInput, primary_raw: str, validatio
                       model: str = protocol.MODEL,
                       credential_slot: str = protocol.CREDENTIAL_SLOT, *,
                       quote_resolution: bool = False, rich_repair_blockers: bool = False,
-                      existing_names: bool = False) -> DurableJobSpec:
+                      existing_names: bool = False, anchor_mentions: bool = False) -> DurableJobSpec:
     payload = protocol.sanitized_failure(validation["category"], validation["blockers"])
     material = prompt_material(variant)
     user = protocol._render(material["repair_user_template"], {
@@ -250,8 +251,8 @@ def build_repair_spec(variant: str, case: CaseInput, primary_raw: str, validatio
     })
     primary = build_primary_spec(variant, case, model, credential_slot,
                                  quote_resolution=quote_resolution, rich_repair_blockers=rich_repair_blockers,
-                                 existing_names=existing_names)
-    label = _run_variant(variant, quote_resolution, rich_repair_blockers, existing_names)
+                                 existing_names=existing_names, anchor_mentions=anchor_mentions)
+    label = _run_variant(variant, quote_resolution, rich_repair_blockers, existing_names, anchor_mentions)
     return replace(primary, job_id=f"{_job_prefix(label, case.dataset)}_{case.case_id}_REPAIR_1",
                    system_prompt=material["repair_system"], user_prompt=user)
 
@@ -288,20 +289,25 @@ def _canonical_blockers(draft: Any, captures: list) -> list[dict[str, str]]:
 
 
 def validate_attempt(raw: str, case: CaseInput, *, quote_resolution: bool = False,
-                     rich_repair_blockers: bool = False) -> tuple[Any, Any, Any, dict]:
+                     rich_repair_blockers: bool = False,
+                     anchor_mentions: bool = False) -> tuple[Any, Any, Any, dict]:
     """Validate one response, optionally resolving copies and capturing safe issues.
 
     The temporary canonical-validator wrapper is single-threaded, like diagnosis.
     Both the untouched draft and the draft actually validated are returned.
     """
-    original_draft, report = None, None
-    if quote_resolution:
+    original_draft, report, anchoring_report = None, None, None
+    if quote_resolution or anchor_mentions:
         try:
             original_draft = json.loads(raw)
         except json.JSONDecodeError:
             pass  # validate_raw retains the standard parse failure.
         else:
-            resolved, report = resolve_quotes(original_draft, case.prepared_input)
+            resolved = original_draft
+            if quote_resolution:
+                resolved, report = resolve_quotes(resolved, case.prepared_input)
+            if anchor_mentions:
+                resolved, anchoring_report = _anchor_mentions(resolved, case.prepared_input)
             raw = json.dumps(resolved, ensure_ascii=False)
     captures = []
     original_validator = compiler.validate_batch_guarded
@@ -323,14 +329,16 @@ def validate_attempt(raw: str, case: CaseInput, *, quote_resolution: bool = Fals
         validation["blockers"].extend(_canonical_blockers(draft, captures))
     if report is not None:
         validation["quote_resolution"] = report
-    return original_draft if quote_resolution else draft, draft, batch, validation
+    if anchoring_report is not None:
+        validation["mention_anchoring"] = anchoring_report
+    return original_draft if quote_resolution or anchor_mentions else draft, draft, batch, validation
 
 
 def run_cases(cases: Sequence[CaseInput], specs: Sequence[DurableJobSpec], variant: str,
               executor: DurableResearchExecutor, transport: Transport, root: Path,
               guard: Callable[[], None], wait: Callable[[float], None], *,
               quote_resolution: bool = False, rich_repair_blockers: bool = False,
-              existing_names: bool = False) -> None:
+              existing_names: bool = False, anchor_mentions: bool = False) -> None:
     for case, primary in zip(cases, specs):
         directory = root / "artifacts" / case.case_id
         attempts = []
@@ -349,10 +357,11 @@ def run_cases(cases: Sequence[CaseInput], specs: Sequence[DurableJobSpec], varia
                 break
             _write_text(directory / f"{phase}_raw.txt", raw)
             draft, resolved, batch, validation = validate_attempt(
-                raw, case, quote_resolution=quote_resolution, rich_repair_blockers=rich_repair_blockers)
+                raw, case, quote_resolution=quote_resolution, rich_repair_blockers=rich_repair_blockers,
+                anchor_mentions=anchor_mentions)
             if draft is not None:
                 _write_json(directory / f"{phase}_draft.json", draft)
-                if quote_resolution:
+                if quote_resolution or anchor_mentions:
                     _write_json(directory / f"{phase}_resolved_draft.json", resolved)
             attempt["validation"] = validation
             if validation["pass"] or phase == "repair_1":
@@ -360,7 +369,7 @@ def run_cases(cases: Sequence[CaseInput], specs: Sequence[DurableJobSpec], varia
             # Only deterministic JSON/schema/compiler failures can reach this repair.
             spec = build_repair_spec(variant, case, raw, validation, primary.model, primary.credential_slot,
                                      quote_resolution=quote_resolution, rich_repair_blockers=rich_repair_blockers,
-                                     existing_names=existing_names)
+                                     existing_names=existing_names, anchor_mentions=anchor_mentions)
         compiled_sha256 = None
         if batch is not None:
             compiled_sha256 = _write_json(directory / "compiled_batch.json", batch)
@@ -466,7 +475,7 @@ def public_summary(score: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def revalidate_cases(cases: Sequence[CaseInput], source: Path, destination: Path, *,
-                     quote_resolution: bool, rich_repair_blockers: bool) -> dict:
+                     quote_resolution: bool, rich_repair_blockers: bool, anchor_mentions: bool = False) -> dict:
     """Replay saved attempts without touching checkpoints or original validations.
 
     All saved attempts are inspected, even when the new primary passes. The new
@@ -476,8 +485,11 @@ def revalidate_cases(cases: Sequence[CaseInput], source: Path, destination: Path
     """
     rows = []
     def statistics():
-        return {"remaining_blocker_counts": Counter(), "quote_resolution_report": {
+        counts = {"remaining_blocker_counts": Counter(), "quote_resolution_report": {
             kind: dict.fromkeys(OUTCOMES, 0) for kind in ("evidence", "mentions")}}
+        if anchor_mentions:
+            counts["mention_anchoring_report"] = _anchor_mentions({}, {})[1]
+        return counts
 
     totals = statistics()
     by_phase = {phase: statistics() for phase in ("primary", "repair_1")}
@@ -495,7 +507,8 @@ def revalidate_cases(cases: Sequence[CaseInput], source: Path, destination: Path
             if path.is_file() or raw_path.is_file():
                 raw = (path if path.is_file() else raw_path).read_text(encoding="utf-8")
                 _, _, batch, validation = validate_attempt(raw, case, quote_resolution=quote_resolution,
-                                                          rich_repair_blockers=rich_repair_blockers)
+                                                          rich_repair_blockers=rich_repair_blockers,
+                                                          anchor_mentions=anchor_mentions)
                 status = "STRUCTURAL_VALID" if batch is not None else validation["category"]
             elif attempt["validation"]["category"] == "TRANSPORT_FAILURE":
                 validation = attempt["validation"]
@@ -509,6 +522,10 @@ def revalidate_cases(cases: Sequence[CaseInput], source: Path, destination: Path
                 for kind, outcomes in validation.get("quote_resolution", {}).items():
                     for code, count in outcomes.items():
                         counts["quote_resolution_report"][kind][code] += count
+                if anchor_mentions:
+                    for kind, outcomes in validation.get("mention_anchoring", {}).items():
+                        for code, count in outcomes.items():
+                            counts["mention_anchoring_report"][kind][code] += count
             if terminal != "STRUCTURAL_VALID":
                 terminal = status
         if not attempts:
@@ -525,6 +542,8 @@ def revalidate_cases(cases: Sequence[CaseInput], source: Path, destination: Path
                      r["new_terminal_status"] == "STRUCTURAL_VALID" for r in rows),
         "transitions": dict(sorted(transitions.items())), **totals, "by_phase": by_phase},
         "quote_resolution": quote_resolution, "rich_repair_blockers": rich_repair_blockers}
+    if anchor_mentions:
+        result["anchor_mentions"] = True
     _write_json(destination / "revalidation.json", result)
     return result
 
@@ -538,7 +557,7 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
             case_loader: Callable = load_case_inputs, transport: Transport | None = None,
             wait: Callable = time.sleep, clock: Callable = time.time,
             quote_resolution: bool = False, rich_repair_blockers: bool = False,
-            existing_names: bool = False,
+            existing_names: bool = False, anchor_mentions: bool = False,
             run_directory: Path | None = None) -> dict[str, Any]:
     if mode not in ("preflight", "run", "score", "revalidate"):
         raise DevelopmentError("Unknown development mode")
@@ -559,7 +578,7 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
 
     verify()
     hashes = prompt_hashes(variant)
-    label = _run_variant(variant, quote_resolution, rich_repair_blockers, existing_names)
+    label = _run_variant(variant, quote_resolution, rich_repair_blockers, existing_names, anchor_mentions)
     identity = label.replace("+", "_")
     base_root = Path(output_root) / "DEV1" if dataset == "DEV1" else Path(output_root)
     root = base_root / label
@@ -575,19 +594,22 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
                 case.prepared_input, case.compiler_context)) for case in loaded]
         specs = [build_primary_spec(variant, case, model, credential_slot,
                  quote_resolution=quote_resolution, rich_repair_blockers=rich_repair_blockers,
-                 existing_names=existing_names) for case in loaded]
+                 existing_names=existing_names, anchor_mentions=anchor_mentions) for case in loaded]
         metadata = {"dataset": dataset, "variant": variant, "model": model, "credential_slot": credential_slot,
                     "case_count": len(loaded), "primary_specs": len(specs), "prompt_hashes": hashes,
                     "input_sha256": DEV1_SHA256 if dataset == "DEV1" else INPUT_SHA256,
                     "gold_sha256": DEV1_SHA256 if dataset == "DEV1" else GOLD_SHA256,
                     "quote_resolution": quote_resolution, "rich_repair_blockers": rich_repair_blockers,
                     "existing_names": existing_names}
+        if anchor_mentions:
+            metadata["anchor_mentions"] = True
         if mode == "preflight":
             return {**metadata, "status": "PREFLIGHT_PASS"}
         if mode == "revalidate":
             # Explicit source wins; otherwise replay the selected configuration.
             return revalidate_cases(loaded, Path(run_directory) if run_directory is not None else root, root,
-                                    quote_resolution=quote_resolution, rich_repair_blockers=rich_repair_blockers)
+                                    quote_resolution=quote_resolution, rich_repair_blockers=rich_repair_blockers,
+                                    anchor_mentions=anchor_mentions)
 
         def guard():
             verify()
@@ -629,7 +651,7 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
                 raise DevelopmentError("Credential smoke qualification failed")
             run_cases(loaded, specs, variant, executor, transport, root, guard, wait,
                       quote_resolution=quote_resolution, rich_repair_blockers=rich_repair_blockers,
-                      existing_names=existing_names)
+                      existing_names=existing_names, anchor_mentions=anchor_mentions)
         guard()
         score = score_cases(loaded, specs, gold if dataset == "DEV1" else read_gold(dev2_gold, selected), root)
         score.update(metadata)
@@ -653,6 +675,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--credential-slot", default=protocol.CREDENTIAL_SLOT)
     parser.add_argument("--cases", type=lambda value: value.split(","))
     parser.add_argument("--quote-resolution", action="store_true")
+    parser.add_argument("--anchor-mentions", action="store_true")
     parser.add_argument("--rich-repair-blockers", action="store_true")
     parser.add_argument("--existing-names", action="store_true",
                         help="Add affirmed prior-context names and mention forms to model input")
