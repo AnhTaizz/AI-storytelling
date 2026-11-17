@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 71 — test functions: 1108
+Suites: 9 — test files: 76 — test functions: 1142
 
 ## canonical_story
 
@@ -644,6 +644,20 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.diagnose
 - `DiagnosisTests.test_public_record_holds_counts_only`
 - `DiagnosisTests.test_diagnose_reads_the_private_files_and_checks_each_case`
 
+### test_diagnose_m4_p4_dev_v1 (10)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.diagnose_m4_p4_dev_v1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `DevelopmentDiagnosisTests.test_structural_issue_templates_remove_variable_values`
+- `DevelopmentDiagnosisTests.test_structural_capture_and_wrapper_restoration`
+- `DevelopmentDiagnosisTests.test_placeholder_propositions_are_labelled_not_rejected`
+- `DevelopmentDiagnosisTests.test_classification_completeness_predicates_and_evidence_role_pairs`
+- `DevelopmentDiagnosisTests.test_optional_gold_and_literal_variant_adapters`
+- `DevelopmentDiagnosisTests.test_paired_recovery_uses_only_jointly_valid_cases`
+- `DevelopmentDiagnosisTests.test_saved_role_failures_with_multiple_gold_roles`
+- `DevelopmentDiagnosisTests.test_loader_dispatch_verification_and_missing_arguments`
+- `DevelopmentDiagnosisTests.test_refuses_unreproduced_evaluations_and_bad_input_sets`
+- `DevelopmentDiagnosisTests.test_cli_writes_private_json_and_prints_counts`
+
 ### test_draft_compiler_v1 (28)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.extraction_contract_guard_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
@@ -687,6 +701,18 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_co
 - `DraftCompilerV11Tests.test_assertion_support_never_gains_implicit_mention_evidence`
 - `DraftCompilerV11Tests.test_collects_all_feasible_same_class_quote_blockers`
 - `DraftCompilerV11Tests.test_collects_independent_handle_blockers`
+
+### test_draft_quote_resolution_v1 (8)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_quote_resolution_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `QuoteResolutionTests.test_copy_noise_returns_exact_original_substrings`
+- `QuoteResolutionTests.test_exact_quotes_and_occurrences_are_preserved`
+- `QuoteResolutionTests.test_ambiguous_absent_partial_expansions_and_invalid_items_stay_unchanged`
+- `QuoteResolutionTests.test_reports_are_counts_per_kind_and_repeat_calls_are_deterministic`
+- `QuoteResolutionTests.test_other_passage_requires_one_matching_eligible_target`
+- `QuoteResolutionTests.test_ordered_mentions_require_all_occurrences_and_no_authored_index`
+- `QuoteResolutionTests.test_pass_order_preserves_local_matches_then_orders_moved_mentions`
+- `QuoteResolutionTests.test_resolved_substring_compiles_to_precise_source_positions`
 
 ### test_durable_research_executor_v1 (22)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.durable_research_executor_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.run_gemini_durable_qualification_v1`, `tools.story_ingestion.light_novel_adapter_v0`
@@ -1040,6 +1066,14 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `M404B3FProtocolTests.test_requests_are_exact_and_only_structural_repairs_are_constructible`
 - `M404B3FProtocolTests.test_bindings_packages_and_the_written_protocol_are_checked`
 
+### test_m4_04b3n_fv2_protocol_v1 (4)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.m4_04b3n_fv2_protocol_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `ProtocolTests.test_determinism_exact_settings_requests_and_binding_drift`
+- `ProtocolTests.test_protocol_file_pinning_canonical_bytes_and_refusals`
+- `ProtocolTests.test_seal_snapshot_and_request_policy_refusals`
+- `ProtocolTests.test_lock_cli_writes_validates_and_refuses_overwrite`
+
 ### test_run_m4_04b3c_dev2_predictions_v1 (8)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.run_m4_04b3c_dev2_predictions_v1`, `tools.story_ingestion.light_novel_adapter_v0`
 
@@ -1061,17 +1095,29 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_co
 - `RunTests.test_smoke_qualification_and_summary`
 - `RunTests.test_lock_mismatches_stop_before_any_call`
 
-### test_run_m4_p4_dev_v1 (9)
+### test_run_m4_04b3o_fv2_predictions_v1 (3)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.fresh_validation_seal_v1`, `tools.story_extraction.m4_04b3n_fv2_protocol_v1`, `tools.story_extraction.run_m4_04b3o_fv2_predictions_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `RunnerTests.test_preflight_no_transport_no_gold_and_wrong_package_refused`
+- `RunnerTests.test_real_compiler_primary_repair_and_transport_outcomes`
+- `RunnerTests.test_smoke_failure_run_cli_and_guard`
+
+### test_run_m4_p4_dev_v1 (14)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_compiler_v1_1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.m4_04b3f_fv1_protocol_v1`, `tools.story_extraction.run_m4_p4_dev_v1`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `DevelopmentRunnerTests.test_prompt_composition_sources_and_request_identity`
 - `DevelopmentRunnerTests.test_hash_refusal_and_selection_validation`
 - `DevelopmentRunnerTests.test_preflight_selects_and_builds_one_spec_without_provider_work`
+- `DevelopmentRunnerTests.test_existing_names_use_only_affirmed_base_facts_and_compiler_handles`
 - `DevelopmentRunnerTests.test_run_outcomes_artifacts_and_locked_resume`
 - `DevelopmentRunnerTests.test_interrupted_artifact_write_resumes_locked_response_and_variants_are_isolated`
 - `DevelopmentRunnerTests.test_smoke_refusal_overrides_and_prompt_change_guard`
 - `DevelopmentRunnerTests.test_real_scoring_optional_ids_aggregation_conventions_and_public_summary`
 - `DevelopmentRunnerTests.test_input_loader_and_gold_refusals`
+- `DevelopmentRunnerTests.test_quote_options_isolate_jobs_save_raw_and_resolved_and_record_metadata`
+- `DevelopmentRunnerTests.test_rich_blockers_sanitize_values_extract_handles_and_restore_validator`
+- `DevelopmentRunnerTests.test_revalidation_is_offline_preserves_runs_and_reports_transitions`
+- `DevelopmentRunnerTests.test_revalidation_counts_remaining_blockers_and_resolution_over_all_attempts`
 - `DevelopmentRunnerTests.test_cli_modes_refusal_and_module_entrypoint`
 
 ### test_score_m4_04b3h_fv1_v1 (3)
@@ -1080,6 +1126,14 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `ScoringTests.test_verified_predictions_are_scored_and_the_failure_counts_as_a_failed_case`
 - `ScoringTests.test_any_mismatch_stops_before_the_gold_is_opened`
 - `ScoringTests.test_cli_prints_the_public_summary_or_refuses`
+
+### test_score_m4_04b3p_fv2_v1 (4)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.m4_04b3n_fv2_protocol_v1`, `tools.story_extraction.run_m4_04b3o_fv2_predictions_v1`, `tools.story_extraction.score_m4_04b3p_fv2_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `ScorerTests.test_verified_gold_open_real_source_evaluation_and_aggregate_privacy`
+- `ScorerTests.test_all_hash_changes_refuse_before_gold`
+- `ScorerTests.test_manifest_semantics_paths_inventory_and_terminal_refusals`
+- `ScorerTests.test_structural_failures_gold_metadata_and_cli`
 
 ### test_story_extraction_contract_v0 (39)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.evaluate_extraction_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
