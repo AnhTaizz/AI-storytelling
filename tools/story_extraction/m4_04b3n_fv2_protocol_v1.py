@@ -20,6 +20,7 @@ from tools.story_extraction.fresh_validation_seal_v1 import BOUND_FILES
 
 REPO_ROOT = fv1.REPO_ROOT
 PROMPT_VARIANT = "P4R4"
+HOST_REPAIRS: tuple[str, ...] = ()
 PROTOCOL_ID = "M4_04B3N_FV2_PROTOCOL_V1"
 TASK_ID = "M4-04B3N-FV2-PROTOCOL-LOCK"
 FV2_SET_ID = "M4_04B3M_FRESH_VALIDATION_V2"
@@ -42,6 +43,13 @@ sha256_bytes = fv1.sha256_bytes
 file_sha256 = fv1.file_sha256
 sanitized_failure = fv1.sanitized_failure
 ValidatedProtocol = fv1.ValidatedProtocol
+
+
+def _host_repairs(value: Any) -> tuple[str, ...]:
+    """Require a JSON list containing a canonical subset of the host repairs."""
+    if not isinstance(value, list) or value != [r for r in ("QR", "AM") if r in value]:
+        raise Fv2ProtocolError("Invalid host_repairs: expected a canonical subset of QR, AM")
+    return tuple(value)
 
 
 def bound_paths() -> tuple[str, ...]:
@@ -69,7 +77,13 @@ def bound_paths() -> tuple[str, ...]:
     )
     prompts = (fv1.SYSTEM_PREAMBLE_PATH, fv1.USER_TEMPLATE_PATH, fv1.REPAIR_USER_TEMPLATE_PATH,
                dev.PROMPT_ROOT / f"story_extraction_draft_{PROMPT_VARIANT.lower()}_system_v1_1.txt")
-    return tuple(sorted(set((*BOUND_FILES, *extra, *(p.relative_to(REPO_ROOT).as_posix() for p in prompts)))))
+    repairs = _host_repairs(list(HOST_REPAIRS))
+    # AM locates spans with QR's _starts helper even when QR is not selected.
+    used_repairs = (*repairs, "QR") if "AM" in repairs else repairs
+    repair_paths = tuple("tools/story_extraction/" + name for repair, name in (
+        ("QR", "draft_quote_resolution_v1.py"), ("AM", "draft_mention_anchoring_v1.py")) if repair in used_repairs)
+    return tuple(sorted(set((*BOUND_FILES, *extra, *repair_paths,
+                             *(p.relative_to(REPO_ROOT).as_posix() for p in prompts)))))
 
 
 def prompt_material() -> dict[str, str]:
@@ -118,6 +132,9 @@ def build_protocol() -> dict[str, Any]:
     value["prediction_lock"].update(manifest_case_count=len(CASE_IDS),
         fv2_gold_may_open_only_after="PREDICTIONS_TERMINAL_LOCKED_AND_HASHED")
     value["access_policy"]["fv2_gold"] = "FORBIDDEN_UNTIL_PREDICTIONS_TERMINAL_LOCKED_AND_HASHED"
+    # Omit the empty selection to preserve the original protocol serialization.
+    if HOST_REPAIRS:
+        value["host_repairs"] = list(_host_repairs(list(HOST_REPAIRS)))
     return value
 
 
@@ -157,8 +174,12 @@ def verify_fv2_packages(directory: Path, *, include_gold: bool = False) -> None:
 def validate_protocol(value: Any) -> dict[str, str]:
     if not isinstance(value, dict):
         raise Fv2ProtocolError("Protocol root must be an object")
+    _host_repairs(value.get("host_repairs", []))
     validate_public_bindings(value)
-    if value != build_protocol():
+    expected = build_protocol()
+    # Today's keyless lock and an explicit empty list have the same semantics.
+    if {**value, "host_repairs": value.get("host_repairs", [])} != {
+            **expected, "host_repairs": expected.get("host_repairs", [])}:
         raise Fv2ProtocolError("Protocol semantic mismatch")
     return {"semantic_consistency": "PASS", "public_bindings": "PASS"}
 

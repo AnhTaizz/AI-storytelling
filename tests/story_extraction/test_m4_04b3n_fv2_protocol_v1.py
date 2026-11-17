@@ -14,6 +14,64 @@ from tests.story_extraction.test_run_m4_04b3g_fv1_predictions_v1 import syntheti
 
 
 class ProtocolTests(unittest.TestCase):
+    def test_default_protocol_matches_pre_task_bytes_with_identical_hash_inputs(self):
+        self.assertEqual((lock.PROMPT_VARIANT, lock.HOST_REPAIRS), ("P4R4", ()))
+        # Captured before Task H. Stable per-path hash inputs avoid self-binding
+        # source edits (and checkout newline differences) changing this baseline.
+        with mock.patch.object(lock, "file_sha256", side_effect=lambda p:
+                lock.sha256_bytes(p.relative_to(lock.REPO_ROOT).as_posix().encode())):
+            value = lock.build_protocol()
+        self.assertNotIn("host_repairs", value)
+        self.assertEqual(lock.sha256_bytes(lock.canonical_json_bytes(value)),
+                         "5c854d8609b9ce0f46db615b9039f66af9e66b0717024b8788fea8f2d2b33e25")
+        self.assertEqual(list(lock.bound_paths()), list(value["public_bindings"]))
+        self.assertEqual(value["public_bindings"], {p: lock.sha256_bytes(p.encode()) for p in lock.bound_paths()})
+
+    def test_host_repair_bindings_variant_selection_and_legacy_empty_lock(self):
+        original_paths = set(lock.bound_paths())
+        modules = {"QR": "tools/story_extraction/draft_quote_resolution_v1.py",
+                   "AM": "tools/story_extraction/draft_mention_anchoring_v1.py"}
+        case, _ = synthetic_case("FV2_01")
+        for variant in ("P4R4", "P3"):
+            for repairs in ((), ("QR",), ("AM",), ("QR", "AM")):
+                with self.subTest(variant=variant, repairs=repairs), \
+                        mock.patch.object(lock, "PROMPT_VARIANT", variant), \
+                        mock.patch.object(lock, "HOST_REPAIRS", repairs):
+                    value = lock.build_protocol()
+                    used = set(repairs) | ({"QR"} if "AM" in repairs else set())
+                    self.assertEqual(value.get("host_repairs", []), list(repairs))
+                    self.assertEqual(set(lock.bound_paths()) & set(modules.values()), {modules[r] for r in used})
+                    if variant == "P4R4":
+                        self.assertEqual(set(lock.bound_paths()), original_paths | {modules[r] for r in used})
+                    for repair in used:
+                        path = modules[repair]
+                        self.assertEqual(value["public_bindings"][path], lock.file_sha256(lock.REPO_ROOT / path))
+                    lock.validate_protocol(value)
+                    self.assertEqual(lock.build_primary_spec(case.case_id, case.prepared_input).system_prompt,
+                                     lock.dev.prompt_material(variant)["primary_system"])
+                    if not repairs:
+                        self.assertNotIn("host_repairs", value)
+                        lock.validate_protocol({**value, "host_repairs": []})
+                    else:
+                        missing = deepcopy(value)
+                        missing.pop("host_repairs")
+                        with self.assertRaisesRegex(lock.Fv2ProtocolError, "semantic"):
+                            lock.validate_protocol(missing)
+                        for repair in used:
+                            real_hash = lock.file_sha256
+                            with mock.patch.object(lock, "file_sha256", side_effect=lambda p:
+                                    "0" * 64 if p == lock.REPO_ROOT / modules[repair] else real_hash(p)):
+                                with self.assertRaisesRegex(lock.Fv2ProtocolError, "binding mismatch"):
+                                    lock.validate_protocol(value)
+        for repairs in (("UNKNOWN",), ("AM", "QR"), ("QR", "QR")):
+            with self.subTest(constant=repairs), mock.patch.object(lock, "HOST_REPAIRS", repairs):
+                with self.assertRaisesRegex(lock.Fv2ProtocolError, "host_repairs"):
+                    lock.build_protocol()
+        value = lock.build_protocol()
+        for repairs in (["UNKNOWN"], ["AM", "QR"], ["QR", "QR"], "QR", None, {}, ("QR",), [1]):
+            with self.subTest(protocol=repairs), self.assertRaisesRegex(lock.Fv2ProtocolError, "host_repairs"):
+                lock.validate_protocol({**value, "host_repairs": repairs})
+
     def test_determinism_exact_settings_requests_and_binding_drift(self):
         value = lock.build_protocol()
         self.assertEqual(value, lock.build_protocol())

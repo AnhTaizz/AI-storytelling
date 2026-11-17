@@ -53,10 +53,12 @@ def qualify_credential(executor, transport, wait):
     return {"credential_slot": lock.CREDENTIAL_SLOT, "qualified": qualified, "transport": shared._telemetry(record)}
 
 
-def run_cases(cases, executor, transport, artifact_root: Path, guard, wait) -> list[dict[str, Any]]:
+def run_cases(cases, executor, transport, artifact_root: Path, guard, wait, *,
+              validated: lock.ValidatedProtocol) -> list[dict[str, Any]]:
     """Reuse durable transport and structural validation; one primary and at most one repair."""
     if [c.case_id for c in cases] != list(lock.CASE_IDS):
         raise Fv2PredictionError("Full ordered FV2 set required")
+    repairs = tuple(validated.value.get("host_repairs", []))
     results = []
     for case in cases:
         attempts, batch, primary_raw, validation = [], None, None, {}
@@ -70,7 +72,8 @@ def run_cases(cases, executor, transport, artifact_root: Path, guard, wait) -> l
             attempt = {"phase": phase, "job_id": spec.job_id, "request_fingerprint": spec.request_fingerprint,
                        "transport": shared._telemetry(record), "raw_response_sha256": None, "draft_sha256": None}
             if isinstance(raw, str):
-                draft, batch, validation = shared.validate_raw(raw, case.compiler_context)
+                _, draft, batch, validation = lock.dev.validate_attempt(
+                    raw, case, quote_resolution="QR" in repairs, anchor_mentions="AM" in repairs)
                 attempt["raw_response_sha256"] = shared._write_text(artifact_root / "raw" / f"{case.case_id}_{phase}.txt", raw)
                 if draft is not None:
                     attempt["draft_sha256"] = shared._write_json(artifact_root / "drafts" / f"{case.case_id}_{phase}.json", draft)
@@ -90,7 +93,8 @@ def run_cases(cases, executor, transport, artifact_root: Path, guard, wait) -> l
         else:
             failure = shared._write_json(artifact_root / "failures" / f"{case.case_id}.json",
                                          {"terminal_status": status, "validation": validation})
-        item = {"case_id": case.case_id, "attempts": attempts, "repair_used": len(attempts) == 2,
+        item = {"case_id": case.case_id, "host_repairs": list(repairs),
+                "attempts": attempts, "repair_used": len(attempts) == 2,
                 "terminal_status": status, "compiled_batch_sha256": compiled, "terminal_failure_sha256": failure}
         shared._write_json(artifact_root / "case_results" / f"{case.case_id}.json", item)
         results.append(item)
@@ -99,13 +103,15 @@ def run_cases(cases, executor, transport, artifact_root: Path, guard, wait) -> l
 
 def prediction_identities(results) -> list[dict]:
     return [{**{k: r[k] for k in ("case_id", "terminal_status", "compiled_batch_sha256", "terminal_failure_sha256")},
+             "host_repairs": r.get("host_repairs", []),
              "attempts": [{k: a[k] for k in ("phase", "request_fingerprint", "raw_response_sha256", "draft_sha256")}
                           for a in r["attempts"]]} for r in results]
 
 
-def summarize(results, smoke, protocol_sha256: str) -> tuple[dict, dict]:
+def summarize(results, smoke, protocol_sha256: str, *, host_repairs) -> tuple[dict, dict]:
     identities = prediction_identities(results)
-    common = {"protocol_sha256": protocol_sha256, "fv2_bindings": {k: h for k, _, h in lock.package_bindings()},
+    common = {"protocol_sha256": protocol_sha256, "host_repairs": list(host_repairs),
+              "fv2_bindings": {k: h for k, _, h in lock.package_bindings()},
               "prediction_set_sha256": lock.sha256_bytes(lock.canonical_json_bytes(identities)),
               "terminal_counts": {s: sum(r["terminal_status"] == s for r in results)
                                   for s in ("STRUCTURAL_VALID", "STRUCTURAL_FAILURE", "TRANSPORT_FAILURE")},
@@ -152,9 +158,10 @@ def execute(*, protocol_path: Path, protocol_sha256: str, fv2_directory: Path, o
     shared._write_json(output_root / "smoke.json", smoke)
     if not smoke["qualified"]:
         raise Fv2PredictionError("Credential qualification failed")
-    results = run_cases(cases, executor, transport, output_root / "artifacts", guard, wait)
+    results = run_cases(cases, executor, transport, output_root / "artifacts", guard, wait, validated=validated)
     guard()
-    result, manifest = summarize(results, smoke, protocol_sha256)
+    result, manifest = summarize(results, smoke, protocol_sha256,
+                                 host_repairs=validated.value.get("host_repairs", []))
     result_hash = shared._write_json(output_root / RESULT_NAME, result)
     manifest_hash = shared._write_json(output_root / MANIFEST_NAME, manifest)
     # Bind every saved prediction artifact, including case_results and telemetry.

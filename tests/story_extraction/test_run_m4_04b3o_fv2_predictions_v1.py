@@ -1,5 +1,6 @@
 """Synthetic sealed zips and fake durable transports for the FV2 blind runner."""
 from contextlib import ExitStack, contextmanager
+from copy import deepcopy
 import io
 import json
 from pathlib import Path
@@ -8,7 +9,7 @@ import unittest
 from unittest import mock
 
 from tests.story_extraction.test_fresh_validation_seal_v1 import authored
-from tests.story_extraction.test_run_m4_04b3g_fv1_predictions_v1 import FakeTransport, Clock, executor
+from tests.story_extraction.test_run_m4_04b3g_fv1_predictions_v1 import FakeTransport, Clock, executor, synthetic_case
 from tools.story_extraction import fresh_validation_seal_v1 as seal
 from tools.story_extraction import m4_04b3n_fv2_protocol_v1 as lock
 from tools.story_extraction import run_m4_04b3o_fv2_predictions_v1 as runner
@@ -55,6 +56,69 @@ def fake_transport(drafts, smoke='{"status":"ok"}', overrides=None):
 
 
 class RunnerTests(unittest.TestCase):
+    def test_validated_lock_threads_host_repairs_to_both_attempts_and_prediction_identity(self):
+        case, draft = synthetic_case("FV2_01")
+        for repairs in ((), ("QR",), ("AM",), ("QR", "AM")):
+            with self.subTest(repairs=repairs), tempfile.TemporaryDirectory() as tmp, \
+                    mock.patch.object(lock, "CASE_IDS", (case.case_id,)), \
+                    mock.patch.object(lock, "HOST_REPAIRS", repairs):
+                root = Path(tmp)
+                path = root / "protocol.json"
+                _, digest = lock.write_protocol(path)
+                validated = lock.validate_protocol_file(path, digest)
+                if not repairs:
+                    self.assertNotIn("host_repairs", validated.value)
+                primary = f"M4B3N_{lock.PROMPT_VARIANT}_{case.case_id}_PRIMARY"
+                repair = f"M4B3N_{lock.PROMPT_VARIANT}_{case.case_id}_REPAIR_1"
+                # Repairable quote/mention errors disappear from the primary's
+                # blockers; a separate unrepairable quote still needs a request.
+                broken = deepcopy(draft)
+                broken["evidence"][0]["quote"] = " ".join(broken["evidence"][0]["quote"])
+                broken["mentions"][0]["passage_handle"] = "P999"
+                broken["evidence"][-1]["quote"] = "UNREPAIRABLE"
+                raw = json.dumps(broken)
+                _, _, _, primary_validation = lock.dev.validate_attempt(
+                    raw, case, quote_resolution="QR" in repairs, anchor_mentions="AM" in repairs)
+                self.assertEqual(len(primary_validation["blockers"]), 3 - len(repairs))
+                transport = fake_transport({case.case_id: draft}, overrides={primary: [raw], repair: [json.dumps(draft)]})
+                clock = Clock()
+                run_cases = runner.run_cases
+
+                def run_with_conflicting_constants(*args, **kwargs):
+                    # The already validated lock remains authoritative even when
+                    # module settings differ at response-validation time.
+                    with mock.patch.object(lock, "HOST_REPAIRS", ("AM",) if repairs != ("AM",) else ()):
+                        return run_cases(*args, **kwargs)
+
+                with mock.patch.object(runner, "load_cases", return_value=[case]), \
+                        mock.patch.object(lock, "verify_fv2_packages"), \
+                        mock.patch.object(runner, "run_cases", side_effect=run_with_conflicting_constants), \
+                        mock.patch.object(lock, "validate_public_bindings"), \
+                        mock.patch.object(lock.dev, "validate_attempt", wraps=lock.dev.validate_attempt) as validate, \
+                        mock.patch.object(lock, "build_repair_spec", wraps=lock.build_repair_spec) as repair_spec:
+                    # Verify the real on-disk lock before injecting package-free
+                    # runtime dependencies; no archive is made or accessed.
+                    with mock.patch.object(runner, "verify_lock", return_value=validated):
+                        result = runner.execute(protocol_path=path, protocol_sha256=digest,
+                            fv2_directory=root / "unused", output_root=root / "predictions",
+                            transport=transport, wait=clock.wait)
+                self.assertEqual(validate.call_count, 2)
+                for call in validate.call_args_list:
+                    self.assertEqual(call.kwargs, {"quote_resolution": "QR" in repairs, "anchor_mentions": "AM" in repairs})
+                    self.assertIs(call.args[1], case)
+                self.assertEqual(repair_spec.call_args.args[2], raw)
+                self.assertEqual(repair_spec.call_args.args[3],
+                                 {k: primary_validation[k] for k in ("category", "blockers")})
+                self.assertEqual(result["terminal_counts"]["STRUCTURAL_VALID"], 1)
+                self.assertEqual(result["host_repairs"], list(repairs))
+                row = result["predictions"][0]
+                self.assertEqual(row["host_repairs"], list(repairs))
+                self.assertEqual(runner.prediction_identities([row])[0]["host_repairs"], list(repairs))
+                manifest = json.loads((root / "predictions" / runner.MANIFEST_NAME).read_bytes())
+                self.assertEqual(manifest["host_repairs"], list(repairs))
+                self.assertEqual(manifest["entries"][0]["host_repairs"], list(repairs))
+                self.assertEqual(row["attempts"][0]["validation"], primary_validation)
+
     def test_preflight_no_transport_no_gold_and_wrong_package_refused(self):
         with tempfile.TemporaryDirectory() as tmp, synthetic_bundle(Path(tmp)) as (opts, cases, drafts):
             args = ["--protocol", str(opts["protocol_path"]), "--protocol-sha256", opts["protocol_sha256"],
@@ -92,6 +156,7 @@ class RunnerTests(unittest.TestCase):
 
     def test_real_compiler_primary_repair_and_transport_outcomes(self):
         with tempfile.TemporaryDirectory() as tmp, synthetic_bundle(Path(tmp)) as (opts, cases, drafts):
+            validated = lock.validate_protocol_file(opts["protocol_path"], opts["protocol_sha256"])
             cid = cases[0].case_id
             primary = f"M4B3N_{lock.PROMPT_VARIANT}_{cid}_PRIMARY"
             repair = f"M4B3N_{lock.PROMPT_VARIANT}_{cid}_REPAIR_1"
@@ -105,11 +170,11 @@ class RunnerTests(unittest.TestCase):
                     clock = Clock()
                     transport = fake_transport(drafts, overrides=overrides)
                     rows = runner.run_cases(cases, executor(Path(tmp) / label, clock), transport,
-                                            Path(tmp) / label / "artifacts", lambda: None, clock.wait)
+                                            Path(tmp) / label / "artifacts", lambda: None, clock.wait, validated=validated)
                     self.assertEqual((rows[0]["terminal_status"], rows[0]["repair_used"]), (status, repaired))
                     self.assertLessEqual(len(rows[0]["attempts"]), 2)
             with self.assertRaisesRegex(runner.Fv2PredictionError, "ordered"):
-                runner.run_cases(cases[::-1], None, None, Path(tmp), lambda: None, lambda _: None)
+                runner.run_cases(cases[::-1], None, None, Path(tmp), lambda: None, lambda _: None, validated=validated)
 
     def test_smoke_failure_run_cli_and_guard(self):
         with tempfile.TemporaryDirectory() as tmp, synthetic_bundle(Path(tmp)) as (opts, cases, drafts):

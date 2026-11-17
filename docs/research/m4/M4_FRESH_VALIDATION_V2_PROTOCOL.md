@@ -163,6 +163,15 @@ gate is claimed to pass.
 
 ## 7. Limits and next boundary
 
+The FV2 lock can bind deterministic host repairs `QR` (quote resolution) and `AM`
+(mention anchoring), in that order, including the selected repair modules' byte
+hashes and dependencies. The prediction runner applies only the validated lock's selection before
+validating primary and repair responses, and uses the resulting primary blockers
+for the repair request; prediction identities and summaries record the selection.
+Defaults remain `P4R4` with no host repairs (the legacy keyless protocol shape).
+Selecting a different binding remains the project owner's decision; this tooling
+preparation authorizes no lock creation or provider run.
+
 Representability does not establish extraction accuracy, generalization,
 unsupported-assertion safety or readiness for sealed holdout evaluation. The
 gold is one agent's unreviewed annotation, and mechanical checks do not prove
