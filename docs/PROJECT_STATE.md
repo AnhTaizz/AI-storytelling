@@ -1104,6 +1104,28 @@ Owner decision (nothing authorized yet):
 2. **FV1 gold check.** Restore the FV1 packages and the B3I private outputs under a git-ignored directory, verify their hashes, then run the checker and the reading audit. The packages are not on the owner's machine.
 3. **P4 prompt** written from the conventions and developed on DEV1, DEV2 and FV1 (all open). Then seal FV2 under the conventions and lock the protocol.
 
+## M4-04B3K — ANNOTATION CONVENTIONS V2 — WRITTEN — Status: M4_04B3K_CONVENTIONS_V2_PROPOSED
+
+- **Authorization.** Option 1 of the Next Candidate above; the project owner asked for it on 2026-11-17 ("làm tiếp V2"). No model call, no new gold access, and no change to gold, seals or protocols.
+- **Deliverable.** `docs/research/m4/M4_ANNOTATION_CONVENTIONS_V2.md`, status `PROPOSED`. It is a complete document, and V1 stays unchanged. The changes are:
+  - **R-NAME-03:** general naming knowledge may decide `GIVEN` or `FAMILY`; story knowledge still may not.
+  - **R-ROLE-03, new test 0:** an inanimate participant that changes nothing in another participant is `PATIENT` if the event changes it, otherwise `THEME`.
+  - **New R-PLACE-01:** the place of an arrival or appearance is `OccursAt`; the destination of going somewhere is not.
+  - **R-MEN-03:** descriptive mentions keep plain adjectives and numerals, and leave out only modifiers that contain a verb or a past or negative adjective.
+  - **R-LIT-05:** no part of a date is ever filled in.
+- **Effect on DEV2.** The 12 items that V1 left unclear or questionable conform under V2. The 10 gold errors stay errors.
+- **Checker.** The MECHANICAL rules are unchanged, so `check_annotation_conventions_v1.py` applies to V2 as it is.
+- **Caution.** V2 was informed by reading the DEV2 gold. Only a fresh set can show whether it holds.
+
+## Next Candidate
+
+Owner decision (nothing authorized yet):
+
+1. **Accept, or correct, V2.**
+2. **P4 prompt** written from V2, developed on DEV1, DEV2 and FV1.
+3. **FV1 gold check**, once its packages are restored.
+4. **Seal FV2** under V2.
+
 ## M8 Narrative Planning — ACCEPTED as a baseline (DEC-023, 2026-11-15)
 
 - **Plan checks (`plan_review.py`):** refs are hard checks; a callback in the wrong order is a soft error. Pacing and new names or numbers in free text are advisory.
