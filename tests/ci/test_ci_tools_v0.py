@@ -242,6 +242,23 @@ class GuardTests(unittest.TestCase):
         self.assertEqual(guards.diff_coverage_findings({"tools/a.py": {50}}, data)[1],
                          "diff coverage: no executable changed lines")
 
+    def test_coverage_keys_match_git_paths_on_windows(self):
+        # coverage.py keys use the OS separator; simulate Windows ("\\") so Linux CI checks it too.
+        report = {"files": {"tools\\a.py": {"executed_lines": [1], "missing_lines": [2]},
+                            str(REPO / "tools" / "b.py"): {"executed_lines": [3], "missing_lines": []}}}
+        with tempfile.TemporaryDirectory() as tmp:
+            coverage_file = Path(tmp) / ".coverage"
+            coverage_file.write_bytes(b"")
+            (Path(tmp) / "coverage.json").write_text(json.dumps(report), encoding="utf-8")
+            done = mock.Mock(returncode=0)
+            with mock.patch.object(guards.subprocess, "run", return_value=done), \
+                    mock.patch.object(guards.os, "sep", "\\"):
+                data = guards.coverage_data(coverage_file)
+        self.assertEqual(data, {"tools/a.py": {"executed": {1}, "missing": {2}},
+                                "tools/b.py": {"executed": {3}, "missing": set()}})
+        findings, summary = guards.diff_coverage_findings({"tools/a.py": {1}}, data)
+        self.assertEqual((findings, summary), ([], "diff coverage: 100.0% of 1 changed executable lines under tools/"))
+
     def test_git_diff_helpers_and_cli(self):
         self.assertIsNone(guards.resolve_base("no-such-ref-xyz"))
         self.assertEqual(guards.resolve_base("HEAD"), "HEAD")

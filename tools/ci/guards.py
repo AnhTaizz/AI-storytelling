@@ -149,8 +149,9 @@ def coverage_data(coverage_file: Path) -> Optional[Dict[str, Dict[str, Set[int]]
     data = json.loads(out_json.read_text(encoding="utf-8"))
     files = {}
     for name, info in data["files"].items():
-        rel = os.path.relpath(name, REPO).replace(os.sep, "/") if os.path.isabs(name) else name
-        files[rel] = {"executed": set(info["executed_lines"]), "missing": set(info["missing_lines"])}
+        rel = os.path.relpath(name, REPO) if os.path.isabs(name) else name
+        # coverage.py writes relative keys with the OS separator; git diff paths use "/".
+        files[rel.replace(os.sep, "/")] = {"executed": set(info["executed_lines"]), "missing": set(info["missing_lines"])}
     return files
 
 

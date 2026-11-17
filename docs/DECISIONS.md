@@ -795,6 +795,20 @@ LIMITS:
 
 ---
 
+## DEC-024 — Diff-Coverage Guard Normalises Windows Paths
+
+STATUS: ACCEPTED (Project Owner instruction to fix `tools/ci/guards.py`, 2026-11-17)
+
+CONTEXT:
+On Windows, `coverage.py` writes relative file keys with `\` (`tools\story_pipeline\review_summary.py`), while `git diff` reports `tools/story_pipeline/review_summary.py`. `guards.coverage_data` normalised only absolute keys, so no changed file matched its coverage data and the diff-coverage guard reported 0% on every Windows run. CI on Linux was unaffected. DEC-021 item 13 left this fix to the Project Owner because an agent does not change the gate that checks its own work; the owner has now asked for it.
+
+DECISION:
+1. `guards.coverage_data` converts every coverage key, relative or absolute, to `/` separators before matching it against `git diff` paths. Nothing else in the gate changes: the 80% threshold, the protected paths and the other guards are as before.
+2. A test in `tests/ci/test_ci_tools_v0.py` simulates the Windows separator, so CI on Linux also catches a regression.
+3. This supersedes DEC-021 item 13.
+
+---
+
 ## DEC-025 — M4 Annotation Conventions V1
 
 STATUS: ACCEPTED (Project Owner, 2026-11-17: "Đồng ý V1")

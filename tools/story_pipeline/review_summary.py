@@ -81,7 +81,7 @@ def collect(roots: Sequence[Path]) -> List[Dict[str, Any]]:
         for path in sorted(root.rglob("review_form*.md")):
             parsed = parse_form(path.read_text(encoding="utf-8"))
             if parsed["reviewer"] is not None:
-                run = str(path.parent.relative_to(root.parent))
+                run = path.parent.relative_to(root.parent).as_posix()  # same label on Windows and Linux
                 forms.append({"run": run if path.name == "review_form.md" else f"{run} ({path.stem})", **parsed})
     return forms
 
