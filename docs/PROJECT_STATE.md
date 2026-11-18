@@ -1245,11 +1245,22 @@ Owner decision (nothing authorized yet):
 3. **Model check.** Run the same protocol with a stronger model as a comparison on DEV1/DEV2 before FV2.
 4. **Housekeeping for the owner.** The FV1 packages are still missing on this machine, and `.env` repeats six keys under several slot numbers.
 
-## M4-04B3N — FV2 LOCK BINDS P4R6 + QR + AM — Status: M4_04B3N_FV2_LOCK_BOUND_RUN_PENDING
+## M4-04B3N — FV2 LOCK BINDS P4R6 + QR + AM — Status: M4_04B3O_FV2_BLIND_RUN_SCORED
 
 - **Authorization.** Option 1 of the Next Candidate above; the project owner asked for it on 2026-11-18 ("khóa P4R6 + QR + AM rồi chạy FV2 đi"). Recorded as DEC-027.
 - **Change.** `m4_04b3n_fv2_protocol_v1.py` binds `PROMPT_VARIANT = "P4R6"` and `HOST_REPAIRS = ("QR", "AM")`. The credential slot moves from `gemini_slot_33`, which was out of daily quota, to `gemini_slot_40`. Model, temperature, the one structural repair per case and the scoring are unchanged. A protocol without the `host_repairs` key is still read as having none.
 - **Run.** One blind FV2 run on slot 40. A protocol lock written for slot 33 was never used for any provider call. The first slot-40 attempt was refused before any provider call, because the runner's credential smoke still carried the FV1 slot; the runner now uses the FV2 lock's slot, with a regression test. The predictions are locked and hashed before the gold is opened.
+- **Results.** First blind fresh-set result for P4: 12/12 structurally valid, 0 structural or transport failures, 4 repairs and 16 semantic jobs. Snapshot V2 guarded evaluator, REAL_SOURCE: all 12 COMPLETE_FOR_PROFILE, 194 required assertions, 0 pending adjudications. Pooled recall/precision 0.8557/0.9022 (means 0.8605/0.8976); unsupported rate 0.0924 (17, all UNRATED). Mean role/epistemic/referent accuracy 0.9697/1.0/0.9088; mean grounding precision/recall 0.8187/0.7116. Layers L0–L5: 12/4/9/7/1/1; full canonical case success 1/12 (0.0833). AM anchored 6 mentions, 65 were already located, 0 left unlocated and 0 pruned. Convention checker: 12 checked, one R-MEN-02 finding, every other rule 0. DEV2 comparison is tuning data, not validation: P4R6 (same with QR+AM offline) 9/10 valid, 89/119 recovered (0.748), role accuracy 0.963. Record: `benchmarks/m4_extraction/M4_04B3O_FV2_BLIND_RUN_RESULT.yaml` (aggregates only).
+- **Limits.** Twelve short agent-authored Japanese units, not real chapters; gold is `AGENT_DRAFT_GOLD`/UNREVIEWED; one model; no holdout run. Weak layers are evidence grounding (L1 4/12; grounding recall 0.71) and coverage/full-case success (each 1/12); unsupported predictions are 9.2% and unrated. FV2 is now spent: any change after seeing these scores makes FV2 development data.
+
+## Next Candidate
+
+Owner decision (nothing authorized yet):
+
+1. **Owner review of FV2 errors by category**, aggregate only, without changing anything that FV2 measured.
+2. **Draft V1.2 prepared input exposing existing entity names.** This needs a DEC and addresses the real-prose gap from DEV1.
+3. **Real-prose check.** Run the locked configuration on DEV1 and decide whether the holdout run is next.
+4. **Housekeeping for the owner.** FV1 packages are missing on this machine, and `.env` has duplicate keys.
 
 ## M8 Narrative Planning — ACCEPTED as a baseline (DEC-023, 2026-11-15)
 
