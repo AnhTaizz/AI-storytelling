@@ -4,7 +4,7 @@
 
 *Header refreshed 2026-11-18; the dated sections below are history.*
 
-M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED; holdout closed, predictions NOT RUN. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. Annotation conventions V3: ACCEPTED (DEC-028). See M4-04B3T for the rule and development rescoring.
+M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED; holdout closed, predictions NOT RUN. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. Annotation conventions V3: ACCEPTED (DEC-028). See M4-04B3U for the FV2-dev full-case blocker diagnosis.
 
 M0 — Product Foundation: CLOSED (see M0 Closure).
 
@@ -43,7 +43,7 @@ M14 — Voice / Video Automation: GATED behind the Script Quality Gate (DEC-009)
   - The contract defines the standard. It does not show that any current Writer or critic meets it. The M9 Script Quality Gate is not evaluated.
 - M2 — Canonical Story Model: capability COMPLETE / FROZEN (DEC-016). The expected capability has been established as `canonical_story/v0` + `predicate_registry/v0.1`. M2 ran under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015).
 - M3 — Light Novel Ingestion: COMPLETE / FROZEN — `LIGHT_NOVEL_INGESTION/v0`, DEC-018, freeze record `benchmarks/m3_ingestion/LIGHT_NOVEL_INGESTION_V0_FROZEN.yaml`. The roadmap is unchanged.
-- M4 — Story Extraction: IN PROGRESS (M4-01/M4-02 accepted; M4-03 holdout sealed and closed, predictions not run; no extractor/model selected; nothing frozen). Annotation conventions V3: ACCEPTED (DEC-028). See M4-04B3T for the rule and development rescoring.
+- M4 — Story Extraction: IN PROGRESS (M4-01/M4-02 accepted; M4-03 holdout sealed and closed, predictions not run; no extractor/model selected; nothing frozen). Annotation conventions V3: ACCEPTED (DEC-028). See M4-04B3U for the FV2-dev full-case blocker diagnosis.
 - M5 — Persistent Story Memory: PROTOTYPE EXISTS; not frozen or M5 completion (see Implementation Status; DEC-021).
 - M6 — Retrieval: ACCEPTED BASELINE over brief memory (DEC-021, 2026-11-15).
 - M7 — Story Brief: ACCEPTED BASELINE (DEC-022, 2026-11-15).
@@ -1390,6 +1390,45 @@ The owner has yet to choose or authorize any of these candidates.
 3. **Full-case diagnosis.** Diagnose the layers beyond L1 that block full-case success on FV2-dev.
 4. **Draft V1.2 with existing entity names.** Requires a DEC.
 5. **Housekeeping.** Address missing FV1 packages and duplicate `.env` keys.
+
+## M4-04B3U — FV2-DEV FULL-CASE BLOCKER DIAGNOSIS — Status: M4_04B3U_DIAGNOSIS_RECORDED
+
+On 2026-11-18, the project owner authorized option 3 of the M4-04B3T Next Candidate list (“ok làm cách 3 đi, dùng codex nhé”) to diagnose the layers beyond L1 that block full-case success on FV2-dev.
+
+**DEVELOPMENT-ONLY.** `tools/story_extraction/diagnose_m4_04b3u_fv2_dev_v1.py` verifies package hashes before opening gold, replays saved P4R6 responses with host repairs, supports optional V3 gold alignment in memory and reports only aggregate counts publicly. The run used QR+AM+ME+SE+TB and aligned six refs to V3. M4-04B3O remains the only validation result.
+
+**Reproduction.** Identical to M4-04B3T with 12 valid cases, 166 matched, 157 grounded, 166 of 194 required recovered, 184 predicted, 17 unsupported, 6 L1 passes and 1 full success.
+
+The counterfactuals remove every material failure in the named group and keep all other failures as scored. U denotes unsupported predictions. L3 and L4 share `MISSING_ENTITY_RESOLUTION`.
+
+| Material failures removed | Full successes out of 12 |
+| --- | ---: |
+| L1 | 1 |
+| L4 | 3 |
+| U | 1 |
+| L4+U | 6 |
+| L1+L4+U | 11 |
+| ALL_BUT_U | 5 |
+
+- **Missed required (L4).** The 28 misses comprise 21 assertions and 7 entity resolutions. Assertion misses came from event identity mismatches (5), temporal structure (3), naming omissions (2), a missing participant (1) and other omissions (10). Three resolution misses had different mention spans and four were unextracted.
+- **Unsupported pairing (U).** Twelve of 17 unsupported predictions represent the same content as a miss (Participates 4, Occurred 2, AnchorDate 2, Conveys 1 and RefersTo 3 paired with missed resolutions). The other five use gold evidence with no gold counterpart (NamedAs 3, Says 2).
+
+- Full-case success requires no required misses, no unsupported predictions and clean evidence. L4 and U together block 11 of 12 cases. Removing both gives 6 full successes, adding L1 gives 11, and removing L1 alone leaves 1.
+- Representation alignment is the largest single lever because it can resolve both halves of the 12 paired errors. Two misaligned events account for five misses. A coverage checklist addresses the 10 plain omissions and four missing resolutions. The five unsupported predictions on gold evidence warrant a gold-completeness or convention check.
+- Full-case success is strict on 12 cases. Per-assertion recall (0.856) and precision are better development signals. Full-case success remains the validation gate.
+
+The aggregate record is `benchmarks/m4_extraction/M4_04B3U_FV2_DEV_FULL_CASE_DIAGNOSIS.yaml`.
+
+## Next Candidate
+
+All candidates await the owner’s decision and authorization.
+
+1. **Event identity and temporal-anchor alignment.** On FV2-dev and DEV2, use a convention rule or host repair for the two misaligned events and three temporal mismatches, clearing the associated unsupported predictions.
+2. **Recall.** Use a coverage checklist for LocatedAt, Possesses, Manner, Attitude and mention resolution, with a P4R7 development model run using Gemini quota.
+3. **Gold completeness.** Check the five unsupported predictions on gold evidence (NamedAs 3, Says 2) against Conventions V3.
+4. **Next locked validation.** Run P4R6+QR+AM+ME+SE+TB on FV3 authored under V3 or on the holdout.
+5. **Draft V1.2.** Requires a DEC.
+6. **Housekeeping.** Address missing FV1 packages and duplicate `.env` keys.
 
 ## M8 Narrative Planning — ACCEPTED as a baseline (DEC-023, 2026-11-15)
 

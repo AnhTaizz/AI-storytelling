@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 82 — test functions: 1186
+Suites: 9 — test files: 83 — test functions: 1193
 
 ## canonical_story
 
@@ -665,6 +665,17 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.diagnose
 - `DiagnosisTests.test_derivation_only_support_reproduces_grounding`
 - `DiagnosisTests.test_layers_and_unmatched_details_aggregate_by_fixed_labels`
 - `DiagnosisTests.test_cli_reports_only_counts_and_writes_private_items`
+
+### test_diagnose_m4_04b3u_fv2_dev_v1 (7)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.diagnose_m4_04b3u_fv2_dev_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `DevelopmentDiagnosisTests.test_blocking_sets_and_counterfactuals_count_cases`
+- `DevelopmentDiagnosisTests.test_histogram_boundaries`
+- `DevelopmentDiagnosisTests.test_replay_tries_repair_after_primary_failure_and_threads_options`
+- `DevelopmentDiagnosisTests.test_public_counts_and_private_items_for_failures_and_unscorable_case`
+- `DevelopmentDiagnosisTests.test_v3_alignment_uses_verified_ingestion_bytes_only_when_enabled`
+- `DevelopmentDiagnosisTests.test_package_verification_precedes_gold_and_refuses_bad_input`
+- `DevelopmentDiagnosisTests.test_cli_parses_repair_set_and_refuses_invalid_options`
 
 ### test_diagnose_m4_p4_dev_v1 (10)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.diagnose_m4_p4_dev_v1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
