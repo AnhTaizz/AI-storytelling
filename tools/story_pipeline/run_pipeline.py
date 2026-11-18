@@ -31,7 +31,7 @@ from tools.story_pipeline import plan_review  # noqa: E402
 from tools.story_pipeline import (PIPELINE_VERSION, checks, episode_brief, lexicon, review_page,  # noqa: E402
                                   review_summary, stages)
 from tools.story_pipeline.facts import StoryFacts  # noqa: E402
-from tools.story_pipeline.llm import CallLog, LLMClient, StageFailed  # noqa: E402
+from tools.story_pipeline.llm import QUOTA_PATTERN, CallLog, LLMClient, StageFailed  # noqa: E402
 from tools.story_pipeline.profile import DEFAULT_PROFILE_PATH, NarrativeProfile, load_profile  # noqa: E402
 from tools.story_pipeline.source import Chapter, StoryScope, layout_warnings, load_scope, parse_range  # noqa: E402
 from tools.story_retrieval.brief_retrieval_v1 import build_brief_corpus, callback_candidates  # noqa: E402
@@ -636,6 +636,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         owner_unplaced: List[Dict[str, Optional[str]]] = []
         brief_gaps: List[Dict[str, Any]] = []
         checked_units: List[Dict[str, str]] = []  # the previous version's paragraphs
+        quota_exhausted = False
         if stop_after != "script":
             while True:
                 units = checks.split_units(checks.script_text(script))
@@ -683,9 +684,12 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                                                                                 chunk_flags, part))
                             except RuntimeError as exc:
                                 # Validation and provider failures leave the draft available for review.
+                                error = str(exc) or type(exc).__name__
                                 manifest.setdefault("source_check_failed", []).append(
-                                    {"version": version, "chunk": part, "sample": sample,
-                                     "error": str(exc)[:300] or type(exc).__name__})
+                                    {"version": version, "chunk": part, "sample": sample, "error": error[:300]})
+                                if not isinstance(exc, StageFailed) and QUOTA_PATTERN.search(error):
+                                    quota_exhausted = True
+                                    break
                                 continue
                             if result is None:
                                 manifest["source_check_skipped"] = (f"episode source is longer than "
@@ -694,7 +698,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                                 break
                             samples.append(stages.source_check_findings(result, passages))
                             results.append(result)
-                        if skipped:
+                        if skipped or quota_exhausted:
                             break
                     verified = stages.merge_source_findings(samples)
                     # Critic findings the source does support are gaps in the brief, not
@@ -725,7 +729,8 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                     owner_findings += located
                     owner_unplaced += unplaced
                     to_fix = located + to_fix
-                if stop_after == "critic" or not to_fix or (version > revision_rounds and not located):
+                if (stop_after == "critic" or quota_exhausted or not to_fix
+                        or (version > revision_rounds and not located)):
                     break
                 version += 1
                 previous, previous_units = script, units
@@ -793,6 +798,8 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                 for status in ("applied", "applied_but_flagged", "still_present", "not_found")}}
         report["final_version"] = version
         report["final_check"] = final_check
+        if quota_exhausted:
+            manifest["source_check_quota_exhausted"] = True
         review_reasons = []
         if critic is not None and not source_check:
             review_reasons.append("Bỏ qua đối chiếu nguyên tác vì bước này đã tắt (--no-source-check).")

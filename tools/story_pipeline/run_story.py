@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
 import time
 from pathlib import Path
@@ -32,14 +31,12 @@ if str(REPO) not in sys.path:
 from tools.story_memory.memory_v0 import StoryMemory  # noqa: E402
 from tools.story_pipeline import run_pipeline  # noqa: E402
 from tools.story_pipeline.facts import StoryFacts  # noqa: E402
-from tools.story_pipeline.llm import LLMClient  # noqa: E402
+from tools.story_pipeline.llm import QUOTA_PATTERN, LLMClient  # noqa: E402
 from tools.story_pipeline.profile import NarrativeProfile, load_profile  # noqa: E402
 from tools.story_pipeline.source import parse_range  # noqa: E402
 
 SEASON_VERSION = "STORY_SEASON/v0"
 DEFAULT_SEASON_ROOT = REPO / ".local" / "story_seasons"
-# Errors that mean "try again later", not "this episode is broken".
-QUOTA_PATTERN = re.compile(r"RESOURCE_EXHAUSTED|quota|rate.?limit|\b429\b", re.IGNORECASE)
 
 
 def plan_episodes(first: int, last: int, episodes: Optional[str] = None,
@@ -178,11 +175,14 @@ def run_season(client: LLMClient, manifest_path: Path | str, ranges: Sequence[Tu
         totals["calls"] += row.get("calls", 0)
         totals["tokens"] += row.get("tokens", 0)
         totals["seconds"] = round(totals["seconds"] + (time.time() - started), 1)
-        if manifest.get("status") == "FAILED":
-            if QUOTA_PATTERN.search(manifest.get("error") or ""):
-                status, stop_reason = "PAUSED_QUOTA", (f"tập {index} hết quota; chạy lại cùng lệnh để tiếp tục "
-                                                       f"từ chỗ dừng")
-                break
+        failed = manifest.get("status") == "FAILED"
+        source_check_quota = manifest.get("source_check_quota_exhausted")
+        if source_check_quota or (failed and QUOTA_PATTERN.search(manifest.get("error") or "")):
+            stage = " khi đối chiếu nguyên tác" if source_check_quota else ""
+            status = "PAUSED_QUOTA"
+            stop_reason = f"tập {index} hết quota{stage}. Chạy lại cùng lệnh để tiếp tục từ chỗ dừng."
+            break
+        if failed:
             if stop_on_failure:
                 status, stop_reason = "FAILED", f"tập {index} lỗi: {manifest.get('error')}"
                 break

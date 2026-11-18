@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 69 — test functions: 1090
+Suites: 9 — test files: 69 — test functions: 1091
 
 ## canonical_story
 
@@ -1276,7 +1276,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `ReviewSummaryTests.test_forms_are_parsed_and_owner_and_agent_kept_apart`
 - `ReviewSummaryTests.test_quoted_errors_are_read_from_the_form`
 
-### test_run_story (7)
+### test_run_story (8)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.llm`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.run_story`
 
 - `PlanTests.test_episodes_cover_the_range_in_order`
@@ -1285,6 +1285,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `SeasonTests.test_apply_review_resumes_completed_episodes_with_unapplied_errors`
 - `SeasonTests.test_quota_pauses_and_failures_stop_unless_told_to_keep_going`
 - `SeasonTests.test_season_with_the_real_pipeline_and_shared_memory`
+- `SeasonTests.test_source_check_quota_saves_the_draft_and_resumes_before_next_episode`
 - `CliTests.test_bad_episode_plan_is_rejected_before_any_call`
 
 ### test_story_pipeline_v0 (50)
