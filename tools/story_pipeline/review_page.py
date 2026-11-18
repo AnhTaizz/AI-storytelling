@@ -162,14 +162,17 @@ def render_review_page(manifest: Mapping[str, Any], report: Mapping[str, Any],
         findings_by_unit.setdefault(finding["unit_id"], []).append(finding)
 
     scope = manifest["scope"]
+    status = manifest.get("status", "")
+    status_label = "Cần duyệt" if status == "NEEDS_REVIEW" else status
     parts = [
         "<!doctype html><html lang='vi'><head><meta charset='utf-8'>",
         "<meta name='viewport' content='width=device-width, initial-scale=1'>",
         f"<title>Review {_esc(manifest['run_id'])}</title><style>{_STYLE}</style></head><body><main>",
         f"<h1>Review — {_esc(manifest['run_id'])}</h1>",
         f"<div class='meta'>{_esc(scope['label'])} · story <code>{_esc(scope['story_id'])}</code> · "
-        f"{_esc(manifest.get('status', ''))} · {len(units)} đoạn · "
+        f"{_esc(status_label)} · {len(units)} đoạn · "
         f"{sum(len(v) for v in findings_by_unit.values())} lỗi còn lại</div>",
+        *[f"<p>{_esc(reason)}</p>" for reason in report.get("review_reasons", [])],
         "<p class='muted'>Mỗi đoạn kịch bản nằm cạnh các mục brief mà đoạn đó trích và nguyên văn passage "
         "nguồn. Phần được tô là chỗ có lỗi do bộ kiểm tra báo. Bộ kiểm tra có thể bỏ sót: hãy đọc cả đoạn.</p>",
         "<h2>Các gate</h2><table><tr><th>Gate</th><th>Trạng thái</th></tr>",
