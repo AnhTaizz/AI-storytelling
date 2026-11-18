@@ -4,7 +4,7 @@
 
 *Header refreshed 2026-11-18; the dated sections below are history.*
 
-M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED; holdout closed, predictions NOT RUN. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. Annotation conventions V2: ACCEPTED (DEC-026). FV2 diagnosis: see M4-04B3Q.
+M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED; holdout closed, predictions NOT RUN. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. Annotation conventions V2: ACCEPTED (DEC-026). Mention-evidence repair: see M4-04B3R.
 
 M0 — Product Foundation: CLOSED (see M0 Closure).
 
@@ -43,7 +43,7 @@ M14 — Voice / Video Automation: GATED behind the Script Quality Gate (DEC-009)
   - The contract defines the standard. It does not show that any current Writer or critic meets it. The M9 Script Quality Gate is not evaluated.
 - M2 — Canonical Story Model: capability COMPLETE / FROZEN (DEC-016). The expected capability has been established as `canonical_story/v0` + `predicate_registry/v0.1`. M2 ran under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015).
 - M3 — Light Novel Ingestion: COMPLETE / FROZEN — `LIGHT_NOVEL_INGESTION/v0`, DEC-018, freeze record `benchmarks/m3_ingestion/LIGHT_NOVEL_INGESTION_V0_FROZEN.yaml`. The roadmap is unchanged.
-- M4 — Story Extraction: IN PROGRESS (M4-01/M4-02 accepted; M4-03 holdout sealed and closed, predictions not run; no extractor/model selected; nothing frozen). V2 accepted (DEC-026). FV2 diagnosis: see M4-04B3Q.
+- M4 — Story Extraction: IN PROGRESS (M4-01/M4-02 accepted; M4-03 holdout sealed and closed, predictions not run; no extractor/model selected; nothing frozen). V2 accepted (DEC-026). Mention-evidence repair: see M4-04B3R.
 - M5 — Persistent Story Memory: PROTOTYPE EXISTS; not frozen or M5 completion (see Implementation Status; DEC-021).
 - M6 — Retrieval: ACCEPTED BASELINE over brief memory (DEC-021, 2026-11-15).
 - M7 — Story Brief: ACCEPTED BASELINE (DEC-022, 2026-11-15).
@@ -1281,6 +1281,36 @@ The owner has yet to choose or authorize any of these candidates.
 1. **P4R7 + mention-evidence repair.** Develop exact mention evidence for `RefersTo` and `NamedAs` and the explicit-time-limit rule for `Possesses` and `Owns` on DEV1/DEV2, then evaluate on a new fresh set or the holdout.
 2. **Draft V1.2 with existing entity names.** Requires a DEC.
 3. **Real-prose check.** Run the locked configuration on DEV1.
+4. **Housekeeping.** FV1 packages are missing, and `.env` has duplicate keys.
+
+## M4-04B3R — MENTION-EVIDENCE REPAIR (ME) — Status: M4_04B3R_ME_DEVELOPMENT_CANDIDATE
+
+The project owner authorized ME on DEV1/DEV2 on 2026-11-18 (“ok làm hướng (a) trên DEV1/DEV2 đi”), then authorized offline FV2 rescoring (“ok làm cách 1 đi”).
+
+**FV2 is now development data because its saved responses were rescored with a repair chosen after diagnosis. M4-04B3O remains the only validation result.**
+
+The offline replay kept the same primary/repair selection and used the Snapshot V2 guarded evaluator in `REAL_SOURCE` with no model call or adjudication. On FV2, the P4R6 + QR + AM baseline exactly reproduced the official scored run. FV2 had 12 valid cases and 194 required assertions.
+
+| FV2 configuration | Grounded/matched | Wrong span | L1 pass | Full success | Required recovered | Unsupported |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| QR+AM | 138/166 | 28 | 4 | 1 | 166 | 17 |
+| +ME_R (`RefersTo`) | 148/166 | 18 | 4 | 1 | 166 | 17 |
+| +ME_N (`NamedAs`) | 143/166 | 23 | 4 | 1 | 166 | 17 |
+| +ME | 153/166 | 13 | 5 | 1 | 166 | 17 |
+
+- DEV2 rose from 82/89 to 83/89 grounded (wrong spans 7 to 6) with 5 L1 passes in both runs. DEV1 stayed at 3/8 grounded, 5 wrong spans and 5 L1 passes, while wrong roles fell from 8 to 6.
+- ME removed most mention-level errors where exact spans are required, especially in FV2's mixed-role passages. DEV1 and DEV2 mostly use wider spans where the evaluator already accepts them. Recall, unsupported counts and structural validity were unchanged across the three sets. No regression was observed.
+- FV2 gained one L1 pass. Remaining L1 failures involve evidence roles and non-mention spans for `Occurred`, `Participates`, `Possesses`, `Owns` and `TemporalRelation`. ME is a candidate for the next locked configuration, with validation on FV3 or the holdout.
+
+The aggregate record is `benchmarks/m4_extraction/M4_04B3R_MENTION_EVIDENCE_REPAIR.yaml`.
+
+## Next Candidate
+
+The owner has yet to choose or authorize any of these candidates.
+
+1. **Remaining L1 errors and the P4R7 validity rule.** Develop evidence-role and non-mention span fixes and the `Possesses`/`Owns` explicit-time-limit rule on DEV2 and FV2 development data.
+2. **Validation for the next locked run.** Use a fresh FV3 set authored under Conventions V2 with more mixed-role passages, or use the holdout.
+3. **Draft V1.2 with existing entity names.** Requires a DEC.
 4. **Housekeeping.** FV1 packages are missing, and `.env` has duplicate keys.
 
 ## M8 Narrative Planning — ACCEPTED as a baseline (DEC-023, 2026-11-15)

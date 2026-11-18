@@ -1,0 +1,99 @@
+# M4-04B3R: Offline mention-evidence repair (ME) evaluation. Public aggregates only.
+# No case identifiers, source text, entity names or gold content.
+artifact: M4_04B3R_MENTION_EVIDENCE_REPAIR
+status: M4_04B3R_ME_DEVELOPMENT_CANDIDATE
+date: '2026-11-18'
+authorization:
+  by: Project Owner
+  date: '2026-11-18'
+  instructions:
+    - "ok làm hướng (a) trên DEV1/DEV2 đi"
+    - "ok làm cách 1 đi"
+  scope: Develop ME on DEV1 and DEV2, then rescore saved FV2 responses offline with ME.
+evaluation_data:
+  fv2_status: DEVELOPMENT_DATA
+  status_change: The saved FV2 responses were rescored with a repair chosen after the FV2 diagnosis.
+  only_validation_result: M4_04B3O_FV2_BLIND_RUN_RESULT.yaml
+  next_validation_data: The holdout or a new fresh set (FV3).
+repair:
+  tool: tools/story_extraction/draft_mention_evidence_v1.py
+  runner: tools/story_extraction/run_m4_p4_dev_v1.py
+  dev_option: --mention-evidence
+  enabled_by_default: false
+  variants:
+    +ME: RefersTo and NamedAs
+    +ME_R: RefersTo only
+    +ME_N: NamedAs only
+  behavior: >-
+    ME narrows a single-item SUFFICIENT evidence set for RefersTo to the located mention span
+    and for NamedAs to the unique verbatim name inside the cited span. It never edits shared
+    evidence in place and refuses when the narrowing is uncertain.
+method:
+  base_configuration: P4R6 + QR + AM
+  replay: Offline replay of saved responses with the same primary/repair selection and no model call.
+  evaluator: Snapshot V2 guarded evaluator
+  profile: REAL_SOURCE
+  adjudication: none
+reproduction_checks:
+  scope: The FV2 replay without ME reproduces the official scored run exactly.
+  matched: 166
+  grounded: 138
+  WRONG_EVIDENCE_SPAN: 28
+  l1_pass: 4
+aggregates:
+  fv2:
+    valid_cases: 12
+    required_assertions: 194
+    configurations:
+      QR+AM: {grounded: 138, matched: 166, WRONG_EVIDENCE_SPAN: 28, l1_pass: 4, full_success: 1, required_recovered: 166, unsupported: 17}
+      +ME_R: {grounded: 148, matched: 166, WRONG_EVIDENCE_SPAN: 18, l1_pass: 4, full_success: 1, required_recovered: 166, unsupported: 17}
+      +ME_N: {grounded: 143, matched: 166, WRONG_EVIDENCE_SPAN: 23, l1_pass: 4, full_success: 1, required_recovered: 166, unsupported: 17}
+      +ME: {grounded: 153, matched: 166, WRONG_EVIDENCE_SPAN: 13, l1_pass: 5, full_success: 1, required_recovered: 166, unsupported: 17}
+    wrong_evidence_span_by_predicate:
+      RefersTo: {baseline: 11, with_me: 1}
+      NamedAs: {baseline: 6, with_me: 1}
+      Occurred: {baseline: 3, with_me: 3}
+      Participates: {baseline: 3, with_me: 3}
+      Owns: {baseline: 2, with_me: 2}
+      Possesses: {baseline: 2, with_me: 2}
+      TemporalRelation: {baseline: 1, with_me: 1}
+    WRONG_EVIDENCE_ROLE: {baseline: 4, with_me: 4}
+    me_outcomes:
+      RefersTo: {narrowed: 54, already_exact: 16, refused_not_contained: 1}
+      NamedAs: {narrowed: 15, already_exact: 6, refused_ambiguous: 1}
+  dev2:
+    source: P4R6 saved run
+    valid_cases: 9
+    total_cases: 10
+    required_assertions: 119
+    configurations:
+      QR+AM: {grounded: 82, matched: 89, WRONG_EVIDENCE_SPAN: 7, WRONG_EVIDENCE_ROLE: 1, l1_pass: 5, full_success: 0}
+      +ME: {grounded: 83, matched: 89, WRONG_EVIDENCE_SPAN: 6, l1_pass: 5}
+    variant_equivalence:
+      +ME_R: +ME
+      +ME_N: QR+AM
+    me_outcomes:
+      RefersTo: {narrowed: 25}
+      NamedAs: {narrowed: 3}
+  dev1:
+    source: P4R6 saved run
+    valid_cases: 10
+    total_cases: 14
+    configurations:
+      QR+AM: {grounded: 3, matched: 8, WRONG_EVIDENCE_SPAN: 5, WRONG_EVIDENCE_ROLE: 8, l1_pass: 5}
+      +ME: {grounded: 3, matched: 8, WRONG_EVIDENCE_SPAN: 5, WRONG_EVIDENCE_ROLE: 6, l1_pass: 5}
+    me_outcomes:
+      RefersTo: {narrowed: 34, refused_not_contained: 6}
+      NamedAs: {narrowed: 8, refused: 5}
+findings:
+  - ME removed most mention-level span errors where the evaluator requires exact spans. FV2 has
+    many mixed-role segments. DEV1 and DEV2 mostly cite wider spans where the evaluator already
+    accepts them, so they show little change.
+  - FV2 L1 passes rose from 4 to 5 of 12. The remaining L1 failures involve evidence roles and
+    non-mention spans for Occurred, Participates, Possesses, Owns and TemporalRelation.
+  - Recall, unsupported counts and structural validity were unchanged across all three sets.
+    No regression was observed.
+candidate_directions:
+  status: Development candidate for owner review.
+  next_locked_configuration: Include ME.
+  validation: Use the holdout or a new fresh set (FV3).
