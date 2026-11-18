@@ -784,23 +784,6 @@ class EndToEndTests(unittest.TestCase):
             self.assertIn("[1.2]", revise_prompt)  # the reviser sees the source passage
             self.assertEqual([v["problem_claims"] for v in manifest["versions"]], [1, 0])
 
-            out2 = Path(tmp) / "skip"
-            client = ScriptedLLMClient(SourceCheckModel())
-            with mock.patch.object(stages, "SOURCE_CHECK_MAX_CHARS", 10):
-                manifest = run(client, scope, test_profile(), out2)
-            self.assertIn("longer than 10", manifest["source_check_skipped"])
-            self.assertNotIn("source_check", [c["stage"] for c in client.calls])
-
-            class BrokenSourceCheckModel(FakeModel):
-                """A source check that never answers in the right shape (season S2)."""
-                def __call__(self, stage, system, user):
-                    return '{"paragraphs": []}' if stage == "source_check" else super().__call__(stage, system, user)
-
-            manifest = run(ScriptedLLMClient(BrokenSourceCheckModel()), scope, test_profile(), Path(tmp) / "broken",
-                           source_check_samples=1)
-            self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
-            self.assertIn("list every paragraph", manifest["source_check_failed"][0]["error"])
-
             # Smaller groups: one call per paragraph, each seeing only its own paragraph; pooled samples.
             prompts = []
             model = SourceCheckModel()
@@ -813,10 +796,62 @@ class EndToEndTests(unittest.TestCase):
             self.assertTrue((Path(tmp) / "chunked" / "source_check_v1_c2_s2.json").is_file())
             self.assertEqual(manifest["versions"][0]["problem_claims"], 1)  # the first sample's finding on P001
 
-            client = ScriptedLLMClient(SourceCheckModel())
-            manifest = run(client, scope, test_profile(), Path(tmp) / "off", source_check=False)
-            self.assertNotIn("source_check", [c["stage"] for c in client.calls])
-            self.assertFalse(manifest["settings"]["source_check"])
+    def test_incomplete_source_check_saves_the_draft_and_reports_why_it_needs_review(self):
+        scope = load_scope(DEFAULT_MANIFEST, (1, 1))
+        cases = (
+            ("disabled", "--no-source-check"),
+            ("too_long", "10 ký tự"),
+            ("invalid_answer", "list every paragraph"),
+            ("transport_error", "provider unavailable"),
+        )
+        for mode, expected_reason in cases:
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as tmp:
+                model = FakeModel()
+                model.critic_calls = 1  # No critic findings to mask an incomplete source check.
+
+                def respond(stage, system, user):
+                    if stage == "source_check" and "<P001>" in user:
+                        if mode == "invalid_answer":
+                            return '{"paragraphs": []}'
+                        if mode == "transport_error":
+                            raise RuntimeError("provider unavailable")
+                    return model(stage, system, user)
+
+                out = Path(tmp) / "run"
+                client = ScriptedLLMClient(respond)
+                limit = 10 if mode == "too_long" else stages.SOURCE_CHECK_MAX_CHARS
+                with mock.patch.object(stages, "SOURCE_CHECK_MAX_CHARS", limit):
+                    manifest = run(client, scope, test_profile(), out, source_check=mode != "disabled",
+                                   source_check_chunk=1)
+                paths = [out / name for name in ("script_final.md", "script_final.txt",
+                                                 "report.json", "report.md", "review.html")]
+                self.assertEqual([p.name for p in paths if not p.is_file()], [])
+                for path in paths[:2]:
+                    self.assertIn(SECTION_1, path.read_text(encoding="utf-8"))
+                self.assertEqual(manifest["status"], "NEEDS_REVIEW", manifest.get("error"))
+                saved = json.loads((out / "run_manifest.json").read_text(encoding="utf-8"))
+                report = json.loads((out / "report.json").read_text(encoding="utf-8"))
+                self.assertEqual(saved["status"], report["status"])
+                self.assertEqual(saved["review_reasons"], report["review_reasons"])
+                self.assertEqual(report["gates"]["GATE_FACTUAL_GROUNDING"]["status"], "NEEDS_REVIEW")
+                self.assertEqual(report["findings"], [])
+                self.assertIn(expected_reason, report["review_reasons"][0])
+                for path in paths[-2:]:
+                    rendered = path.read_text(encoding="utf-8")
+                    self.assertIn("Cần duyệt", rendered)
+                    self.assertIn(expected_reason, rendered)
+                if mode in ("disabled", "too_long"):
+                    self.assertNotIn("source_check", [call["stage"] for call in client.calls])
+                else:
+                    self.assertEqual(manifest["source_check_failed"][0]["chunk"], 1)
+                    self.assertTrue((out / "source_check_v1_c2.json").is_file())
+                if mode == "transport_error":
+                    recovered_client = ScriptedLLMClient(FakeModel())
+                    recovered = run(recovered_client, scope, test_profile(), out, source_check_chunk=1, resume=True)
+                    self.assertEqual(recovered["status"], "COMPLETED")
+                    self.assertEqual([call["stage"] for call in recovered_client.calls], ["source_check"])
+                    recovered_report = json.loads((out / "report.json").read_text(encoding="utf-8"))
+                    self.assertEqual(recovered_report["review_reasons"], [])
 
     def test_later_versions_recheck_only_the_paragraphs_that_changed(self):
         """Patch rounds left 60-97% of paragraphs byte-identical in saved runs, yet every
@@ -1000,7 +1035,7 @@ class EndToEndTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             client = ScriptedLLMClient(PersistentProblemModel())
             manifest = run(client, scope, test_profile(), Path(tmp) / "run", revision_rounds=2, source_check=False)
-            self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
+            self.assertEqual(manifest["status"], "NEEDS_REVIEW", manifest.get("error"))
             self.assertEqual([c["stage"] for c in client.calls if c["stage"] in ("revise", "patch")],
                              ["revise", "patch"])
             self.assertEqual([v["problem_claims"] for v in manifest["versions"]], [1, 1, 0])
@@ -1227,7 +1262,7 @@ class EndToEndTests(unittest.TestCase):
             with mock.patch.object(run_pipeline, "build_brief_corpus", side_effect=ValueError("no brief for chapters [1]")):
                 broken = run(ScriptedLLMClient(FakeModel()), episode, test_profile(), Path(tmp) / "broken",
                              background=background, memory=memory, source_check=False)
-            self.assertEqual((broken["status"], broken["callbacks_skipped"]), ("COMPLETED", "no brief for chapters [1]"))
+            self.assertEqual((broken["status"], broken["callbacks_skipped"]), ("NEEDS_REVIEW", "no brief for chapters [1]"))
 
             # The story's name glossary is kept with the memory; the owner's spelling is enforced.
             glossary_file = Path(tmp) / "memory" / full.story_id / "glossary.yaml"

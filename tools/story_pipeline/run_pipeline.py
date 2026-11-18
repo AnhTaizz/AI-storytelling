@@ -31,7 +31,7 @@ from tools.story_pipeline import plan_review  # noqa: E402
 from tools.story_pipeline import (PIPELINE_VERSION, checks, episode_brief, lexicon, review_page,  # noqa: E402
                                   review_summary, stages)
 from tools.story_pipeline.facts import StoryFacts  # noqa: E402
-from tools.story_pipeline.llm import CallLog, LLMClient, StageFailed  # noqa: E402
+from tools.story_pipeline.llm import QUOTA_PATTERN, CallLog, LLMClient, StageFailed  # noqa: E402
 from tools.story_pipeline.profile import DEFAULT_PROFILE_PATH, NarrativeProfile, load_profile  # noqa: E402
 from tools.story_pipeline.source import Chapter, StoryScope, layout_warnings, load_scope, parse_range  # noqa: E402
 from tools.story_retrieval.brief_retrieval_v1 import build_brief_corpus, callback_candidates  # noqa: E402
@@ -133,7 +133,7 @@ def gate_report(critic: Optional[Dict[str, Any]], check: Dict[str, Any],
             "undetermined": undetermined}
 
 
-STATUS_VI = {"PASS": "ĐẠT", "FLAG": "CẦN XEM", "FAIL": "KHÔNG ĐẠT",
+STATUS_VI = {"PASS": "ĐẠT", "FLAG": "CẦN XEM", "FAIL": "KHÔNG ĐẠT", "NEEDS_REVIEW": "Cần duyệt",
              "NOT_CHECKED": "CHƯA KIỂM TRA", "PLAN_ONLY": "CHỈ KIỂM Ở PLAN"}
 
 
@@ -147,6 +147,7 @@ def _language_line(coverage: Optional[Dict[str, Any]]) -> str:
 
 
 def report_markdown(manifest: Dict[str, Any], report: Dict[str, Any]) -> str:
+    status = manifest["status"]
     lines = [
         f"# Báo cáo chạy pipeline — {manifest['run_id']}",
         "",
@@ -156,7 +157,8 @@ def report_markdown(manifest: Dict[str, Any], report: Dict[str, Any]) -> str:
         f"{manifest['profile']['min_words']}–{manifest['profile']['max_words']} từ",
         f"- Số lần gọi mô hình: {manifest['model_calls']} — thời gian: {manifest['seconds']} giây",
         _usage_line(manifest.get("usage")),
-        f"- Trạng thái: **{manifest['status']}**",
+        f"- Trạng thái: **{STATUS_VI.get(status, status)}**",
+        *[f"- Lý do: {reason}" for reason in report.get("review_reasons", [])],
         _language_line(manifest.get("language_checks")),
         *[f"- **Cảnh báo nguồn:** {warning}" for warning in manifest.get("source_warnings", [])],
         "",
@@ -634,6 +636,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         owner_unplaced: List[Dict[str, Optional[str]]] = []
         brief_gaps: List[Dict[str, Any]] = []
         checked_units: List[Dict[str, str]] = []  # the previous version's paragraphs
+        quota_exhausted = False
         if stop_after != "script":
             while True:
                 units = checks.split_units(checks.script_text(script))
@@ -679,11 +682,14 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                                                 lambda: stages.run_source_check(client, scope, chunk, profile, log,
                                                                                 max_repairs, version, sample,
                                                                                 chunk_flags, part))
-                            except StageFailed as exc:
-                                # A second verifier that cannot answer must not sink the episode
-                                # (season S2): record it and go on with the other checks.
+                            except RuntimeError as exc:
+                                # Validation and provider failures leave the draft available for review.
+                                error = str(exc) or type(exc).__name__
                                 manifest.setdefault("source_check_failed", []).append(
-                                    {"version": version, "chunk": part, "sample": sample, "error": str(exc)[:300]})
+                                    {"version": version, "chunk": part, "sample": sample, "error": error[:300]})
+                                if not isinstance(exc, StageFailed) and QUOTA_PATTERN.search(error):
+                                    quota_exhausted = True
+                                    break
                                 continue
                             if result is None:
                                 manifest["source_check_skipped"] = (f"episode source is longer than "
@@ -692,7 +698,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                                 break
                             samples.append(stages.source_check_findings(result, passages))
                             results.append(result)
-                        if skipped:
+                        if skipped or quota_exhausted:
                             break
                     verified = stages.merge_source_findings(samples)
                     # Critic findings the source does support are gaps in the brief, not
@@ -723,7 +729,8 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                     owner_findings += located
                     owner_unplaced += unplaced
                     to_fix = located + to_fix
-                if stop_after == "critic" or not to_fix or (version > revision_rounds and not located):
+                if (stop_after == "critic" or quota_exhausted or not to_fix
+                        or (version > revision_rounds and not located)):
                     break
                 version += 1
                 previous, previous_units = script, units
@@ -791,8 +798,27 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                 for status in ("applied", "applied_but_flagged", "still_present", "not_found")}}
         report["final_version"] = version
         report["final_check"] = final_check
-        write_json(out_dir / "report.json", report)
+        if quota_exhausted:
+            manifest["source_check_quota_exhausted"] = True
+        review_reasons = []
+        if critic is not None and not source_check:
+            review_reasons.append("Bỏ qua đối chiếu nguyên tác vì bước này đã tắt (--no-source-check).")
+        if manifest.get("source_check_skipped"):
+            review_reasons.append(f"Bỏ qua đối chiếu nguyên tác vì nguồn dài hơn "
+                                  f"{stages.SOURCE_CHECK_MAX_CHARS} ký tự.")
+        for failure in manifest.get("source_check_failed", []):
+            review_reasons.append(f"Đối chiếu nguyên tác gặp lỗi ở bản {failure['version']}, "
+                                  f"nhóm {failure['chunk'] or 1}, lần {failure['sample']}: {failure['error']}")
         status = "COMPLETED" if critic is not None else "STOPPED_AFTER_SCRIPT"
+        if review_reasons:
+            status = "NEEDS_REVIEW"
+            manifest["review_reasons"] = review_reasons
+            grounding = report["gates"]["GATE_FACTUAL_GROUNDING"]
+            if grounding["status"] == "PASS":
+                grounding["status"] = status
+        report["status"] = status
+        report["review_reasons"] = review_reasons
+        write_json(out_dir / "report.json", report)
         finish(status)
         (out_dir / "report.md").write_text(report_markdown(manifest, report), encoding="utf-8")
         write_review_form(out_dir, review_form(manifest))
@@ -975,7 +1001,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     manifest = run(client, scope, profile, out_dir, facts=facts, resume=resume, background=background,
                    memory=memory, progress=lambda message: print(f"  ... {message}", flush=True),
                    invocation=invocation_of(args), **run_options(args))
-    print(f"status: {manifest['status']}  calls: {manifest['model_calls']}  seconds: {manifest['seconds']}")
+    status = manifest["status"]
+    print(f"status: {STATUS_VI.get(status, status)}  calls: {manifest['model_calls']}  seconds: {manifest['seconds']}")
+    for reason in manifest.get("review_reasons", []):
+        print(f"  - {reason}")
     if manifest.get("error"):
         print(f"error: {manifest['error']}")
     if (out_dir / "report.md").exists():

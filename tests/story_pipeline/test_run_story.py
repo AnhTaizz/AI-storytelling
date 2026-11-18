@@ -142,6 +142,50 @@ class SeasonTests(unittest.TestCase):
             self.assertTrue((Path(tmp) / "season" / "ep02_ch2" / "review.html").is_file())
             self.assertGreater(ep2["usage"]["total"]["calls"], 0)
 
+    def test_source_check_quota_saves_the_draft_and_resumes_before_next_episode(self):
+        model = FakeModel()  # The first critic finds a problem that would normally trigger revision.
+
+        def quota_on_second_chunk(stage, system, user):
+            if stage == "source_check" and "<P002>" in user:
+                raise RuntimeError("429 RESOURCE_EXHAUSTED")
+            return model(stage, system, user)
+
+        ranges = [(1, 1), (2, 2)]
+        memory = StoryMemory(Path(self.tmp.name) / "memory", "story-sample-0001")
+        client = ScriptedLLMClient(quota_on_second_chunk)
+        options = {"source_check_chunk": 1}
+        season = run_story.run_season(client, DEFAULT_MANIFEST, ranges, test_profile(), self.season_dir,
+                                      memory=memory, stop_on_failure=False, options=options)
+        self.assertEqual(season["status"], "PAUSED_QUOTA")
+        self.assertIn("tập 1", season["stop_reason"])
+        self.assertEqual([row["status"] for row in season["episodes"]], ["NEEDS_REVIEW", "NOT_RUN"])
+        self.assertEqual(json.loads((self.season_dir / "season.json").read_text(encoding="utf-8")), season)
+        self.assertFalse((self.season_dir / "ep02_ch2").exists())
+        missing_check = "source_check:v1c2:attempt1"
+        self.assertEqual(client.calls[-1]["request_id"], missing_check)
+
+        episode = self.season_dir / "ep01_ch1"
+        self.assertTrue((episode / "source_check_v1_c1.json").is_file())
+        self.assertFalse((episode / "source_check_v1_c2.json").exists())
+        draft = (episode / "script_final.txt").read_text(encoding="utf-8")
+        self.assertIn("buổi chiều mưa", draft)
+        report = json.loads((episode / "report.json").read_text(encoding="utf-8"))
+        self.assertEqual(report["status"], "NEEDS_REVIEW")
+        self.assertIn("RESOURCE_EXHAUSTED", report["review_reasons"][0])
+
+        resumed = ScriptedLLMClient(model)
+        season = run_story.run_season(resumed, DEFAULT_MANIFEST, ranges, test_profile(), self.season_dir,
+                                      memory=memory, stop_on_failure=False, options=options)
+        self.assertEqual(season["status"], "COMPLETED")
+        self.assertEqual([row["status"] for row in season["episodes"]], ["COMPLETED", "COMPLETED"])
+        requests = [call["request_id"] for call in resumed.calls]
+        ep2_start = requests.index("brief:ch2:attempt1")
+        self.assertEqual(requests[:ep2_start], [missing_check, "revise:v2:attempt1", "critic:v2:attempt1",
+                                                "source_check:v2:attempt1"])
+        self.assertTrue((episode / "source_check_v1_c2.json").is_file())
+        report = json.loads((episode / "report.json").read_text(encoding="utf-8"))
+        self.assertEqual(report["review_reasons"], [])
+
 
 class CliTests(unittest.TestCase):
     def test_bad_episode_plan_is_rejected_before_any_call(self):
