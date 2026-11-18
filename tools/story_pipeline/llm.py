@@ -44,6 +44,9 @@ class StageFailed(RuntimeError):
 # per-model quota (429) are model-specific; a request the provider rejects is not.
 FALLBACK_CODES = frozenset({"SERVER_FAILURE", "RATE_LIMIT", "TIMEOUT", "NETWORK_FAILURE", "POOL_EXHAUSTED"})
 
+# Provider errors that allow the pipeline to resume when quota is available again.
+QUOTA_PATTERN = re.compile(r"RESOURCE_EXHAUSTED|quota|rate.?limit|\b429\b", re.IGNORECASE)
+
 
 _NETWORK_MODULES = ("httpx", "httpcore", "h11", "h2", "ssl", "socket", "urllib3", "aiohttp")
 
