@@ -4,7 +4,7 @@
 
 *Header refreshed 2026-11-18; the dated sections below are history.*
 
-M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED; holdout closed, predictions NOT RUN. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. Annotation conventions V2: ACCEPTED (DEC-026). Mention-evidence repair: see M4-04B3R.
+M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED; holdout closed, predictions NOT RUN. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. Annotation conventions V2: ACCEPTED (DEC-026). P4R7 host repairs are tracked in M4-04B3S.
 
 M0 — Product Foundation: CLOSED (see M0 Closure).
 
@@ -43,7 +43,7 @@ M14 — Voice / Video Automation: GATED behind the Script Quality Gate (DEC-009)
   - The contract defines the standard. It does not show that any current Writer or critic meets it. The M9 Script Quality Gate is not evaluated.
 - M2 — Canonical Story Model: capability COMPLETE / FROZEN (DEC-016). The expected capability has been established as `canonical_story/v0` + `predicate_registry/v0.1`. M2 ran under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015).
 - M3 — Light Novel Ingestion: COMPLETE / FROZEN — `LIGHT_NOVEL_INGESTION/v0`, DEC-018, freeze record `benchmarks/m3_ingestion/LIGHT_NOVEL_INGESTION_V0_FROZEN.yaml`. The roadmap is unchanged.
-- M4 — Story Extraction: IN PROGRESS (M4-01/M4-02 accepted; M4-03 holdout sealed and closed, predictions not run; no extractor/model selected; nothing frozen). V2 accepted (DEC-026). Mention-evidence repair: see M4-04B3R.
+- M4 — Story Extraction: IN PROGRESS (M4-01/M4-02 accepted; M4-03 holdout sealed and closed, predictions not run; no extractor/model selected; nothing frozen). V2 accepted (DEC-026). P4R7 host repairs are tracked in M4-04B3S.
 - M5 — Persistent Story Memory: PROTOTYPE EXISTS; not frozen or M5 completion (see Implementation Status; DEC-021).
 - M6 — Retrieval: ACCEPTED BASELINE over brief memory (DEC-021, 2026-11-15).
 - M7 — Story Brief: ACCEPTED BASELINE (DEC-022, 2026-11-15).
@@ -1312,6 +1312,48 @@ The owner has yet to choose or authorize any of these candidates.
 2. **Validation for the next locked run.** Use a fresh FV3 set authored under Conventions V2 with more mixed-role passages, or use the holdout.
 3. **Draft V1.2 with existing entity names.** Requires a DEC.
 4. **Housekeeping.** FV1 packages are missing, and `.env` has duplicate keys.
+
+## M4-04B3S — P4R7 HOST REPAIRS SE AND TB — Status: M4_04B3S_SE_TB_DEVELOPMENT_CANDIDATE
+
+The project owner authorized option 1 of the M4-04B3R Next Candidate list on 2026-11-18 (“ok làm P4R7 đi, dùng codex nhé”). FV2 has been development data since M4-04B3R. M4-04B3O remains the only validation result.
+
+The diagnosis after QR + AM + ME found three patterns.
+
+- Predictions were narrower than gold in 9 of 11 non-mention wrong spans. Whole sentences account for 93/96 gold references on FV2, 259/290 on DEV1 and 5/60 on DEV2. A whole dialogue line includes the 「…」 brackets. DEV2 gold favors clauses.
+- All six FV2 validity errors had OPEN start and end bounds on Possesses or Owns where gold used a TRANSFER anchor. The draft already contained the transfer in five of the six cases.
+- V2 leaves dialogue-mention evidence roles unspecified. FV2 uses IN_WORLD_REPORT for 6/7, while DEV1 and DEV2 use DEPICTION for 4/4 and 5/5. The conventions gap needs an owner decision on a V3 rule. No repair was built for it.
+
+Both host repairs are opt-in development options in `run_m4_p4_dev_v1.py`. They run in the order QR → AM → ME → SE → TB when enabled.
+
+- **Sentence evidence (+SE).** `draft_sentence_evidence_v1.py` (`--sentence-evidence`) widens SUFFICIENT evidence for predicates other than RefersTo and NamedAs to the enclosing sentence or whole dialogue region. It refuses multi-sentence spans and preserves shared evidence items.
+- **Transfer bounds (+TB).** `draft_transfer_bounds_v1.py` (`--transfer-bounds`) uses a unique TRANSFER anchor for an OPEN start bound on affirmed Possesses or Owns when the item is THEME and the holder is RECIPIENT. It also uses the anchor for an OPEN end bound on affirmed Possesses when the holder is SOURCE. It refuses ambiguity and incorrect text order.
+- **P4R7 prompt.** `prompts/story_extraction_draft_p4r7_system_v1_1.txt` adds one possession-bounds paragraph to P4R6. P4R6 bytes were preserved. A P4R7 model run is pending.
+
+As in M4-04B3R, the evaluation replayed saved P4R6 responses offline, with P4R6 + QR + AM + ME as the base. FV2 had 12 valid cases. Subset counts `INSUFFICIENT_SUPPORT_MARKED_SUFFICIENT`.
+
+| FV2 configuration | Grounded/matched | Wrong span | Subset | Wrong role | Validity errors | L1 pass | Full success |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Base | 153/166 | 13 | 0 | 4 | 6 | 5 | 1 |
+| +SE | 157/166 | 8 | 1 | 4 | 6 | 5 | 1 |
+| +TB | 153/166 | 13 | 0 | 4 | 1 | 5 | 1 |
+| +SE+TB | 157/166 | 8 | 1 | 4 | 1 | 5 | 1 |
+
+- **DEV results.** With SE, DEV1 rose from 3/8 to 5/8 grounded and DEV2 from 83/89 to 86/89. Both gained one L1 pass, from five to six. TB left both DEV scores unchanged. DEV2's remaining validity error is a NAMED_TIME bound.
+
+- SE and TB reduced the errors they targeted, with recall, matched counts, unsupported counts and structural validity unchanged on all three sets. DEV1 gained one role mismatch where a widened span covers gold evidence with a different role.
+- FV2 kept five L1 passes. Almost every failing case still has a dialogue-mention role error or a remaining span error, and the next case-level gain needs the owner's evidence-role rule. The one remaining FV2 validity error involves a pick-up GENERIC event that the P4R7 prompt addresses.
+
+The aggregate record is `benchmarks/m4_extraction/M4_04B3S_P4R7_SENTENCE_EVIDENCE_TRANSFER_BOUNDS.yaml`.
+
+## Next Candidate
+
+The owner has yet to choose or authorize any of these candidates.
+
+1. **Evidence-role rule for mentions inside dialogue.** Record Conventions V3 and a DEC, then align the gold or the prompt.
+2. **P4R7 development model run.** Check the possession-bounds prompt rule on DEV2 and FV2 development data. This uses Gemini quota.
+3. **Next locked validation.** Use FV3 or the holdout with P4R6 + QR + AM + ME + SE + TB, with P4R7 as an option after a development model run.
+4. **Draft V1.2 with existing entity names.** Requires a DEC.
+5. **Housekeeping.** Address missing FV1 packages and duplicate `.env` keys.
 
 ## M8 Narrative Planning — ACCEPTED as a baseline (DEC-023, 2026-11-15)
 

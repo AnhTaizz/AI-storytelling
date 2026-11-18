@@ -26,6 +26,8 @@ from tools.story_extraction.draft_mention_anchoring_v1 import anchor_mentions as
 from tools.story_extraction.draft_mention_evidence_v1 import (
     PREDICATES as MENTION_EVIDENCE_PREDICATES, narrow_mention_evidence,
 )
+from tools.story_extraction.draft_sentence_evidence_v1 import widen_to_sentence
+from tools.story_extraction.draft_transfer_bounds_v1 import bound_by_transfer
 from tools.story_extraction.check_annotation_conventions_v1 import RULE_IDS, check_batch
 from tools.story_extraction.draft_compiler_v1 import DraftCompilerContext
 from tools.story_extraction.draft_compiler_v1_1 import prepare_story_extraction_draft_v1_1
@@ -114,7 +116,8 @@ def _job_prefix(variant: str, dataset: str) -> str:
 def _run_variant(variant: str, quote_resolution: bool, rich_repair_blockers: bool,
                  existing_names: bool = False, anchor_mentions: bool = False,
                  mention_evidence: bool = False,
-                 mention_evidence_predicates: Sequence[str] = MENTION_EVIDENCE_PREDICATES) -> str:
+                 mention_evidence_predicates: Sequence[str] = MENTION_EVIDENCE_PREDICATES, *,
+                 sentence_evidence: bool = False, transfer_bounds: bool = False) -> str:
     label = (variant + ("+QR" if quote_resolution else "") + ("+RB" if rich_repair_blockers else "")
              + ("+EN" if existing_names else "") + ("+AM" if anchor_mentions else ""))
     if mention_evidence:
@@ -124,7 +127,7 @@ def _run_variant(variant: str, quote_resolution: bool, rich_repair_blockers: boo
         if selected not in suffix:
             raise DevelopmentError("Mention evidence predicates must select RefersTo, NamedAs, or both")
         label += suffix[selected]
-    return label
+    return label + ("+SE" if sentence_evidence else "") + ("+TB" if transfer_bounds else "")
 
 
 def _with_existing_names(prepared: Mapping[str, Any], context: DraftCompilerContext) -> dict[str, Any]:
@@ -239,14 +242,16 @@ def build_primary_spec(variant: str, case: CaseInput, model: str = protocol.MODE
                        quote_resolution: bool = False, rich_repair_blockers: bool = False,
                        existing_names: bool = False, anchor_mentions: bool = False,
                        mention_evidence: bool = False,
-                       mention_evidence_predicates: Sequence[str] = MENTION_EVIDENCE_PREDICATES) -> DurableJobSpec:
+                       mention_evidence_predicates: Sequence[str] = MENTION_EVIDENCE_PREDICATES,
+                       sentence_evidence: bool = False, transfer_bounds: bool = False) -> DurableJobSpec:
     material = prompt_material(variant)
     user = protocol._render(material["primary_user_template"], {
         "CASE_ID": case.case_id,
         "PREPARED_INPUT_JSON": protocol.canonical_json_bytes(dict(case.prepared_input)).decode().rstrip(),
     })
     label = _run_variant(variant, quote_resolution, rich_repair_blockers, existing_names, anchor_mentions,
-                         mention_evidence, mention_evidence_predicates)
+                         mention_evidence, mention_evidence_predicates,
+                         sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds)
     return replace(protocol._spec(f"{_job_prefix(label, case.dataset)}_{case.case_id}_PRIMARY",
                                   material["primary_system"], user),
                    model=model, credential_slot=credential_slot, research_task_id=TASK_ID)
@@ -258,7 +263,8 @@ def build_repair_spec(variant: str, case: CaseInput, primary_raw: str, validatio
                       quote_resolution: bool = False, rich_repair_blockers: bool = False,
                       existing_names: bool = False, anchor_mentions: bool = False,
                       mention_evidence: bool = False,
-                      mention_evidence_predicates: Sequence[str] = MENTION_EVIDENCE_PREDICATES) -> DurableJobSpec:
+                      mention_evidence_predicates: Sequence[str] = MENTION_EVIDENCE_PREDICATES,
+                      sentence_evidence: bool = False, transfer_bounds: bool = False) -> DurableJobSpec:
     payload = protocol.sanitized_failure(validation["category"], validation["blockers"])
     material = prompt_material(variant)
     user = protocol._render(material["repair_user_template"], {
@@ -271,9 +277,11 @@ def build_repair_spec(variant: str, case: CaseInput, primary_raw: str, validatio
                                  quote_resolution=quote_resolution, rich_repair_blockers=rich_repair_blockers,
                                  existing_names=existing_names, anchor_mentions=anchor_mentions,
                                  mention_evidence=mention_evidence,
-                                 mention_evidence_predicates=mention_evidence_predicates)
+                                 mention_evidence_predicates=mention_evidence_predicates,
+                                 sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds)
     label = _run_variant(variant, quote_resolution, rich_repair_blockers, existing_names, anchor_mentions,
-                         mention_evidence, mention_evidence_predicates)
+                         mention_evidence, mention_evidence_predicates,
+                         sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds)
     return replace(primary, job_id=f"{_job_prefix(label, case.dataset)}_{case.case_id}_REPAIR_1",
                    system_prompt=material["repair_system"], user_prompt=user)
 
@@ -312,7 +320,8 @@ def _canonical_blockers(draft: Any, captures: list) -> list[dict[str, str]]:
 def validate_attempt(raw: str, case: CaseInput, *, quote_resolution: bool = False,
                      rich_repair_blockers: bool = False,
                      anchor_mentions: bool = False, mention_evidence: bool = False,
-                     mention_evidence_predicates: Sequence[str] = MENTION_EVIDENCE_PREDICATES
+                     mention_evidence_predicates: Sequence[str] = MENTION_EVIDENCE_PREDICATES,
+                     sentence_evidence: bool = False, transfer_bounds: bool = False,
                      ) -> tuple[Any, Any, Any, dict]:
     """Validate one response with optional draft repairs and safe diagnostics.
 
@@ -320,7 +329,8 @@ def validate_attempt(raw: str, case: CaseInput, *, quote_resolution: bool = Fals
     Both the untouched draft and the draft actually validated are returned.
     """
     original_draft, report, anchoring_report, evidence_report = None, None, None, None
-    host_repair = quote_resolution or anchor_mentions or mention_evidence
+    sentence_report, bounds_report = None, None
+    host_repair = quote_resolution or anchor_mentions or mention_evidence or sentence_evidence or transfer_bounds
     if host_repair:
         try:
             original_draft = json.loads(raw)
@@ -335,6 +345,10 @@ def validate_attempt(raw: str, case: CaseInput, *, quote_resolution: bool = Fals
             if mention_evidence:
                 resolved, evidence_report = narrow_mention_evidence(
                     resolved, case.prepared_input, predicates=mention_evidence_predicates)
+            if sentence_evidence:
+                resolved, sentence_report = widen_to_sentence(resolved, case.prepared_input)
+            if transfer_bounds:
+                resolved, bounds_report = bound_by_transfer(resolved, case.prepared_input)
             raw = json.dumps(resolved, ensure_ascii=False)
     captures = []
     original_validator = compiler.validate_batch_guarded
@@ -360,6 +374,10 @@ def validate_attempt(raw: str, case: CaseInput, *, quote_resolution: bool = Fals
         validation["mention_anchoring"] = anchoring_report
     if evidence_report is not None:
         validation["mention_evidence"] = evidence_report
+    if sentence_report is not None:
+        validation["sentence_evidence"] = sentence_report
+    if bounds_report is not None:
+        validation["transfer_bounds"] = bounds_report
     return original_draft if host_repair else draft, draft, batch, validation
 
 
@@ -368,7 +386,8 @@ def run_cases(cases: Sequence[CaseInput], specs: Sequence[DurableJobSpec], varia
               guard: Callable[[], None], wait: Callable[[float], None], *,
               quote_resolution: bool = False, rich_repair_blockers: bool = False,
               existing_names: bool = False, anchor_mentions: bool = False, mention_evidence: bool = False,
-              mention_evidence_predicates: Sequence[str] = MENTION_EVIDENCE_PREDICATES) -> None:
+              mention_evidence_predicates: Sequence[str] = MENTION_EVIDENCE_PREDICATES,
+              sentence_evidence: bool = False, transfer_bounds: bool = False) -> None:
     for case, primary in zip(cases, specs):
         directory = root / "artifacts" / case.case_id
         attempts = []
@@ -389,10 +408,11 @@ def run_cases(cases: Sequence[CaseInput], specs: Sequence[DurableJobSpec], varia
             draft, resolved, batch, validation = validate_attempt(
                 raw, case, quote_resolution=quote_resolution, rich_repair_blockers=rich_repair_blockers,
                 anchor_mentions=anchor_mentions, mention_evidence=mention_evidence,
-                mention_evidence_predicates=mention_evidence_predicates)
+                mention_evidence_predicates=mention_evidence_predicates,
+                sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds)
             if draft is not None:
                 _write_json(directory / f"{phase}_draft.json", draft)
-                if quote_resolution or anchor_mentions or mention_evidence:
+                if quote_resolution or anchor_mentions or mention_evidence or sentence_evidence or transfer_bounds:
                     _write_json(directory / f"{phase}_resolved_draft.json", resolved)
             attempt["validation"] = validation
             if validation["pass"] or phase == "repair_1":
@@ -402,7 +422,8 @@ def run_cases(cases: Sequence[CaseInput], specs: Sequence[DurableJobSpec], varia
                                      quote_resolution=quote_resolution, rich_repair_blockers=rich_repair_blockers,
                                      existing_names=existing_names, anchor_mentions=anchor_mentions,
                                      mention_evidence=mention_evidence,
-                                     mention_evidence_predicates=mention_evidence_predicates)
+                                     mention_evidence_predicates=mention_evidence_predicates,
+                                     sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds)
         compiled_sha256 = None
         if batch is not None:
             compiled_sha256 = _write_json(directory / "compiled_batch.json", batch)
@@ -510,7 +531,8 @@ def public_summary(score: Mapping[str, Any]) -> dict[str, Any]:
 def revalidate_cases(cases: Sequence[CaseInput], source: Path, destination: Path, *,
                      quote_resolution: bool, rich_repair_blockers: bool, anchor_mentions: bool = False,
                      mention_evidence: bool = False,
-                     mention_evidence_predicates: Sequence[str] = MENTION_EVIDENCE_PREDICATES) -> dict:
+                     mention_evidence_predicates: Sequence[str] = MENTION_EVIDENCE_PREDICATES,
+                     sentence_evidence: bool = False, transfer_bounds: bool = False) -> dict:
     """Replay saved attempts without touching checkpoints or original validations.
 
     All saved attempts are inspected, even when the new primary passes. The new
@@ -519,6 +541,9 @@ def revalidate_cases(cases: Sequence[CaseInput], source: Path, destination: Path
     Counts include every replayed attempt, even after an earlier attempt passes.
     """
     rows = []
+    repair_reports = [key for key, enabled in (("mention_evidence", mention_evidence),
+                      ("sentence_evidence", sentence_evidence), ("transfer_bounds", transfer_bounds)) if enabled]
+
     def statistics():
         counts = {"remaining_blocker_counts": Counter(), "quote_resolution_report": {
             kind: dict.fromkeys(OUTCOMES, 0) for kind in ("evidence", "mentions")}}
@@ -527,6 +552,10 @@ def revalidate_cases(cases: Sequence[CaseInput], source: Path, destination: Path
         if mention_evidence:
             counts["mention_evidence_report"] = narrow_mention_evidence(
                 {}, {}, predicates=mention_evidence_predicates)[1]
+        if sentence_evidence:
+            counts["sentence_evidence_report"] = widen_to_sentence({}, {})[1]
+        if transfer_bounds:
+            counts["transfer_bounds_report"] = bound_by_transfer({}, {})[1]
         return counts
 
     totals = statistics()
@@ -547,7 +576,8 @@ def revalidate_cases(cases: Sequence[CaseInput], source: Path, destination: Path
                 _, _, batch, validation = validate_attempt(
                     raw, case, quote_resolution=quote_resolution, rich_repair_blockers=rich_repair_blockers,
                     anchor_mentions=anchor_mentions, mention_evidence=mention_evidence,
-                    mention_evidence_predicates=mention_evidence_predicates)
+                    mention_evidence_predicates=mention_evidence_predicates,
+                    sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds)
                 status = "STRUCTURAL_VALID" if batch is not None else validation["category"]
             elif attempt["validation"]["category"] == "TRANSPORT_FAILURE":
                 validation = attempt["validation"]
@@ -565,14 +595,18 @@ def revalidate_cases(cases: Sequence[CaseInput], source: Path, destination: Path
                     for kind, outcomes in validation.get("mention_anchoring", {}).items():
                         for code, count in outcomes.items():
                             counts["mention_anchoring_report"][kind][code] += count
-                if mention_evidence and "mention_evidence" in validation:
-                    report = validation["mention_evidence"]
-                    aggregate = counts["mention_evidence_report"]
+                for name in repair_reports:
+                    if name not in validation:
+                        continue
+                    report = validation[name]
+                    aggregate = counts[f"{name}_report"]
                     for predicate, outcomes in report["by_predicate"].items():
+                        predicate_counts = aggregate["by_predicate"].setdefault(predicate, dict.fromkeys(outcomes, 0))
                         for code, count in outcomes.items():
-                            aggregate["by_predicate"][predicate][code] += count
-                    for key in ("evidence_items_added", "evidence_items_removed"):
-                        aggregate[key] += report[key]
+                            predicate_counts[code] += count
+                    for key, count in report.items():
+                        if key != "by_predicate":
+                            aggregate[key] += count
             if terminal != "STRUCTURAL_VALID":
                 terminal = status
         if not attempts:
@@ -594,6 +628,10 @@ def revalidate_cases(cases: Sequence[CaseInput], source: Path, destination: Path
     if mention_evidence:
         result["mention_evidence"] = True
         result["mention_evidence_predicates"] = list(totals["mention_evidence_report"]["by_predicate"])
+    if sentence_evidence:
+        result["sentence_evidence"] = True
+    if transfer_bounds:
+        result["transfer_bounds"] = True
     _write_json(destination / "revalidation.json", result)
     return result
 
@@ -610,6 +648,7 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
             existing_names: bool = False, anchor_mentions: bool = False,
             mention_evidence: bool = False,
             mention_evidence_predicates: Sequence[str] = MENTION_EVIDENCE_PREDICATES,
+            sentence_evidence: bool = False, transfer_bounds: bool = False,
             run_directory: Path | None = None) -> dict[str, Any]:
     if mode not in ("preflight", "run", "score", "revalidate"):
         raise DevelopmentError("Unknown development mode")
@@ -631,7 +670,8 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
     verify()
     hashes = prompt_hashes(variant)
     label = _run_variant(variant, quote_resolution, rich_repair_blockers, existing_names, anchor_mentions,
-                         mention_evidence, mention_evidence_predicates)
+                         mention_evidence, mention_evidence_predicates,
+                         sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds)
     identity = label.replace("+", "_")
     base_root = Path(output_root) / "DEV1" if dataset == "DEV1" else Path(output_root)
     root = base_root / label
@@ -649,7 +689,8 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
                  quote_resolution=quote_resolution, rich_repair_blockers=rich_repair_blockers,
                  existing_names=existing_names, anchor_mentions=anchor_mentions,
                  mention_evidence=mention_evidence,
-                 mention_evidence_predicates=mention_evidence_predicates) for case in loaded]
+                 mention_evidence_predicates=mention_evidence_predicates,
+                 sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds) for case in loaded]
         metadata = {"dataset": dataset, "variant": variant, "model": model, "credential_slot": credential_slot,
                     "case_count": len(loaded), "primary_specs": len(specs), "prompt_hashes": hashes,
                     "input_sha256": DEV1_SHA256 if dataset == "DEV1" else INPUT_SHA256,
@@ -662,6 +703,10 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
             metadata["mention_evidence"] = True
             metadata["mention_evidence_predicates"] = [p for p in MENTION_EVIDENCE_PREDICATES
                                                       if p in mention_evidence_predicates]
+        if sentence_evidence:
+            metadata["sentence_evidence"] = True
+        if transfer_bounds:
+            metadata["transfer_bounds"] = True
         if mode == "preflight":
             return {**metadata, "status": "PREFLIGHT_PASS"}
         if mode == "revalidate":
@@ -669,7 +714,8 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
             return revalidate_cases(loaded, Path(run_directory) if run_directory is not None else root, root,
                                     quote_resolution=quote_resolution, rich_repair_blockers=rich_repair_blockers,
                                     anchor_mentions=anchor_mentions, mention_evidence=mention_evidence,
-                                    mention_evidence_predicates=mention_evidence_predicates)
+                                    mention_evidence_predicates=mention_evidence_predicates,
+                                    sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds)
 
         def guard():
             verify()
@@ -713,7 +759,8 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
                       quote_resolution=quote_resolution, rich_repair_blockers=rich_repair_blockers,
                       existing_names=existing_names, anchor_mentions=anchor_mentions,
                       mention_evidence=mention_evidence,
-                      mention_evidence_predicates=mention_evidence_predicates)
+                      mention_evidence_predicates=mention_evidence_predicates,
+                      sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds)
         guard()
         score = score_cases(loaded, specs, gold if dataset == "DEV1" else read_gold(dev2_gold, selected), root)
         score.update(metadata)
@@ -743,6 +790,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--mention-evidence-predicates", default=MENTION_EVIDENCE_PREDICATES,
                         type=lambda value: tuple(part.strip() for part in value.split(",")),
                         help="Comma-separated subset of RefersTo,NamedAs (default: both)")
+    parser.add_argument("--sentence-evidence", action="store_true",
+                        help="Widen sufficient assertion evidence to single sentences")
+    parser.add_argument("--transfer-bounds", action="store_true",
+                        help="Bound possession validity using matching transfer anchors")
     parser.add_argument("--rich-repair-blockers", action="store_true")
     parser.add_argument("--existing-names", action="store_true",
                         help="Add affirmed prior-context names and mention forms to model input")
