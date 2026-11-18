@@ -19,7 +19,9 @@ class ProtocolTests(unittest.TestCase):
         # Captured before Task H. Stable per-path hash inputs avoid self-binding
         # source edits (and checkout newline differences) changing this baseline.
         with mock.patch.object(lock, "file_sha256", side_effect=lambda p:
-                lock.sha256_bytes(p.relative_to(lock.REPO_ROOT).as_posix().encode())),                 mock.patch.object(lock, "PROMPT_VARIANT", "P4R4"), mock.patch.object(lock, "HOST_REPAIRS", ()):
+                lock.sha256_bytes(p.relative_to(lock.REPO_ROOT).as_posix().encode())), \
+                mock.patch.object(lock, "PROMPT_VARIANT", "P4R4"), mock.patch.object(lock, "HOST_REPAIRS", ()), \
+                mock.patch.object(lock, "CREDENTIAL_SLOT", "gemini_slot_33"):
             value = lock.build_protocol()
             paths = lock.bound_paths()
         self.assertNotIn("host_repairs", value)
@@ -79,7 +81,7 @@ class ProtocolTests(unittest.TestCase):
         self.assertEqual(value, lock.build_protocol())
         self.assertEqual(lock.CASE_IDS, tuple(f"FV2_{i:02d}" for i in range(1, 13)))
         self.assertEqual(value["generation"]["temperature"], 0)
-        self.assertEqual(value["generation"]["credential_slot"], "gemini_slot_33")
+        self.assertEqual(value["generation"]["credential_slot"], "gemini_slot_40")
         self.assertEqual(value["repair_policy"]["maximum_per_case"], 1)
         self.assertEqual(value["durable_execution"]["global_pacing_max_operations"], 6)
         self.assertIn("P4R6", value["extractor_id"])
@@ -95,7 +97,7 @@ class ProtocolTests(unittest.TestCase):
         case, _ = synthetic_case("FV2_01")
         spec = lock.build_primary_spec(case.case_id, case.prepared_input)
         self.assertEqual(spec.system_prompt, lock.dev.prompt_material("P4R6")["primary_system"])
-        self.assertEqual(spec.credential_slot, "gemini_slot_33")
+        self.assertEqual(spec.credential_slot, "gemini_slot_40")
         failure = {"category": "JSON_PARSE_FAILURE", "blockers": [{"code": "INVALID_JSON", "phase": "JSON", "path": ""}]}
         repair = lock.build_repair_spec(case.case_id, case.prepared_input, "{", failure)
         self.assertTrue(repair.job_id.endswith("REPAIR_1"))

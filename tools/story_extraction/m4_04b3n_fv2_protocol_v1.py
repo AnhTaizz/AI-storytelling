@@ -35,7 +35,7 @@ FV2_MANIFEST_SHA256 = "9595d44c4e41e50038d6f64466f2dd5415799321e86baea0878c9e3e8
 # Assume the FV1 author's scheme with the FV2 prefix; refuse any discrepancy.
 CASE_IDS = tuple(f"FV2_{i:02d}" for i in range(1, 13))
 MODEL = fv1.MODEL
-CREDENTIAL_SLOT = "gemini_slot_33"
+CREDENTIAL_SLOT = "gemini_slot_40"  # DEC-027: slot 33 was out of daily quota
 PROTOCOL_NAME = PROTOCOL_ID + ".json"
 VALIDATION_NAME = "M4_04B3N_FV2_PROTOCOL_VALIDATION_V1.json"
 Fv2ProtocolError = fv1.Fv1ProtocolError

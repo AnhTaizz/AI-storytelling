@@ -852,7 +852,7 @@ LIMITS:
 STATUS: ACCEPTED (Project Owner, 2026-11-18: "khóa P4R6 + QR + AM rồi chạy FV2 đi")
 
 DECISION:
-1. **The FV2 protocol lock binds P4R6 with host repairs QR and AM.** In `tools/story_extraction/m4_04b3n_fv2_protocol_v1.py`, `PROMPT_VARIANT` is `P4R6` and `HOST_REPAIRS` is `("QR", "AM")`. The lock hashes the P4R6 prompt and both repair modules. Model, temperature, credential slot, the one structural repair per case and the scoring are unchanged.
+1. **The FV2 protocol lock binds P4R6 with host repairs QR and AM.** In `tools/story_extraction/m4_04b3n_fv2_protocol_v1.py`, `PROMPT_VARIANT` is `P4R6` and `HOST_REPAIRS` is `("QR", "AM")`. The lock hashes the P4R6 prompt and both repair modules. The credential slot moves from `gemini_slot_33`, which was out of daily quota, to `gemini_slot_40` (owner choice, 2026-11-18: "sang cách 2 đi"); a one-request probe of slots 34–40 succeeded before the change. Model, temperature, the one structural repair per case and the scoring are unchanged.
 2. **FV2 is run once, blind.** The predictions are locked and hashed before the FV2 gold is opened. A second run, or any change to the prompt, the repairs or the scoring after the gold is opened, makes FV2 tuning data, as happened to DEV2.
 
 LIMITS:

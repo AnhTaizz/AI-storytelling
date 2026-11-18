@@ -1248,8 +1248,8 @@ Owner decision (nothing authorized yet):
 ## M4-04B3N — FV2 LOCK BINDS P4R6 + QR + AM — Status: M4_04B3N_FV2_LOCK_BOUND_RUN_PENDING
 
 - **Authorization.** Option 1 of the Next Candidate above; the project owner asked for it on 2026-11-18 ("khóa P4R6 + QR + AM rồi chạy FV2 đi"). Recorded as DEC-027.
-- **Change.** `m4_04b3n_fv2_protocol_v1.py` binds `PROMPT_VARIANT = "P4R6"` and `HOST_REPAIRS = ("QR", "AM")`. Model, temperature, credential slot (`gemini_slot_33`), the one structural repair per case and the scoring are unchanged. A protocol without the `host_repairs` key is still read as having none.
-- **Run.** One blind FV2 run on slot 33, after its daily quota resets. The predictions are locked and hashed before the gold is opened.
+- **Change.** `m4_04b3n_fv2_protocol_v1.py` binds `PROMPT_VARIANT = "P4R6"` and `HOST_REPAIRS = ("QR", "AM")`. The credential slot moves from `gemini_slot_33`, which was out of daily quota, to `gemini_slot_40`. Model, temperature, the one structural repair per case and the scoring are unchanged. A protocol without the `host_repairs` key is still read as having none.
+- **Run.** One blind FV2 run on slot 40. A protocol lock written for slot 33 was never used for any provider call. The predictions are locked and hashed before the gold is opened.
 
 ## M8 Narrative Planning — ACCEPTED as a baseline (DEC-023, 2026-11-15)
 
