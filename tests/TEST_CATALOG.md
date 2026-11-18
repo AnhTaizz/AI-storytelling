@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 77 — test functions: 1153
+Suites: 9 — test files: 77 — test functions: 1154
 
 ## canonical_story
 
@@ -1108,12 +1108,13 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_co
 - `RunTests.test_smoke_qualification_and_summary`
 - `RunTests.test_lock_mismatches_stop_before_any_call`
 
-### test_run_m4_04b3o_fv2_predictions_v1 (4)
+### test_run_m4_04b3o_fv2_predictions_v1 (5)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.fresh_validation_seal_v1`, `tools.story_extraction.m4_04b3n_fv2_protocol_v1`, `tools.story_extraction.run_m4_04b3o_fv2_predictions_v1`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `RunnerTests.test_validated_lock_threads_host_repairs_to_both_attempts_and_prediction_identity`
 - `RunnerTests.test_preflight_no_transport_no_gold_and_wrong_package_refused`
 - `RunnerTests.test_real_compiler_primary_repair_and_transport_outcomes`
+- `RunnerTests.test_every_request_uses_the_fv2_locked_credential_slot`
 - `RunnerTests.test_smoke_failure_run_cli_and_guard`
 
 ### test_run_m4_p4_dev_v1 (15)
