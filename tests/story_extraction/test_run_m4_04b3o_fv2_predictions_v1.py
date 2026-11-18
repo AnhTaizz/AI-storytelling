@@ -176,6 +176,20 @@ class RunnerTests(unittest.TestCase):
             with self.assertRaisesRegex(runner.Fv2PredictionError, "ordered"):
                 runner.run_cases(cases[::-1], None, None, Path(tmp), lambda: None, lambda _: None, validated=validated)
 
+    def test_every_request_uses_the_fv2_locked_credential_slot(self):
+        for slot in (lock.CREDENTIAL_SLOT, "gemini_slot_99"):
+            with self.subTest(slot), tempfile.TemporaryDirectory() as tmp, \
+                    mock.patch.object(lock, "CREDENTIAL_SLOT", slot), \
+                    synthetic_bundle(Path(tmp)) as (opts, cases, drafts):
+                transport, slots = fake_transport(drafts), []
+
+                def checking(spec, window, request_id):
+                    slots.append(spec.credential_slot)
+                    return transport(spec, window, request_id)
+                runner.execute(**opts, transport=checking, wait=Clock().wait)
+                self.assertEqual(set(slots), {slot})
+                self.assertGreater(len(slots), len(cases))
+
     def test_smoke_failure_run_cli_and_guard(self):
         with tempfile.TemporaryDirectory() as tmp, synthetic_bundle(Path(tmp)) as (opts, cases, drafts):
             for index, raw in enumerate(("invalid JSON", '{"status":"no"}')):

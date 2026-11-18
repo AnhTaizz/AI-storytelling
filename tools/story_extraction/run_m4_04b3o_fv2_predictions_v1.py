@@ -43,7 +43,9 @@ def load_cases(fv2_directory: Path) -> list[CaseInput]:
 
 
 def qualify_credential(executor, transport, wait):
-    spec = replace(shared.smoke_spec(), job_id=SMOKE_JOB_ID, research_task_id=RUNNER_ID)
+    # The FV1 smoke spec carries the FV1 slot; the FV2 lock's slot must qualify.
+    spec = replace(shared.smoke_spec(), job_id=SMOKE_JOB_ID, research_task_id=RUNNER_ID,
+                   credential_slot=lock.CREDENTIAL_SLOT)
     record = shared._run_job(executor, spec, transport, wait)
     raw = (record.get("first_success") or {}).get("raw_response")
     try:
