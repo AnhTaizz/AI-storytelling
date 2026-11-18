@@ -1,0 +1,71 @@
+# M4-04B3T: Conventions V3 and offline development rescoring. Public aggregates only.
+# No case identifiers, source text, entity names or gold content.
+artifact: M4_04B3T_CONVENTIONS_V3_MENTION_ROLE
+status: M4_04B3T_V3_ACCEPTED
+date: '2026-11-18'
+authorization:
+  by: Project Owner
+  date: '2026-11-18'
+  instructions:
+    - "ok làm cách 1 đi, dùng codex nhé"
+    - "Luôn DEPICTION"
+  scope: Option 1 of the M4-04B3S Next Candidate list.
+  decision: DEC-028
+conventions:
+  revision: V3
+  path: docs/research/m4/M4_ANNOTATION_CONVENTIONS_V3.md
+  rule:
+    id: R-EVR-01
+    behavior: >-
+      SUFFICIENT evidence for RefersTo or NamedAs uses DEPICTION when the mention
+      span lies inside dialogue, including statements that report a fact or event.
+      Evidence for the reported fact or event itself keeps IN_WORLD_REPORT.
+  prompt_change: none
+  prompt_reason: P4R6 and P4R7 already agree with R-EVR-01.
+checker:
+  tool: tools/story_extraction/check_annotation_conventions_v2.py
+  rules: V1 rules plus R-EVR-01.
+  development_alignment: align_mention_roles
+  gold_check:
+    run: Private run, aggregate counts only.
+    fv2: {R-EVR-01: 6, IN_WORLD_REPORT: 6, aligned: 6, refused_as_shared: 0}
+    dev2: {R-EVR-01: 0}
+    dev1: {R-EVR-01: 0}
+evaluation_data:
+  label: DEVELOPMENT-ONLY
+  sets: [FV2, DEV2, DEV1]
+  only_validation_result: M4_04B3O_FV2_BLIND_RUN_RESULT.yaml
+  next_validation_data: FV3 authored under V3 or the holdout.
+method:
+  prompt: P4R6
+  replay: Offline replay of saved responses with no model call.
+  gold_alignment: Applied in memory for development rescoring only. Sealed packages were preserved.
+  subset_metric: INSUFFICIENT_SUPPORT_MARKED_SUFFICIENT
+aggregates:
+  fv2:
+    valid_cases: 12
+    configurations:
+      QR+AM+ME:
+        sealed: {grounded: 153, matched: 166, WRONG_EVIDENCE_SPAN: 13, INSUFFICIENT_SUPPORT_MARKED_SUFFICIENT: 0, WRONG_EVIDENCE_ROLE: 4, validity_errors: 6, l1_pass: 5, full_success: 1}
+        v3_aligned: {grounded: 153, matched: 166, WRONG_EVIDENCE_SPAN: 13, INSUFFICIENT_SUPPORT_MARKED_SUFFICIENT: 0, WRONG_EVIDENCE_ROLE: 0, validity_errors: 6, l1_pass: 6, full_success: 1}
+      QR+AM+ME+SE+TB:
+        sealed: {grounded: 157, matched: 166, WRONG_EVIDENCE_SPAN: 8, INSUFFICIENT_SUPPORT_MARKED_SUFFICIENT: 1, WRONG_EVIDENCE_ROLE: 4, validity_errors: 1, l1_pass: 5, full_success: 1}
+        v3_aligned: {grounded: 157, matched: 166, WRONG_EVIDENCE_SPAN: 8, INSUFFICIENT_SUPPORT_MARKED_SUFFICIENT: 1, WRONG_EVIDENCE_ROLE: 0, validity_errors: 1, l1_pass: 6, full_success: 1}
+  dev2:
+    configurations:
+      QR+AM+ME+SE+TB:
+        v3_aligned_equals_sealed: {grounded: 86, matched: 89, WRONG_EVIDENCE_SPAN: 3, INSUFFICIENT_SUPPORT_MARKED_SUFFICIENT: 0, WRONG_EVIDENCE_ROLE: 1, validity_errors: 1, l1_pass: 6, full_success: 0}
+  dev1:
+    configurations:
+      QR+AM+ME+SE+TB:
+        v3_aligned_equals_sealed: {grounded: 5, matched: 8, WRONG_EVIDENCE_SPAN: 3, INSUFFICIENT_SUPPORT_MARKED_SUFFICIENT: 0, WRONG_EVIDENCE_ROLE: 7, validity_errors: 0, l1_pass: 6, full_success: 0}
+    remaining_role_mismatches: All seven fall outside R-EVR-01 because they concern evidence other than mentions in dialogue.
+findings:
+  - V3 alignment removes all four FV2 role mismatches in both configurations. DEV2 and DEV1 already follow R-EVR-01.
+  - FV2 gains one L1 pass, from 5 to 6 of 12, and full success stays at 1 of 12.
+    With SE and TB, eight wrong spans and one subset error remain at L1. Other layers also limit full-case success.
+candidate_directions:
+  status: Owner decision pending.
+  development_configuration: P4R6 + QR + AM + ME + SE + TB scored under V3.
+  prompt_alternative: P4R7 if a development model run shows a gain.
+  validation: Lock the candidate for a fresh sealed FV3 authored under V3 with mixed-role passages, or use the holdout.

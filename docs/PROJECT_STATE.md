@@ -4,7 +4,7 @@
 
 *Header refreshed 2026-11-18; the dated sections below are history.*
 
-M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED; holdout closed, predictions NOT RUN. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. Annotation conventions V2: ACCEPTED (DEC-026). P4R7 host repairs are tracked in M4-04B3S.
+M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED; holdout closed, predictions NOT RUN. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. Annotation conventions V3: ACCEPTED (DEC-028). See M4-04B3T for the rule and development rescoring.
 
 M0 — Product Foundation: CLOSED (see M0 Closure).
 
@@ -43,7 +43,7 @@ M14 — Voice / Video Automation: GATED behind the Script Quality Gate (DEC-009)
   - The contract defines the standard. It does not show that any current Writer or critic meets it. The M9 Script Quality Gate is not evaluated.
 - M2 — Canonical Story Model: capability COMPLETE / FROZEN (DEC-016). The expected capability has been established as `canonical_story/v0` + `predicate_registry/v0.1`. M2 ran under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015).
 - M3 — Light Novel Ingestion: COMPLETE / FROZEN — `LIGHT_NOVEL_INGESTION/v0`, DEC-018, freeze record `benchmarks/m3_ingestion/LIGHT_NOVEL_INGESTION_V0_FROZEN.yaml`. The roadmap is unchanged.
-- M4 — Story Extraction: IN PROGRESS (M4-01/M4-02 accepted; M4-03 holdout sealed and closed, predictions not run; no extractor/model selected; nothing frozen). V2 accepted (DEC-026). P4R7 host repairs are tracked in M4-04B3S.
+- M4 — Story Extraction: IN PROGRESS (M4-01/M4-02 accepted; M4-03 holdout sealed and closed, predictions not run; no extractor/model selected; nothing frozen). Annotation conventions V3: ACCEPTED (DEC-028). See M4-04B3T for the rule and development rescoring.
 - M5 — Persistent Story Memory: PROTOTYPE EXISTS; not frozen or M5 completion (see Implementation Status; DEC-021).
 - M6 — Retrieval: ACCEPTED BASELINE over brief memory (DEC-021, 2026-11-15).
 - M7 — Story Brief: ACCEPTED BASELINE (DEC-022, 2026-11-15).
@@ -1352,6 +1352,42 @@ The owner has yet to choose or authorize any of these candidates.
 1. **Evidence-role rule for mentions inside dialogue.** Record Conventions V3 and a DEC, then align the gold or the prompt.
 2. **P4R7 development model run.** Check the possession-bounds prompt rule on DEV2 and FV2 development data. This uses Gemini quota.
 3. **Next locked validation.** Use FV3 or the holdout with P4R6 + QR + AM + ME + SE + TB, with P4R7 as an option after a development model run.
+4. **Draft V1.2 with existing entity names.** Requires a DEC.
+5. **Housekeeping.** Address missing FV1 packages and duplicate `.env` keys.
+
+## M4-04B3T — CONVENTIONS V3: MENTIONS IN DIALOGUE ARE DEPICTION — Status: M4_04B3T_V3_ACCEPTED
+
+On 2026-11-18, the project owner authorized option 1 of the M4-04B3S Next Candidate list (“ok làm cách 1 đi, dùng codex nhé”), then chose “Luôn DEPICTION.” DEC-028 records the acceptance of Conventions V3. P4R6 and P4R7 already follow the rule, so neither prompt needed an edit.
+
+- **Conventions V3.** `docs/research/m4/M4_ANNOTATION_CONVENTIONS_V3.md` defines R-EVR-01. SUFFICIENT evidence for RefersTo or NamedAs uses DEPICTION when the mention span lies inside dialogue, including statements that report a fact or event. Evidence for the reported fact or event itself keeps IN_WORLD_REPORT.
+- **Checker V2.** `tools/story_extraction/check_annotation_conventions_v2.py` implements the V1 rules plus R-EVR-01 and provides `align_mention_roles` for development rescoring only.
+- **Gold checker counts.** The private run reported six R-EVR-01 violations on FV2, all IN_WORLD_REPORT. The aligner corrected all six, with zero refusals for shared evidence. DEV2 and DEV1 each had zero findings.
+
+**DEVELOPMENT-ONLY.** The offline replay used saved P4R6 responses and aligned gold in memory. Sealed packages were preserved. M4-04B3O remains the only validation result. Subset counts `INSUFFICIENT_SUPPORT_MARKED_SUFFICIENT`.
+
+| FV2 configuration | Gold | Grounded/matched | Wrong span | Subset | Wrong role | Validity errors | L1 pass | Full success |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| QR+AM+ME | Sealed | 153/166 | 13 | 0 | 4 | 6 | 5 | 1 |
+| QR+AM+ME | V3-aligned | 153/166 | 13 | 0 | 0 | 6 | 6 | 1 |
+| QR+AM+ME+SE+TB | Sealed | 157/166 | 8 | 1 | 4 | 1 | 5 | 1 |
+| QR+AM+ME+SE+TB | V3-aligned | 157/166 | 8 | 1 | 0 | 1 | 6 | 1 |
+
+- **DEV results.** With QR+AM+ME+SE+TB, V3-aligned and sealed scores agree. DEV2 had 86/89 grounded/matched, 3 wrong spans, 1 wrong role and 1 validity error. DEV1 had 5/8 grounded/matched, 3 wrong spans, 7 wrong roles and 0 validity errors. Both had 0 subset errors, 6 L1 passes and 0 full successes. All seven DEV1 role mismatches fall outside R-EVR-01 because they concern evidence other than mentions in dialogue.
+
+- R-EVR-01 removes all four FV2 role mismatches in both configurations. DEV1 and DEV2 already follow the rule, so their scores stay the same.
+- FV2 gained one L1 pass, from 5 to 6 of 12. Full success stayed at 1 of 12. With SE and TB, eight wrong spans and one subset error remain at L1, and other layers also limit full-case success.
+
+The development candidate is P4R6 + QR + AM + ME + SE + TB scored under V3. Validation requires FV3 authored under V3 or the holdout.
+
+The aggregate record is `benchmarks/m4_extraction/M4_04B3T_CONVENTIONS_V3_MENTION_ROLE.yaml`.
+
+## Next Candidate
+
+The owner has yet to choose or authorize any of these candidates.
+
+1. **Next locked validation.** Author FV3 under V3 as a fresh sealed set with mixed-role passages, or open the holdout. Run locked P4R6 + QR + AM + ME + SE + TB, using P4R7 if its development run shows a gain.
+2. **P4R7 development model run.** Run on DEV2 and FV2-dev. This uses Gemini quota.
+3. **Full-case diagnosis.** Diagnose the layers beyond L1 that block full-case success on FV2-dev.
 4. **Draft V1.2 with existing entity names.** Requires a DEC.
 5. **Housekeeping.** Address missing FV1 packages and duplicate `.env` keys.
 

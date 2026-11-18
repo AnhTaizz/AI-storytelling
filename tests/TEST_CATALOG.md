@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 81 — test functions: 1178
+Suites: 9 — test files: 82 — test functions: 1186
 
 ## canonical_story
 
@@ -634,6 +634,18 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.check_an
 - `AnnotationConventionsTests.test_unverifiable_spans_and_broken_references_are_refused`
 - `AnnotationConventionsTests.test_report_is_deterministic_sorted_and_does_not_mutate_inputs`
 - `AnnotationConventionsTests.test_cli_output_and_refusal_are_safe_and_have_documented_exit_codes`
+
+### test_check_annotation_conventions_v2 (8)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.check_annotation_conventions_v2`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `AnnotationConventionsV2Tests.test_dialogue_role_applies_to_sufficient_affirmed_and_negated_mentions`
+- `AnnotationConventionsV2Tests.test_quote_boundaries_are_inclusive_balanced_and_line_local`
+- `AnnotationConventionsV2Tests.test_optional_base_segment_bounds_limit_the_quote_context`
+- `AnnotationConventionsV2Tests.test_v1_report_is_preserved_with_a_dialogue_violation_in_the_same_batch`
+- `AnnotationConventionsV2Tests.test_alignment_counts_distinct_refs_and_does_not_mutate_the_batch`
+- `AnnotationConventionsV2Tests.test_alignment_refuses_refs_shared_with_non_mentions_in_any_evidence_set`
+- `AnnotationConventionsV2Tests.test_alignment_of_a_base_ref_redirects_candidate_citations`
+- `AnnotationConventionsV2Tests.test_cli_reports_findings_and_refuses_unavailable_sources`
 
 ### test_diagnose_m4_04b3i_fv1_v1 (5)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.diagnose_m4_04b3i_fv1_v1`, `tools.story_extraction.evaluate_extraction_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.score_m4_04b3h_fv1_v1`, `tools.story_ingestion.light_novel_adapter_v0`

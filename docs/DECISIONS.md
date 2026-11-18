@@ -858,3 +858,22 @@ DECISION:
 LIMITS:
 - P4R6, QR and AM were chosen on DEV1 and DEV2 (record `benchmarks/m4_extraction/M4_04B3L2_P4_REVISIONS_DEV1_AND_HOST_REPAIRS.yaml`). FV2 is the first set they have not seen.
 - The Draft V1.1 prepared input is unchanged; existing entity names are still not shown to the model.
+
+---
+
+## DEC-028 — M4 Annotation Conventions V3: Mentions Inside Dialogue Are DEPICTION
+
+STATUS: ACCEPTED (Project Owner, 2026-11-18: chose "Luôn DEPICTION"; work authorized with "ok làm cách 1 đi, dùng codex nhé")
+
+CONTEXT:
+V2 left the role unstated. FV2 used `IN_WORLD_REPORT` for 6 mention refs in the content of dialogue statements. DEV1 and DEV2 used `DEPICTION`, including 5 such refs in DEV2. Every set used `DEPICTION` for vocative mentions in dialogue.
+
+DECISION:
+1. **V3 replaces V2.** `docs/research/m4/M4_ANNOTATION_CONVENTIONS_V3.md` replaces V2 (DEC-026) as the M4 annotation convention for new gold and extraction prompts. V2 stays unchanged as a record.
+2. **R-EVR-01.** `SUFFICIENT` evidence for a `RefersTo` or `NamedAs` assertion has role `DEPICTION` when the span lies inside dialogue, including a statement that reports a fact or event. The scene shows the act of referring or naming, just as it shows the utterance for `Says`. Evidence for the reported fact or event itself keeps `IN_WORLD_REPORT` under the extraction contract's evidence-role hard contrasts.
+3. **Sealed gold is never rewritten.** FV2, DEV1 and DEV2 are all development data. They may be rescored against an in-memory copy aligned with `align_mention_roles`, with results labelled development-only. M4-04B3O stays the only validation number.
+4. **P4R6 and P4R7 already agree with V3.** Both prompts say `IN_WORLD_REPORT` is “never for a mention”, so no prompt change is needed.
+5. **FV3 and holdout gold authored from now on follows V3.**
+
+LIMITS:
+- The choice followed a review of disagreements in the FV2 and DEV gold. Only a fresh set can show whether the rule holds.
