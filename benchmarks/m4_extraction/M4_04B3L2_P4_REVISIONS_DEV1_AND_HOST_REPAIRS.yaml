@@ -1,0 +1,92 @@
+# M4-04B3L2: P4 revisions R3-R6, DEV1 check, host-side quote/mention repairs. Development data only. Aggregates only;
+# private artifacts in .local. No corpus text, names or gold content in this file.
+artifact: M4_04B3L2_P4_REVISIONS_DEV1_AND_HOST_REPAIRS
+status: M4_04B3L2_P4R6_QR_AM_DEVELOPMENT_LEADER
+date: '2026-11-18'
+authorization: Project Owner, 2026-11-17 (P4 revisions, DEV1 analysis, P4R4) and the overnight delegation of 2026-11-17
+  ("tự lên kế hoạch và thực hiện ... dùng codex").
+data_status: DEV1 (M4-02 calibration, 4 COMPLETE + 10 UNCERTAIN cases) and DEV2 (tuning data, gold open) are development
+  data. Every variant below was revised after seeing these scores. Nothing here is validation.
+boundaries:
+  holdout_accessed: false
+  fv2_blind_run: false
+  fv2_gold_or_source_seen_by_prompt_developer: false
+  env_file_changed: false
+  locked_protocols_changed: false
+  protected_files_changed: false
+setup:
+  runner: tools/story_extraction/run_m4_p4_dev_v1.py (development harness, not a lock)
+  model: gemini-3.5-flash-lite
+  temperature: 0
+  structural_repairs_per_case: 1
+  scoring: Snapshot V2 guarded evaluator, REAL_SOURCE, no adjudication
+  dev2_required_assertions_total: 119
+  credential_slots: gemini_slot_33 (R3, R4), gemini_slot_20 (R5), gemini_slot_21 (R6); slot 33 and slot 20 hit their
+    daily quota (RATE_LIMIT RESOURCE_EXHAUSTED) during these runs.
+prompts:
+  P4R3:
+    file_sha256: ebe513aec972386d034c4d50c06d3e39aafd1d056dda6c61ffd2a908061fcee5
+    adds: TemporalRelation only with an ordering word; one Says assertion per repeated line; non-stative predicates never
+      carry validity; said or believed is not true
+  P4R4:
+    file_sha256: c205bf88e1589fee2749c59fe4d1ea3775d2bab4375f2aa5015c380217da5803
+    adds: one entity per referent; never guess an existing entity from its kind alone; Says never carries validity; one
+      Participates proposition per (event, participant, role); short exact quotes
+  P4R5:
+    file_sha256: 01e65107583a23a237599ec6de3704898751bd530bebdd5d1ebec9452aab36d5
+    adds: the extraction contract's evidence-role table verbatim
+  P4R6:
+    file_sha256: 55ac49daabde49389d51f85583d55410a5691f22ae4f1c59590704df6c83cf55
+    adds: P4R4 plus a narrow evidence-role rule (DEPICTION by default; IN_WORLD_REPORT only for recounted content;
+      NARRATION_SUMMARY only for a sentence that leaves the depicted moment)
+host_side_repairs:
+  QR: tools/story_extraction/draft_quote_resolution_v1.py — normalization-equivalent copies, unique other passage, ordered
+    mention occurrences; refuses on any doubt
+  AM: tools/story_extraction/draft_mention_anchoring_v1.py — a RefersTo-only mention that cannot be located is moved to
+    the single occurrence inside the evidence its RefersTo assertion cites; if no cited evidence contains it, the mention,
+    its RefersTo propositions and their assertions are removed when nothing else references them
+  EN: --existing-names development option (existing entity names shown to the model); not part of the Draft V1.1 interface
+dev2_model_runs:  # 10 cases, required recovered over all cases
+  P4R3: {L0_structural_valid: 9, required_recovered: 89, unsupported_unrated: 19, evidence_role_accuracy_mean: 0.891}
+  P4R4: {L0_structural_valid: 9, required_recovered: 86, unsupported_unrated: 22, evidence_role_accuracy_mean: 0.961}
+  P4R5: {L0_structural_valid: 8, required_recovered: 82, unsupported_unrated: 19, evidence_role_accuracy_mean: 0.683}
+  P4R6: {L0_structural_valid: 9, required_recovered: 89, unsupported_unrated: 21, evidence_role_accuracy_mean: 0.963}
+dev1_model_runs:  # 14 cases; transport failures count as structurally invalid
+  P3: {L0_structural_valid: 7, required_recovered: 10, complete_cases_required_recovered: 4, unsupported_unrated: 10}
+  P4R3: {L0_structural_valid: 8, required_recovered: 7, complete_cases_required_recovered: 1, unsupported_unrated: 42}
+  P4R4: {L0_structural_valid: 6, required_recovered: 7, complete_cases_required_recovered: 1, unsupported_unrated: 7,
+    transport_failures: 0}
+  P4R5: {L0_structural_valid: 6, required_recovered: 6, complete_cases_required_recovered: 1, unsupported_unrated: 27,
+    transport_failures: 2}
+  P4R6: {L0_structural_valid: 5, required_recovered: 1, complete_cases_required_recovered: 1, unsupported_unrated: 10,
+    evidence_role_accuracy_mean: 0.625}
+  P4R6+EN+RB: {L0_structural_valid: 7, required_recovered: 6, complete_cases_required_recovered: 1,
+    unsupported_unrated: 4, evidence_role_accuracy_mean: 0.853, transport_failures: 3}
+offline_rescoring_with_QR_AM:  # same saved responses, no new model call; L0 / required recovered
+  DEV1_P4R3: {before: [8, 7], after: [10, 12]}
+  DEV1_P4R4: {before: [6, 7], after: [9, 8]}
+  DEV1_P4R5: {before: [6, 6], after: [7, 7]}
+  DEV1_P4R6: {before: [5, 1], after: [10, 8]}
+  DEV1_P4R6_EN_RB: {before: [7, 6], after: [8, 6]}
+  DEV1_P3: {before: [7, 10], after: [7, 10]}
+  DEV2_P4R4: {before: [9, 86], after: [9, 86]}
+  DEV2_P4R5: {before: [8, 82], after: [9, 92]}
+  DEV2_P4R6: {before: [9, 89], after: [9, 89]}
+  unsupported_change: DEV2_P4R5 19 to 22 (one more valid case); unchanged on every other run (DEV1 extra predictions
+    fall on UNCERTAIN cases and are pending adjudication)
+negative_results:
+  - QR alone fixed 0 cases on every saved DEV1/DEV2 run; remaining blockers were mention placement, not copy noise.
+  - P4R5 (contract role table verbatim) moved NamedAs, RefersTo and Possesses evidence to NARRATION_SUMMARY on DEV2
+    (evidence-role accuracy 0.961 to 0.683); P4R6 replaced it.
+dev1_findings:
+  - Most DEV1 structural failures are QUOTE blockers on RefersTo mentions. The model numbers occurrence across the whole
+    input instead of within the passage, and it places a name in a passage that does not contain it.
+  - P4 variants recover fewer required assertions than P3 on the 4 COMPLETE cases (1 vs 4). The model creates new entities
+    because the V1.1 prepared input lists existing entities by kind only; P3 matched by guessing an existing handle.
+  - The EN option lowers unsupported predictions (4) and raises evidence-role accuracy (0.853). It changes the prepared
+    input and therefore needs an owner decision on a Draft V1.2 interface before it can be locked.
+interpretation:
+  - Development leader for a fresh-set lock: P4R6 with QR and AM. It equals the best DEV2 recall among valid runs while
+    keeping role accuracy, and AM is the largest single structural gain on real prose.
+  - The FV2 protocol tooling still binds P4R4 with no host-side repair. Changing that binding and running FV2 are owner
+    decisions.

@@ -1,0 +1,245 @@
+task: M4-04B3M
+date: 2026-11-17
+status: M4_04B3M_FRESH_VALIDATION_V2_SEALED_PENDING_ORCHESTRATOR_REVIEW
+scope: FRESH_VALIDATION_SET_CONSTRUCTION_AND_OFFLINE_REPRESENTATIONAL_VALIDATION_ONLY
+base_commit: 18bd37a9f2b71f0b9cae1e4ff66fa4b13fe001d6
+authorization: project owner, task M4-04B3M
+
+boundaries:
+  provider_calls: 0
+  Gemini_or_other_API_used: false
+  network_calls: 0
+  prediction_runs: 0
+  DEV1_text_accessed: false
+  DEV2_input_opened: false
+  DEV2_gold_opened: false
+  FV1_private_material_opened: false
+  holdout_input_opened: false
+  holdout_gold_opened: false
+  prediction_outputs_opened: false
+  env_file_opened: false
+  P4_prompt_files_opened: false
+  P4_developer_saw_FV2_source_or_gold: false
+  M4_04C_started: false
+  draft_V1_modified: false
+  draft_V1_1_modified: false
+  deterministic_compilers_modified: false
+  snapshot_V1_modified: false
+  snapshot_V2_modified: false
+  canonical_schema_modified: false
+  predicate_registry_modified: false
+  M3_adapter_modified: false
+  seal_tool_modified: false
+  extractor_or_model_selected: false
+  git_commit_or_push: false
+
+freshness:
+  set_id: M4_04B3M_FRESH_VALIDATION_V2
+  source_family: ORIGINAL_JA_MINI_NARRATIVES_FV2
+  source_language: ja
+  source_units: 12
+  cases: 12
+  permitted_passages_per_unit: [2, 5]
+  actual_passages_per_unit_min: 2
+  actual_passages_per_unit_max: 4
+  authored_for_this_task: true
+  copied_narrative_text: false
+  excluded_source_families: [corpus_30_chapters, repository_samples, DEV1, DEV2, FV1, sealed_holdout]
+  non_use_basis: >-
+    Process isolation. No other private directory, source set, prediction output,
+    environment file or P4 prompt was used in annotation. No byte comparison against
+    excluded material is claimed.
+  author_exposure: >-
+    Required public conventions, protocol, registry and offline tooling; synthetic
+    fixture tooling was inspected for record construction. No repository narrative
+    sample was inspected by the gold author. Verification subprocesses ran after
+    sealing and retained their output privately.
+  claim_boundary: fresh authored miniature-source representational validation, not model-quality validation
+
+case_coverage:
+  capability_01: alias_multiple_mentions_honorifics_and_name_forms
+  capability_02: adjectives_genitive_chains_and_excluded_relative_clause
+  capability_03: giving_lending_transfer_roles_and_resulting_possession
+  capability_04: taking_from_holder_versus_unheld_pickup
+  capability_05: encounter_then_separate_conversation
+  capability_06: arrival_location_versus_heading_destination
+  capability_07: reveal_tell_conveys_versus_utterance
+  capability_08: negated_speech_belief_repeated_speaker_without_truth_leak
+  capability_09: inanimate_change_patient_versus_sound_light_theme
+  capability_10: benefactive_recipient_and_deliberate_involuntary_perception
+  capability_11: yearless_dates_time_of_day_and_explicit_temporal_order
+  capability_12: prior_context_reuse_context_only_and_as_of_cutoff
+case_coverage_note: >-
+  Coverage slots are public capability labels, not identifiers from gold.
+  One primary capability per case; other capabilities may co-occur.
+
+ingestion:
+  contract: LIGHT_NOVEL_INGESTION/v0
+  manifests: 12
+  source_documents: 12
+  source_language_metadata: ja
+  cases_ingested: 12/12
+  source_passages: 28
+  evidence_eligible_passages: 25
+  context_only_passages: 2
+  after_cutoff_passages: 1
+  exact_source_available_to_compiler: true
+
+gold:
+  extraction_profile: STORY_UNDERSTANDING_CORE_V0
+  status: [AGENT_DRAFT_GOLD, NOT_HUMAN_CONFIRMED]
+  annotation_method: HUMAN_ANNOTATION
+  review_state: UNREVIEWED
+  human_review_performed: false
+  annotation_order: canonical semantics first; draft-like projection and compiler round-trip second
+  annotation_conventions: docs/research/m4/M4_ANNOTATION_CONVENTIONS_V2.md
+  annotation_conventions_sha256: 49fc5de9af46b861eb0ed70bd3bbc44948855576e0e0565fd9340777d26f5f7e
+  completeness: 12/12 COMPLETE_FOR_PROFILE
+  required_assertions: 194
+  acceptable_optional_assertions: 0
+  record_counts:
+    assertions: 194
+    entities: 38
+    events: 26
+    evidence_refs: 108
+    extraction_provenance: 12
+    mentions: 74
+    propositions: 195
+    temporal_anchors: 26
+  predicate_counts:
+    AnchorDate: 2
+    Attitude: 2
+    Conveys: 1
+    LocatedAt: 2
+    Manner: 1
+    NamedAs: 21
+    Occurred: 26
+    OccursAt: 4
+    Owns: 2
+    Participates: 45
+    Possesses: 9
+    RefersTo: 74
+    Says: 3
+    TemporalRelation: 2
+  epistemic_status: {EXPLICIT: 190, ENTAILED: 4}
+  assertion_polarity: {AFFIRMED: 194}
+  evidence_roles: {DEPICTION: 101, IN_WORLD_REPORT: 6, RETROSPECTIVE: 1}
+  evidence_set_labels: {SUFFICIENT: 190}
+  derivations: 4
+  assertions_with_validity: 36
+  prior_context: earlier canonical records are reused, excluded from the required total
+  annotation_rules: at the top of the private builder, included in the gold package
+  coverage_notes: one per evidence-eligible passage, 25 total
+  required_ids: enumerated only in the private gold manifest
+  literal_variants: empty; all STRING literals are verbatim source-language values
+
+annotation_checker:
+  tool: tools/story_extraction/check_annotation_conventions_v1.py
+  function: check_batch
+  inputs: every gold batch with exact source bytes and base document
+  cases_checked: 12
+  prior_context_batch_checked: true
+  all_MECHANICAL_counts_zero: true
+  counts:
+    R-ROLE-01: 0
+    R-ROLE-02: 0
+    R-EVT-02: 0
+    R-MEN-01: 0
+    R-MEN-02: 0
+    R-LIT-01: 0
+    R-LIT-02: 0
+    R-LIT-04: 0
+    R-LIT-05: 0
+    R-TIME-02: 0
+  judged_rules: manually applied; mechanical checker does not establish semantic completeness
+
+offline_representational_verification:
+  path: canonical gold -> STORY_EXTRACTION_DRAFT_V1_1 oracle projection -> deterministic compiler V1.1 -> canonical batch
+  gold_batches_passing_frozen_validation: 12/12
+  draft_schema_and_compile_pass: 12/12
+  compiled_batches_passing_source_exact_validation: 12/12
+  canonical_semantic_support_graph_alpha_equivalence: 12/12
+  representable: 12/12
+  gap_detected: false
+  compiler_or_schema_patch_performed: false
+  interpretation: representational coverage only; oracle projection is not an extractor prediction
+
+private_packages:
+  input:
+    name: M4_04B3M_FRESH_VALIDATION_V2_INPUT.zip
+    sha256: e9d4ec2462d00922a3cf075bbbc5bd650707a38425c94eff0b626f57eac46353
+    bytes: 98723
+    members: 73
+    contains_gold: false
+    extractor_surface: prepared_draft_input.json members only
+  gold:
+    name: M4_04B3M_FRESH_VALIDATION_V2_GOLD.zip
+    sha256: ca82f09c599e8a5d4386cc23ce76a9e7eed902b0bb51a8ea8546fa63dcce1977
+    bytes: 822850
+    members: 42
+  blindness_manifest:
+    name: M4_04B3M_FRESH_VALIDATION_V2_BLINDNESS_MANIFEST.json
+    sha256: 9595d44c4e41e50038d6f64466f2dd5415799321e86baea0878c9e3e89eda89d
+  shared_member_names: 0
+  compression: stored members, fixed timestamps, name order
+  location: .local/m4_fv2/sealed/
+
+verification:
+  deterministic_rebuild: PASS; two builds, identical hashes for all three artifacts
+  verify_from_sealed_packages: PASS; hashes, frozen bindings, separation, no gold in input, gate 12/12
+  after_cutoff_text_absent_from_prepared_input: true
+  seal_tool: tools/story_extraction/fresh_validation_seal_v1.py
+  seal_tool_sha256: 005b083e49bfcdad276176d516a9de0aa7d60f1b8dd6b57734dbcec197b9e643
+  seal_tool_tests: tests/story_extraction/test_fresh_validation_seal_v1.py
+  builder: .local/m4_fv2/build_fv2.py
+  checker_report: .local/m4_fv2/checker_results.json
+  gate_report: .local/m4_fv2/gate_results.json
+
+repository_checks:
+  python: 3.14.2
+  PYTHONUTF8: 1
+  PYTHONDONTWRITEBYTECODE: 1
+  story_extraction:
+    command: python -m tools.ci.run_tests --suite story_extraction
+    status: FAIL_WITH_REQUIRED_READ_BOUNDARY_ENFORCED
+    tests_run: 407
+    failures: 1
+    known_CRLF_protocol_lock_hash_failure: true
+    known_failure_path: tests/story_extraction/test_m4_04b3f_fv1_protocol_v1.py
+    errors: 10
+    forbidden_P4_prompt_read_errors: 10
+    blocked_test_path: tests/story_extraction/test_run_m4_p4_dev_v1.py
+    skipped: 0
+    tests_modified_or_weakened: false
+    report: .local/m4_fv2/story_extraction_results.json
+  coverage_gate:
+    status: FAIL
+    coverage_module_available: false
+    pre_existing_catalog_stale: true
+    stdout: .local/m4_fv2/quality_gate_coverage.stdout.log
+    stderr: .local/m4_fv2/quality_gate_coverage.stderr.log
+  ordinary_quality_gate:
+    status: FAIL
+    suites: 10
+    tests_run: 1164
+    failures_or_errors: 36
+    test_policy_codes: [CATALOG_STALE]
+    forbidden_private_directory_reads_blocked: true
+    forbidden_P4_prompt_reads_blocked: true
+    stdout: .local/m4_fv2/quality_gate.stdout.log
+    stderr: .local/m4_fv2/quality_gate.stderr.log
+    scope: repository-wide; includes failures outside FV2
+  limitation: >-
+    The complete suite cannot pass while the explicit P4-file read prohibition is
+    enforced: existing prompt-composition tests require those reads. No prohibition
+    was relaxed and no test was skipped or weakened. FV2 offline checks passed.
+
+limits:
+  - Agent-drafted and unreviewed gold; no human confirmation or independent semantic adjudication.
+  - Completeness is for the declared profile; a later omission withdraws the affected label without rewriting the seal.
+  - Twelve authored miniature units do not establish performance on real chapters or other languages.
+  - Mechanical convention checks and graph equivalence do not establish extraction accuracy.
+
+next:
+  - Orchestrator review of this seal.
+  - Separately authorized prompt/runtime lock and blind prediction task; gold remains closed until predictions are locked and hashed.

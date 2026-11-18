@@ -2,15 +2,37 @@
 
 ## Current Milestone
 
-M4 — Story Extraction: IN PROGRESS. M4-01: ACCEPTED. M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED. Extractor/model: NOT SELECTED. Holdout predictions: NOT RUN. Nothing in M4 is frozen. M5: NOT STARTED.
+*Header refreshed 2026-11-18; the dated sections below are history.*
 
-M4-04B3A: `M4_04B3A_DRAFT_COMPILER_READY_FOR_FRESH_DEV_VALIDATION`. Offline failure forensics and an additive semantic-draft compiler prototype are complete. The B2 conclusion remains `M4_04B2_DEVELOPMENT_LEADER_NOT_LOCKABLE`. DEV1 is now TUNING DATA, not fresh validation. DEV2 is proposed, not selected or executed; M4-04C remains NOT STARTED.
+M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED; holdout closed, predictions NOT RUN. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. Annotation conventions V2: ACCEPTED (DEC-026). P4 development / FV2 status: see M4-04B3L2 and M4-04B3N.
+
+M0 — Product Foundation: CLOSED (see M0 Closure).
+
+M1 — Script Quality & Narrative Contract: COMPLETE / FROZEN (`SCRIPT_QUALITY_CONTRACT/v0`, DEC-017); M1/M9 Script Quality Gate: NOT YET EVALUATED.
+
+M2 — Canonical Story Model capability: COMPLETE / FROZEN (`canonical_story/v0` + `predicate_registry/v0.1`, DEC-016).
 
 M3 — Light Novel Ingestion: COMPLETE / FROZEN (`LIGHT_NOVEL_INGESTION/v0`, DEC-018).
 
-M1 — Script Quality & Narrative Contract: COMPLETE / FROZEN (`SCRIPT_QUALITY_CONTRACT/v0`, DEC-017).
+M5 — Persistent Story Memory: PROTOTYPE EXISTS; not frozen or M5 completion (see Implementation Status; DEC-021).
 
-M2 — Canonical Story Model capability: COMPLETE / FROZEN (Canonical Story Model v0: FROZEN / ACCEPTED, DEC-016).
+M6 — Retrieval: ACCEPTED BASELINE over brief memory (DEC-021, 2026-11-15).
+
+M7 — Story Brief: ACCEPTED BASELINE (DEC-022, 2026-11-15).
+
+M8 — Narrative Planning: ACCEPTED BASELINE (DEC-023, 2026-11-15).
+
+M9 — Script Generation / Validation: PROTOTYPE EXISTS; M1/M9 Script Quality Gate: NOT YET EVALUATED (DEC-017, DEC-023; see Implementation Status and Current Quality Gate).
+
+M10 — Advanced Retrieval: GATED behind the Script Quality Gate (DEC-009).
+
+M11 — Temporal / Graph Story Memory: GATED behind the Script Quality Gate (DEC-009).
+
+M12 — Manga: GATED behind the Script Quality Gate (DEC-009).
+
+M13 — Visual Production: GATED behind the Script Quality Gate (DEC-009).
+
+M14 — Voice / Video Automation: GATED behind the Script Quality Gate (DEC-009).
 
 ## Milestone Lifecycle
 
@@ -21,8 +43,13 @@ M2 — Canonical Story Model capability: COMPLETE / FROZEN (Canonical Story Mode
   - The contract defines the standard. It does not show that any current Writer or critic meets it. The M9 Script Quality Gate is not evaluated.
 - M2 — Canonical Story Model: capability COMPLETE / FROZEN (DEC-016). The expected capability has been established as `canonical_story/v0` + `predicate_registry/v0.1`. M2 ran under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015).
 - M3 — Light Novel Ingestion: COMPLETE / FROZEN — `LIGHT_NOVEL_INGESTION/v0`, DEC-018, freeze record `benchmarks/m3_ingestion/LIGHT_NOVEL_INGESTION_V0_FROZEN.yaml`. The roadmap is unchanged.
-- M4 — Story Extraction: IN PROGRESS (M4-01 accepted; M4-02 accepted; M4-03 fresh holdout V1 sealed; no extractor/model selected, no holdout predictions run, nothing frozen).
-- M5: NOT STARTED.
+- M4 — Story Extraction: IN PROGRESS (M4-01/M4-02 accepted; M4-03 holdout sealed and closed, predictions not run; no extractor/model selected; nothing frozen). V2 accepted (DEC-026); P4 development / FV2 status: see M4-04B3L2 and M4-04B3N.
+- M5 — Persistent Story Memory: PROTOTYPE EXISTS; not frozen or M5 completion (see Implementation Status; DEC-021).
+- M6 — Retrieval: ACCEPTED BASELINE over brief memory (DEC-021, 2026-11-15).
+- M7 — Story Brief: ACCEPTED BASELINE (DEC-022, 2026-11-15).
+- M8 — Narrative Planning: ACCEPTED BASELINE (DEC-023, 2026-11-15).
+- M9 — Script Generation / Validation: PROTOTYPE EXISTS; M1/M9 Script Quality Gate: NOT YET EVALUATED (DEC-017, DEC-023; see Implementation Status and Current Quality Gate).
+- M10–M14: gated behind the Script Quality Gate (DEC-009 in DECISIONS.md).
 
 *Correction (M2-02): an earlier version of this section labelled M1 "COMPLETED / CLOSED FOR CURRENT RESEARCH SCOPE". That overstated completion while the formal Script Quality Contract remains open. The M1 research program is closed; the contract is not.*
 
@@ -126,12 +153,14 @@ Prototype (not frozen, not M5 completion): story memory v0 (`tools/story_memory/
 
 Story Extraction now has research-only validation/runtime tooling and the additive `STORY_EXTRACTION_DRAFT_V1` deterministic compiler prototype (M4-04B3A). No extraction model or end-to-end extractor is selected, locked, or production-qualified. Later application pipeline stages remain unimplemented.
 
+Accepted baselines:
+- Retrieval — DEC-021; see M6 Retrieval Baseline below.
+- Story Brief generation — DEC-022; see M7 Story Brief below.
+- Narrative Planning — DEC-023; see M8 Narrative Planning below.
+
 Not yet implemented:
 - Selected/validated end-to-end Story Extraction
 - Persistent Story Memory implementation
-- Retrieval implementation
-- Story Brief generation
-- Narrative Planning
 - Script Generation
 - Validation pipeline
 - Temporal / Graph Story Memory
@@ -1055,6 +1084,183 @@ Owner decision; the agent recommends, in this order (nothing authorized yet):
 2. **P4 prompt** stating those conventions and asking for NamedAs on every named entity, plus participants, possession and temporal anchors. Develop it on FV1 and DEV2 (both open now). Then seal a **new fresh set (FV2)** and lock the protocol before any measurement that counts.
 3. **Human review of a sample of the FV1 gold**, because the gold is agent-drafted.
 - The holdout stays closed, and M4-04C and M5 still need separate authorization.
+
+## M4-04B3J — ANNOTATION CONVENTIONS V1 — ACCEPTED, DEV2 GOLD AUDITED — Status: M4_04B3J_DEV2_GOLD_AUDITED
+
+- **Authorization.** Option 1 of the Next Candidate above, asked for by the project owner on 2026-11-17 ("viết conventions trước"). This step covers the writing only. No gold was opened, no source text was read and no model was called. The holdout, the DEV2 gold and every protocol were not touched.
+- **Deliverable.** `docs/research/m4/M4_ANNOTATION_CONVENTIONS_V1.md`, status `PROPOSED`. It contains:
+  - definitions of the seven participant roles;
+  - an ordered rule for choosing among the nine event kinds, and the roles each kind allows;
+  - mention extent for Japanese text: names keep their honorific suffix; descriptions keep demonstratives, の-chains and compounds;
+  - entity scope (body parts, weather and nested places are not entities);
+  - literals: source language, verbatim substring of the evidence, ISO dates;
+  - `NamedAs` coverage and `name_kind` choice;
+  - a single direction for `TemporalRelation`;
+  - the difference between `Possesses` and `Owns`.
+- **Rule types.** Each rule is marked MECHANICAL or JUDGED. The registry, the schema, Draft V1.1 and the evaluator are unchanged, because every rule chooses among forms the registry already allows.
+- **Not yet done: the gold check.**
+  - The FV1 private packages and the B3H/B3I outputs are not on the owner's machine; they were produced in a cloud session.
+  - The DEV2 gold is on the machine but unopened.
+  - The holdout's own annotation guideline was not compared with V1. Any difference is a known risk for a later holdout score.
+- **Not settled by V1:** which expressions receive a mention, event granularity, and source languages other than Japanese.
+- **Acceptance.** The owner accepted V1 on 2026-11-17 (DEC-025), and its status is now `ACCEPTED`.
+- **DEV2 gold audit** (the owner authorized opening the DEV2 gold on 2026-11-17):
+  - *Before opening:* both package hashes matched the M4-04B3B1 seal. The gold was opened at 2026-11-17T10:10:19Z and is now tuning data.
+  - *Mechanical check:* the new checker `tools/story_extraction/check_annotation_conventions_v1.py` covers the ten MECHANICAL rules; it has synthetic tests only. Across all 10 cases (117 affirmed assertions, 47 mentions, 16 literals) it found 1 issue: a `TemporalRelation` with `AFTER`.
+  - *Reading:* the agent read every case against the JUDGED rules. This is not a human review. It found 22 items:
+
+    | Verdict | Items | What |
+    |---|---|---|
+    | gold wrong under V1 | 10 | 2 objects that are only handled, typed `PATIENT` (V1 says `THEME`); a theft typed `GENERIC` (V1 says `TRANSFER`; 3 items); a missing beneficiary; a missing `NamedAs`; two `AnchorDate` values with a year the source never states; the `AFTER` relation |
+    | rule unclear | 9 | lone names typed `GIVEN` from general Japanese naming knowledge (7); the role of an inanimate, unchanged subject (1); `OccursAt` for an arrival (1) |
+    | rule questionable | 3 | descriptive mentions keep a distinguishing adjective that V1 leaves out |
+  - *Limit of the checker:* it checks the date format only, so it cannot see an invented year.
+  - *Seals:* the gold was not rewritten; the seals stand.
+  - *Records:* `benchmarks/m4_extraction/M4_04B3J_DEV2_CONVENTIONS_AUDIT.yaml` (counts and hashes only). The per-item audit and the checker reports stay in the git-ignored `.local/m4_04b3j_conventions/`.
+- **Reading.** The gold author's habit of typing an object that is only handled as `PATIENT` appears in DEV2 as well, so FV1 probably shares it. That would explain part of the FV1 `ROLE_LABEL` misses.
+
+## Next Candidate
+
+Owner decision (nothing authorized yet):
+
+1. **Conventions V2.** It addresses the three unclear rules and the questionable one:
+   - general naming knowledge is allowed for `name_kind`;
+   - an inanimate, unchanged subject is `THEME`;
+   - `OccursAt` is used for the place of an arrival or appearance;
+   - descriptive mentions keep adjectives.
+
+   V2 is a new file, and it settles 12 of the 22 DEV2 items.
+2. **FV1 gold check.** Restore the FV1 packages and the B3I private outputs under a git-ignored directory, verify their hashes, then run the checker and the reading audit. The packages are not on the owner's machine.
+3. **P4 prompt** written from the conventions and developed on DEV1, DEV2 and FV1 (all open). Then seal FV2 under the conventions and lock the protocol.
+
+## M4-04B3K — ANNOTATION CONVENTIONS V2 — WRITTEN — Status: M4_04B3K_CONVENTIONS_V2_PROPOSED
+
+- **Authorization.** Option 1 of the Next Candidate above; the project owner asked for it on 2026-11-17 ("làm tiếp V2"). No model call, no new gold access, and no change to gold, seals or protocols.
+- **Deliverable.** `docs/research/m4/M4_ANNOTATION_CONVENTIONS_V2.md`, status `PROPOSED`. It is a complete document, and V1 stays unchanged. The changes are:
+  - **R-NAME-03:** general naming knowledge may decide `GIVEN` or `FAMILY`; story knowledge still may not.
+  - **R-ROLE-03, new test 0:** an inanimate participant that changes nothing in another participant is `PATIENT` if the event changes it, otherwise `THEME`.
+  - **New R-PLACE-01:** the place of an arrival or appearance is `OccursAt`; the destination of going somewhere is not.
+  - **R-MEN-03:** descriptive mentions keep plain adjectives and numerals, and leave out only modifiers that contain a verb or a past or negative adjective.
+  - **R-LIT-05:** no part of a date is ever filled in.
+- **Effect on DEV2.** The 12 items that V1 left unclear or questionable conform under V2. The 10 gold errors stay errors.
+- **Checker.** The MECHANICAL rules are unchanged, so `check_annotation_conventions_v1.py` applies to V2 as it is.
+- **Caution.** V2 was informed by reading the DEV2 gold. Only a fresh set can show whether it holds.
+
+## Next Candidate
+
+Owner decision (nothing authorized yet):
+
+1. **Accept, or correct, V2.**
+2. **P4 prompt** written from V2, developed on DEV1, DEV2 and FV1.
+3. **FV1 gold check**, once its packages are restored.
+4. **Seal FV2** under V2.
+
+## M4-04B3L — P4 PROMPT DEVELOPED ON DEV2 — Status: M4_04B3L_P4_DEVELOPED_ON_DEV2
+
+- **Authorization.** The project owner accepted V2 on 2026-11-17 (DEC-026) and asked for P4 ("làm tiếp P4 đi").
+- **Prompt.** `tools/story_extraction/prompts/story_extraction_draft_p4_system_v1_1.txt` is the P3 preamble plus three additions:
+  - the V2 conventions, condensed for the model;
+  - the structural rules that the DEV2 runs showed failing;
+  - a coverage checklist.
+
+  The schemas, the registry, the user template and the repair template are the same as P3's.
+- **Harness.** `tools/story_extraction/run_m4_p4_dev_v1.py` is a development runner, not a lock. It runs a prompt variant on DEV2 through the durable Gemini path, compiles the drafts, scores them with the Snapshot V2 evaluator and runs the conventions checker. It was written by Codex and reviewed by the agent.
+- **Results.** `gemini-3.5-flash-lite`, 10 DEV2 cases with 119 required assertions:
+
+  | Variant | Structurally valid | Required recovered (all 10 cases) | Precision on valid cases | Unsupported (unrated) |
+  |---|---|---|---|---|
+  | P3 | 6 | 48 | 0.814 | 11 |
+  | P4, first draft | 8 | 66 | 0.857 | 11 |
+  | P4, revised | 9 | 88 | 0.786 | 23 |
+
+  No variant reached full case success on any case.
+- **Causes behind the revision.** The first draft emitted `NamedAs` without validity (10 `WRONG_VALIDITY_BOUND`) and made no entities for inanimate participants. The structural failures were:
+  - an event anchor that is not the event's own `EVENT_TIME` anchor;
+  - two identical `Says` propositions for a repeated line;
+  - `AnchorDate` written for a time of day;
+  - a repeated short quote without `occurrence`.
+- **Caveats.**
+  - Part of the rise in unsupported predictions is output that follows V2 where the DEV2 gold is wrong (an invented year, a missing `NamedAs`, a missing beneficiary, `AFTER`).
+  - Another part is `TemporalRelation` over-generation (7 in 4 cases), which is left for the next revision.
+  - DEV2 is tuning data and P4 was revised on it. These numbers are not validation.
+- **Records.** `benchmarks/m4_extraction/M4_04B3L_P4_DEV2_DEVELOPMENT_RESULT.yaml` (aggregates only). Raw responses, drafts and scores are in `.local/m4_p4_dev/` and `.local/m4_p4_dev_r2/`.
+
+## Next Candidate
+
+Owner decision (nothing authorized yet):
+
+1. **One more P4 revision.** Restrict `TemporalRelation` to an order stated by a connective. Check the remaining structural failure and the holder-relative leak. Rerun on DEV2.
+2. **Try P4 on DEV1** (development data) to see whether the gain holds beyond DEV2; on FV1 once its packages are restored.
+3. **Seal FV2 under V2** (new source text, gold written to V2) and lock a P4 protocol before any measurement that counts.
+
+## M4-04B3M — FRESH VALIDATION V2 SEALED — Status: M4_04B3M_FRESH_VALIDATION_V2_SEALED_PENDING_ORCHESTRATOR_REVIEW
+
+- **Authorization.** Option 3 of the Next Candidate above, under the owner's 2026-11-17 instruction to carry out the proposed steps with Codex.
+- **What.** Codex authored and sealed 12 FV2 cases with 194 required assertions, written to the V2 conventions. The prompt developer (the agent) has not seen the FV2 source or gold; only member names, counts and hashes were read.
+- **Lock tooling, not run.** Codex also prepared:
+  - the protocol module `tools/story_extraction/m4_04b3n_fv2_protocol_v1.py`;
+  - the prediction runner `run_m4_04b3o_fv2_predictions_v1.py`, which never opens gold;
+  - the scorer `score_m4_04b3p_fv2_v1.py`, which checks the prediction lock before it opens gold.
+
+  The protocol currently binds P4R4 with no host-side repair. No FV2 prediction has been run.
+- **Records.** `benchmarks/m4_extraction/M4_04B3M_FRESH_VALIDATION_V2_SEAL_RESULT.yaml`, `docs/research/m4/M4_FRESH_VALIDATION_V2_PROTOCOL.md`.
+
+## M4-04B3L2 — P4 REVISIONS, DEV1 CHECK AND HOST-SIDE MENTION REPAIRS — Status: M4_04B3L2_P4R6_QR_AM_DEVELOPMENT_LEADER
+
+- **Authorization.**
+  - Owner requests of 2026-11-17: P4 revisions, DEV1 analysis, P4R4.
+  - The owner's overnight delegation of 2026-11-17 to plan and carry out the next steps with Codex.
+  - Development data only. The holdout and FV2 were not opened; `.env` was not changed.
+- **Prompts.** Each was revised after seeing scores, so none of these numbers is validation.
+  - P4R3: TemporalRelation only with an ordering word; repeated lines handled as one Says.
+  - P4R4: one entity per referent; never guess an existing entity from its kind.
+  - P4R5: the contract's evidence-role table verbatim.
+  - P4R6: P4R4 plus a narrow evidence-role rule.
+- **Host-side repairs.** Both are deterministic, refuse whenever there is doubt, and are written by Codex on synthetic tests.
+  - `draft_quote_resolution_v1.py` (QR).
+  - `draft_mention_anchoring_v1.py` (AM). AM moves a RefersTo mention that cannot be located to the single occurrence inside the evidence its assertion cites. If no cited evidence contains it, AM removes the spurious RefersTo.
+- **Results.** `gemini-3.5-flash-lite`; DEV2 has 119 required assertions. "L0" counts structurally valid cases.
+
+  | Variant | DEV2 L0 / recovered | DEV2 role accuracy | DEV1 L0 / recovered (14 cases) | DEV1 L0 / recovered with QR+AM (offline) |
+  |---|---|---|---|---|
+  | P3 | 6 / 48 | — | 7 / 10 | 7 / 10 |
+  | P4R3 | 9 / 89 | 0.891 | 8 / 7 | 10 / 12 |
+  | P4R4 | 9 / 86 | 0.961 | 6 / 7 | 9 / 8 |
+  | P4R5 | 8 / 82 (92 with QR+AM) | 0.683 | 6 / 6 | 7 / 7 |
+  | P4R6 | 9 / 89 | 0.963 | 5 / 1 | 10 / 8 |
+- **Findings.**
+  - QR alone fixed no case.
+  - On real prose the remaining structural failures are mostly RefersTo mentions. The model counts `occurrence` across the whole input, or names a character in a passage that does not contain the name. AM addresses this.
+  - On the 4 COMPLETE DEV1 cases, P4 variants recover fewer required assertions than P3 (1 vs 4). The V1.1 prepared input lists existing entities by kind only, so P4 creates new entities where P3 guessed the right handle.
+  - The development-only `--existing-names` option lowered DEV1 unsupported predictions to 4 and raised role accuracy to 0.853.
+  - Slots 33 and 20 hit their daily quota during these runs.
+- **Records.** `benchmarks/m4_extraction/M4_04B3L2_P4_REVISIONS_DEV1_AND_HOST_REPAIRS.yaml` (aggregates only). Runs are in `.local/m4_p4_dev_r3` … `_r6` and the diagnoses in `.local/m4_p4_diag*`.
+
+## Next Candidate
+
+Owner decision (nothing authorized yet):
+
+1. **Bind P4R6 + QR + AM in the FV2 lock** (agent recommendation), then run FV2 once, blind, on a credential slot with quota left. The FV2 protocol module needs a small change to bind the host-side repairs; that is preparation only.
+2. **Draft V1.2 prepared input exposing existing entity names** (the EN option). This is an interface change and needs a DEC. Without it, P4 under-uses existing entities on real prose.
+3. **Model check.** Run the same protocol with a stronger model as a comparison on DEV1/DEV2 before FV2.
+4. **Housekeeping for the owner.** The FV1 packages are still missing on this machine, and `.env` repeats six keys under several slot numbers.
+
+## M4-04B3N — FV2 LOCK BINDS P4R6 + QR + AM — Status: M4_04B3O_FV2_BLIND_RUN_SCORED
+
+- **Authorization.** Option 1 of the Next Candidate above; the project owner asked for it on 2026-11-18 ("khóa P4R6 + QR + AM rồi chạy FV2 đi"). Recorded as DEC-027.
+- **Change.** `m4_04b3n_fv2_protocol_v1.py` binds `PROMPT_VARIANT = "P4R6"` and `HOST_REPAIRS = ("QR", "AM")`. The credential slot moves from `gemini_slot_33`, which was out of daily quota, to `gemini_slot_40`. Model, temperature, the one structural repair per case and the scoring are unchanged. A protocol without the `host_repairs` key is still read as having none.
+- **Run.** One blind FV2 run on slot 40. A protocol lock written for slot 33 was never used for any provider call. The first slot-40 attempt was refused before any provider call, because the runner's credential smoke still carried the FV1 slot; the runner now uses the FV2 lock's slot, with a regression test. The predictions are locked and hashed before the gold is opened.
+- **Results.** First blind fresh-set result for P4: 12/12 structurally valid, 0 structural or transport failures, 4 repairs and 16 semantic jobs. Snapshot V2 guarded evaluator, REAL_SOURCE: all 12 COMPLETE_FOR_PROFILE, 194 required assertions, 0 pending adjudications. Pooled recall/precision 0.8557/0.9022 (means 0.8605/0.8976); unsupported rate 0.0924 (17, all UNRATED). Mean role/epistemic/referent accuracy 0.9697/1.0/0.9088; mean grounding precision/recall 0.8187/0.7116. Layers L0–L5: 12/4/9/7/1/1; full canonical case success 1/12 (0.0833). AM anchored 6 mentions, 65 were already located, 0 left unlocated and 0 pruned. Convention checker: 12 checked, one R-MEN-02 finding, every other rule 0. DEV2 comparison is tuning data, not validation: P4R6 (same with QR+AM offline) 9/10 valid, 89/119 recovered (0.748), role accuracy 0.963. Record: `benchmarks/m4_extraction/M4_04B3O_FV2_BLIND_RUN_RESULT.yaml` (aggregates only).
+- **Limits.** Twelve short agent-authored Japanese units, not real chapters; gold is `AGENT_DRAFT_GOLD`/UNREVIEWED; one model; no holdout run. Weak layers are evidence grounding (L1 4/12; grounding recall 0.71) and coverage/full-case success (each 1/12); unsupported predictions are 9.2% and unrated. FV2 is now spent: any change after seeing these scores makes FV2 development data.
+
+## Next Candidate
+
+Owner decision (nothing authorized yet):
+
+1. **Owner review of FV2 errors by category**, aggregate only, without changing anything that FV2 measured.
+2. **Draft V1.2 prepared input exposing existing entity names.** This needs a DEC and addresses the real-prose gap from DEV1.
+3. **Real-prose check.** Run the locked configuration on DEV1 and decide whether the holdout run is next.
+4. **Housekeeping for the owner.** FV1 packages are missing on this machine, and `.env` has duplicate keys.
 
 ## M8 Narrative Planning — ACCEPTED as a baseline (DEC-023, 2026-11-15)
 

@@ -1,0 +1,177 @@
+STORY EXTRACTION DRAFT P4 V1.1
+
+Return exactly one JSON object conforming to STORY_EXTRACTION_DRAFT_V1_1. Return no
+Markdown, prose, code fence, commentary, alternate answer, or canonical batch.
+The host will compile your draft deterministically. Do not reproduce trusted host
+metadata.
+
+INPUT HANDLES
+- Passages are P1, P2, ... in the supplied order. Read only supplied passages.
+- A passage marked EVIDENCE_ELIGIBLE may be cited. CONTEXT_ONLY may help interpretation
+  but must never be cited by evidence or mentions.
+- Existing prior records use handles such as E_EXISTING_1, EVT_EXISTING_1,
+  T_EXISTING_1, PROP_EXISTING_1, M_EXISTING_1, EV_EXISTING_1, and A_EXISTING_1.
+  Reuse the appropriate existing handle when it is the same referent or record. Do not
+  emit an existing record again. Prior context is never direct evidence for a new claim.
+- New records use local handles: EV1 for evidence, M1 for mentions, E_NEW_1 for new
+  entities, EVT1 for events, T1 for anchors, PROP1 for propositions, and A1 for
+  assertions. Handles carry no story meaning. Keep handle kinds type-correct.
+
+EXACT EVIDENCE AND MENTIONS
+- Every evidence and mention selects one passage_handle and an exact, byte-for-byte
+  quote found in that passage text. Preserve Unicode, punctuation, and whitespace.
+- If the exact quote appears more than once in that passage, provide its 1-based
+  occurrence. Omit occurrence only when the quote is unique.
+- Choose the explicit evidence role. A mention is only a located surface form; it does
+  not resolve itself. Express resolution with a RefersTo proposition and assertion.
+- A mention has only handle, passage_handle, quote, optional occurrence, role, and
+  optional surface_form. Never give a mention an evidence_handle: the host binds each
+  mention to its own exact evidence. Assertion support still cites only evidence[]
+  records.
+- An assertion may cite only new EV handles from EVIDENCE_ELIGIBLE passages. Existing
+  evidence and context-only text cannot support a new assertion.
+
+SEMANTIC DISCIPLINE
+- Emit all eight required top-level arrays, including empty arrays. Emit only keys the
+  exact Draft V1.1 schema permits.
+- Use only predicates, argument names, argument kinds, vocabularies, and derivation
+  rules in the exact predicate registry below. Never invent or approximate a predicate.
+- An event record does not establish occurrence. Add an Occurred proposition/assertion
+  only when supported. Discourse adjacency and temporal order do not establish Causes.
+- Preserve polarity exactly: AFFIRMED, NEGATED, or OPEN. Preserve the distinction among
+  EXPLICIT, ENTAILED, and SUGGESTED. Do not upgrade uncertainty or suggestion.
+- Says, Attitude, and Intends are holder-relative. Asserting them never asserts their
+  embedded content as world truth. A report or belief does not make an event occur.
+- Keep identities distinct unless evidence supports RefersTo or SameAs. Use placeholder
+  entities or propositions when the source requires unresolved content. Do not merge a
+  later-resolved placeholder away.
+- For stative assertions, keep start or end OPEN unless evidence supports a bound. Bound
+  support is explicit. PARTIAL and CORROBORATING sets do not replace a SUFFICIENT path.
+- Extract only story-relevant commitments under STORY_UNDERSTANDING_CORE_V0. Do not add
+  unsupported facts, missing-world guesses, or mechanically convenient relations.
+
+ANNOTATION CONVENTIONS (M4 ANNOTATION CONVENTIONS V2)
+These choose ONE representation where the registry allows several. They never license
+a fact the passages do not support.
+
+Event kind: take the FIRST that matches.
+ 1. REVEAL_TELL      a character conveys a specific proposition to another (record it with Conveys)
+ 2. REVEAL_DISCOVER  a character learns a proposition from story-world evidence (with Conveys)
+ 3. REVEAL_INFER     a character works a proposition out by reasoning (with Conveys)
+ 4. ADDRESS_CHANGE   a character starts using a different form of address for another
+ 5. TRANSFER         custody or ownership of an object passes between holders: give, lend,
+                     hand over, return, receive, take or steal from someone
+ 6. ENCOUNTER        characters come into each other's presence and the text presents the
+                     meeting itself; what they do afterwards is a separate event
+ 7. UTTERANCE        a speech or writing act recorded without Conveys
+ 8. MOVEMENT         a participant or object changes location
+ 9. GENERIC          anything else
+Conveys appears only on REVEAL_* events. One speech act is one event, never both
+REVEAL_TELL and UTTERANCE.
+
+Participant roles: one role per participant per event, allowed by the event's frame.
+  GENERIC         AGENT PATIENT THEME EXPERIENCER RECIPIENT WITNESS
+  TRANSFER        SOURCE (previous holder) RECIPIENT (new holder) THEME (object);
+                  AGENT only for a third party; the giver is SOURCE, never AGENT
+  UTTERANCE       AGENT (speaker) RECIPIENT (addressee) WITNESS
+  MOVEMENT        AGENT (mover) THEME (person or object moved by another) WITNESS
+  ENCOUNTER       AGENT (who seeks or arrives; every party if nobody seeks) THEME (who is
+                  met without seeking it) WITNESS
+  ADDRESS_CHANGE  AGENT (speaker who changes the form) RECIPIENT WITNESS
+  REVEAL_TELL     SOURCE (teller) RECIPIENT (learner) WITNESS
+  REVEAL_DISCOVER RECIPIENT (learner) THEME (what reveals it) WITNESS
+  REVEAL_INFER    RECIPIENT (the reasoner)
+Where several roles are allowed, take the FIRST test that matches:
+ 0. inanimate and changes nothing in another participant: PATIENT if the event changes it
+    (a window closes), otherwise THEME (a bell rings)
+ 1. performs or instigates the event, deliberately or not: AGENT
+ 2. perceives or feels without acting (notices, is startled): EXPERIENCER
+ 3. is changed by the event (damaged, closed, opened, healed, cooked): PATIENT
+ 4. receives something or benefits without being changed (the person something is done
+    for): RECIPIENT
+ 5. is moved, transferred, used, created, looked at or talked about without being
+    changed: THEME. An object that is only taken off, picked up, used or reserved is THEME.
+ 6. is only present: WITNESS
+Deliberate looking or listening makes the perceiver AGENT. Assert every participant
+the cited evidence establishes, including a subject left unspoken but clear.
+
+Places: OccursAt is where the event happens. For an arrival or appearance, the place
+reached is OccursAt. The destination of going or heading somewhere is not OccursAt;
+if arrival there is stated, use a LocatedAt state of the mover instead.
+
+Entities: characters, objects and places that take part in an event or state ARE
+entities, including inanimate ones (a bell, a window, a gate, a key, a lock). Body
+parts, weather and ambient conditions are not entities. A place or person named only
+inside a longer noun phrase gets its own entity only if it is an argument of another
+assertion.
+
+Mention spans (exact quote = surface form):
+- A name: the name as written plus an attached honorific suffix (さん, くん, ちゃん,
+  様, 先輩, 先生), without the following particle. 山田さんが -> 山田さん
+- A description: from the head noun back to the leftmost kept modifier. Keep
+  demonstratives (この その あの), の-chains, noun compounds, plain adjectives (赤い,
+  静かな, 大きな) and numerals with counters. Leave out any modifier containing a verb,
+  past or negative adjectives, everything left of them, particles and the copula.
+  その古い本を -> その古い本; 昨日買った赤い本 -> 赤い本; 彼の部屋の窓 -> 彼の部屋の窓
+- A pronoun or a kinship or role noun used as a reference: the word itself.
+
+Literals:
+- STRING literals stay in the source language, never translated. Use the fewest
+  whole words of the cited evidence that express the value, copied exactly as written
+  (no dictionary form).
+- NamedAs.name: the name exactly as written, without honorific.
+- DATE: AnchorDate.date always has value_type DATE, written YYYY-MM-DD, YYYY-MM, or
+  --MM-DD when no year is stated. Never fill in a year, month or day the text does
+  not state. Only a calendar date is a date: a time of day (evening, the next
+  morning, noon), a weekday alone or "the next day" is NOT; emit no AnchorDate for
+  it and use TemporalRelation between anchors where the order is stated.
+
+Time: TemporalRelation reads "subject relation object". Never use AFTER: write
+"B BEFORE A" instead of "A AFTER B". Only when the text states the order.
+
+Possession: Possesses = the holder holds, carries or has the object with them.
+Owns = the object is the holder's property. X の Y alone never supports Possesses.
+
+STRUCTURAL RULES THAT OFTEN FAIL (the host rejects the whole draft otherwise)
+- Occurrence: before omitting occurrence, count how often the exact quote appears in
+  that passage. Short quotes (one or two characters, a name, a common noun) usually
+  repeat; give the 1-based occurrence whenever the count is above one.
+- One proposition per content: if the same content is said, believed or asserted
+  more than once (a repeated line), create ONE proposition and cite it from each
+  assertion or event; never two propositions with identical predicate and arguments.
+- Every event has its own EVENT_TIME anchor whose event is that event. Never reuse
+  one anchor for two events, and never use a NAMED_TIME anchor as an event's anchor;
+  relate a named time to the event with TemporalRelation instead.
+- Every assertion of a stative predicate (stative: true in the registry, for example
+  NamedAs, AddressesAs, Possesses, Owns, LocatedAt, PhysicalCondition, EmotionToward,
+  Regard, Attitude, Intends, Conceals, Habitually) has validity with both start and
+  end; each is OPEN unless the text states that bound.
+
+COVERAGE CHECKLIST (complete for STORY_UNDERSTANDING_CORE_V0)
+Before returning, check each eligible passage for these and add every one the text
+supports:
+- NAMES: for every entity you use, each distinct name form written in an eligible
+  passage gets one NamedAs, cited at its first occurrence, unless prior context already
+  asserts it. name_kind: FORMAL (family and given name together), FAMILY, GIVEN,
+  NICKNAME, EPITHET, TITLE. Decide FAMILY or GIVEN from the passages, prior context, or
+  general naming knowledge of the language; never from knowledge of the story. If
+  still undecidable, omit that NamedAs.
+- EVENTS: every depicted occurrence that changes the story situation gets an event,
+  an Occurred assertion and every participant with its role.
+- STATES: possession and ownership, location, physical condition, emotion toward
+  someone, and intention, whenever the text states them; state bounds only when stated.
+- TIME: AnchorDate for every explicit date or named time, TemporalRelation for every
+  explicitly stated order between events.
+- IDENTITY AND KNOWLEDGE: SameAs or IdentityKnown when the text resolves or leaves open
+  who someone is; Says, Attitude and Conveys for what characters say, believe and learn.
+Do not add anything the checklist names if the text does not support it.
+
+HOST-OWNED FIELDS — NEVER OUTPUT
+Do not output hashes, offsets, byte ranges, locators, source positions, source document
+or segment ids, a batch envelope, process metadata, provenance, review state, canonical
+ids, confidence, provider metadata, or the supplied passages/existing_context. The
+output root is the Draft V1.1 object only.
+
+The exact Draft V1.1 JSON schema, the Draft V1 definitions it references, and the
+predicate registry appended below are authoritative. If this instruction conflicts with
+them, follow the schemas and registry and fail conservatively.

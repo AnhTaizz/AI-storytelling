@@ -1,0 +1,73 @@
+# M4-04B3J: audit of the DEV2 gold against Annotation Conventions V1 (counts and hashes only; private items in .local).
+artifact: M4_04B3J_DEV2_CONVENTIONS_AUDIT
+status: M4_04B3J_DEV2_GOLD_AUDITED
+date: '2026-11-17'
+authorization: Project Owner, 2026-11-17 ("Đồng ý V1, mở DEV2 gold để kiểm luôn"). V1 accepted as DEC-025.
+data_status: The DEV2 gold was opened in this step and is now tuning data. It was sealed in M4-04B3B1 and unopened until
+  this step (M4_04B3CR dev2_gold_opened false). DEV2 sources are original authored mini narratives, not corpus text.
+boundaries:
+  model_calls: 0
+  holdout_accessed: false
+  fv1_packages_accessed: false
+  gold_modified: false
+  protocol_changed: false
+  m4_04c_or_m5_work: false
+gold_access:
+  opened_at_utc: '2026-11-17T10:10:19Z'
+  hashes_checked_before_opening:
+    M4_04B3_DEV2_GOLD_V1.zip: 77b9655b92b09c5b2c0d0ce749432ae12da342bbf07d62a01b16b37b1fce9939
+    M4_04B3_DEV2_INPUT_V1.zip: e63937252e69820ff6f4b097537f860524ea9937e1e0bbd7187f2ae52cd812d5
+  matches_m4_04b3b1_seal: true
+inputs_sha256:
+  conventions_v1: d3ecf9a3b2f261440a64b3fa2c24f89642bcdde0b5d1f77e923293bfd100da7f
+  checker: 87bc3c0c2d6c4363e9e113cc60f5b686dd29c75dc7ca494ec51e7d446743f02c
+private_outputs_sha256:
+  DEV2_CHECKER_REPORTS_V1.jsonl: 73687d8c9f6d8892e6221facceaa5a6b0fb0e1bb91390b1368c8bd0f0facfa43
+  DEV2_JUDGED_AUDIT_V1.json: 78f84d8f155b9918dd1fab38501aed21f31f9cd6f73c1b162a5997fea1661813
+method:
+  mechanical: tools/story_extraction/check_annotation_conventions_v1.py on all 10 canonical_annotation_batch files, with the
+    exact M3 source and the base canonical document of each case. Ten MECHANICAL rules.
+  judged: The agent read all 10 gold cases against the JUDGED rules. This is not a human review.
+mechanical:
+  checked: {assertions_affirmed: 117, mentions: 47, participates: 24, string_literals: 14, date_literals: 2}
+  findings_by_rule: {R-ROLE-01: 0, R-ROLE-02: 0, R-EVT-02: 0, R-MEN-01: 0, R-MEN-02: 0, R-LIT-01: 0, R-LIT-02: 0,
+    R-LIT-04: 0, R-LIT-05: 0, R-TIME-02: 1}
+  blind_spot: R-LIT-05 checks the date format only; a well-formed date with an invented year passes (found by reading, below).
+judged:
+  verdicts:
+    GOLD_WRONG_UNDER_RULE: the rule is sound; the gold item would change under V1
+    RULE_UNCLEAR: the rule does not decide the item clearly; V2 should clarify it
+    RULE_QUESTIONABLE: the gold choice looks better than the rule; V2 should reconsider it
+  items_by_verdict: {GOLD_WRONG_UNDER_RULE: 10, RULE_UNCLEAR: 9, RULE_QUESTIONABLE: 3}
+  findings:
+    - {rule: R-ROLE-03, items: 2, verdict: GOLD_WRONG_UNDER_RULE, issue: object handled but not changed annotated PATIENT
+        (V1 THEME); the same THEME/PATIENT disagreement as FV1}
+    - {rule: R-EVT-01, items: 3, verdict: GOLD_WRONG_UNDER_RULE, issue: taking an object from someone annotated GENERIC with
+        AGENT/PATIENT (V1 TRANSFER, taker RECIPIENT, object THEME); one event and its two roles}
+    - {rule: R-ROLE-05, items: 1, verdict: GOLD_WRONG_UNDER_RULE, issue: the person an act is done for has no Participates}
+    - {rule: R-NAME-01, items: 1, verdict: GOLD_WRONG_UNDER_RULE, issue: a name form written in an eligible passage has no
+        NamedAs although prior context shows its kind}
+    - {rule: R-LIT-05, items: 2, verdict: GOLD_WRONG_UNDER_RULE, issue: AnchorDate literals carry a year the source never
+        states; an invented value, not only a format choice}
+    - {rule: R-TIME-02, items: 1, verdict: GOLD_WRONG_UNDER_RULE, issue: TemporalRelation AFTER (also found mechanically)}
+    - {rule: R-NAME-03, items: 7, verdict: RULE_UNCLEAR, issue: lone names typed GIVEN from general Japanese naming knowledge,
+        not from the passages; V2 should allow general naming knowledge and forbid only story knowledge}
+    - {rule: R-ROLE-03, items: 1, verdict: RULE_UNCLEAR, issue: role of an inanimate, unchanged subject of an intransitive verb
+        (gold THEME; V1 test 1 reads AGENT)}
+    - {rule: 'section 4.2 OccursAt note', items: 1, verdict: RULE_UNCLEAR, issue: place of an appearance/arrival event
+        annotated OccursAt; V1 says LocatedAt for a destination}
+    - {rule: R-MEN-03, items: 3, verdict: RULE_QUESTIONABLE, issue: descriptive mentions keep a colour adjective that V1 leaves
+        out; the adjective distinguishes two referents of one noun; V2 should keep adjectives and leave out only modifiers that
+        contain a verb}
+  conforming_noted:
+    - TRANSFER frames (SOURCE/RECIPIENT/THEME) in two cases
+    - PATIENT for objects whose state changes (closed, opened)
+    - の-chain mentions and a nested place mention that has its own role
+    - Possesses for holding statements
+    - verbatim source-language STRING literals
+    - UTTERANCE speakers as AGENT
+interpretation:
+  - Under V1, 10 gold items in 10 small cases would change. Two of them (an invented year) are gold errors in any convention.
+  - The THEME/PATIENT habit of the gold author also appears here, so FV1 and earlier gold probably share it.
+  - Four V1 points need a V2 (3 unclear rules and 1 questionable rule, covering 12 items). None of them blocks a P4 draft.
+  - The gold sets were not rewritten; the seals stand.

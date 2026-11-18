@@ -806,3 +806,55 @@ DECISION:
 1. `guards.coverage_data` converts every coverage key, relative or absolute, to `/` separators before matching it against `git diff` paths. Nothing else in the gate changes: the 80% threshold, the protected paths and the other guards are as before.
 2. A test in `tests/ci/test_ci_tools_v0.py` simulates the Windows separator, so CI on Linux also catches a regression.
 3. This supersedes DEC-021 item 13.
+
+---
+
+## DEC-025 — M4 Annotation Conventions V1
+
+STATUS: ACCEPTED (Project Owner, 2026-11-17: "Đồng ý V1")
+
+DECISION:
+1. **`docs/research/m4/M4_ANNOTATION_CONVENTIONS_V1.md` is the annotation convention for M4.** It covers participant roles, the choice of event kind, mention extent, entity scope, literals, `NamedAs`, the direction of `TemporalRelation`, and `Possesses` versus `Owns`. It binds:
+   - the gold of every new sealed set (FV2 onward);
+   - the P4 extraction prompt.
+2. **The frozen layers stay unchanged.** The registry, the schema, Draft V1.1, the evaluator and every existing seal and score are not changed. Every rule chooses among representations the registry already permits.
+3. **A change is a new version.** A rule that an audit shows to be wrong is changed in a new file (V2), never by editing V1.
+
+LIMITS:
+- V1 was written without reading any gold.
+- The holdout was annotated under its own sealed guideline, which was not compared with V1.
+- V1 covers Japanese source text only.
+
+---
+
+## DEC-026 — M4 Annotation Conventions V2 Replaces V1
+
+STATUS: ACCEPTED (Project Owner, 2026-11-17: "Đồng ý V2")
+
+DECISION:
+1. **V2 replaces V1.** `docs/research/m4/M4_ANNOTATION_CONVENTIONS_V2.md` replaces V1 (DEC-025) as the M4 annotation convention for new gold and for the P4 extraction prompt. V1 stays unchanged as a record.
+2. **What V2 changes.** It settles the four points that the DEV2 audit found unclear or questionable:
+   - general naming knowledge may decide `name_kind`;
+   - an inanimate participant that changes nothing in another participant is `PATIENT` if the event changes it, otherwise `THEME`;
+   - the place of an arrival or appearance is `OccursAt`;
+   - descriptive mentions keep plain adjectives.
+
+   It also states that no part of a date is ever filled in.
+
+LIMITS:
+- V2 was informed by the DEV2 gold, which is now tuning data. A fresh set (FV2) is needed to show that it holds.
+- The holdout guideline was not compared with V2.
+
+---
+
+## DEC-027 — FV2 Lock Binds P4R6 With Host Repairs QR and AM
+
+STATUS: ACCEPTED (Project Owner, 2026-11-18: "khóa P4R6 + QR + AM rồi chạy FV2 đi")
+
+DECISION:
+1. **The FV2 protocol lock binds P4R6 with host repairs QR and AM.** In `tools/story_extraction/m4_04b3n_fv2_protocol_v1.py`, `PROMPT_VARIANT` is `P4R6` and `HOST_REPAIRS` is `("QR", "AM")`. The lock hashes the P4R6 prompt and both repair modules. The credential slot moves from `gemini_slot_33`, which was out of daily quota, to `gemini_slot_40` (owner choice, 2026-11-18: "sang cách 2 đi"); a one-request probe of slots 34–40 succeeded before the change. Model, temperature, the one structural repair per case and the scoring are unchanged.
+2. **FV2 is run once, blind.** The predictions are locked and hashed before the FV2 gold is opened. A second run, or any change to the prompt, the repairs or the scoring after the gold is opened, makes FV2 tuning data, as happened to DEV2.
+
+LIMITS:
+- P4R6, QR and AM were chosen on DEV1 and DEV2 (record `benchmarks/m4_extraction/M4_04B3L2_P4_REVISIONS_DEV1_AND_HOST_REPAIRS.yaml`). FV2 is the first set they have not seen.
+- The Draft V1.1 prepared input is unchanged; existing entity names are still not shown to the model.

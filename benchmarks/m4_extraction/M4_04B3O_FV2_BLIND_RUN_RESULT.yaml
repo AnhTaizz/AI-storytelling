@@ -1,0 +1,111 @@
+# M4-04B3O: one-shot FV2 blind run of P4R6 + QR + AM. Public aggregates only.
+# No case identifiers, source text, entity names or gold content.
+artifact: M4_04B3O_FV2_BLIND_RUN_RESULT
+status: M4_04B3O_FV2_BLIND_RUN_SCORED
+date: '2026-11-18'
+authorization: DEC-027, Project Owner, 2026-11-18
+data_status: First blind fresh-set result for P4. FV2 is now spent; any change after seeing these scores makes FV2
+  development data.
+boundaries:
+  aggregates_only: true
+  holdout_accessed: false
+  counted_fv2_blind_runs: 1
+  fv2_cases_sent_to_model_before_counted_run: 0
+  provider_operations_after_gold_open: 0
+  documentation_only: true
+  private_artifacts_read_for_this_record: false
+  env_file_changed: false
+  locked_protocols_changed: false
+  existing_protected_files_changed: false
+setup:
+  prompt: P4R6
+  host_repairs: [QR, AM]
+  model: gemini-3.5-flash-lite
+  temperature: 0
+  structural_repairs_per_case: 1
+  credential_slot: gemini_slot_40
+  credential_slot_reason: Slot 33 was out of daily quota.
+  execution_commit: b66cf8d
+  execution_clone_line_endings: LF
+hashes:
+  protocol_sha256: fb67a18b2d4e17593206e5fe11bbd63576f5b2babd2648afeedfb8f56a232e20
+  prediction_lock_sha256: 1b9d4e49da72693557799506c1e31e63b802fe3bcd7709bb584933ff0f11a903
+  prediction_set_sha256: c0148e5d64486e2d85838f5cba380705b563f3254ae751b6b1a626acc51c48dd
+  gold_sha256: ca82f09c599e8a5d4386cc23ce76a9e7eed902b0bb51a8ea8546fa63dcce1977
+  gold_sha256_reference: tools/story_extraction/m4_04b3n_fv2_protocol_v1.py (FV2_GOLD_SHA256)
+timeline:  # UTC, 2026-11-18; reported chronology, no private artifacts reopened for this record
+  live_run_at: '2026-11-18T01:27:25Z'
+  predictions_locked_before: '2026-11-18T01:31:38Z'
+  gold_access_record_verified_at: '2026-11-18T01:31:40Z'
+  chronology: ALL_LOCKS_AND_PACKAGE_HASHES_VERIFIED_BEFORE_GOLD_OPEN
+earlier_unused_locks:
+  count: 2
+  predictions_produced: 0
+  attempts:
+    - credential_slot: gemini_slot_33
+      outcome: Abandoned because of daily quota; no prediction produced and no FV2 case reached the model.
+    - credential_slot: gemini_slot_40
+      outcome: Refused before any provider call because the runner's credential smoke carried the FV1 slot.
+      repair: run_m4_04b3o_fv2_predictions_v1.py now uses the FV2 lock's slot, with a regression test.
+run:
+  cases: 12
+  STRUCTURAL_VALID: 12
+  STRUCTURAL_FAILURE: 0
+  TRANSPORT_FAILURE: 0
+  structural_repairs_used: 4
+  semantic_jobs: 16
+host_repairs_on_final_attempts:
+  AM:
+    mentions_anchored: 6
+    mentions_already_located: 65
+    mentions_left_unlocated: 0
+    mentions_pruned: 0
+    nothing_removed: true
+scoring:
+  evaluator: Snapshot V2 guarded evaluator
+  source_mode: REAL_SOURCE
+  COMPLETE_FOR_PROFILE: 12
+  required_assertions: 194
+  pending_adjudications: 0
+  assertion_recall: 0.8557  # pooled; about 166 of 194 required assertions
+  assertion_recall_mean: 0.8605
+  assertion_precision: 0.9022  # pooled
+  assertion_precision_mean: 0.8976
+  unsupported_assertion_rate: 0.0924
+  unsupported_assertions: 17
+  unsupported_severity: UNRATED  # all 17
+  evidence_role_accuracy_mean: 0.9697
+  epistemic_accuracy_mean: 1.0
+  referent_resolution_accuracy_mean: 0.9088
+  evidence_grounding_precision_mean: 0.8187
+  evidence_grounding_recall_mean: 0.7116
+layers:  # cases passing, out of 12
+  L0_structural_validity: 12
+  L1_evidence_grounding: 4
+  L2_atomic_semantics: 9
+  L3_referent_event_structure: 7
+  L4_coverage: 1
+  L5_full_case: 1
+  full_canonical_case_success: 0.0833  # 1/12
+annotation_convention_checker:
+  cases_checked: 12
+  findings: {R-MEN-02: 1}
+  every_other_rule_findings: 0
+development_comparison:
+  data_status: DEV2 tuning data, not validation
+  configuration: P4R6; offline QR + AM gives the same result
+  cases: 10
+  structural_valid: 9
+  required_recovered: 89
+  required_assertions: 119
+  assertion_recall: 0.748
+  evidence_role_accuracy: 0.963
+interpretation:
+  - First blind fresh-set result for P4; structural validity on every case, with pooled recall/precision near 0.86/0.90.
+  - Evidence grounding remains weak (L1 4/12; grounding recall 0.71), as do coverage and full-case success (each 1/12).
+  - Unsupported predictions are 9.2% (17), all with UNRATED severity.
+limits:
+  - Twelve short agent-authored Japanese units, not real chapters.
+  - Gold is AGENT_DRAFT_GOLD and UNREVIEWED.
+  - One model; no holdout run.
+  - FV2 is now spent; any change after seeing these scores makes FV2 development data.
