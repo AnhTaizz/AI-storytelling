@@ -1080,7 +1080,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 ### test_m4_04b3n_fv2_protocol_v1 (6)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.m4_04b3n_fv2_protocol_v1`, `tools.story_ingestion.light_novel_adapter_v0`
 
-- `ProtocolTests.test_default_protocol_matches_pre_task_bytes_with_identical_hash_inputs`
+- `ProtocolTests.test_owner_binding_and_legacy_p4r4_protocol_bytes_unchanged`
 - `ProtocolTests.test_host_repair_bindings_variant_selection_and_legacy_empty_lock`
 - `ProtocolTests.test_determinism_exact_settings_requests_and_binding_drift`
 - `ProtocolTests.test_protocol_file_pinning_canonical_bytes_and_refusals`
