@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 77 — test functions: 1156
+Suites: 9 — test files: 79 — test functions: 1170
 
 ## canonical_story
 
@@ -644,6 +644,16 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.diagnose
 - `DiagnosisTests.test_public_record_holds_counts_only`
 - `DiagnosisTests.test_diagnose_reads_the_private_files_and_checks_each_case`
 
+### test_diagnose_m4_04b3q_fv2_v1 (6)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.diagnose_m4_04b3q_fv2_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.fresh_validation_seal_v1`, `tools.story_extraction.m4_04b3n_fv2_protocol_v1`, `tools.story_extraction.run_m4_04b3o_fv2_predictions_v1`, `tools.story_extraction.score_m4_04b3p_fv2_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `DiagnosisTests.test_bad_or_missing_prerequisites_refuse_before_gold`
+- `DiagnosisTests.test_reproduction_refuses_changed_scoring`
+- `DiagnosisTests.test_grounding_classes_and_evaluator_semantics`
+- `DiagnosisTests.test_derivation_only_support_reproduces_grounding`
+- `DiagnosisTests.test_layers_and_unmatched_details_aggregate_by_fixed_labels`
+- `DiagnosisTests.test_cli_reports_only_counts_and_writes_private_items`
+
 ### test_diagnose_m4_p4_dev_v1 (10)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.diagnose_m4_p4_dev_v1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
@@ -712,6 +722,16 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_me
 - `MentionAnchoringTests.test_pruning_checks_all_schema_reference_fields_but_not_literals`
 - `MentionAnchoringTests.test_only_located_cited_evidence_counts_and_own_ambiguity_never_prunes`
 - `MentionAnchoringTests.test_malformed_inputs_are_left_to_validation`
+
+### test_draft_mention_evidence_v1 (6)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_mention_evidence_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `MentionEvidenceTests.test_narrowing_is_pure_deterministic_and_reuses_new_exact_item`
+- `MentionEvidenceTests.test_selected_predicate_keeps_shared_wide_item_and_reuses_existing_exact_role`
+- `MentionEvidenceTests.test_refusals_preserve_cited_evidence`
+- `MentionEvidenceTests.test_all_eligible_sets_are_narrowed_and_other_support_keeps_original_items`
+- `MentionEvidenceTests.test_non_object_draft_and_malformed_records_reach_validation`
+- `MentionEvidenceTests.test_narrowed_runner_fixture_passes_validate_raw`
 
 ### test_draft_quote_resolution_v1 (8)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_quote_resolution_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
@@ -1117,7 +1137,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `RunnerTests.test_every_request_uses_the_fv2_locked_credential_slot`
 - `RunnerTests.test_smoke_failure_run_cli_and_guard`
 
-### test_run_m4_p4_dev_v1 (15)
+### test_run_m4_p4_dev_v1 (17)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_compiler_v1_1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.m4_04b3f_fv1_protocol_v1`, `tools.story_extraction.run_m4_p4_dev_v1`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `DevelopmentRunnerTests.test_prompt_composition_sources_and_request_identity`
@@ -1131,6 +1151,8 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_co
 - `DevelopmentRunnerTests.test_input_loader_and_gold_refusals`
 - `DevelopmentRunnerTests.test_quote_options_isolate_jobs_save_raw_and_resolved_and_record_metadata`
 - `DevelopmentRunnerTests.test_anchoring_compiles_preserves_originals_and_replays_all_attempts`
+- `DevelopmentRunnerTests.test_mention_evidence_labels_and_disabled_output_bytes`
+- `DevelopmentRunnerTests.test_mention_evidence_applies_after_repairs_in_run_score_and_revalidation`
 - `DevelopmentRunnerTests.test_rich_blockers_sanitize_values_extract_handles_and_restore_validator`
 - `DevelopmentRunnerTests.test_revalidation_is_offline_preserves_runs_and_reports_transitions`
 - `DevelopmentRunnerTests.test_revalidation_counts_remaining_blockers_and_resolution_over_all_attempts`
