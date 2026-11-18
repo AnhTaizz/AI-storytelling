@@ -4,7 +4,7 @@
 
 *Header refreshed 2026-11-18; the dated sections below are history.*
 
-M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED; holdout closed, predictions NOT RUN. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. Annotation conventions V2: ACCEPTED (DEC-026). P4 development / FV2 status: see M4-04B3L2 and M4-04B3N.
+M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED; holdout closed, predictions NOT RUN. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. Annotation conventions V2: ACCEPTED (DEC-026). FV2 diagnosis: see M4-04B3Q.
 
 M0 — Product Foundation: CLOSED (see M0 Closure).
 
@@ -43,7 +43,7 @@ M14 — Voice / Video Automation: GATED behind the Script Quality Gate (DEC-009)
   - The contract defines the standard. It does not show that any current Writer or critic meets it. The M9 Script Quality Gate is not evaluated.
 - M2 — Canonical Story Model: capability COMPLETE / FROZEN (DEC-016). The expected capability has been established as `canonical_story/v0` + `predicate_registry/v0.1`. M2 ran under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015).
 - M3 — Light Novel Ingestion: COMPLETE / FROZEN — `LIGHT_NOVEL_INGESTION/v0`, DEC-018, freeze record `benchmarks/m3_ingestion/LIGHT_NOVEL_INGESTION_V0_FROZEN.yaml`. The roadmap is unchanged.
-- M4 — Story Extraction: IN PROGRESS (M4-01/M4-02 accepted; M4-03 holdout sealed and closed, predictions not run; no extractor/model selected; nothing frozen). V2 accepted (DEC-026); P4 development / FV2 status: see M4-04B3L2 and M4-04B3N.
+- M4 — Story Extraction: IN PROGRESS (M4-01/M4-02 accepted; M4-03 holdout sealed and closed, predictions not run; no extractor/model selected; nothing frozen). V2 accepted (DEC-026). FV2 diagnosis: see M4-04B3Q.
 - M5 — Persistent Story Memory: PROTOTYPE EXISTS; not frozen or M5 completion (see Implementation Status; DEC-021).
 - M6 — Retrieval: ACCEPTED BASELINE over brief memory (DEC-021, 2026-11-15).
 - M7 — Story Brief: ACCEPTED BASELINE (DEC-022, 2026-11-15).
@@ -1261,6 +1261,27 @@ Owner decision (nothing authorized yet):
 2. **Draft V1.2 prepared input exposing existing entity names.** This needs a DEC and addresses the real-prose gap from DEV1.
 3. **Real-prose check.** Run the locked configuration on DEV1 and decide whether the holdout run is next.
 4. **Housekeeping for the owner.** FV1 packages are missing on this machine, and `.env` has duplicate keys.
+
+## M4-04B3Q — FV2 ERROR DIAGNOSIS — Status: M4_04B3Q_FV2_ERROR_DIAGNOSIS_RECORDED
+
+The project owner authorized the aggregate review on 2026-11-18 (“Xem lỗi FV2 theo nhóm ... ok làm đi”). The diagnosis tool is `tools/story_extraction/diagnose_m4_04b3q_fv2_v1.py`.
+
+- Evidence grounding (L1) was the first failure in 8 of 12 cases and the main blocker. Coverage (L4) was first in 3 cases, and 1 case fully passed.
+- Of 166 matched assertions, 138 were grounded and 28 had wrong evidence spans. Predictions cited wider spans in 68 matches, including 52 `RefersTo` and 14 `NamedAs` matches.
+- There were 4 wrong evidence roles and 6 wrong validity bounds (5 `Possesses`, 1 `Owns`).
+- Of 21 missed required assertions, 9 had referent mismatches. Six of the 7 missed `RefersTo` resolutions had a different mention span.
+- Of 17 unsupported assertions, 12 paired with a missed assertion or resolution, and the other 5 were on gold evidence.
+
+The aggregate record is `benchmarks/m4_extraction/M4_04B3Q_FV2_ERROR_DIAGNOSIS.yaml`. FV2 is spent and cannot validate a change.
+
+## Next Candidate
+
+The owner has yet to choose or authorize any of these candidates.
+
+1. **P4R7 + mention-evidence repair.** Develop exact mention evidence for `RefersTo` and `NamedAs` and the explicit-time-limit rule for `Possesses` and `Owns` on DEV1/DEV2, then evaluate on a new fresh set or the holdout.
+2. **Draft V1.2 with existing entity names.** Requires a DEC.
+3. **Real-prose check.** Run the locked configuration on DEV1.
+4. **Housekeeping.** FV1 packages are missing, and `.env` has duplicate keys.
 
 ## M8 Narrative Planning — ACCEPTED as a baseline (DEC-023, 2026-11-15)
 

@@ -1,0 +1,235 @@
+# M4-04B3Q: FV2 error diagnosis of the scored blind run. Public aggregates only.
+# No case identifiers, source text, entity names or gold content.
+artifact: M4_04B3Q_FV2_ERROR_DIAGNOSIS
+status: M4_04B3Q_FV2_ERROR_DIAGNOSIS_RECORDED
+date: '2026-11-18'
+authorization:
+  by: Project Owner
+  date: '2026-11-18'
+  instruction: "Xem lỗi FV2 theo nhóm ... ok làm đi"
+tool: tools/story_extraction/diagnose_m4_04b3q_fv2_v1.py
+source_aggregate: M4_04B3Q_FV2_DIAGNOSIS_PUBLIC_V1.json
+reproduction_checks:
+  scope: The tool requires each reconstructed count to match the scored evaluation per case.
+  missed_required_assertions: 21  # Rebuilt misses match the scorer's MISSED_REQUIRED_ASSERTION count.
+  unsupported_assertions: 17  # Rebuilt unsupported predictions match the scorer's unsupported count.
+  matched_predictions: 166  # Rebuilt nonduplicate matches match the scorer's matched_predictions count.
+  grounded: 138  # Rebuilt grounded matches match the scorer's grounded count.
+  narrow_span_segments: >-
+    The count of segments with multiple gold evidence roles must match the scorer's narrow_span_segments
+    count. The public aggregate gives no total for this check.
+aggregates:
+  first_failing_layer:
+    L1: 8
+    L4: 3
+    NONE: 1
+  grounding:
+    by_class:
+      EXACT: 87
+      NO_OVERLAP_SAME_PASSAGE: 1
+      PARTIAL_OVERLAP: 1
+      PRED_NARROWER: 9
+      PRED_WIDER: 68
+    by_gold_evidence_role:
+      DEPICTION:
+        EXACT: 86
+        NO_OVERLAP_SAME_PASSAGE: 1
+        PARTIAL_OVERLAP: 1
+        PRED_NARROWER: 9
+        PRED_WIDER: 62
+      IN_WORLD_REPORT:
+        PRED_WIDER: 4
+      NO_GOLD_EVIDENCE_ROLE:
+        EXACT: 1
+      RETROSPECTIVE:
+        PRED_WIDER: 2
+    by_predicate:
+      Attitude:
+        EXACT: 1
+      NamedAs:
+        EXACT: 4
+        PRED_NARROWER: 1
+        PRED_WIDER: 14
+      Occurred:
+        EXACT: 21
+        PRED_NARROWER: 2
+        PRED_WIDER: 1
+      OccursAt:
+        EXACT: 4
+      Owns:
+        PRED_NARROWER: 2
+      Participates:
+        EXACT: 37
+        PRED_NARROWER: 2
+        PRED_WIDER: 1
+      Possesses:
+        EXACT: 4
+        PRED_NARROWER: 2
+      RefersTo:
+        EXACT: 14
+        NO_OVERLAP_SAME_PASSAGE: 1
+        PRED_WIDER: 52
+      Says:
+        EXACT: 2
+      TemporalRelation:
+        PARTIAL_OVERLAP: 1
+    grounded_pairs: 138
+    matched_pairs: 166
+  layer_blocking:
+    by_layer:
+      L1:
+        WRONG_EVIDENCE_ROLE: 4
+        WRONG_EVIDENCE_SPAN: 28
+      L2:
+        WRONG_VALIDITY_BOUND: 6
+      L3:
+        MISSING_ENTITY_RESOLUTION: 7
+      L4:
+        MISSED_REQUIRED_ASSERTION: 21
+        MISSING_ENTITY_RESOLUTION: 7
+      L5:
+        MISSED_REQUIRED_ASSERTION: 21
+        MISSING_ENTITY_RESOLUTION: 7
+        UNSUPPORTED_ASSERTION: 17
+        WRONG_EVIDENCE_ROLE: 4
+        WRONG_EVIDENCE_SPAN: 28
+        WRONG_VALIDITY_BOUND: 6
+      NON_BLOCKING:
+        DUPLICATE_ASSERTION: 1
+    by_predicate:
+      AnchorDate:
+        MISSED_REQUIRED_ASSERTION: 2
+        UNSUPPORTED_ASSERTION: 2
+      Attitude:
+        MISSED_REQUIRED_ASSERTION: 1
+      Conveys:
+        MISSED_REQUIRED_ASSERTION: 1
+        UNSUPPORTED_ASSERTION: 1
+      LocatedAt:
+        MISSED_REQUIRED_ASSERTION: 2
+      Manner:
+        MISSED_REQUIRED_ASSERTION: 1
+      NO_PREDICATE:
+        WRONG_EVIDENCE_ROLE: 4
+      NamedAs:
+        MISSED_REQUIRED_ASSERTION: 2
+        UNSUPPORTED_ASSERTION: 3
+        WRONG_EVIDENCE_SPAN: 6
+      Occurred:
+        MISSED_REQUIRED_ASSERTION: 2
+        UNSUPPORTED_ASSERTION: 2
+        WRONG_EVIDENCE_SPAN: 3
+      Owns:
+        WRONG_EVIDENCE_SPAN: 2
+        WRONG_VALIDITY_BOUND: 1
+      Participates:
+        MISSED_REQUIRED_ASSERTION: 5
+        UNSUPPORTED_ASSERTION: 4
+        WRONG_EVIDENCE_SPAN: 3
+      Possesses:
+        MISSED_REQUIRED_ASSERTION: 3
+        WRONG_EVIDENCE_SPAN: 2
+        WRONG_VALIDITY_BOUND: 5
+      RefersTo:
+        DUPLICATE_ASSERTION: 1
+        MISSING_ENTITY_RESOLUTION: 7
+        UNSUPPORTED_ASSERTION: 3
+        WRONG_EVIDENCE_SPAN: 11
+      Says:
+        MISSED_REQUIRED_ASSERTION: 1
+        UNSUPPORTED_ASSERTION: 2
+      TemporalRelation:
+        MISSED_REQUIRED_ASSERTION: 1
+        WRONG_EVIDENCE_SPAN: 1
+  missed_by_cause:
+    EVENT_NOT_ALIGNED: 5
+    MISSING_PARTICIPANT: 1
+    NAMING_NOT_EMITTED: 2
+    OTHER_OMISSION: 10
+    TEMPORAL_STRUCTURE: 3
+  missed_by_class:
+    NOT_EXTRACTED: 3
+    OTHER_PREDICATE: 8
+    REFERENT_MISMATCH: 9
+    VALUE_MISMATCH: 1
+  missed_predicates_by_class:
+    NOT_EXTRACTED:
+      Attitude: 1
+      Possesses: 2
+    OTHER_PREDICATE:
+      LocatedAt: 2
+      Manner: 1
+      NamedAs: 2
+      Possesses: 1
+      Says: 1
+      TemporalRelation: 1
+    REFERENT_MISMATCH:
+      AnchorDate: 2
+      Occurred: 2
+      Participates: 5
+    VALUE_MISMATCH:
+      Conveys: 1
+  missed_resolutions_by_class:
+    MENTION_SPAN_DIFFERS: 6
+    NOT_EXTRACTED: 1
+  unsupported:
+    by_mechanical_hint:
+      UNSUPPORTED_ASSERTION: 17
+    by_predicate:
+      AnchorDate: 2
+      Conveys: 1
+      NamedAs: 3
+      Occurred: 2
+      Participates: 4
+      RefersTo: 3
+      Says: 2
+    by_state:
+      UNSUPPORTED_ASSERTION: 17
+  unsupported_by_class:
+    ON_GOLD_EVIDENCE: 5
+    PAIRED_WITH_MISS: 9
+    PAIRED_WITH_MISSED_RESOLUTION: 3
+  unsupported_predicates_by_class:
+    ON_GOLD_EVIDENCE:
+      NamedAs: 3
+      Says: 2
+    PAIRED_WITH_MISS:
+      AnchorDate: 2
+      Conveys: 1
+      Occurred: 2
+      Participates: 4
+    PAIRED_WITH_MISSED_RESOLUTION:
+      RefersTo: 3
+findings:
+  - Evidence grounding (L1) was the first failing layer in 8 of 12 cases and the main blocker.
+    Coverage (L4) was first in 3 cases, and 1 case fully passed.
+  - Of 166 matched assertions, 138 were grounded. WRONG_EVIDENCE_SPAN accounted for 28 failures
+    (RefersTo 11, NamedAs 6, Occurred 3, Participates 3, Owns 2, Possesses 2, TemporalRelation 1).
+    Span geometry was EXACT 87, PRED_WIDER 68, PRED_NARROWER 9, PARTIAL_OVERLAP 1, and
+    NO_OVERLAP_SAME_PASSAGE 1. The model tended to cite wider spans for mention-level assertions
+    (52 RefersTo and 14 NamedAs matches). Wider spans fail where the evaluator requires exact spans.
+  - There were 4 WRONG_EVIDENCE_ROLE failures at L1 and 6 WRONG_VALIDITY_BOUND failures at L2
+    (Possesses 5, Owns 1).
+  - Of 21 missed required assertions, 9 were REFERENT_MISMATCH (Participates 5, Occurred 2, AnchorDate 2),
+    8 were OTHER_PREDICATE, 3 were NOT_EXTRACTED, and 1 was VALUE_MISMATCH. The cause counts were
+    EVENT_NOT_ALIGNED 5, TEMPORAL_STRUCTURE 3, NAMING_NOT_EMITTED 2, MISSING_PARTICIPANT 1, and
+    OTHER_OMISSION 10. Of 7 missed RefersTo resolutions, 6 were MENTION_SPAN_DIFFERS and 1 was
+    NOT_EXTRACTED.
+  - Of 17 unsupported assertions, 9 were PAIRED_WITH_MISS, 3 were PAIRED_WITH_MISSED_RESOLUTION,
+    and 5 were ON_GOLD_EVIDENCE. The reported classes account for all 17, so NO_GOLD_ON_EVIDENCE
+    was 0. The tool classified none as lying on source evidence the gold leaves unannotated.
+    Most were the prediction side of a mechanically identified mismatch.
+candidate_directions:
+  status: Candidates for owner review.
+  development_data: DEV1/DEV2 for any candidate taken forward.
+  evaluation_data: FV2 is spent. Evaluating a change requires a new fresh set or the holdout.
+  mention_level_evidence: >-
+    Cite the exact mention span for RefersTo and NamedAs. A prompt rule or a deterministic host
+    repair could use the known mention location.
+  validity_bounds: Emit a validity bound on Possesses or Owns only when the text gives an explicit time limit.
+  event_alignment: Use one event per depicted action and attach participants to that event.
+limits:
+  - FV2 is spent. These error classes are mechanical and do not establish source-level correctness.
+  - Twelve short agent-authored units.
+  - Gold is unreviewed.
+  - One model.
