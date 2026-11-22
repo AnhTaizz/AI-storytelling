@@ -1,0 +1,126 @@
+# M4-04B3U: FV2-dev full-case blocker diagnosis. Public aggregates only.
+# No case identifiers, source text, entity names or gold content.
+artifact: M4_04B3U_FV2_DEV_FULL_CASE_DIAGNOSIS
+status: M4_04B3U_DIAGNOSIS_RECORDED
+date: '2026-11-18'
+authorization:
+  by: Project Owner
+  date: '2026-11-18'
+  instructions:
+    - "ok làm cách 3 đi, dùng codex nhé"
+  scope: Option 3 of the M4-04B3T Next Candidate list to diagnose the layers beyond L1 that block full-case success on FV2-dev.
+evaluation_data:
+  label: DEVELOPMENT-ONLY
+  set: FV2-dev
+  only_validation_result: M4_04B3O_FV2_BLIND_RUN_RESULT.yaml
+method:
+  tool: tools/story_extraction/diagnose_m4_04b3u_fv2_dev_v1.py
+  prompt: P4R6
+  replay: Offline replay of saved responses with host repairs.
+  host_repairs: QR+AM+ME+SE+TB
+  gold_alignment: Optional in-memory V3 alignment, enabled for this run.
+  aligned_refs: 6
+  package_verification: Verifies package hashes before opening gold.
+  public_output: Aggregate counts only.
+aggregates:
+  reproduction:
+    agrees_with: M4-04B3T
+    valid_cases: 12
+    matched: 166
+    grounded: 157
+    required_recovered: 166
+    required_total: 194
+    predicted: 184
+    unsupported: 17
+    l1_pass: 6
+    full_success: 1
+  first_failing_layer: {L1: 6, L3: 2, L4: 3, none: 1}
+  blocking_sets:
+    definition: Layers with a material failure per case. U denotes unsupported predictions.
+    cases:
+      L4+U: 2
+      L1+L4+U: 2
+      L1+L3+L4: 1
+      L1+L3+L4+U: 1
+      L1+L2+L3+L4+U: 1
+      L1+L4: 1
+      L3+L4: 1
+      L3+L4+U: 1
+      L4: 1
+      none: 1
+  counterfactual_full_success:
+    method: Remove every material failure of the named group and leave all other failures as scored.
+    total_cases: 12
+    shared_failure: L3 and L4 share MISSING_ENTITY_RESOLUTION.
+    cases:
+      L1: 1
+      L2: 1
+      L3: 2
+      U: 1
+      L4: 3
+      L1+L2: 1
+      L1+U: 1
+      L4+U: 6
+      L1+L2+U: 1
+      L1+L4+U: 11
+      ALL_BUT_L4: 1
+      ALL_BUT_U: 5
+  missed_required:
+    layer: L4
+    total: 28
+    per_case_histogram: {0: 3, 1: 3, 2: 2, '3-5': 4}
+    assertions:
+      total: 21
+      by_cause:
+        event_not_aligned:
+          total: 5
+          by_predicate: {Occurred: 2, Participates: 3}
+          predicted_events_with_identity_different_from_gold: 2
+        temporal_structure:
+          total: 3
+          different_anchor: {AnchorDate: 2}
+          temporal_relation: {TemporalRelation: 1}
+        naming_not_emitted: {NamedAs: 2}
+        missing_participant: 1
+        other_omission:
+          total: 10
+          by_predicate: {LocatedAt: 2, Possesses: 3, Manner: 1, Says: 1, Attitude: 1, Conveys content: 1, Participates participant: 1}
+    entity_resolutions:
+      total: 7
+      by_cause: {mention_span_differs: 3, not_extracted: 4}
+  unsupported:
+    layer: U
+    total: 17
+    failure: UNSUPPORTED_ASSERTION
+    material_because: The gold is COMPLETE_FOR_PROFILE.
+    per_case_histogram: {0: 5, 1: 2, 2: 2, '3-5': 3}
+    paired_with_a_miss:
+      total: 12
+      description: The same content is represented differently.
+      by_predicate: {Participates: 4, Occurred: 2, AnchorDate: 2, Conveys: 1, RefersTo: 3}
+      refers_to_pairing: All three pair with a missed entity resolution.
+    on_gold_evidence_without_gold_counterpart:
+      total: 5
+      by_predicate: {NamedAs: 3, Says: 2}
+  remaining_evidence:
+    layer: L1
+    wrong_span:
+      total: 8
+      by_predicate: {Owns: 2, Possesses: 2, NamedAs: 1, Occurred: 1, Participates: 1, RefersTo: 1}
+    subset:
+      failure: INSUFFICIENT_SUPPORT_MARKED_SUFFICIENT
+      by_predicate: {TemporalRelation: 1}
+  remaining_validity:
+    layer: L2
+    validity_bound: 1
+findings:
+  - Full-case success requires no required misses, no unsupported predictions and clean evidence.
+    L4 and U together block 11 of 12 cases. Removing L4 and U alone gives 6 full successes.
+    Adding L1 gives 11. Evidence fixes alone leave full success at 1.
+  - Representation alignment is the largest single lever. Twelve of 17 unsupported predictions
+    pair with a miss, including mismatches in event identity, temporal anchors and mention resolution.
+    Fixing a paired representation can remove both errors. Two misaligned events account for five misses.
+  - Ten plain omissions and four missing resolutions call for recall work using a coverage checklist.
+    Five unsupported predictions on gold evidence warrant a gold-completeness or convention check.
+  - Full-case success is strict on 12 cases. Per-assertion recall (0.856) and precision are better
+    development signals. Full-case success remains the validation gate.

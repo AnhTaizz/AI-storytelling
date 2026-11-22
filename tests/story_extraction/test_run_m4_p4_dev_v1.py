@@ -1,4 +1,4 @@
-"""Synthetic, offline behaviour tests for the DEV1/DEV2 prompt development runner."""
+"""Synthetic, offline behaviour tests for the prompt development runner."""
 from contextlib import contextmanager, ExitStack, redirect_stdout, redirect_stderr
 from copy import deepcopy
 from dataclasses import replace
@@ -12,12 +12,46 @@ from unittest.mock import Mock, patch
 from zipfile import ZipFile
 
 from tests.story_extraction import fixture_builder as fx
+from tests.story_extraction.test_draft_date_anchor_v1 import date_case
 from tests.story_extraction.test_run_m4_04b3g_fv1_predictions_v1 import Clock, FakeTransport
 from tools.story_extraction import run_m4_p4_dev_v1 as runner
 from tools.story_extraction import m4_04b3f_fv1_protocol_v1 as protocol
+from tools.story_extraction import run_m4_04b3o_fv2_predictions_v1 as fv2_loader
 from tools.story_extraction.draft_compiler_v1 import DraftCompilerContext
 from tools.story_extraction.draft_compiler_v1_1 import migrate_draft_v1_to_v1_1
 from tools.story_extraction.draft_coverage_v1 import canonical_gold_to_draft_v1
+
+
+def widened_mention_draft(draft):
+    wide = deepcopy(draft)
+    wide["evidence"][0]["quote"] = "Mira opened"
+    return wide
+
+
+def transfer_case():
+    """Two synthetic transfers with the same holder receiving and then giving."""
+    first, second = "ヨルがミラに灯りを渡した。", "ミラがノアに灯りを渡した。"
+    ingestion, base = fx.ingest_text(first + second)
+    builder = fx.Builder(ingestion, base)
+    holder = builder.named(1, "ミラ")
+    source, recipient, item = builder.entity(), builder.entity(), builder.entity("OBJECT")
+    for sentence, giver, receiver in ((first, source, holder), (second, holder, recipient)):
+        event, _ = builder.event("TRANSFER")
+        builder.occurred(event, 1, sentence[:-1])
+        for entity, role in ((giver, "SOURCE"), (receiver, "RECIPIENT"), (item, "THEME")):
+            builder.claim(builder.prop("Participates", event=fx.V(event), participant=fx.E(entity),
+                                       role=fx.ROLE(role)), [[builder.ev(1, sentence[:-1])]])
+    for predicate, args in (("Possesses", {"holder": fx.E(holder)}),
+                            ("Owns", {"owner": fx.E(holder)}), ("Owns", {"owner": fx.E(source)})):
+        builder.claim(builder.prop(predicate, item=fx.E(item), **args),
+                      [[builder.ev(1, first[:-1])]], validity=fx.OPEN)
+    gold = builder.batch()
+    scope = gold["scope"]
+    context = DraftCompilerContext(base, scope["passage_inputs"], scope["as_of_position"],
+                                   scope["profile_id"], "DEV_V1", "v1", "DEV_V1", ingestion)
+    draft, _ = canonical_gold_to_draft_v1(gold, context)
+    prepared = runner.prepare_story_extraction_draft_v1_1(context)
+    return migrate_draft_v1_to_v1_1(draft), runner.CaseInput("DEV2_01", prepared, context, ()), gold
 
 
 class DevelopmentRunnerTests(unittest.TestCase):
@@ -68,7 +102,7 @@ class DevelopmentRunnerTests(unittest.TestCase):
     def transport(self, variant="P3", script=None, smoke='{"status":"ok"}', slot=protocol.CREDENTIAL_SLOT,
                   dataset="DEV2"):
         variant = variant.replace("+", "_")
-        prefix = f"{runner.TASK_ID}_{'DEV1_' if dataset == 'DEV1' else ''}{variant}"
+        prefix = f"{runner.TASK_ID}_{'' if dataset == 'DEV2' else dataset + '_'}{variant}"
         values = {f"{prefix}_SMOKE_{slot.upper()}": [smoke]}
         for (cid, phase), raw in (script or {("DEV2_01", "PRIMARY"): self.good}).items():
             values[f"{prefix}_{cid}_{phase}"] = [raw]
@@ -124,6 +158,39 @@ class DevelopmentRunnerTests(unittest.TestCase):
         self.assertEqual(p4["repair_system"], p4["primary_system"] + "\n\n" + protocol.REPAIR_SYSTEM_SUFFIX)
         for key in ("primary_user_template", "repair_user_template"):
             self.assertEqual(p4[key], locked[key])
+        path6, path7 = (runner.PROMPT_ROOT / f"story_extraction_draft_{v}_system_v1_1.txt"
+                        for v in ("p4r6", "p4r7"))
+        original6 = path6.read_bytes()
+        ending = b"\r\n" if b"\r\n" in original6 else b"\n"
+        marker = "Owns = the object is the holder's property. X の Y alone never supports Possesses.".encode()
+        insertion = ending.join((
+            b"Possession bounds: when a TRANSFER gives the item to the holder (holder RECIPIENT, item",
+            b"THEME), the holder's Possesses and Owns start at that event's anchor. When the holder",
+            b"hands the item over (holder SOURCE), Possesses ends at that event's anchor; handing over",
+            b"or lending never ends Owns. When the holder picks up an item nobody held, Possesses",
+            b"starts at that pick-up event's anchor. Otherwise a bound stays OPEN.",
+            b"",
+        ))
+        expected7 = original6.replace(b"STORY EXTRACTION DRAFT P4R6 V1.1",
+                                      b"STORY EXTRACTION DRAFT P4R7 V1.1", 1)
+        self.assertEqual(path7.read_bytes(), expected7.replace(marker + ending, marker + ending + insertion, 1))
+        material6, material7 = (runner.prompt_material(v) for v in ("P4R6", "P4R7"))
+        preamble6, preamble7 = (protocol._normalized_text(p) for p in (path6, path7))
+        for key in ("primary_system", "repair_system"):
+            self.assertEqual(material7[key], preamble7 + material6[key][len(preamble6):])
+        for key in ("primary_user_template", "repair_user_template"):
+            self.assertEqual(material7[key], material6[key])
+        path8 = runner.PROMPT_ROOT / "story_extraction_draft_p4r8_system_v1_1.txt"
+        preamble8, material8 = protocol._normalized_text(path8), runner.prompt_material("P4R8")
+        self.assertTrue(preamble8.startswith("STORY EXTRACTION DRAFT P4R8 V1.1"))
+        for rule in ("the AnchorDate of that event's own EVENT_TIME anchor", "そのとき, その時, 同時に (SIMULTANEOUS)",
+                     "picking up or finding an\nobject nobody holds is GENERIC", "MOVEMENT needs a change of location"):
+            self.assertIn(rule, preamble8)
+        for key in ("primary_system", "repair_system"):
+            self.assertEqual(material8[key], preamble8 + material7[key][len(preamble7):])
+        self.assertEqual(runner.prompt_hashes("P4R6")["source_sha256"][path6.name],
+                         protocol.sha256_bytes(original6))
+        self.assertEqual(path6.read_bytes(), original6)
         with self.fixture() as (opts, _, _), tempfile.TemporaryDirectory() as tmp:
             case = runner.load_cases(opts["dev2_input"], Path(tmp), opts["cases"], opts["case_loader"])[0]
             prompt_root = Path(tmp) / "prompts"
@@ -210,6 +277,107 @@ class DevelopmentRunnerTests(unittest.TestCase):
                     self.assertEqual(result["status"], "PREFLIGHT_PASS")
             fake.assert_not_called()
             self.assertFalse(opts["output_root"].exists())
+
+    def test_fv2_run_verifies_before_use_and_rescores_aligned_gold_offline(self):
+        lock = runner.fv2_protocol
+        draft, case, gold = date_case()
+        original_gold = deepcopy(gold)
+        ids = lock.CASE_IDS[2], lock.CASE_IDS[0]
+        loaded = [fv2_loader.CaseInput(cid, {"locked_input": True}, case.compiler_context)
+                  for cid in lock.CASE_IDS]
+        flags = dict(quote_resolution=True, anchor_mentions=True, mention_evidence=True,
+                     sentence_evidence=True, transfer_bounds=True, date_anchor=True, vocabulary_guard=True)
+        label = "P4R8+QR+AM+ME+SE+TB+DA+VG"
+        with tempfile.TemporaryDirectory() as tmp, ExitStack() as stack:
+            directory = Path(tmp) / "sealed"
+            output = Path(tmp) / "output"
+            root = output / "FV2" / label
+            clock = Clock()
+            opts = dict(variant="P4R8", dataset="FV2", fv2_dir=directory, output_root=output,
+                        cases=ids, clock=clock, wait=clock.wait, **flags)
+            events = []
+
+            def verify(path, *, include_gold):
+                self.assertEqual(path, directory)
+                events.append("gold verified" if include_gold else "input verified")
+                if include_gold:
+                    for cid in ids:
+                        self.assertTrue((root / "artifacts" / cid / "validation.json").is_file())
+
+            def read_gold(path):
+                self.assertEqual(path, directory / lock.FV2_GOLD_NAME)
+                self.assertEqual(events[-1], "gold verified")
+                events.append("gold read")
+                return {cid: {"gold_batch": gold, "gold_completeness": "COMPLETE_FOR_PROFILE"} for cid in ids}
+
+            verifier = stack.enter_context(patch.object(lock, "verify_fv2_packages", side_effect=verify))
+            loader = stack.enter_context(patch.object(fv2_loader, "load_cases", return_value=loaded))
+            reader = stack.enter_context(patch.object(runner.scoring, "read_gold", side_effect=read_gold))
+            fake = self.transport(label, dataset="FV2", script={
+                (ids[0], "PRIMARY"): "{", (ids[0], "REPAIR_1"): json.dumps(draft),
+                (ids[1], "PRIMARY"): json.dumps(draft)})
+
+            def transport(*args):
+                self.assertEqual(events[-1], "input verified")
+                events.append("provider")
+                return fake(*args)
+
+            self.assertEqual(runner.selected_cases(None, "FV2"), lock.CASE_IDS)
+            with self.assertRaisesRegex(runner.DevelopmentError, "FV2 directory"):
+                runner.execute(**{**opts, "fv2_dir": None})
+            with self.assertRaisesRegex(runner.DevelopmentError, "FV2 selection"):
+                runner.execute(**{**opts, "cases": ["DEV2_01"]})
+            with patch.object(lock, "verify_fv2_packages", side_effect=lock.Fv2ProtocolError("mismatch")):
+                with self.assertRaises(lock.Fv2ProtocolError):
+                    runner.execute(**opts, mode="run", transport=transport)
+            loader.assert_not_called()
+            preflight = runner.execute(**opts, transport=transport)
+            self.assertEqual(events, ["input verified"])
+            loader.assert_called_once_with(directory)
+            self.assertFalse(output.exists())
+            self.assertEqual((preflight["dataset"], preflight["case_count"], preflight["input_sha256"],
+                              preflight["gold_sha256"]), ("FV2", 2, lock.FV2_INPUT_SHA256, lock.FV2_GOLD_SHA256))
+            with patch.object(runner.scoring.evaluator, "evaluate_case",
+                              wraps=runner.scoring.evaluator.evaluate_case) as evaluator:
+                result = runner.execute(**opts, mode="run", transport=transport)
+            for call in evaluator.call_args_list:
+                self.assertIs(call.kwargs["ingestion"], case.compiler_context.ingestion)
+                self.assertEqual(call.kwargs["case_spec"], {"mode": "REAL_SOURCE", "adjudications": [],
+                                 "gold_completeness": "COMPLETE_FOR_PROFILE", "acceptable_assertion_ids": []})
+            self.assertEqual(evaluator.call_count, len(ids))
+            self.assertEqual([row["case_id"] for row in result["rows"]], list(ids))
+            self.assertEqual([job for job, prompt in fake.calls], [
+                f"M4_P4_DEV_V1_FV2_P4R8_QR_AM_ME_SE_TB_DA_VG_{suffix}" for suffix in
+                (f"SMOKE_{protocol.CREDENTIAL_SLOT.upper()}", f"{ids[0]}_PRIMARY",
+                 f"{ids[0]}_REPAIR_1", f"{ids[1]}_PRIMARY")])
+            self.assertIn('"draft_version": "STORY_EXTRACTION_DRAFT_V1_1"', fake.calls[1][1])
+            self.assertNotIn("locked_input", fake.calls[1][1])
+            self.assertEqual(events.count("gold verified"), 1)
+            self.assertEqual(events[-2:], ["gold verified", "gold read"])
+            raw_score = (root / "score.json").read_bytes()
+            self.assertNotIn("gold_alignment", result)
+            replay = runner.execute(**opts, mode="revalidate")
+            self.assertEqual(replay["totals"]["new_structurally_valid"], len(ids))
+            self.assertTrue(result["vocabulary_guard"])
+            self.assertTrue(preflight["vocabulary_guard"])
+            self.assertEqual(events.count("gold verified"), 1)
+            reader.assert_called_once()
+
+            argv = ["--dataset", "FV2", "--fv2-dir", str(directory), "--output-root", str(output),
+                    "--variant", "P4R8", "--cases", ",".join(ids), "--mode", "score", "--align-gold",
+                    *("--" + key.replace("_", "-") for key in flags)]
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(runner.main(argv), 0)
+            aligned = json.loads((root / "score_aligned.json").read_bytes())
+            self.assertEqual(aligned["gold_alignment"], "V4_DEVELOPMENT_ONLY")
+            self.assertEqual(aligned["gold_alignment_counts"]["date_anchors"], {
+                "flagged": 2, "aligned": 2, "refused": {}, "anchors_dropped": 2,
+                "relations_dropped": 2, "duplicates_dropped": 0})
+            self.assertIn("by_from_role", aligned["gold_alignment_counts"]["mention_roles"])
+            self.assertGreater(aligned["summary"]["assertion_recall"], result["summary"]["assertion_recall"])
+            self.assertEqual((root / "score.json").read_bytes(), raw_score)
+            self.assertEqual(gold, original_gold)
+            verifier.assert_called_with(directory, include_gold=True)
 
     def test_existing_names_use_only_affirmed_base_facts_and_compiler_handles(self):
         ingestion, base = fx.ingest_text("Mira greeted Captain Mira and the stranger. Niko watched.")
@@ -671,6 +839,208 @@ class DevelopmentRunnerTests(unittest.TestCase):
                             kind: {code: count * 2 for code, count in counts.items()}
                             for kind, counts in report.items()})
 
+    def test_host_repair_labels_and_disabled_output_bytes(self):
+        for predicates, suffix in ((runner.MENTION_EVIDENCE_PREDICATES, "+ME"),
+                                   (("NamedAs", "RefersTo"), "+ME"),
+                                   (("RefersTo",), "+ME_R"), (("NamedAs",), "+ME_N")):
+            with self.subTest(predicates=predicates):
+                self.assertEqual(runner._run_variant("P3", True, True, True, True, True, predicates),
+                                 "P3+QR+RB+EN+AM" + suffix)
+                self.assertEqual(runner._run_variant("P4R7", True, True, True, True, True, predicates,
+                                                    sentence_evidence=True, transfer_bounds=True,
+                                                    date_anchor=True),
+                                 "P4R7+QR+RB+EN+AM" + suffix + "+SE+TB+DA")
+        for option, suffix in (("sentence_evidence", "+SE"), ("transfer_bounds", "+TB"),
+                               ("date_anchor", "+DA"), ("vocabulary_guard", "+VG")):
+            self.assertEqual(runner._run_variant("P4R7", False, False, **{option: True}), "P4R7" + suffix)
+        for predicates in ((), ("Occurred",)):
+            with self.subTest(invalid=predicates), self.assertRaisesRegex(runner.DevelopmentError, "predicates"):
+                runner._run_variant("P3", False, False, mention_evidence=True,
+                                    mention_evidence_predicates=predicates)
+
+        raw = json.dumps(widened_mention_draft(self.draft))
+        snapshots = []
+        with self.fixture() as (opts, _, _):
+            for flags in ({}, {"mention_evidence": False, "mention_evidence_predicates": ("NamedAs",),
+                               "sentence_evidence": False, "transfer_bounds": False, "date_anchor": False,
+                               "vocabulary_guard": False, "fv2_dir": Path("unused"), "align_gold": False}):
+                clock = Clock()
+                run = {**opts, "output_root": opts["output_root"] / str(len(snapshots)),
+                       "clock": clock, "wait": clock.wait}
+                fake = self.transport(script={("DEV2_01", "PRIMARY"): raw})
+                runner.execute(**run, **flags, mode="run", transport=fake)
+                runner.execute(**run, **flags, mode="revalidate", transport=Mock(side_effect=AssertionError))
+                root = run["output_root"] / "P3"
+                snapshots.append({p.relative_to(root): p.read_bytes() for p in root.rglob("*") if p.is_file()})
+        self.assertEqual(snapshots[0], snapshots[1])
+        for filename in ("score.json", "revalidation.json"):
+            for option in (b"mention_evidence", b"sentence_evidence", b"transfer_bounds", b"date_anchor",
+                           b"vocabulary_guard", b"gold_alignment", b"gold_alignment_counts"):
+                self.assertNotIn(b'"' + option, snapshots[0][Path(filename)])
+        self.assertNotIn(Path("artifacts/DEV2_01/primary_resolved_draft.json"), snapshots[0])
+
+    def test_vocabulary_guard_alone_saves_the_primary_without_a_repair_request(self):
+        draft = deepcopy(self.draft)
+        prop = next(p for p in draft["propositions"] if p["predicate"] == "Participates")
+        prop["args"]["role"]["value"] = "INVENTED"
+        with self.fixture() as (opts, _, _):
+            fake = self.transport("P3+VG", script={("DEV2_01", "PRIMARY"): json.dumps(draft)})
+            score = runner.execute(**opts, vocabulary_guard=True, mode="run", transport=fake)
+            row, = score["rows"]
+            self.assertEqual(row["terminal_status"], "STRUCTURAL_VALID")
+            self.assertFalse(row["repair_used"])
+            saved = opts["output_root"] / "P3+VG" / "artifacts" / "DEV2_01"
+            self.assertEqual(json.loads((saved / "primary_draft.json").read_bytes()), draft)
+            resolved = json.loads((saved / "primary_resolved_draft.json").read_bytes())
+            self.assertEqual(resolved["propositions"], [p for p in draft["propositions"] if p != prop])
+            validation = json.loads((saved / "validation.json").read_bytes())["validation"]
+            self.assertEqual(validation["vocabulary_guard"]["assertions_dropped"], 1)
+
+    def test_mention_evidence_applies_after_repairs_in_run_score_and_revalidation(self):
+        for phase in ("primary", "repair_1"):
+            with self.subTest(phase=phase), self.fixture() as (opts, _, _):
+                wide = widened_mention_draft(self.draft)
+                flags = {"mention_evidence": True}
+                if phase == "repair_1":
+                    # QR must restore the quote for AM to locate the mention, then ME narrows it.
+                    wide["evidence"][0]["quote"] = "\n".join(wide["evidence"][0]["quote"])
+                    wide["mentions"][0]["occurrence"] = 99
+                    flags.update(quote_resolution=True, anchor_mentions=True,
+                                 mention_evidence_predicates=("RefersTo",))
+                label = "P3+QR+AM+ME_R" if phase == "repair_1" else "P3+ME"
+                predicates = list(flags.get("mention_evidence_predicates", runner.MENTION_EVIDENCE_PREDICATES))
+                raw = json.dumps(wide)
+                script = {("DEV2_01", "PRIMARY"): raw if phase == "primary" else "{",
+                          ("DEV2_01", "REPAIR_1"): raw}
+                fake = self.transport(label, script=script)
+                score = runner.execute(**opts, **flags, mode="run", transport=fake)
+                self.assertTrue(score["mention_evidence"])
+                self.assertEqual(score["mention_evidence_predicates"], predicates)
+                self.assertEqual(score["rows"][0]["terminal_status"], "STRUCTURAL_VALID")
+                no_provider = Mock(side_effect=AssertionError("host-only"))
+                self.assertEqual(runner.execute(**opts, **flags, mode="score", transport=no_provider), score)
+
+                root = opts["output_root"] / label
+                saved = root / "artifacts" / "DEV2_01"
+                self.assertEqual((saved / f"{phase}_raw.txt").read_text(), raw)
+                self.assertEqual(json.loads((saved / f"{phase}_draft.json").read_text()), wide)
+                resolved = json.loads((saved / f"{phase}_resolved_draft.json").read_text())
+                self.assertEqual([item["quote"] for item in resolved["evidence"]],
+                                 ["Mira opened the gate.", "Mira"])
+                validation = json.loads((saved / "validation.json").read_text())
+                report = validation["validation"]["mention_evidence"]
+                self.assertEqual(report["by_predicate"]["RefersTo"]["NARROWED"], 1)
+                self.assertEqual((report["evidence_items_added"], report["evidence_items_removed"]), (1, 1))
+                self.assertEqual(set(report["by_predicate"]), set(predicates))
+                if phase == "repair_1":
+                    self.assertEqual(validation["validation"]["mention_anchoring"]["mentions"]
+                                     ["ANCHORED_TO_EVIDENCE"], 1)
+                    self.assertNotIn("mention_evidence", validation["attempts"][0]["validation"])
+
+                runner.execute(**opts, mode="run", transport=self.transport(script={
+                    ("DEV2_01", "PRIMARY"): raw, ("DEV2_01", "REPAIR_1"): raw}))
+                source = opts["output_root"] / "P3"
+                before = {p: p.read_bytes() for p in source.rglob("*") if p.is_file()}
+                replay = runner.execute(**opts, **flags, mode="revalidate", run_directory=source,
+                                        transport=no_provider)
+                self.assertEqual({p: p.read_bytes() for p in before}, before)
+                self.assertTrue(replay["mention_evidence"])
+                self.assertEqual(replay["mention_evidence_predicates"], predicates)
+                totals = replay["totals"]
+                self.assertEqual(totals["fixed"], int(phase == "repair_1"))
+                self.assertEqual(totals["by_phase"]["primary"]["mention_evidence_report"], report)
+                if phase == "repair_1":
+                    self.assertEqual(totals["by_phase"]["repair_1"]["mention_evidence_report"], report)
+                    self.assertEqual(totals["mention_evidence_report"], {
+                        "by_predicate": {p: {code: n * 2 for code, n in counts.items()}
+                                         for p, counts in report["by_predicate"].items()},
+                        "evidence_items_added": 2, "evidence_items_removed": 2,
+                    })
+                else:
+                    self.assertEqual(totals["by_phase"]["repair_1"]["mention_evidence_report"]
+                                     ["evidence_items_added"], 0)
+                    self.assertEqual(totals["mention_evidence_report"], report)
+                no_provider.assert_not_called()
+
+    def test_sentence_evidence_and_transfer_bounds_in_run_score_and_revalidation(self):
+        draft, case, gold = transfer_case()
+        # A second claim about the transfer contains an unregistered role.
+        participates = next(p for p in draft["propositions"] if p["predicate"] == "Participates")
+        draft["propositions"].append({**participates, "handle": "PROP99", "args": {
+            **participates["args"], "role": fx.TOK("participant_role", "INVENTED")}})
+        claim = next(a for a in draft["assertions"] if a["proposition_handle"] == participates["handle"])
+        draft["assertions"].append({**claim, "handle": "A99", "proposition_handle": "PROP99"})
+        invalid = {**draft, "unknown_field": True}
+        raw = {"primary": json.dumps(invalid), "repair_1": json.dumps(draft)}
+        flags = {"quote_resolution": True, "anchor_mentions": True, "mention_evidence": True,
+                 "sentence_evidence": True, "transfer_bounds": True, "date_anchor": True, "vocabulary_guard": True}
+        label = "P4R7+QR+AM+ME+SE+TB+DA+VG"
+        order = ("resolve_quotes", "_anchor_mentions", "narrow_mention_evidence",
+                 "widen_to_sentence", "bound_by_transfer", "anchor_dates_to_events", "guard_vocabulary")
+        repairs = Mock()
+        no_provider = Mock(side_effect=AssertionError("offline"))
+        with patch.object(self, "context", case.compiler_context), patch.object(self, "gold", gold), \
+                self.fixture() as (opts, _, _), ExitStack() as stack:
+            opts["variant"] = "P4R7"
+            for name in order:
+                repair = stack.enter_context(patch.object(runner, name, wraps=getattr(runner, name)))
+                repairs.attach_mock(repair, name)
+            fake = self.transport(label, script={(case.case_id, phase.upper()): response
+                                                for phase, response in raw.items()})
+            score = runner.execute(**opts, **flags, mode="run", transport=fake)
+            self.assertEqual([call[0] for call in repairs.mock_calls], list(order) * 2)
+            self.assertEqual(score["rows"][0]["terminal_status"], "STRUCTURAL_VALID")
+            self.assertTrue(score["rows"][0]["repair_used"])
+            self.assertTrue(score["sentence_evidence"])
+            self.assertTrue(score["transfer_bounds"])
+            self.assertTrue(score["date_anchor"])
+            self.assertTrue(score["vocabulary_guard"])
+            repairs.reset_mock()
+            self.assertEqual(runner.execute(**opts, **flags, mode="score", transport=no_provider), score)
+            self.assertEqual(repairs.mock_calls, [])
+
+            source = opts["output_root"] / label
+            saved = source / "artifacts" / case.case_id
+            run_validation = json.loads((saved / "validation.json").read_text(encoding="utf-8"))
+            for phase, original in (("primary", invalid), ("repair_1", draft)):
+                self.assertEqual((saved / f"{phase}_raw.txt").read_text(encoding="utf-8"), raw[phase])
+                self.assertEqual(json.loads((saved / f"{phase}_draft.json").read_bytes()), original)
+                resolved = json.loads((saved / f"{phase}_resolved_draft.json").read_bytes())
+                self.assertTrue(any(e["quote"].endswith("。") for e in resolved["evidence"]))
+                self.assertTrue(any(a.get("validity", {}).get("end", {}).get("kind") == "ANCHOR"
+                                    for a in resolved["assertions"]))
+
+            before = {p: p.read_bytes() for p in source.rglob("*") if p.is_file()}
+            replay = runner.execute(**{**opts, "output_root": source.parent / "replay"}, **flags,
+                                    mode="revalidate", run_directory=source, transport=no_provider)
+            self.assertEqual([call[0] for call in repairs.mock_calls if call.args[0]], list(order) * 2)
+            self.assertEqual({p: p.read_bytes() for p in before}, before)
+            totals = replay["totals"]
+            for name, predicate, code, value in (("sentence_evidence", "Occurred", "WIDENED", 2),
+                                                  ("transfer_bounds", "Possesses", "BOTH_SET", 1)):
+                self.assertTrue(replay[name])
+                self.assertEqual(totals[f"{name}_report"]["by_predicate"][predicate][code], value * 2)
+                for attempt in run_validation["attempts"]:
+                    report = attempt["validation"][name]
+                    phase_report = totals["by_phase"][attempt["phase"]][f"{name}_report"]
+                    self.assertEqual(phase_report, report)
+                    self.assertEqual(report["by_predicate"][predicate][code], value)
+            self.assertEqual(totals["sentence_evidence_report"]["evidence_items_added"], 4)
+            self.assertEqual(totals["sentence_evidence_report"]["evidence_items_removed"], 4)
+            self.assertTrue(replay["date_anchor"])
+            self.assertTrue(replay["vocabulary_guard"])
+            guard_totals = totals["vocabulary_guard_report"]
+            self.assertEqual(guard_totals["by_vocabulary"], {"participant_role": guard_totals["outcomes"]})
+            self.assertEqual(guard_totals["outcomes"]["DROPPED"], 2)
+            self.assertEqual(guard_totals["assertions_dropped"], 2)
+            self.assertEqual(totals["date_anchor_report"], runner.anchor_dates_to_events({}, {})[1])
+            for attempt in run_validation["attempts"]:
+                self.assertEqual(attempt["validation"]["date_anchor"], runner.anchor_dates_to_events({}, {})[1])
+                phase_report = totals["by_phase"][attempt["phase"]]["vocabulary_guard_report"]
+                self.assertEqual(phase_report, attempt["validation"]["vocabulary_guard"])
+                self.assertEqual(phase_report["outcomes"]["DROPPED"], 1)
+            no_provider.assert_not_called()
+
     def test_rich_blockers_sanitize_values_extract_handles_and_restore_validator(self):
         bad = deepcopy(self.draft)
         bad["assertions"][0]["support"] = {"evidence_sets": [], "derivations": []}
@@ -849,6 +1219,11 @@ class DevelopmentRunnerTests(unittest.TestCase):
                             "--cases", ",".join(opts["cases"]), "--mode", mode, "--existing-names", "--anchor-mentions"]
                     if dataset == "DEV1":
                         argv += ["--dataset", dataset]
+                    if mode == "score":
+                        argv += ["--align-gold"]
+                    if mode == "revalidate":
+                        argv += ["--mention-evidence", "--mention-evidence-predicates", "NamedAs, RefersTo",
+                                 "--sentence-evidence", "--transfer-bounds", "--vocabulary-guard"]
                     for key in ("dev1_package", "dev1_ingestion_manifest", "dev1_source_root",
                                 "dev2_input", "dev2_gold"):
                         if key in opts:
@@ -868,11 +1243,18 @@ class DevelopmentRunnerTests(unittest.TestCase):
                         with patch.object(runner, "execute", side_effect=execute_cli), redirect_stdout(output):
                             self.assertEqual(runner.main(argv), 0)
                         self.assertIsInstance(json.loads(output.getvalue()), dict)
+                        if mode == "score":
+                            self.assertEqual(returned[-1]["gold_alignment"], "V4_DEVELOPMENT_ONLY")
                         if mode == 'revalidate':
                             self.assertEqual(json.loads(output.getvalue()), returned[-1]['totals'])
                             self.assertIn('remaining_blocker_counts', returned[-1]['totals'])
                             self.assertIn('quote_resolution_report', returned[-1]['totals'])
                             self.assertIn('mention_anchoring_report', returned[-1]['totals'])
+                            self.assertIn('mention_evidence_report', returned[-1]['totals'])
+                            self.assertEqual(returned[-1]['mention_evidence_predicates'], ['RefersTo', 'NamedAs'])
+                            self.assertIn('sentence_evidence_report', returned[-1]['totals'])
+                            self.assertIn('transfer_bounds_report', returned[-1]['totals'])
+                            self.assertIn('vocabulary_guard_report', returned[-1]['totals'])
                             self.assertEqual(set(returned[-1]['totals']['by_phase']), {'primary', 'repair_1'})
                         with patch.object(runner, "execute", side_effect=runner.DevelopmentError("private")), redirect_stdout(output):
                             self.assertEqual(runner.main(argv), 2)

@@ -1,0 +1,131 @@
+# M4-04B3S: Offline evaluation of P4R7 host repairs SE and TB. Public aggregates only.
+# No case identifiers, source text, entity names or gold content.
+artifact: M4_04B3S_P4R7_SENTENCE_EVIDENCE_TRANSFER_BOUNDS
+status: M4_04B3S_SE_TB_DEVELOPMENT_CANDIDATE
+date: '2026-11-18'
+authorization:
+  by: Project Owner
+  date: '2026-11-18'
+  instructions:
+    - "ok làm P4R7 đi, dùng codex nhé"
+  scope: Option 1 of the M4-04B3R Next Candidate list.
+evaluation_data:
+  fv2_status: DEVELOPMENT_DATA
+  status_change: FV2 became development data in M4-04B3R.
+  only_validation_result: M4_04B3O_FV2_BLIND_RUN_RESULT.yaml
+  next_validation_data: The holdout or a new fresh set (FV3).
+diagnosis:
+  after_configuration: P4R6 + QR + AM + ME
+  non_mention_wrong_spans: {prediction_narrower_than_gold: 9, total: 11}
+  non_mention_gold_whole_sentence:
+    fv2: {whole_sentence: 93, refs: 96}
+    dev1: {whole_sentence: 259, refs: 290}
+    dev2: {whole_sentence: 5, refs: 60}
+    shape: >-
+      Narrow predictions cited a verb or a clause where gold cited the whole sentence.
+      Whole dialogue lines include the enclosing 「…」 brackets. DEV2 gold uses clauses
+      within sentences.
+  transfer_bounds:
+    predicates: [Possesses, Owns]
+    fv2_validity_errors: 6
+    predicted_open_on_both_bounds: 6
+    gold_bounded_at_transfer_anchor: 6
+    transfer_already_in_draft: 5
+    gold_patterns_across_fv2_dev1_dev2:
+      RECIPIENT:
+        Possesses: {starts_at_anchor: 10, total: 12}
+        Owns: {starts_at_anchor: 1, total: 1}
+      SOURCE:
+        Possesses: {ends_at_anchor: 5, total: 7}
+        Owns: {stays_open: 2, total: 2}
+  dialogue_mention_evidence_role:
+    fv2: {IN_WORLD_REPORT: 6, total: 7}
+    dev1: {DEPICTION: 4, total: 4}
+    dev2: {DEPICTION: 5, total: 5}
+    finding: V2 leaves the evidence role of mentions in dialogue unspecified, and the gold conventions differ.
+    resolution: An owner decision on a Conventions V3 rule is pending. No repair was built for this gap.
+repairs:
+  runner: tools/story_extraction/run_m4_p4_dev_v1.py
+  order: [QR, AM, ME, SE, TB]
+  sentence_evidence:
+    tool: tools/story_extraction/draft_sentence_evidence_v1.py
+    dev_option: --sentence-evidence
+    suffix: +SE
+    enabled_by_default: false
+    behavior: >-
+      Widens SUFFICIENT evidence for every predicate except RefersTo and NamedAs to the
+      enclosing sentence or whole 「…」 region for dialogue. Refuses multi-sentence spans
+      and never edits a shared evidence item in place.
+  transfer_bounds:
+    tool: tools/story_extraction/draft_transfer_bounds_v1.py
+    dev_option: --transfer-bounds
+    suffix: +TB
+    enabled_by_default: false
+    behavior: >-
+      Sets an OPEN bound on an affirmed Possesses or Owns assertion to the anchor of the
+      unique TRANSFER with the item as THEME and the holder as RECIPIENT for the start bound.
+      For Possesses, it can also set the end bound when the holder is SOURCE. Refuses
+      ambiguous transfers and bounds in the wrong text order.
+prompt:
+  revision: P4R7
+  path: prompts/story_extraction_draft_p4r7_system_v1_1.txt
+  change: One possession-bounds paragraph added to P4R6. The P4R6 prompt bytes were preserved.
+  model_run: pending
+method:
+  base_configuration: P4R6 + QR + AM + ME
+  replay: Offline replay of saved P4R6 responses with the same primary/repair selection as M4-04B3R and no model call.
+  evaluator: Snapshot V2 guarded evaluator
+  profile: REAL_SOURCE
+  adjudication: none
+  subset_metric: INSUFFICIENT_SUPPORT_MARKED_SUFFICIENT
+aggregates:
+  fv2:
+    valid_cases: 12
+    configurations:
+      base: {grounded: 153, matched: 166, WRONG_EVIDENCE_SPAN: 13, INSUFFICIENT_SUPPORT_MARKED_SUFFICIENT: 0, WRONG_EVIDENCE_ROLE: 4, validity_errors: 6, l1_pass: 5, full_success: 1}
+      +SE: {grounded: 157, matched: 166, WRONG_EVIDENCE_SPAN: 8, INSUFFICIENT_SUPPORT_MARKED_SUFFICIENT: 1, WRONG_EVIDENCE_ROLE: 4, validity_errors: 6, l1_pass: 5, full_success: 1}
+      +TB: {grounded: 153, matched: 166, WRONG_EVIDENCE_SPAN: 13, INSUFFICIENT_SUPPORT_MARKED_SUFFICIENT: 0, WRONG_EVIDENCE_ROLE: 4, validity_errors: 1, l1_pass: 5, full_success: 1}
+      +SE+TB: {grounded: 157, matched: 166, WRONG_EVIDENCE_SPAN: 8, INSUFFICIENT_SUPPORT_MARKED_SUFFICIENT: 1, WRONG_EVIDENCE_ROLE: 4, validity_errors: 1, l1_pass: 5, full_success: 1}
+    se_outcomes:
+      widened: 12
+      widened_by_predicate: {Occurred: 3, Participates: 3, Says: 2, AnchorDate: 2, Conveys: 1, TemporalRelation: 1}
+      already_sentence: 78
+      refused: 1
+    tb_outcomes:
+      Possesses: {start: 3, end: 2, no_transfer: 1}
+      Owns: {start: 1, no_transfer: 1}
+    remaining_with_se_tb:
+      WRONG_EVIDENCE_SPAN: 8
+      wrong_evidence_span_by_predicate: {NamedAs: 1, RefersTo: 1, Occurred: 1, Participates: 1, Owns: 2, Possesses: 2}
+      possession_evidence: The Owns and Possesses predictions already span whole sentences under SE. Gold spans extend farther.
+      WRONG_EVIDENCE_ROLE: 4
+      role_reason: The dialogue-mention convention gap.
+      validity_errors: 1
+      validity_reason: A pick-up GENERIC event. Only the P4R7 prompt addresses this case.
+  dev2:
+    valid_cases: 9
+    configurations:
+      base: {grounded: 83, matched: 89, WRONG_EVIDENCE_SPAN: 6, INSUFFICIENT_SUPPORT_MARKED_SUFFICIENT: 0, WRONG_EVIDENCE_ROLE: 1, validity_errors: 1, l1_pass: 5, full_success: 0}
+      +SE: {grounded: 86, matched: 89, WRONG_EVIDENCE_SPAN: 3, INSUFFICIENT_SUPPORT_MARKED_SUFFICIENT: 0, WRONG_EVIDENCE_ROLE: 1, validity_errors: 1, l1_pass: 6, full_success: 0}
+      +TB: {grounded: 83, matched: 89, WRONG_EVIDENCE_SPAN: 6, INSUFFICIENT_SUPPORT_MARKED_SUFFICIENT: 0, WRONG_EVIDENCE_ROLE: 1, validity_errors: 1, l1_pass: 5, full_success: 0}
+      +SE+TB: {grounded: 86, matched: 89, WRONG_EVIDENCE_SPAN: 3, INSUFFICIENT_SUPPORT_MARKED_SUFFICIENT: 0, WRONG_EVIDENCE_ROLE: 1, validity_errors: 1, l1_pass: 6, full_success: 0}
+    remaining_validity_error: A NAMED_TIME bound outside TB's scope.
+  dev1:
+    valid_cases: 10
+    configurations:
+      base: {grounded: 3, matched: 8, WRONG_EVIDENCE_SPAN: 5, INSUFFICIENT_SUPPORT_MARKED_SUFFICIENT: 0, WRONG_EVIDENCE_ROLE: 6, validity_errors: 0, l1_pass: 5, full_success: 0}
+      +SE: {grounded: 5, matched: 8, WRONG_EVIDENCE_SPAN: 3, INSUFFICIENT_SUPPORT_MARKED_SUFFICIENT: 0, WRONG_EVIDENCE_ROLE: 7, validity_errors: 0, l1_pass: 6, full_success: 0}
+      +TB: {grounded: 3, matched: 8, WRONG_EVIDENCE_SPAN: 5, INSUFFICIENT_SUPPORT_MARKED_SUFFICIENT: 0, WRONG_EVIDENCE_ROLE: 6, validity_errors: 0, l1_pass: 5, full_success: 0}
+      +SE+TB: {grounded: 5, matched: 8, WRONG_EVIDENCE_SPAN: 3, INSUFFICIENT_SUPPORT_MARKED_SUFFICIENT: 0, WRONG_EVIDENCE_ROLE: 7, validity_errors: 0, l1_pass: 6, full_success: 0}
+findings:
+  - SE and TB reduced the span and transfer-bound errors they target. Recall, matched counts,
+    unsupported counts and structural validity were unchanged on all three sets, with no
+    regression in recall or precision.
+  - DEV1 gained one role mismatch where a widened span covers gold evidence with a different role.
+  - FV2 retained five L1 passes. DEV1 and DEV2 each gained one. Almost every failing case still
+    has a dialogue-mention role error or a remaining span error. Further case-level gains need
+    the owner's evidence-role rule.
+candidate_directions:
+  status: Development candidate for owner review.
+  next_locked_configuration: P4R6 + QR + AM + ME + SE + TB, with P4R7 as an option after a development model run.
+  validation: Use FV3 or the holdout.

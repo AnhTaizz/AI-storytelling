@@ -858,3 +858,79 @@ DECISION:
 LIMITS:
 - P4R6, QR and AM were chosen on DEV1 and DEV2 (record `benchmarks/m4_extraction/M4_04B3L2_P4_REVISIONS_DEV1_AND_HOST_REPAIRS.yaml`). FV2 is the first set they have not seen.
 - The Draft V1.1 prepared input is unchanged; existing entity names are still not shown to the model.
+
+---
+
+## DEC-028 — M4 Annotation Conventions V3: Mentions Inside Dialogue Are DEPICTION
+
+STATUS: ACCEPTED (Project Owner, 2026-11-18: chose "Luôn DEPICTION"; work authorized with "ok làm cách 1 đi, dùng codex nhé")
+
+CONTEXT:
+V2 left the role unstated. FV2 used `IN_WORLD_REPORT` for 6 mention refs in the content of dialogue statements. DEV1 and DEV2 used `DEPICTION`, including 5 such refs in DEV2. Every set used `DEPICTION` for vocative mentions in dialogue.
+
+DECISION:
+1. **V3 replaces V2.** `docs/research/m4/M4_ANNOTATION_CONVENTIONS_V3.md` replaces V2 (DEC-026) as the M4 annotation convention for new gold and extraction prompts. V2 stays unchanged as a record.
+2. **R-EVR-01.** `SUFFICIENT` evidence for a `RefersTo` or `NamedAs` assertion has role `DEPICTION` when the span lies inside dialogue, including a statement that reports a fact or event. The scene shows the act of referring or naming, just as it shows the utterance for `Says`. Evidence for the reported fact or event itself keeps `IN_WORLD_REPORT` under the extraction contract's evidence-role hard contrasts.
+3. **Sealed gold is never rewritten.** FV2, DEV1 and DEV2 are all development data. They may be rescored against an in-memory copy aligned with `align_mention_roles`, with results labelled development-only. M4-04B3O stays the only validation number.
+4. **P4R6 and P4R7 already agree with V3.** Both prompts say `IN_WORLD_REPORT` is “never for a mention”, so no prompt change is needed.
+5. **FV3 and holdout gold authored from now on follows V3.**
+
+LIMITS:
+- The choice followed a review of disagreements in the FV2 and DEV gold. Only a fresh set can show whether the rule holds.
+
+---
+
+## DEC-029 — M4 Annotation Conventions V4: Event Dates on the Event's Own Anchor
+
+STATUS: ACCEPTED (Project Owner, 2026-11-22: chose "Gắn vào mốc sự kiện"; work authorized with "Oke thực hiện đi nào")
+
+CONTEXT:
+The M4-04B3U diagnosis of FV2 development data found temporal-structure misses paired with unsupported predictions. When a sentence states the date of one event, the FV2 gold puts the `AnchorDate` on the event's own `EVENT_TIME` anchor (2 dates), while the DEV2 gold creates a separate `NAMED_TIME` anchor (2 dates) and bounds a possession on it. V3 has no rule. The same diagnosis found a pick-up predicted as `TRANSFER` and a hand wave predicted as `MOVEMENT`, both already excluded by V2's definitions.
+
+DECISION:
+1. **V4 replaces V3.** `docs/research/m4/M4_ANNOTATION_CONVENTIONS_V4.md` replaces V3 (DEC-028) for new gold and extraction prompts. V3 stays unchanged as a record.
+2. **R-TIME-03.** A calendar date stated in the same sentence as the occurrence of exactly one event, and giving that event's time, is the `AnchorDate` of that event's own `EVENT_TIME` anchor. A `NAMED_TIME` anchor is used only for a time not tied to one event. Validity bounds and `TemporalRelation` refer to the event's anchor.
+3. **R-EVT-01 clarifications, no change in meaning.** Picking up or finding an object nobody holds is `GENERIC`; receiving from an unnamed giver is still `TRANSFER`. `MOVEMENT` needs a change of location; a gesture in place is `GENERIC`.
+4. **Sealed gold is never rewritten.** Development rescoring may align a gold copy in memory with `align_date_anchors` (checker `check_annotation_conventions_v3.py`), labelled development-only. M4-04B3O stays the only validation number.
+5. **Prompt and host.** Prompt variant P4R8 carries the matching rules; host repair DA (`draft_date_anchor_v1.py`, development option `--date-anchor`) moves a date from a `NAMED_TIME` anchor to the only event in its sentence. FV3 and holdout gold authored from now on follow V4.
+
+LIMITS:
+- R-TIME-03 was chosen after reading development gold; only a fresh set can show whether it holds.
+- DEV1 gold labels a body-part movement `MOVEMENT`, already wrong under V2's definition. The clarification is judged, so it is not aligned automatically.
+
+---
+
+## DEC-030 — FV3 Locked Blind Validation of P4R8 With Seven Host Repairs
+
+STATUS: ACCEPTED (Project Owner, 2026-11-22: "ok làm cách 1 đi, tạo FV3"; FV3 author chosen as Codex on a separate account: "Codex, đổi sang tk …23")
+
+CONTEXT:
+FV2 has been development data since M4-04B3R. The development candidate after M4-04B3S to M4-04B3X is prompt P4R8 with host repairs QR, AM, ME, SE, TB, DA and VG, scored under Annotation Conventions V4 (DEC-029). On FV2-dev it reached 176/194 required assertions against 168/194 for P4R6 with the same repairs; one sample per prompt.
+
+DECISION:
+1. **A new fresh set, FV3, is authored and sealed by an independent author.** Codex, signed in to a different account from the development work, authors 16 original Japanese mini-narrative units and their gold under Conventions V4 and seals them with the unchanged `fresh_validation_seal_v1` as `M4_04B3Y_FRESH_VALIDATION_V3`. The prompt and repair developer never opens FV3 source text or gold before the predictions are locked and hashed.
+2. **The FV3 protocol lock binds P4R8 with host repairs QR, AM, ME, SE, TB, DA and VG, in that order.** The lock hashes the P4R8 prompt and every repair module. Model, temperature, one primary and at most one structural repair per case, and the scorer follow the FV2 lock (DEC-027); the scorer applies no gold alignment because FV3 gold is authored under V4. The credential slot is chosen before the run and recorded in the lock.
+3. **FV3 is run once, blind.** A second run, or any change to the prompt, the repairs or the scoring after the gold is opened, makes FV3 development data.
+
+LIMITS:
+- P4R8 and all seven repairs were chosen on DEV1, DEV2 and FV2-dev. FV3 is the first set they have not seen.
+- Sixteen short authored units in one language do not measure extraction on real chapters; the holdout stays closed for a later decision.
+
+---
+
+## DEC-031 — M4 Annotation Conventions V5: Mention Roles Follow the Sentence; NamedAs Only for Proper Names
+
+STATUS: ACCEPTED (Project Owner, 2026-11-22: chose "Theo vai trò của câu" and "Chỉ tên riêng"; work authorized with "oke làm cách 1 đi, codex hết token rồi bạn làm luôn nhé")
+
+CONTEXT:
+The FV3 diagnosis (M4-04B4A, development data) found every role error to be DEPICTION where the gold uses NARRATION_SUMMARY or RETROSPECTIVE, six of them on mention evidence inside such sentences, and 9 unsupported predictions that assert role or common nouns as names. V4 left mention roles in non-depicted narration unsettled and allowed `TITLE`/`EPITHET` by judgement. The gold of DEV1, DEV2, FV2 and FV3 names only characters with personal names.
+
+DECISION:
+1. **V5 replaces V4.** `docs/research/m4/M4_ANNOTATION_CONVENTIONS_V5.md` replaces V4 (DEC-029) for new gold and prompts. V4 stays unchanged as a record.
+2. **R-EVR-02.** Outside dialogue, the evidence of a RefersTo or NamedAs assertion takes the role of its sentence (DEPICTION, NARRATION_SUMMARY or RETROSPECTIVE). Inside dialogue R-EVR-01 still applies. Checker `check_annotation_conventions_v4.py` checks the consistency part.
+3. **R-NAME-05 and a narrower R-NAME-02.** `NamedAs` is only for proper names; role and occupation nouns and common nouns for objects or places are never names, not even as `TITLE` or `EPITHET`.
+4. **Sealed gold is never rewritten.** Checker counts on existing gold for R-EVR-02: DEV1 0, DEV2 1, FV2 0, FV3 0. M4-04B3O and M4-04B3Z stay the only validation numbers.
+5. **Prompts.** The current prompts (P4R6 to P4R8) set DEPICTION as the default role and do not restrict `NamedAs`; a new prompt variant must carry V5 before the next development run. Gold authored from now on follows V5.
+
+LIMITS:
+- Both rules were chosen after reading development data (FV3); only a fresh set can show whether they hold.

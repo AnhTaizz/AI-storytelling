@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 77 — test functions: 1156
+Suites: 9 — test files: 90 — test functions: 1213
 
 ## canonical_story
 
@@ -635,6 +635,31 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.check_an
 - `AnnotationConventionsTests.test_report_is_deterministic_sorted_and_does_not_mutate_inputs`
 - `AnnotationConventionsTests.test_cli_output_and_refusal_are_safe_and_have_documented_exit_codes`
 
+### test_check_annotation_conventions_v2 (8)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.check_annotation_conventions_v2`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `AnnotationConventionsV2Tests.test_dialogue_role_applies_to_sufficient_affirmed_and_negated_mentions`
+- `AnnotationConventionsV2Tests.test_quote_boundaries_are_inclusive_balanced_and_line_local`
+- `AnnotationConventionsV2Tests.test_optional_base_segment_bounds_limit_the_quote_context`
+- `AnnotationConventionsV2Tests.test_v1_report_is_preserved_with_a_dialogue_violation_in_the_same_batch`
+- `AnnotationConventionsV2Tests.test_alignment_counts_distinct_refs_and_does_not_mutate_the_batch`
+- `AnnotationConventionsV2Tests.test_alignment_refuses_refs_shared_with_non_mentions_in_any_evidence_set`
+- `AnnotationConventionsV2Tests.test_alignment_of_a_base_ref_redirects_candidate_citations`
+- `AnnotationConventionsV2Tests.test_cli_reports_findings_and_refuses_unavailable_sources`
+
+### test_check_annotation_conventions_v3 (3)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.check_annotation_conventions_v3`, `tools.story_extraction.evaluate_extraction_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `ConventionsV3CheckerTests.test_flags_only_a_date_in_the_sentence_of_exactly_one_event`
+- `ConventionsV3CheckerTests.test_alignment_moves_dates_bounds_and_relations_in_a_copy`
+- `ConventionsV3CheckerTests.test_cli_reports_and_refuses`
+
+### test_check_annotation_conventions_v4 (2)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.check_annotation_conventions_v4`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `ConventionsV4CheckerTests.test_mention_role_must_match_a_single_sentence_role_outside_dialogue`
+- `ConventionsV4CheckerTests.test_cli_reports_and_refuses`
+
 ### test_diagnose_m4_04b3i_fv1_v1 (5)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.diagnose_m4_04b3i_fv1_v1`, `tools.story_extraction.evaluate_extraction_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.score_m4_04b3h_fv1_v1`, `tools.story_ingestion.light_novel_adapter_v0`
 
@@ -643,6 +668,27 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.diagnose
 - `DiagnosisTests.test_cause_rules`
 - `DiagnosisTests.test_public_record_holds_counts_only`
 - `DiagnosisTests.test_diagnose_reads_the_private_files_and_checks_each_case`
+
+### test_diagnose_m4_04b3q_fv2_v1 (6)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.diagnose_m4_04b3q_fv2_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.fresh_validation_seal_v1`, `tools.story_extraction.m4_04b3n_fv2_protocol_v1`, `tools.story_extraction.run_m4_04b3o_fv2_predictions_v1`, `tools.story_extraction.score_m4_04b3p_fv2_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `DiagnosisTests.test_bad_or_missing_prerequisites_refuse_before_gold`
+- `DiagnosisTests.test_reproduction_refuses_changed_scoring`
+- `DiagnosisTests.test_grounding_classes_and_evaluator_semantics`
+- `DiagnosisTests.test_derivation_only_support_reproduces_grounding`
+- `DiagnosisTests.test_layers_and_unmatched_details_aggregate_by_fixed_labels`
+- `DiagnosisTests.test_cli_reports_only_counts_and_writes_private_items`
+
+### test_diagnose_m4_04b3u_fv2_dev_v1 (7)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.diagnose_m4_04b3u_fv2_dev_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `DevelopmentDiagnosisTests.test_blocking_sets_and_counterfactuals_count_cases`
+- `DevelopmentDiagnosisTests.test_histogram_boundaries`
+- `DevelopmentDiagnosisTests.test_replay_tries_repair_after_primary_failure_and_threads_options`
+- `DevelopmentDiagnosisTests.test_public_counts_and_private_items_for_failures_and_unscorable_case`
+- `DevelopmentDiagnosisTests.test_v3_alignment_uses_verified_ingestion_bytes_only_when_enabled`
+- `DevelopmentDiagnosisTests.test_package_verification_precedes_gold_and_refuses_bad_input`
+- `DevelopmentDiagnosisTests.test_cli_parses_repair_set_and_refuses_invalid_options`
 
 ### test_diagnose_m4_p4_dev_v1 (10)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.diagnose_m4_p4_dev_v1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
@@ -702,6 +748,13 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_co
 - `DraftCompilerV11Tests.test_collects_all_feasible_same_class_quote_blockers`
 - `DraftCompilerV11Tests.test_collects_independent_handle_blockers`
 
+### test_draft_date_anchor_v1 (3)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_compiler_v1_1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.draft_date_anchor_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.run_m4_04b3g_fv1_predictions_v1`, `tools.story_extraction.run_m4_p4_dev_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `DateAnchorTests.test_date_moves_to_the_event_anchor_with_its_references`
+- `DateAnchorTests.test_refusals_and_duplicates`
+- `DateAnchorTests.test_unlocated_and_degenerate_inputs`
+
 ### test_draft_mention_anchoring_v1 (7)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_mention_anchoring_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
@@ -712,6 +765,16 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_me
 - `MentionAnchoringTests.test_pruning_checks_all_schema_reference_fields_but_not_literals`
 - `MentionAnchoringTests.test_only_located_cited_evidence_counts_and_own_ambiguity_never_prunes`
 - `MentionAnchoringTests.test_malformed_inputs_are_left_to_validation`
+
+### test_draft_mention_evidence_v1 (6)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_mention_evidence_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `MentionEvidenceTests.test_narrowing_is_pure_deterministic_and_reuses_new_exact_item`
+- `MentionEvidenceTests.test_selected_predicate_keeps_shared_wide_item_and_reuses_existing_exact_role`
+- `MentionEvidenceTests.test_refusals_preserve_cited_evidence`
+- `MentionEvidenceTests.test_all_eligible_sets_are_narrowed_and_other_support_keeps_original_items`
+- `MentionEvidenceTests.test_non_object_draft_and_malformed_records_reach_validation`
+- `MentionEvidenceTests.test_narrowed_runner_fixture_passes_validate_raw`
 
 ### test_draft_quote_resolution_v1 (8)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_quote_resolution_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
@@ -724,6 +787,31 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_co
 - `QuoteResolutionTests.test_ordered_mentions_require_all_occurrences_and_no_authored_index`
 - `QuoteResolutionTests.test_pass_order_preserves_local_matches_then_orders_moved_mentions`
 - `QuoteResolutionTests.test_resolved_substring_compiles_to_precise_source_positions`
+
+### test_draft_sentence_evidence_v1 (4)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_sentence_evidence_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.run_m4_04b3g_fv1_predictions_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `SentenceEvidenceTests.test_enclosing_sentence_boundaries`
+- `SentenceEvidenceTests.test_set_deduplication_reuse_and_shared_references`
+- `SentenceEvidenceTests.test_refusals_and_precedence_across_sets`
+- `SentenceEvidenceTests.test_widened_draft_validates`
+
+### test_draft_transfer_bounds_v1 (3)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_transfer_bounds_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.run_m4_04b3g_fv1_predictions_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `TransferBoundsTests.test_matching_roles_polarity_and_existing_bounds`
+- `TransferBoundsTests.test_two_bounds_require_located_sufficient_occurrence_in_text_order`
+- `TransferBoundsTests.test_bounded_draft_validates`
+
+### test_draft_vocabulary_guard_v1 (6)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_compiler_v1_1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.draft_vocabulary_guard_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.run_m4_p4_dev_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `VocabularyGuardTests.test_membership_normalization_polarity_and_unknown_vocabulary`
+- `VocabularyGuardTests.test_invalid_named_as_is_the_only_loss_in_canonical_validation`
+- `VocabularyGuardTests.test_only_evidence_orphaned_by_removed_claims_is_pruned`
+- `VocabularyGuardTests.test_external_references_refuse_entire_proposition_edit`
+- `VocabularyGuardTests.test_two_invalid_tokens_count_as_one_drop_in_either_argument_order`
+- `VocabularyGuardTests.test_malformed_records_are_left_for_validation`
 
 ### test_durable_research_executor_v1 (22)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.durable_research_executor_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.run_gemini_durable_qualification_v1`, `tools.story_ingestion.light_novel_adapter_v0`
@@ -1087,6 +1175,11 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `ProtocolTests.test_seal_snapshot_and_request_policy_refusals`
 - `ProtocolTests.test_lock_cli_writes_validates_and_refuses_overwrite`
 
+### test_m4_04b3z_fv3_protocol_v1 (1)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.m4_04b3z_fv3_protocol_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `ProtocolTests.test_canonical_lock_binds_dependencies_and_refuses_drift`
+
 ### test_run_m4_04b3c_dev2_predictions_v1 (8)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.run_m4_04b3c_dev2_predictions_v1`, `tools.story_ingestion.light_novel_adapter_v0`
 
@@ -1117,12 +1210,19 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `RunnerTests.test_every_request_uses_the_fv2_locked_credential_slot`
 - `RunnerTests.test_smoke_failure_run_cli_and_guard`
 
-### test_run_m4_p4_dev_v1 (15)
-Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_compiler_v1_1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.m4_04b3f_fv1_protocol_v1`, `tools.story_extraction.run_m4_p4_dev_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+### test_run_m4_04b3z_fv3_predictions_v1 (2)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.m4_04b3z_fv3_protocol_v1`, `tools.story_extraction.run_m4_04b3z_fv3_predictions_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `RunnerTests.test_blind_lifecycle_and_ordered_repair_options`
+- `RunnerTests.test_smoke_and_case_order_refusals`
+
+### test_run_m4_p4_dev_v1 (20)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_compiler_v1_1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.m4_04b3f_fv1_protocol_v1`, `tools.story_extraction.run_m4_04b3o_fv2_predictions_v1`, `tools.story_extraction.run_m4_p4_dev_v1`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `DevelopmentRunnerTests.test_prompt_composition_sources_and_request_identity`
 - `DevelopmentRunnerTests.test_hash_refusal_and_selection_validation`
 - `DevelopmentRunnerTests.test_preflight_selects_and_builds_one_spec_without_provider_work`
+- `DevelopmentRunnerTests.test_fv2_run_verifies_before_use_and_rescores_aligned_gold_offline`
 - `DevelopmentRunnerTests.test_existing_names_use_only_affirmed_base_facts_and_compiler_handles`
 - `DevelopmentRunnerTests.test_run_outcomes_artifacts_and_locked_resume`
 - `DevelopmentRunnerTests.test_interrupted_artifact_write_resumes_locked_response_and_variants_are_isolated`
@@ -1131,6 +1231,10 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_co
 - `DevelopmentRunnerTests.test_input_loader_and_gold_refusals`
 - `DevelopmentRunnerTests.test_quote_options_isolate_jobs_save_raw_and_resolved_and_record_metadata`
 - `DevelopmentRunnerTests.test_anchoring_compiles_preserves_originals_and_replays_all_attempts`
+- `DevelopmentRunnerTests.test_host_repair_labels_and_disabled_output_bytes`
+- `DevelopmentRunnerTests.test_vocabulary_guard_alone_saves_the_primary_without_a_repair_request`
+- `DevelopmentRunnerTests.test_mention_evidence_applies_after_repairs_in_run_score_and_revalidation`
+- `DevelopmentRunnerTests.test_sentence_evidence_and_transfer_bounds_in_run_score_and_revalidation`
 - `DevelopmentRunnerTests.test_rich_blockers_sanitize_values_extract_handles_and_restore_validator`
 - `DevelopmentRunnerTests.test_revalidation_is_offline_preserves_runs_and_reports_transitions`
 - `DevelopmentRunnerTests.test_revalidation_counts_remaining_blockers_and_resolution_over_all_attempts`
@@ -1150,6 +1254,11 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `ScorerTests.test_all_hash_changes_refuse_before_gold`
 - `ScorerTests.test_manifest_semantics_paths_inventory_and_terminal_refusals`
 - `ScorerTests.test_structural_failures_gold_metadata_and_cli`
+
+### test_score_m4_04b3z_fv3_v1 (1)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.m4_04b3z_fv3_protocol_v1`, `tools.story_extraction.run_m4_04b3z_fv3_predictions_v1`, `tools.story_extraction.score_m4_04b3z_fv3_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `ScorerTests.test_hash_refusals_then_verified_gold_access_and_counts_only_summary`
 
 ### test_story_extraction_contract_v0 (39)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.evaluate_extraction_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`

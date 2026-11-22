@@ -1,0 +1,115 @@
+# M4-04B3Z: one-shot FV3 blind run of P4R8 and seven host repairs. Public aggregates only.
+artifact: M4_04B3Z_FV3_BLIND_RUN_RESULT
+status: M4_04B3Z_FV3_BLIND_RUN_SCORED
+date: '2026-11-22'
+authorization: DEC-030, Project Owner, 2026-11-22
+owner_instruction: "ok làm cách 1 đi, tạo FV3"
+author_choice: "Codex, đổi sang tk …23"
+data_status: FV3 is now development data under DEC-030. The holdout stays closed.
+boundaries:
+  aggregates_only: true
+  holdout_accessed: false
+  counted_fv3_blind_runs: 1
+  provider_operations_after_gold_open: 0
+  documentation_only: true
+  private_artifacts_read_for_this_record: false
+seal:
+  record: M4_04B3Y_FRESH_VALIDATION_V3_SEAL_RESULT.yaml
+  authored_and_sealed_by: Codex on a separate account
+  original_units: 16
+  annotation_conventions: V4
+  required_assertions: 165
+  eligible_passages: 31
+  mixed_role_passages: 7
+  checker_v3_findings_all_rules: 0
+  representational_gate_passed: 16  # out of 16
+  developer_opened_fv3_text_or_gold: false
+setup:
+  protocol: m4_04b3z_fv3_protocol_v1.py
+  prompt: P4R8
+  host_repairs: [QR, AM, ME, SE, TB, DA, VG]
+  model: gemini-3.5-flash-lite
+  credential_slot: gemini_slot_40
+  primary_attempts_per_case: 1
+  max_structural_repairs_per_case: 1
+  preflight: PASS
+hashes:
+  input_sha256: 784f0276087795635aedd452a50cadbae761194bb3b9e55a176c758c457791be
+  gold_sha256: 24cb19e083eb34cbeaa4278c7e20aa733e62c7089ab82bd3717950ab8d3dfb12
+  manifest_sha256: 56586433c2d86a4b4e0b064f7af3be51412a1b045627c29d0d23215b049ab1f3
+  protocol_sha256: 2b6e4f669022d301588e58c2d4e6c335833a3cc12c874b6327acf210038abe42
+  prediction_lock_sha256: 9ab74553c326f64249b3b516f0e88db52e9cd83e14e9c4462022bcf3e7026c41
+timeline:
+  chronology: ALL_LOCKS_AND_PACKAGE_HASHES_VERIFIED_BEFORE_GOLD_OPEN
+run:
+  cases: 16
+  STRUCTURAL_VALID: 15
+  STRUCTURAL_FAILURE: 1
+  TRANSPORT_FAILURE: 0
+scoring:
+  evaluator: Snapshot V2 guarded evaluator
+  source_mode: REAL_SOURCE
+  adjudication_used: false
+  gold_alignment_used: false
+  required_recovered: 115
+  required_assertions_in_valid_cases: 145
+  assertion_recall: 0.7931
+  assertion_recall_with_invalid_case_as_zero: 0.697  # 115/165
+  assertion_precision: 0.7823
+  unsupported_assertion_rate: 0.2027
+  unsupported_assertions: 30
+  unsupported_severity: UNRATED  # all 30
+  assertion_recall_mean: 0.8025
+  assertion_precision_mean: 0.7857
+  evidence_grounding_recall_mean: 0.7918
+  evidence_role_accuracy_mean: 0.9048
+  referent_resolution_accuracy_mean: 0.9144
+  epistemic_accuracy_mean: 1.0
+layers:  # cases passing, out of all 16
+  L0_structural_validity: 15
+  L1_evidence_grounding: 9
+  L2_atomic_semantics: 15
+  L3_referent_event_structure: 11
+  L4_coverage: 3
+  L5_full_case: 0
+  full_canonical_case_success: 0.0
+failure_codes:
+  MISSED_REQUIRED_ASSERTION: 25
+  UNSUPPORTED_ASSERTION: 28
+  WRONG_EVIDENCE_ROLE: 10
+  MISSING_ENTITY_RESOLUTION: 5
+  WRONG_ENTITY_RESOLUTION: 2
+  DUPLICATE_ASSERTION: 2
+  WRONG_EVIDENCE_SPAN: 1
+  INSUFFICIENT_SUPPORT_MARKED_SUFFICIENT: 1
+  CANONICAL_CONFORMANCE_FAILURE: 1
+failure_predicates:
+  MISSED_REQUIRED_ASSERTION: {Participates: 11, TemporalRelation: 4, Says: 2, Occurred: 2, NamedAs: 1,
+    LocatedAt: 1, OccursAt: 1, Attitude: 1, Habitually: 1, AnchorDate: 1}
+  # The 30 unmatched predictions by predicate = 28 UNSUPPORTED_ASSERTION + 2 WRONG_ENTITY_RESOLUTION (both are unsupported predictions).
+  UNSUPPORTED_PREDICTIONS: {Participates: 9, NamedAs: 9, Occurred: 3, Possesses: 2, RefersTo: 2,
+    TemporalRelation: 1, Conveys: 1, Says: 1, Habitually: 1, AnchorDate: 1}
+annotation_convention_checker:
+  cases_checked: 15
+  findings: {R-ROLE-02: 2}
+  every_other_rule_findings: 0
+blind_comparison:
+  record: M4_04B3O_FV2_BLIND_RUN_RESULT.yaml
+  configuration: P4R6 + QR + AM
+  cases: 12
+  structural_valid: 12
+  assertion_recall: 0.856
+  assertion_precision: 0.902
+  unsupported_assertion_rate: 0.092
+  L1_evidence_grounding: 4
+  full_case_successes: 1
+  paired_comparison: false  # FV2 and FV3 contain different units.
+development_comparison:
+  record: M4-04B3X
+  set: FV2-dev
+  assertion_recall: 0.907
+interpretation:
+  - The span repairs carried over. L1 passed on 9/15 valid FV3 cases against 4/12 on FV2 blind, with one wrong span on FV3.
+  - The development gains in recall and precision did not transfer. FV3 recall was 0.793 and its unsupported rate was about twice FV2's blind rate. Rule selection on FV2-dev carried an acknowledged overfitting risk. FV3 stresses mixed-role passages, where 10 role mismatches occurred.
+  - No case achieved full success. The leading misses were Participates and TemporalRelation, and the leading unsupported predicates were Participates and NamedAs.
+next_steps: The owner decides whether to diagnose FV3 as development data, measure run-to-run variance and reconsider the configuration before any holdout use.

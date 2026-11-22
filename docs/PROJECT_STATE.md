@@ -2,9 +2,9 @@
 
 ## Current Milestone
 
-*Header refreshed 2026-11-18; the dated sections below are history.*
+*Header refreshed 2026-11-22; the dated sections below are history.*
 
-M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED; holdout closed, predictions NOT RUN. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. Annotation conventions V2: ACCEPTED (DEC-026). P4 development / FV2 status: see M4-04B3L2 and M4-04B3N.
+M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED; holdout closed, predictions NOT RUN. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. Annotation conventions V5: ACCEPTED (DEC-031). See M4-04B3Z (FV3 blind run: recall 0.793, precision 0.782, L1 9/15, full 0/16). FV3 error diagnosis: M4-04B4A. Conventions V5: M4-04B4B (DEC-031).
 
 M0 — Product Foundation: CLOSED (see M0 Closure).
 
@@ -43,7 +43,7 @@ M14 — Voice / Video Automation: GATED behind the Script Quality Gate (DEC-009)
   - The contract defines the standard. It does not show that any current Writer or critic meets it. The M9 Script Quality Gate is not evaluated.
 - M2 — Canonical Story Model: capability COMPLETE / FROZEN (DEC-016). The expected capability has been established as `canonical_story/v0` + `predicate_registry/v0.1`. M2 ran under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015).
 - M3 — Light Novel Ingestion: COMPLETE / FROZEN — `LIGHT_NOVEL_INGESTION/v0`, DEC-018, freeze record `benchmarks/m3_ingestion/LIGHT_NOVEL_INGESTION_V0_FROZEN.yaml`. The roadmap is unchanged.
-- M4 — Story Extraction: IN PROGRESS (M4-01/M4-02 accepted; M4-03 holdout sealed and closed, predictions not run; no extractor/model selected; nothing frozen). V2 accepted (DEC-026); P4 development / FV2 status: see M4-04B3L2 and M4-04B3N.
+- M4 — Story Extraction: IN PROGRESS (M4-01/M4-02 accepted; M4-03 holdout sealed and closed, predictions not run; no extractor/model selected; nothing frozen). Annotation conventions V5: ACCEPTED (DEC-031). See M4-04B3Z (FV3 blind run: recall 0.793, precision 0.782, L1 9/15, full 0/16). FV3 error diagnosis: M4-04B4A. Conventions V5: M4-04B4B (DEC-031).
 - M5 — Persistent Story Memory: PROTOTYPE EXISTS; not frozen or M5 completion (see Implementation Status; DEC-021).
 - M6 — Retrieval: ACCEPTED BASELINE over brief memory (DEC-021, 2026-11-15).
 - M7 — Story Brief: ACCEPTED BASELINE (DEC-022, 2026-11-15).
@@ -1261,6 +1261,375 @@ Owner decision (nothing authorized yet):
 2. **Draft V1.2 prepared input exposing existing entity names.** This needs a DEC and addresses the real-prose gap from DEV1.
 3. **Real-prose check.** Run the locked configuration on DEV1 and decide whether the holdout run is next.
 4. **Housekeeping for the owner.** FV1 packages are missing on this machine, and `.env` has duplicate keys.
+
+## M4-04B3Q — FV2 ERROR DIAGNOSIS — Status: M4_04B3Q_FV2_ERROR_DIAGNOSIS_RECORDED
+
+The project owner authorized the aggregate review on 2026-11-18 (“Xem lỗi FV2 theo nhóm ... ok làm đi”). The diagnosis tool is `tools/story_extraction/diagnose_m4_04b3q_fv2_v1.py`.
+
+- Evidence grounding (L1) was the first failure in 8 of 12 cases and the main blocker. Coverage (L4) was first in 3 cases, and 1 case fully passed.
+- Of 166 matched assertions, 138 were grounded and 28 had wrong evidence spans. Predictions cited wider spans in 68 matches, including 52 `RefersTo` and 14 `NamedAs` matches.
+- There were 4 wrong evidence roles and 6 wrong validity bounds (5 `Possesses`, 1 `Owns`).
+- Of 21 missed required assertions, 9 had referent mismatches. Six of the 7 missed `RefersTo` resolutions had a different mention span.
+- Of 17 unsupported assertions, 12 paired with a missed assertion or resolution, and the other 5 were on gold evidence.
+
+The aggregate record is `benchmarks/m4_extraction/M4_04B3Q_FV2_ERROR_DIAGNOSIS.yaml`. FV2 is spent and cannot validate a change.
+
+## Next Candidate
+
+The owner has yet to choose or authorize any of these candidates.
+
+1. **P4R7 + mention-evidence repair.** Develop exact mention evidence for `RefersTo` and `NamedAs` and the explicit-time-limit rule for `Possesses` and `Owns` on DEV1/DEV2, then evaluate on a new fresh set or the holdout.
+2. **Draft V1.2 with existing entity names.** Requires a DEC.
+3. **Real-prose check.** Run the locked configuration on DEV1.
+4. **Housekeeping.** FV1 packages are missing, and `.env` has duplicate keys.
+
+## M4-04B3R — MENTION-EVIDENCE REPAIR (ME) — Status: M4_04B3R_ME_DEVELOPMENT_CANDIDATE
+
+The project owner authorized ME on DEV1/DEV2 on 2026-11-18 (“ok làm hướng (a) trên DEV1/DEV2 đi”), then authorized offline FV2 rescoring (“ok làm cách 1 đi”).
+
+**FV2 is now development data because its saved responses were rescored with a repair chosen after diagnosis. M4-04B3O remains the only validation result.**
+
+The offline replay kept the same primary/repair selection and used the Snapshot V2 guarded evaluator in `REAL_SOURCE` with no model call or adjudication. On FV2, the P4R6 + QR + AM baseline exactly reproduced the official scored run. FV2 had 12 valid cases and 194 required assertions.
+
+| FV2 configuration | Grounded/matched | Wrong span | L1 pass | Full success | Required recovered | Unsupported |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| QR+AM | 138/166 | 28 | 4 | 1 | 166 | 17 |
+| +ME_R (`RefersTo`) | 148/166 | 18 | 4 | 1 | 166 | 17 |
+| +ME_N (`NamedAs`) | 143/166 | 23 | 4 | 1 | 166 | 17 |
+| +ME | 153/166 | 13 | 5 | 1 | 166 | 17 |
+
+- DEV2 rose from 82/89 to 83/89 grounded (wrong spans 7 to 6) with 5 L1 passes in both runs. DEV1 stayed at 3/8 grounded, 5 wrong spans and 5 L1 passes, while wrong roles fell from 8 to 6.
+- ME removed most mention-level errors where exact spans are required, especially in FV2's mixed-role passages. DEV1 and DEV2 mostly use wider spans where the evaluator already accepts them. Recall, unsupported counts and structural validity were unchanged across the three sets. No regression was observed.
+- FV2 gained one L1 pass. Remaining L1 failures involve evidence roles and non-mention spans for `Occurred`, `Participates`, `Possesses`, `Owns` and `TemporalRelation`. ME is a candidate for the next locked configuration, with validation on FV3 or the holdout.
+
+The aggregate record is `benchmarks/m4_extraction/M4_04B3R_MENTION_EVIDENCE_REPAIR.yaml`.
+
+## Next Candidate
+
+The owner has yet to choose or authorize any of these candidates.
+
+1. **Remaining L1 errors and the P4R7 validity rule.** Develop evidence-role and non-mention span fixes and the `Possesses`/`Owns` explicit-time-limit rule on DEV2 and FV2 development data.
+2. **Validation for the next locked run.** Use a fresh FV3 set authored under Conventions V2 with more mixed-role passages, or use the holdout.
+3. **Draft V1.2 with existing entity names.** Requires a DEC.
+4. **Housekeeping.** FV1 packages are missing, and `.env` has duplicate keys.
+
+## M4-04B3S — P4R7 HOST REPAIRS SE AND TB — Status: M4_04B3S_SE_TB_DEVELOPMENT_CANDIDATE
+
+The project owner authorized option 1 of the M4-04B3R Next Candidate list on 2026-11-18 (“ok làm P4R7 đi, dùng codex nhé”). FV2 has been development data since M4-04B3R. M4-04B3O remains the only validation result.
+
+The diagnosis after QR + AM + ME found three patterns.
+
+- Predictions were narrower than gold in 9 of 11 non-mention wrong spans. Whole sentences account for 93/96 gold references on FV2, 259/290 on DEV1 and 5/60 on DEV2. A whole dialogue line includes the 「…」 brackets. DEV2 gold favors clauses.
+- All six FV2 validity errors had OPEN start and end bounds on Possesses or Owns where gold used a TRANSFER anchor. The draft already contained the transfer in five of the six cases.
+- V2 leaves dialogue-mention evidence roles unspecified. FV2 uses IN_WORLD_REPORT for 6/7, while DEV1 and DEV2 use DEPICTION for 4/4 and 5/5. The conventions gap needs an owner decision on a V3 rule. No repair was built for it.
+
+Both host repairs are opt-in development options in `run_m4_p4_dev_v1.py`. They run in the order QR → AM → ME → SE → TB when enabled.
+
+- **Sentence evidence (+SE).** `draft_sentence_evidence_v1.py` (`--sentence-evidence`) widens SUFFICIENT evidence for predicates other than RefersTo and NamedAs to the enclosing sentence or whole dialogue region. It refuses multi-sentence spans and preserves shared evidence items.
+- **Transfer bounds (+TB).** `draft_transfer_bounds_v1.py` (`--transfer-bounds`) uses a unique TRANSFER anchor for an OPEN start bound on affirmed Possesses or Owns when the item is THEME and the holder is RECIPIENT. It also uses the anchor for an OPEN end bound on affirmed Possesses when the holder is SOURCE. It refuses ambiguity and incorrect text order.
+- **P4R7 prompt.** `prompts/story_extraction_draft_p4r7_system_v1_1.txt` adds one possession-bounds paragraph to P4R6. P4R6 bytes were preserved. A P4R7 model run is pending.
+
+As in M4-04B3R, the evaluation replayed saved P4R6 responses offline, with P4R6 + QR + AM + ME as the base. FV2 had 12 valid cases. Subset counts `INSUFFICIENT_SUPPORT_MARKED_SUFFICIENT`.
+
+| FV2 configuration | Grounded/matched | Wrong span | Subset | Wrong role | Validity errors | L1 pass | Full success |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Base | 153/166 | 13 | 0 | 4 | 6 | 5 | 1 |
+| +SE | 157/166 | 8 | 1 | 4 | 6 | 5 | 1 |
+| +TB | 153/166 | 13 | 0 | 4 | 1 | 5 | 1 |
+| +SE+TB | 157/166 | 8 | 1 | 4 | 1 | 5 | 1 |
+
+- **DEV results.** With SE, DEV1 rose from 3/8 to 5/8 grounded and DEV2 from 83/89 to 86/89. Both gained one L1 pass, from five to six. TB left both DEV scores unchanged. DEV2's remaining validity error is a NAMED_TIME bound.
+
+- SE and TB reduced the errors they targeted, with recall, matched counts, unsupported counts and structural validity unchanged on all three sets. DEV1 gained one role mismatch where a widened span covers gold evidence with a different role.
+- FV2 kept five L1 passes. Almost every failing case still has a dialogue-mention role error or a remaining span error, and the next case-level gain needs the owner's evidence-role rule. The one remaining FV2 validity error involves a pick-up GENERIC event that the P4R7 prompt addresses.
+
+The aggregate record is `benchmarks/m4_extraction/M4_04B3S_P4R7_SENTENCE_EVIDENCE_TRANSFER_BOUNDS.yaml`.
+
+## Next Candidate
+
+The owner has yet to choose or authorize any of these candidates.
+
+1. **Evidence-role rule for mentions inside dialogue.** Record Conventions V3 and a DEC, then align the gold or the prompt.
+2. **P4R7 development model run.** Check the possession-bounds prompt rule on DEV2 and FV2 development data. This uses Gemini quota.
+3. **Next locked validation.** Use FV3 or the holdout with P4R6 + QR + AM + ME + SE + TB, with P4R7 as an option after a development model run.
+4. **Draft V1.2 with existing entity names.** Requires a DEC.
+5. **Housekeeping.** Address missing FV1 packages and duplicate `.env` keys.
+
+## M4-04B3T — CONVENTIONS V3: MENTIONS IN DIALOGUE ARE DEPICTION — Status: M4_04B3T_V3_ACCEPTED
+
+On 2026-11-18, the project owner authorized option 1 of the M4-04B3S Next Candidate list (“ok làm cách 1 đi, dùng codex nhé”), then chose “Luôn DEPICTION.” DEC-028 records the acceptance of Conventions V3. P4R6 and P4R7 already follow the rule, so neither prompt needed an edit.
+
+- **Conventions V3.** `docs/research/m4/M4_ANNOTATION_CONVENTIONS_V3.md` defines R-EVR-01. SUFFICIENT evidence for RefersTo or NamedAs uses DEPICTION when the mention span lies inside dialogue, including statements that report a fact or event. Evidence for the reported fact or event itself keeps IN_WORLD_REPORT.
+- **Checker V2.** `tools/story_extraction/check_annotation_conventions_v2.py` implements the V1 rules plus R-EVR-01 and provides `align_mention_roles` for development rescoring only.
+- **Gold checker counts.** The private run reported six R-EVR-01 violations on FV2, all IN_WORLD_REPORT. The aligner corrected all six, with zero refusals for shared evidence. DEV2 and DEV1 each had zero findings.
+
+**DEVELOPMENT-ONLY.** The offline replay used saved P4R6 responses and aligned gold in memory. Sealed packages were preserved. M4-04B3O remains the only validation result. Subset counts `INSUFFICIENT_SUPPORT_MARKED_SUFFICIENT`.
+
+| FV2 configuration | Gold | Grounded/matched | Wrong span | Subset | Wrong role | Validity errors | L1 pass | Full success |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| QR+AM+ME | Sealed | 153/166 | 13 | 0 | 4 | 6 | 5 | 1 |
+| QR+AM+ME | V3-aligned | 153/166 | 13 | 0 | 0 | 6 | 6 | 1 |
+| QR+AM+ME+SE+TB | Sealed | 157/166 | 8 | 1 | 4 | 1 | 5 | 1 |
+| QR+AM+ME+SE+TB | V3-aligned | 157/166 | 8 | 1 | 0 | 1 | 6 | 1 |
+
+- **DEV results.** With QR+AM+ME+SE+TB, V3-aligned and sealed scores agree. DEV2 had 86/89 grounded/matched, 3 wrong spans, 1 wrong role and 1 validity error. DEV1 had 5/8 grounded/matched, 3 wrong spans, 7 wrong roles and 0 validity errors. Both had 0 subset errors, 6 L1 passes and 0 full successes. All seven DEV1 role mismatches fall outside R-EVR-01 because they concern evidence other than mentions in dialogue.
+
+- R-EVR-01 removes all four FV2 role mismatches in both configurations. DEV1 and DEV2 already follow the rule, so their scores stay the same.
+- FV2 gained one L1 pass, from 5 to 6 of 12. Full success stayed at 1 of 12. With SE and TB, eight wrong spans and one subset error remain at L1, and other layers also limit full-case success.
+
+The development candidate is P4R6 + QR + AM + ME + SE + TB scored under V3. Validation requires FV3 authored under V3 or the holdout.
+
+The aggregate record is `benchmarks/m4_extraction/M4_04B3T_CONVENTIONS_V3_MENTION_ROLE.yaml`.
+
+## Next Candidate
+
+The owner has yet to choose or authorize any of these candidates.
+
+1. **Next locked validation.** Author FV3 under V3 as a fresh sealed set with mixed-role passages, or open the holdout. Run locked P4R6 + QR + AM + ME + SE + TB, using P4R7 if its development run shows a gain.
+2. **P4R7 development model run.** Run on DEV2 and FV2-dev. This uses Gemini quota.
+3. **Full-case diagnosis.** Diagnose the layers beyond L1 that block full-case success on FV2-dev.
+4. **Draft V1.2 with existing entity names.** Requires a DEC.
+5. **Housekeeping.** Address missing FV1 packages and duplicate `.env` keys.
+
+## M4-04B3U — FV2-DEV FULL-CASE BLOCKER DIAGNOSIS — Status: M4_04B3U_DIAGNOSIS_RECORDED
+
+On 2026-11-18, the project owner authorized option 3 of the M4-04B3T Next Candidate list (“ok làm cách 3 đi, dùng codex nhé”) to diagnose the layers beyond L1 that block full-case success on FV2-dev.
+
+**DEVELOPMENT-ONLY.** `tools/story_extraction/diagnose_m4_04b3u_fv2_dev_v1.py` verifies package hashes before opening gold, replays saved P4R6 responses with host repairs, supports optional V3 gold alignment in memory and reports only aggregate counts publicly. The run used QR+AM+ME+SE+TB and aligned six refs to V3. M4-04B3O remains the only validation result.
+
+**Reproduction.** Identical to M4-04B3T with 12 valid cases, 166 matched, 157 grounded, 166 of 194 required recovered, 184 predicted, 17 unsupported, 6 L1 passes and 1 full success.
+
+The counterfactuals remove every material failure in the named group and keep all other failures as scored. U denotes unsupported predictions. L3 and L4 share `MISSING_ENTITY_RESOLUTION`.
+
+| Material failures removed | Full successes out of 12 |
+| --- | ---: |
+| L1 | 1 |
+| L4 | 3 |
+| U | 1 |
+| L4+U | 6 |
+| L1+L4+U | 11 |
+| ALL_BUT_U | 5 |
+
+- **Missed required (L4).** The 28 misses comprise 21 assertions and 7 entity resolutions. Assertion misses came from event identity mismatches (5), temporal structure (3), naming omissions (2), a missing participant (1) and other omissions (10). Three resolution misses had different mention spans and four were unextracted.
+- **Unsupported pairing (U).** Twelve of 17 unsupported predictions represent the same content as a miss (Participates 4, Occurred 2, AnchorDate 2, Conveys 1 and RefersTo 3 paired with missed resolutions). The other five use gold evidence with no gold counterpart (NamedAs 3, Says 2).
+
+- Full-case success requires no required misses, no unsupported predictions and clean evidence. L4 and U together block 11 of 12 cases. Removing both gives 6 full successes, adding L1 gives 11, and removing L1 alone leaves 1.
+- Representation alignment is the largest single lever because it can resolve both halves of the 12 paired errors. Two misaligned events account for five misses. A coverage checklist addresses the 10 plain omissions and four missing resolutions. The five unsupported predictions on gold evidence warrant a gold-completeness or convention check.
+- Full-case success is strict on 12 cases. Per-assertion recall (0.856) and precision are better development signals. Full-case success remains the validation gate.
+
+The aggregate record is `benchmarks/m4_extraction/M4_04B3U_FV2_DEV_FULL_CASE_DIAGNOSIS.yaml`.
+
+## Next Candidate
+
+All candidates await the owner’s decision and authorization.
+
+1. **Event identity and temporal-anchor alignment.** On FV2-dev and DEV2, use a convention rule or host repair for the two misaligned events and three temporal mismatches, clearing the associated unsupported predictions.
+2. **Recall.** Use a coverage checklist for LocatedAt, Possesses, Manner, Attitude and mention resolution, with a P4R7 development model run using Gemini quota.
+3. **Gold completeness.** Check the five unsupported predictions on gold evidence (NamedAs 3, Says 2) against Conventions V3.
+4. **Next locked validation.** Run P4R6+QR+AM+ME+SE+TB on FV3 authored under V3 or on the holdout.
+5. **Draft V1.2.** Requires a DEC.
+6. **Housekeeping.** Address missing FV1 packages and duplicate `.env` keys.
+
+## M4-04B3V — CONVENTIONS V4: EVENT DATES ON THE EVENT'S ANCHOR, HOST REPAIR DA, PROMPT P4R8 — Status: M4_04B3V_V4_ACCEPTED_DA_DEVELOPMENT_CANDIDATE
+
+On 2026-11-22 the project owner authorized option 1 of the M4-04B3U Next Candidate list ("Oke thực hiện đi nào"), chose "Gắn vào mốc sự kiện" for the date rule (DEC-029) and, when Codex hit its usage limit, chose "Claude tự làm".
+
+- **Diagnosis (FV2-dev, counts only).** The two misaligned events were event-kind choices: a pick-up of an unheld object predicted as TRANSFER and a hand wave predicted as MOVEMENT (gold GENERIC; both already excluded by V2's definitions). Two temporal misses were event dates put on separate NAMED_TIME anchors; one SIMULTANEOUS stated by "at that moment" was not predicted. The gold disagreed on dates: FV2 puts an event's date on its EVENT_TIME anchor (2), DEV2 on a separate NAMED_TIME anchor (2).
+- **Conventions V4.** `docs/research/m4/M4_ANNOTATION_CONVENTIONS_V4.md` adds R-TIME-03 (a date stated for exactly one event in its sentence goes on that event's anchor) and clarifies R-EVT-01 (pick-up and gestures in place are GENERIC; an unnamed giver is still TRANSFER). Checker `check_annotation_conventions_v3.py` flags R-TIME-03 (FV2 0, DEV2 2, DEV1 0) and offers `align_date_anchors` for development rescoring.
+- **Host repair DA.** `draft_date_anchor_v1.py` (`--date-anchor`, suffix +DA, off by default) moves the date to the event's anchor and redirects bounds and relations.
+- **Prompt P4R8.** P4R7 plus the date rule, the event-kind clarifications and そのとき/その時/同時に as SIMULTANEOUS. Not run against a model.
+
+**DEVELOPMENT-ONLY.** Offline replay of saved P4R6 responses with QR+AM+ME+SE+TB; gold aligned in memory (FV2 V3, DEV2 V4); sealed packages untouched. M4-04B3O remains the only validation result.
+
+| Set (gold) | Repairs | Matched | Grounded | Unsupported | Validity errors | L1 pass | Full success |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| FV2 (aligned) | base | 166 | 157 | 17 | 1 | 6 | 1 |
+| FV2 (aligned) | base+DA | 168 | 159 | 15 | 1 | 6 | 1 |
+| DEV2 (V4-aligned) | base | 89 | 86 | 21 | 0 | 6 | 0 |
+| DEV2 (V4-aligned) | base+DA | 89 | 86 | 19 | 0 | 6 | 0 |
+
+- DEV1 is unchanged by DA. On sealed DEV2 gold, DA also lowers unsupported from 21 to 19 with no other change.
+- DA turns both FV2 temporal misses and their paired unsupported predictions into matches with no regression. The event-kind misses and the missing SIMULTANEOUS need P4R8 and a development model run.
+
+The aggregate record is `benchmarks/m4_extraction/M4_04B3V_CONVENTIONS_V4_DATE_ANCHOR.yaml`.
+
+## Next Candidate
+
+The owner has yet to choose or authorize any of these candidates.
+
+1. **P4R8 development model run.** Run P4R8 + QR+AM+ME+SE+TB+DA on DEV2 and FV2-dev to check the event-kind, date and SIMULTANEOUS rules and recall (Gemini quota, about 50 requests).
+2. **Next locked validation.** Author FV3 under V4, or open the holdout, for a locked blind run of the best development configuration.
+3. **Recall.** Coverage checklist for LocatedAt, Possesses, Manner, Attitude and mention resolution.
+4. **Draft V1.2 with existing entity names.** Requires a DEC.
+5. **Housekeeping.** FV1 packages, `.env` duplicate keys.
+
+## M4-04B3W — P4R8 DEVELOPMENT MODEL RUN (DEV2, FV2-DEV) — Status: M4_04B3W_P4R8_DEVELOPMENT_CANDIDATE
+
+On 2026-11-22 the project owner authorized option 1 of the M4-04B3V Next Candidate list ("ok làm cách 1 đi, dùng codex nhé").
+
+- **Development runner.** `run_m4_p4_dev_v1.py` gained `--dataset FV2` and `--fv2-dir`. It writes under `<root>/FV2/` with distinct `..._FV2_...` job IDs. The locked FV2 runner still refuses reruns. For scoring only, `--align-gold` applies V3 `align_mention_roles` then V4 `align_date_anchors` in memory. It preserves `score.json` and writes `score_aligned.json` with `gold_alignment: V4_DEVELOPMENT_ONLY`.
+
+**DEVELOPMENT-ONLY.** P4R8 ran on `gemini-3.5-flash-lite` with QR+AM+ME+SE+TB+DA and one sample per case. Each case received one primary request and at most one structural repair. Credential slot 21 served about 21 requests for DEV2 and 25 for FV2-dev. The comparison replays saved P4R6 responses from M4-04B3L2 (DEV2) and M4-04B3O (FV2 blind run) offline with the same repairs and gold alignment. M4-04B3O remains the only validation result.
+
+**DEV2** had 10 cases and 119 required items. Both prompts failed structural validation on the same case. The table covers the nine common valid cases with aligned gold.
+
+| Prompt | Recovered | Grounded | Predicted | Unsupported | L1 pass | Full success |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| P4R6 (replay) | 89 | 86 | 108 | 19 | 6 | 0 |
+| P4R8 (live) | 89 | 82 | 113 | 24 | 4 | 0 |
+
+V4 gold alignment reduced validity errors from 1 to 0 for each prompt. All other DEV2 scores were the same before and after alignment.
+
+**FV2-dev** had 12 cases and 194 required items. P4R6 produced 12 structurally valid cases and P4R8 produced 11. The official aligned P4R8 development score was 0.905 recall, 0.926 precision, 6 L1 passes and 1 full success. Scoring against unaligned gold gave 4 L1 passes and 0 full successes. The table compares the 11 common valid cases with aligned gold.
+
+| Prompt | Recovered | Grounded | Unsupported | L1 pass | Full success | Missing entity resolutions | Validity errors |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| P4R6 (replay) | 154 | 145 | 14 | 5 | 1 | 7 | 1 |
+| P4R8 (live) | 162 | 155 | 13 | 6 | 1 | 4 | 2 |
+
+P4R6 recovered 14 required items with 1 unsupported prediction on the case excluded from the paired comparison. Among the paired cases, one gained full success and another lost it with 3 unsupported predictions.
+
+- On FV2-dev, P4R8 recovered 8 more required items and grounded 10 more. Missing entity resolutions fell from 7 to 4 and unsupported predictions from 14 to 13. The largest gains came from the two event-kind misses diagnosed in M4-04B3V. The hand-wave case gained 2 recoveries (unsupported 3 → 1) and the pick-up case gained 4 (unsupported 5 → 2).
+- DEV2 recall was equal. The increases in unsupported mention, name and speech predictions fall outside the new rules and are consistent with run-to-run variance. One sample per prompt cannot separate a prompt effect from variance.
+- The lost FV2-dev case failed on an out-of-vocabulary `NamedAs.name_kind` token, unrelated to the P4R8 rule changes. Every subset of the six host repairs reproduced the vocabulary failure on replay. The structural repair then failed on quote occurrences. A vocabulary guard before compilation could recover such cases.
+- P4R8 + QR+AM+ME+SE+TB+DA is the candidate for the next locked validation.
+
+The aggregate record is `benchmarks/m4_extraction/M4_04B3W_P4R8_DEV_MODEL_RUN.yaml`.
+
+## Next Candidate
+
+The owner has yet to choose or authorize any of these candidates.
+
+1. **Next locked validation.** The owner chooses between FV3 authored under V4 and the holdout. A DEC binds P4R8 + QR+AM+ME+SE+TB+DA before the run.
+2. **Second development sample.** Run both P4R6 and P4R8 on DEV2 and FV2-dev to measure run-to-run variance. This uses Gemini quota.
+3. **Vocabulary guard.** Check for out-of-vocabulary tokens such as `name_kind` before compiling.
+4. **Recall.** Develop a coverage checklist for LocatedAt, Possesses, Manner, Attitude and mention resolution.
+5. **Draft V1.2 with existing entity names.** Requires a DEC.
+6. **Housekeeping.** Address FV1 packages and duplicate keys in `.env`.
+
+## M4-04B3X — HOST REPAIR VG (VOCABULARY GUARD) — Status: M4_04B3X_VG_DEVELOPMENT_CANDIDATE
+
+On 2026-11-22 the owner authorized option 3 of the M4-04B3W Next Candidate list with “ok làm cách 3 đi, dùng codex nhé”.
+
+- `tools/story_extraction/draft_vocabulary_guard_v1.py` checks TOKEN arguments using the same canonical predicate registry loader as the conformance check. VG normalizes a value if its uppercase, underscore form is in the vocabulary. Otherwise it drops the proposition and its assertions, then removes evidence left unreferenced by the drop. VG refuses the drop if another reference to the proposition exists. The dev option `--vocabulary-guard` is off by default and appends `+VG` as the final repair in QR+AM+ME+SE+TB+DA+VG.
+
+**DEVELOPMENT-ONLY.** Offline replay compared VG off and on using the same saved responses and the six base repairs. Replay made no model calls. Scoring aligned gold in memory for FV2-dev (V3 then V4) and DEV2 (V4). DEV1 used sealed gold. M4-04B3O remains the only validation result.
+
+| Run | VG | Valid | Recovered | Grounded | Predicted | Unsupported | L1 pass | Full success |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| FV2-dev P4R8 | off | 11 | 162 | 155 | 175 | 13 | 6 | 1 |
+| FV2-dev P4R8 | on | 12 | 176 | 169 | 189 | 13 | 7 | 1 |
+| DEV2 P4R8 | off | 9 | 89 | 82 | 113 | 24 | 4 | 0 |
+| DEV2 P4R8 | on | 9 | 89 | 82 | 111 | 22 | 4 | 0 |
+
+P4R6 runs and DEV1 identical with VG.
+
+Across all 12 FV2-dev cases with the same seven repairs, P4R8 recovered 176/194 required assertions (recall 0.907) versus 168/194 (0.866) for P4R6. Unsupported predictions were 13 versus 15, L1 passes 7 versus 6, and full successes 1 versus 1.
+
+- VG recovered the FV2-dev case lost to an out-of-vocabulary token. On DEV2, VG made one P4R8 primary attempt valid, replacing the repaired attempt and removing two unsupported predictions. Results were identical wherever no such token occurred, with no regression on any of the five saved runs.
+- P4R8 + QR+AM+ME+SE+TB+DA+VG is the development candidate for the next locked validation. Each prompt still has one model sample.
+
+The aggregate record is `benchmarks/m4_extraction/M4_04B3X_VOCABULARY_GUARD.yaml`.
+
+## Next Candidate
+
+The owner has yet to choose or authorize any of these candidates.
+
+1. **Next locked validation.** Validate P4R8 + QR+AM+ME+SE+TB+DA+VG on FV3 authored under V4 (recommended to keep the holdout for last), or on the holdout. A DEC binds the configuration before the run.
+2. **Second development sample.** Run P4R6 and P4R8 again on DEV2 and FV2-dev to measure run-to-run variance. This uses Gemini quota.
+3. **Recall.** Develop a coverage checklist for LocatedAt, Possesses, Manner, Attitude and mention resolution.
+4. **Draft V1.2 with existing entity names.** Requires a DEC.
+5. **Housekeeping.** Address FV1 packages and duplicate keys in `.env`.
+
+## M4-04B3Y/Z — FV3 SEALED AND LOCKED BLIND RUN — Status: M4_04B3Z_FV3_BLIND_RUN_SCORED
+
+On 2026-11-22 the owner authorized FV3 under DEC-030 (“ok làm cách 1 đi, tạo FV3”) and chose the author (“Codex, đổi sang tk …23”).
+
+### FV3 seal (M4-04B3Y)
+
+- Codex authored and sealed 16 original units on a separate account under Conventions V4. The developer never opened the FV3 text or gold.
+- The seal covered 165 required assertions and 31 eligible passages, including 7 mixed-role passages. Checker V3 returned zero findings on every rule, and all 16 units passed the representational gate.
+
+### Lock and run (M4-04B3Z)
+
+- Preflight passed for `m4_04b3z_fv3_protocol_v1.py`. The lock bound P4R8 and host repairs QR, AM, ME, SE, TB, DA and VG to `gemini-3.5-flash-lite` on `gemini_slot_40`, with one primary attempt and at most one structural repair per case.
+- The single run on 2026-11-22 produced 15 structurally valid cases, one structural failure and zero transport failures. The scorer verified all locks and package hashes before opening gold. Provider operations after gold opened were zero. The Snapshot V2 guarded evaluator scored in `REAL_SOURCE` mode without adjudication or gold alignment.
+
+| Measure | FV3 blind (P4R8) | FV2 blind (P4R6 + QR + AM) |
+| --- | ---: | ---: |
+| Structurally valid | 15/16 | 12/12 |
+| Pooled recall on valid cases | 0.7931 (115/145) | 0.856 |
+| Pooled precision | 0.7823 | 0.902 |
+| Unsupported assertion rate | 20.27% | 9.2% |
+| L1 pass among valid cases | 9/15 | 4/12 |
+| Full-case success across all cases | 0/16 | 1/12 |
+
+Counting the invalid FV3 case as zero gives recall of 115/165 (0.697). FV2 and FV3 contain different units, so the blind comparison is unpaired.
+
+- Failure codes recorded 25 missed required assertions, 28 unsupported assertions, 10 wrong evidence roles, 5 missing and 2 wrong entity resolutions, 2 duplicate assertions, 1 wrong evidence span, 1 insufficient support marked sufficient and 1 canonical conformance failure.
+
+**FV3 is now development data under DEC-030. The holdout stays closed.**
+
+### Interpretation
+
+- The span repairs carried over to FV3. Nine of 15 valid cases passed evidence grounding, compared with four of 12 on FV2 blind. FV3 had one wrong evidence span.
+- The FV2-dev gains in recall and precision did not transfer. Recall fell from the M4-04B3X development estimate of 0.907 to 0.793. Precision was 0.782, with unsupported predictions at about twice the FV2 blind rate. The development records acknowledged the overfitting risk of selecting rules on FV2-dev. FV3 stressed mixed-role passages, where 10 evidence-role mismatches occurred.
+- Full-case success remained out of reach at 0/16. Participates and TemporalRelation led the misses (11 and 4). Participates and NamedAs led the unsupported predictions (9 each).
+
+Records: [FV3 seal](../benchmarks/m4_extraction/M4_04B3Y_FRESH_VALIDATION_V3_SEAL_RESULT.yaml) and [FV3 blind run](../benchmarks/m4_extraction/M4_04B3Z_FV3_BLIND_RUN_RESULT.yaml).
+
+## Next Candidate
+
+The owner decides. None of the following work is authorized.
+
+1. Diagnose FV3 as development data by category, focusing on role errors in mixed-role passages, unsupported Participates/NamedAs and missed Participates/TemporalRelation.
+2. Take a second sample of the locked configuration on FV2-dev and FV3-dev to separate run-to-run variance from prompt effects. This requires Gemini quota.
+3. Address unsupported predictions to improve precision before any further locked run.
+4. Keep the holdout closed until the owner chooses a configuration using evidence from more than one fresh set.
+5. Consider Draft V1.2, which requires a DEC.
+6. Housekeeping.
+
+## M4-04B4A — FV3 ERROR DIAGNOSIS — Status: M4_04B4A_DIAGNOSIS_RECORDED
+
+On 2026-11-22 the project owner authorized option 1 of the M4-04B3Z Next Candidate list ("ok làm cách 1 đi, dùng codex nhé"); Codex was out of quota and the owner chose "Claude tự chẩn đoán ngay". **DEVELOPMENT-ONLY:** FV3 has been development data since M4-04B3Z; the diagnosis reads the locked predictions as scored.
+
+- **Role errors (10).** Every one is DEPICTION where the gold uses NARRATION_SUMMARY (8) or RETROSPECTIVE (2), all in narration, none in dialogue. Six are mention evidence inside those sentences. The DEPICTION default introduced in P4R6 (tuned on DEV2) overcorrected for summary and flashback narration; Conventions V4 leave mention roles in non-depicted narration unsettled.
+- **Unsupported NamedAs (9 of 30 unsupported).** Role or occupation nouns and common nouns for objects or places were asserted as names (TITLE, GIVEN, EPITHET); the gold names none of these entities.
+- **Participates (9 unsupported, 11 missed).** Five errors are PATIENT/THEME disagreements on the R-ROLE-03 boundary, each counted as one miss and one unsupported prediction; two follow from unaligned events.
+- **Other misses.** TemporalRelation 4, entity resolutions 5, a few single omissions.
+
+Together the three patterns account for 10 role errors, 14 unsupported predictions and at least 5 misses. The aggregate record is `benchmarks/m4_extraction/M4_04B4A_FV3_ERROR_DIAGNOSIS.yaml`.
+
+## Next Candidate
+
+The owner has yet to choose or authorize any of these candidates.
+
+1. **Conventions V5.** Owner decisions on the evidence role of mentions in non-depicted narration (follow the sentence role) and on NamedAs for role and common nouns.
+2. **Prompt P4R9 and a role-propagation host repair,** developed on FV2-dev and FV3-dev together and measured on both (Gemini quota for a development run).
+3. **Run-to-run variance sample** of the locked configuration before any further locked run.
+4. **Holdout stays closed** until a configuration has evidence from more than one fresh set.
+5. **Draft V1.2 with existing entity names.** Requires a DEC.
+
+## M4-04B4B — CONVENTIONS V5: MENTION ROLES FOLLOW THE SENTENCE; NAMEDAS ONLY FOR PROPER NAMES — Status: M4_04B4B_V5_ACCEPTED
+
+On 2026-11-22 the project owner authorized option 1 of the M4-04B4A Next Candidate list ("oke làm cách 1 đi, codex hết token rồi bạn làm luôn nhé") and chose "Theo vai trò của câu" and "Chỉ tên riêng" (DEC-031).
+
+- **Conventions V5.** `docs/research/m4/M4_ANNOTATION_CONVENTIONS_V5.md` adds R-EVR-02 (outside dialogue, a mention's evidence takes its sentence's role) and R-NAME-05 (`NamedAs` only for proper names; role, occupation and common nouns are never names), and narrows `TITLE`/`EPITHET` in R-NAME-02.
+- **Checker V4.** `tools/story_extraction/check_annotation_conventions_v4.py` adds the consistency check of R-EVR-02. On existing gold it finds DEV1 0, DEV2 1, FV2 0, FV3 0.
+- **Gold agreement.** The gold of all four sets names only characters with personal names (no `TITLE`, no `EPITHET`). The rules address the 10 role errors and 9 unsupported `NamedAs` of the FV3 blind run.
+- **Prompt status.** P4R6 to P4R8 conflict with V5 (DEPICTION default, unrestricted `NamedAs`); a new variant is needed before the next development run.
+
+The aggregate record is `benchmarks/m4_extraction/M4_04B4B_CONVENTIONS_V5.yaml`.
+
+## Next Candidate
+
+The owner has yet to choose or authorize any of these candidates.
+
+1. **Prompt P4R9 under V5,** plus a host repair that gives mention evidence the role of the other evidence in its sentence, developed on FV2-dev and FV3-dev together and measured on both (Gemini quota for a development run).
+2. **PATIENT/THEME boundary (R-ROLE-03)** review on FV3-dev, the third pattern of M4-04B4A.
+3. **Run-to-run variance sample** before any further locked run.
+4. **Holdout stays closed** until a configuration has evidence from more than one fresh set.
+5. **Draft V1.2 with existing entity names.** Requires a DEC.
 
 ## M8 Narrative Planning — ACCEPTED as a baseline (DEC-023, 2026-11-15)
 
