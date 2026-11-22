@@ -4,7 +4,7 @@
 
 *Header refreshed 2026-11-22; the dated sections below are history.*
 
-M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED; holdout closed, predictions NOT RUN. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. Annotation conventions V4: ACCEPTED (DEC-029). See M4-04B3Z (FV3 blind run: recall 0.793, precision 0.782, L1 9/15, full 0/16). FV3 error diagnosis: M4-04B4A.
+M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED; holdout closed, predictions NOT RUN. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. Annotation conventions V5: ACCEPTED (DEC-031). See M4-04B3Z (FV3 blind run: recall 0.793, precision 0.782, L1 9/15, full 0/16). FV3 error diagnosis: M4-04B4A. Conventions V5: M4-04B4B (DEC-031).
 
 M0 — Product Foundation: CLOSED (see M0 Closure).
 
@@ -43,7 +43,7 @@ M14 — Voice / Video Automation: GATED behind the Script Quality Gate (DEC-009)
   - The contract defines the standard. It does not show that any current Writer or critic meets it. The M9 Script Quality Gate is not evaluated.
 - M2 — Canonical Story Model: capability COMPLETE / FROZEN (DEC-016). The expected capability has been established as `canonical_story/v0` + `predicate_registry/v0.1`. M2 ran under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015).
 - M3 — Light Novel Ingestion: COMPLETE / FROZEN — `LIGHT_NOVEL_INGESTION/v0`, DEC-018, freeze record `benchmarks/m3_ingestion/LIGHT_NOVEL_INGESTION_V0_FROZEN.yaml`. The roadmap is unchanged.
-- M4 — Story Extraction: IN PROGRESS (M4-01/M4-02 accepted; M4-03 holdout sealed and closed, predictions not run; no extractor/model selected; nothing frozen). Annotation conventions V4: ACCEPTED (DEC-029). See M4-04B3Z (FV3 blind run: recall 0.793, precision 0.782, L1 9/15, full 0/16). FV3 error diagnosis: M4-04B4A.
+- M4 — Story Extraction: IN PROGRESS (M4-01/M4-02 accepted; M4-03 holdout sealed and closed, predictions not run; no extractor/model selected; nothing frozen). Annotation conventions V5: ACCEPTED (DEC-031). See M4-04B3Z (FV3 blind run: recall 0.793, precision 0.782, L1 9/15, full 0/16). FV3 error diagnosis: M4-04B4A. Conventions V5: M4-04B4B (DEC-031).
 - M5 — Persistent Story Memory: PROTOTYPE EXISTS; not frozen or M5 completion (see Implementation Status; DEC-021).
 - M6 — Retrieval: ACCEPTED BASELINE over brief memory (DEC-021, 2026-11-15).
 - M7 — Story Brief: ACCEPTED BASELINE (DEC-022, 2026-11-15).
@@ -1607,6 +1607,27 @@ The owner has yet to choose or authorize any of these candidates.
 1. **Conventions V5.** Owner decisions on the evidence role of mentions in non-depicted narration (follow the sentence role) and on NamedAs for role and common nouns.
 2. **Prompt P4R9 and a role-propagation host repair,** developed on FV2-dev and FV3-dev together and measured on both (Gemini quota for a development run).
 3. **Run-to-run variance sample** of the locked configuration before any further locked run.
+4. **Holdout stays closed** until a configuration has evidence from more than one fresh set.
+5. **Draft V1.2 with existing entity names.** Requires a DEC.
+
+## M4-04B4B — CONVENTIONS V5: MENTION ROLES FOLLOW THE SENTENCE; NAMEDAS ONLY FOR PROPER NAMES — Status: M4_04B4B_V5_ACCEPTED
+
+On 2026-11-22 the project owner authorized option 1 of the M4-04B4A Next Candidate list ("oke làm cách 1 đi, codex hết token rồi bạn làm luôn nhé") and chose "Theo vai trò của câu" and "Chỉ tên riêng" (DEC-031).
+
+- **Conventions V5.** `docs/research/m4/M4_ANNOTATION_CONVENTIONS_V5.md` adds R-EVR-02 (outside dialogue, a mention's evidence takes its sentence's role) and R-NAME-05 (`NamedAs` only for proper names; role, occupation and common nouns are never names), and narrows `TITLE`/`EPITHET` in R-NAME-02.
+- **Checker V4.** `tools/story_extraction/check_annotation_conventions_v4.py` adds the consistency check of R-EVR-02. On existing gold it finds DEV1 0, DEV2 1, FV2 0, FV3 0.
+- **Gold agreement.** The gold of all four sets names only characters with personal names (no `TITLE`, no `EPITHET`). The rules address the 10 role errors and 9 unsupported `NamedAs` of the FV3 blind run.
+- **Prompt status.** P4R6 to P4R8 conflict with V5 (DEPICTION default, unrestricted `NamedAs`); a new variant is needed before the next development run.
+
+The aggregate record is `benchmarks/m4_extraction/M4_04B4B_CONVENTIONS_V5.yaml`.
+
+## Next Candidate
+
+The owner has yet to choose or authorize any of these candidates.
+
+1. **Prompt P4R9 under V5,** plus a host repair that gives mention evidence the role of the other evidence in its sentence, developed on FV2-dev and FV3-dev together and measured on both (Gemini quota for a development run).
+2. **PATIENT/THEME boundary (R-ROLE-03)** review on FV3-dev, the third pattern of M4-04B4A.
+3. **Run-to-run variance sample** before any further locked run.
 4. **Holdout stays closed** until a configuration has evidence from more than one fresh set.
 5. **Draft V1.2 with existing entity names.** Requires a DEC.
 

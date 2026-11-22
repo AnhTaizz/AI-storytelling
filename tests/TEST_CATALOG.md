@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 89 — test functions: 1211
+Suites: 9 — test files: 90 — test functions: 1213
 
 ## canonical_story
 
@@ -653,6 +653,12 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.check_an
 - `ConventionsV3CheckerTests.test_flags_only_a_date_in_the_sentence_of_exactly_one_event`
 - `ConventionsV3CheckerTests.test_alignment_moves_dates_bounds_and_relations_in_a_copy`
 - `ConventionsV3CheckerTests.test_cli_reports_and_refuses`
+
+### test_check_annotation_conventions_v4 (2)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.check_annotation_conventions_v4`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `ConventionsV4CheckerTests.test_mention_role_must_match_a_single_sentence_role_outside_dialogue`
+- `ConventionsV4CheckerTests.test_cli_reports_and_refuses`
 
 ### test_diagnose_m4_04b3i_fv1_v1 (5)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.diagnose_m4_04b3i_fv1_v1`, `tools.story_extraction.evaluate_extraction_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.score_m4_04b3h_fv1_v1`, `tools.story_ingestion.light_novel_adapter_v0`

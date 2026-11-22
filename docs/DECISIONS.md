@@ -915,3 +915,22 @@ DECISION:
 LIMITS:
 - P4R8 and all seven repairs were chosen on DEV1, DEV2 and FV2-dev. FV3 is the first set they have not seen.
 - Sixteen short authored units in one language do not measure extraction on real chapters; the holdout stays closed for a later decision.
+
+---
+
+## DEC-031 — M4 Annotation Conventions V5: Mention Roles Follow the Sentence; NamedAs Only for Proper Names
+
+STATUS: ACCEPTED (Project Owner, 2026-11-22: chose "Theo vai trò của câu" and "Chỉ tên riêng"; work authorized with "oke làm cách 1 đi, codex hết token rồi bạn làm luôn nhé")
+
+CONTEXT:
+The FV3 diagnosis (M4-04B4A, development data) found every role error to be DEPICTION where the gold uses NARRATION_SUMMARY or RETROSPECTIVE, six of them on mention evidence inside such sentences, and 9 unsupported predictions that assert role or common nouns as names. V4 left mention roles in non-depicted narration unsettled and allowed `TITLE`/`EPITHET` by judgement. The gold of DEV1, DEV2, FV2 and FV3 names only characters with personal names.
+
+DECISION:
+1. **V5 replaces V4.** `docs/research/m4/M4_ANNOTATION_CONVENTIONS_V5.md` replaces V4 (DEC-029) for new gold and prompts. V4 stays unchanged as a record.
+2. **R-EVR-02.** Outside dialogue, the evidence of a RefersTo or NamedAs assertion takes the role of its sentence (DEPICTION, NARRATION_SUMMARY or RETROSPECTIVE). Inside dialogue R-EVR-01 still applies. Checker `check_annotation_conventions_v4.py` checks the consistency part.
+3. **R-NAME-05 and a narrower R-NAME-02.** `NamedAs` is only for proper names; role and occupation nouns and common nouns for objects or places are never names, not even as `TITLE` or `EPITHET`.
+4. **Sealed gold is never rewritten.** Checker counts on existing gold for R-EVR-02: DEV1 0, DEV2 1, FV2 0, FV3 0. M4-04B3O and M4-04B3Z stay the only validation numbers.
+5. **Prompts.** The current prompts (P4R6 to P4R8) set DEPICTION as the default role and do not restrict `NamedAs`; a new prompt variant must carry V5 before the next development run. Gold authored from now on follows V5.
+
+LIMITS:
+- Both rules were chosen after reading development data (FV3); only a fresh set can show whether they hold.

@@ -1,0 +1,25 @@
+# M4-04B4B: Annotation Conventions V5 (R-EVR-02, R-NAME-05) and checker V4. Public aggregates only.
+artifact: M4_04B4B_CONVENTIONS_V5
+status: M4_04B4B_V5_ACCEPTED
+date: '2026-11-22'
+authorization:
+  by: Project Owner
+  date: '2026-11-22'
+  instructions:
+    - "oke làm cách 1 đi, codex hết token rồi bạn làm luôn nhé"
+    - "Chose 'Theo vai trò của câu' (mention roles) and 'Chỉ tên riêng' (NamedAs)."
+  record: DEC-031
+basis: benchmarks/m4_extraction/M4_04B4A_FV3_ERROR_DIAGNOSIS.yaml
+conventions: docs/research/m4/M4_ANNOTATION_CONVENTIONS_V5.md
+rules:
+  R-EVR-02: Outside dialogue, mention evidence takes the role of its sentence; the checker flags a mention whose role differs from the single role of the other evidence in its sentence.
+  R-NAME-05: NamedAs only for proper names; role, occupation and common nouns are never names (TITLE and EPITHET narrowed in R-NAME-02).
+checker: tools/story_extraction/check_annotation_conventions_v4.py
+gold_evidence:
+  namedas_name_kinds_in_gold: {DEV1: none, DEV2: [FORMAL, GIVEN, NICKNAME], FV2: [FORMAL, GIVEN, FAMILY, NICKNAME], FV3: [FORMAL, FAMILY, NICKNAME]}
+  namedas_title_or_epithet_in_gold: 0
+  R-EVR-02_findings_on_gold: {DEV1: 0, DEV2: 1, FV2: 0, FV3: 0}
+  fv3_blind_run_items_addressed: {role_errors: 10, unsupported_namedas: 9}
+prompt_status: Current prompts P4R6 to P4R8 conflict with V5 (DEPICTION default, unrestricted NamedAs); a new variant is needed before the next development run.
+limits:
+  - Chosen after reading development data (FV3); only a fresh set can show whether the rules hold.
