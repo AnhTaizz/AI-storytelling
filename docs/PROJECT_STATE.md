@@ -2,9 +2,9 @@
 
 ## Current Milestone
 
-*Header refreshed 2026-11-18; the dated sections below are history.*
+*Header refreshed 2026-11-22; the dated sections below are history.*
 
-M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED; holdout closed, predictions NOT RUN. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. Annotation conventions V4: ACCEPTED (DEC-029). See M4-04B3X for the vocabulary guard replay and the P4R8 development candidate for locked validation.
+M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED; holdout closed, predictions NOT RUN. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. Annotation conventions V4: ACCEPTED (DEC-029). See M4-04B3Z (FV3 blind run: recall 0.793, precision 0.782, L1 9/15, full 0/16).
 
 M0 — Product Foundation: CLOSED (see M0 Closure).
 
@@ -43,7 +43,7 @@ M14 — Voice / Video Automation: GATED behind the Script Quality Gate (DEC-009)
   - The contract defines the standard. It does not show that any current Writer or critic meets it. The M9 Script Quality Gate is not evaluated.
 - M2 — Canonical Story Model: capability COMPLETE / FROZEN (DEC-016). The expected capability has been established as `canonical_story/v0` + `predicate_registry/v0.1`. M2 ran under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015).
 - M3 — Light Novel Ingestion: COMPLETE / FROZEN — `LIGHT_NOVEL_INGESTION/v0`, DEC-018, freeze record `benchmarks/m3_ingestion/LIGHT_NOVEL_INGESTION_V0_FROZEN.yaml`. The roadmap is unchanged.
-- M4 — Story Extraction: IN PROGRESS (M4-01/M4-02 accepted; M4-03 holdout sealed and closed, predictions not run; no extractor/model selected; nothing frozen). Annotation conventions V4: ACCEPTED (DEC-029). See M4-04B3X for the vocabulary guard replay and the P4R8 development candidate for locked validation.
+- M4 — Story Extraction: IN PROGRESS (M4-01/M4-02 accepted; M4-03 holdout sealed and closed, predictions not run; no extractor/model selected; nothing frozen). Annotation conventions V4: ACCEPTED (DEC-029). See M4-04B3Z (FV3 blind run: recall 0.793, precision 0.782, L1 9/15, full 0/16).
 - M5 — Persistent Story Memory: PROTOTYPE EXISTS; not frozen or M5 completion (see Implementation Status; DEC-021).
 - M6 — Retrieval: ACCEPTED BASELINE over brief memory (DEC-021, 2026-11-15).
 - M7 — Story Brief: ACCEPTED BASELINE (DEC-022, 2026-11-15).
@@ -1540,6 +1540,54 @@ The owner has yet to choose or authorize any of these candidates.
 3. **Recall.** Develop a coverage checklist for LocatedAt, Possesses, Manner, Attitude and mention resolution.
 4. **Draft V1.2 with existing entity names.** Requires a DEC.
 5. **Housekeeping.** Address FV1 packages and duplicate keys in `.env`.
+
+## M4-04B3Y/Z — FV3 SEALED AND LOCKED BLIND RUN — Status: M4_04B3Z_FV3_BLIND_RUN_SCORED
+
+On 2026-11-22 the owner authorized FV3 under DEC-030 (“ok làm cách 1 đi, tạo FV3”) and chose the author (“Codex, đổi sang tk …23”).
+
+### FV3 seal (M4-04B3Y)
+
+- Codex authored and sealed 16 original units on a separate account under Conventions V4. The developer never opened the FV3 text or gold.
+- The seal covered 165 required assertions and 31 eligible passages, including 7 mixed-role passages. Checker V3 returned zero findings on every rule, and all 16 units passed the representational gate.
+
+### Lock and run (M4-04B3Z)
+
+- Preflight passed for `m4_04b3z_fv3_protocol_v1.py`. The lock bound P4R8 and host repairs QR, AM, ME, SE, TB, DA and VG to `gemini-3.5-flash-lite` on `gemini_slot_40`, with one primary attempt and at most one structural repair per case.
+- The single run on 2026-11-22 produced 15 structurally valid cases, one structural failure and zero transport failures. The scorer verified all locks and package hashes before opening gold. Provider operations after gold opened were zero. The Snapshot V2 guarded evaluator scored in `REAL_SOURCE` mode without adjudication or gold alignment.
+
+| Measure | FV3 blind (P4R8) | FV2 blind (P4R6 + QR + AM) |
+| --- | ---: | ---: |
+| Structurally valid | 15/16 | 12/12 |
+| Pooled recall on valid cases | 0.7931 (115/145) | 0.856 |
+| Pooled precision | 0.7823 | 0.902 |
+| Unsupported assertion rate | 20.27% | 9.2% |
+| L1 pass among valid cases | 9/15 | 4/12 |
+| Full-case success across all cases | 0/16 | 1/12 |
+
+Counting the invalid FV3 case as zero gives recall of 115/165 (0.697). FV2 and FV3 contain different units, so the blind comparison is unpaired.
+
+- Failure codes recorded 25 missed required assertions, 28 unsupported assertions, 10 wrong evidence roles, 5 missing and 2 wrong entity resolutions, 2 duplicate assertions, 1 wrong evidence span, 1 insufficient support marked sufficient and 1 canonical conformance failure.
+
+**FV3 is now development data under DEC-030. The holdout stays closed.**
+
+### Interpretation
+
+- The span repairs carried over to FV3. Nine of 15 valid cases passed evidence grounding, compared with four of 12 on FV2 blind. FV3 had one wrong evidence span.
+- The FV2-dev gains in recall and precision did not transfer. Recall fell from the M4-04B3X development estimate of 0.907 to 0.793. Precision was 0.782, with unsupported predictions at about twice the FV2 blind rate. The development records acknowledged the overfitting risk of selecting rules on FV2-dev. FV3 stressed mixed-role passages, where 10 evidence-role mismatches occurred.
+- Full-case success remained out of reach at 0/16. Participates and TemporalRelation led the misses (11 and 4). Participates and NamedAs led the unsupported predictions (9 each).
+
+Records: [FV3 seal](../benchmarks/m4_extraction/M4_04B3Y_FRESH_VALIDATION_V3_SEAL_RESULT.yaml) and [FV3 blind run](../benchmarks/m4_extraction/M4_04B3Z_FV3_BLIND_RUN_RESULT.yaml).
+
+## Next Candidate
+
+The owner decides. None of the following work is authorized.
+
+1. Diagnose FV3 as development data by category, focusing on role errors in mixed-role passages, unsupported Participates/NamedAs and missed Participates/TemporalRelation.
+2. Take a second sample of the locked configuration on FV2-dev and FV3-dev to separate run-to-run variance from prompt effects. This requires Gemini quota.
+3. Address unsupported predictions to improve precision before any further locked run.
+4. Keep the holdout closed until the owner chooses a configuration using evidence from more than one fresh set.
+5. Consider Draft V1.2, which requires a DEC.
+6. Housekeeping.
 
 ## M8 Narrative Planning — ACCEPTED as a baseline (DEC-023, 2026-11-15)
 
