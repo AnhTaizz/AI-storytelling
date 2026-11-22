@@ -1,0 +1,53 @@
+# M4-04B3X: host repair VG (vocabulary guard). Public aggregates only.
+artifact: M4_04B3X_VOCABULARY_GUARD
+status: M4_04B3X_VG_DEVELOPMENT_CANDIDATE
+date: '2026-11-22'
+authorization:
+  by: Project Owner
+  date: '2026-11-22'
+  instructions:
+    - "ok làm cách 3 đi, dùng codex nhé"
+  scope: Option 3 of the M4-04B3W Next Candidate list (vocabulary guard).
+evaluation_data:
+  label: DEVELOPMENT-ONLY
+  sets: [FV2-dev, DEV2, DEV1]
+  only_validation_result: M4_04B3O_FV2_BLIND_RUN_RESULT.yaml
+runner:
+  file: tools/story_extraction/run_m4_p4_dev_v1.py
+  repair: tools/story_extraction/draft_vocabulary_guard_v1.py
+  option: --vocabulary-guard
+  default_enabled: false
+  suffix: '+VG'
+  repair_order: [QR, AM, ME, SE, TB, DA, VG]
+  vocabulary: VG checks TOKEN arguments using the same canonical predicate registry loader as the conformance check.
+  normalization: VG uses the uppercase, underscore form when it is in the vocabulary.
+  removal: For an out-of-vocabulary value, VG drops the proposition and its assertions unless another reference to the proposition requires it to refuse the drop. VG removes evidence left unreferenced by the drop.
+method:
+  comparison: Offline replay of each saved run with VG off and on. Replay made no model calls.
+  base_repairs: QR+AM+ME+SE+TB+DA
+  gold_alignment: In memory for scoring. FV2-dev uses V3 then V4, DEV2 uses V4, and DEV1 uses sealed gold.
+  model_samples_per_prompt: 1
+results:
+  FV2-dev:
+    cases: 12
+    required: 194
+    replay_sources: {P4R6: M4-04B3O blind-run responses, P4R8: M4-04B3W}
+    runs:
+      - {prompt: P4R6, vg: ['off', 'on'], valid: 12, recovered: 168, grounded: 159, predicted: 184, unsupported: 15, l1_pass: 6, full_success: 1}
+      - {prompt: P4R8, vg: 'off', valid: 11, recovered: 162, grounded: 155, predicted: 175, unsupported: 13, l1_pass: 6, full_success: 1}
+      - {prompt: P4R8, vg: 'on', valid: 12, recovered: 176, grounded: 169, predicted: 189, unsupported: 13, l1_pass: 7, full_success: 1}
+    all_cases_recall_with_vg: {P4R6: 0.866, P4R8: 0.907}
+  DEV2:
+    cases: 10
+    required: 119
+    runs:
+      - {prompt: P4R6, vg: ['off', 'on'], valid: 9, recovered: 89, grounded: 86, predicted: 108, unsupported: 19, l1_pass: 6, full_success: 0}
+      - {prompt: P4R8, vg: 'off', valid: 9, recovered: 89, grounded: 82, predicted: 113, unsupported: 24, l1_pass: 4, full_success: 0}
+      - {prompt: P4R8, vg: 'on', valid: 9, recovered: 89, grounded: 82, predicted: 111, unsupported: 22, l1_pass: 4, full_success: 0}
+    attempt_selection: VG made one P4R8 primary attempt valid. It replaced the repaired attempt and removed two unsupported predictions.
+  DEV1:
+    runs:
+      - {prompt: P4R6, vg: ['off', 'on'], valid: 10, recovered: 8, grounded: 5, predicted: 206, unsupported: 40, l1_pass: 6, full_success: 0}
+interpretation:
+  - VG recovered the FV2-dev case lost to an out-of-vocabulary token. Results were identical wherever no such token occurred, with no regression on any of the five saved runs.
+  - P4R8 + QR+AM+ME+SE+TB+DA+VG is the development candidate for the next locked validation. One model sample per prompt leaves run-to-run variance unmeasured.

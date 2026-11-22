@@ -286,8 +286,8 @@ class DevelopmentRunnerTests(unittest.TestCase):
         loaded = [fv2_loader.CaseInput(cid, {"locked_input": True}, case.compiler_context)
                   for cid in lock.CASE_IDS]
         flags = dict(quote_resolution=True, anchor_mentions=True, mention_evidence=True,
-                     sentence_evidence=True, transfer_bounds=True, date_anchor=True)
-        label = "P4R8+QR+AM+ME+SE+TB+DA"
+                     sentence_evidence=True, transfer_bounds=True, date_anchor=True, vocabulary_guard=True)
+        label = "P4R8+QR+AM+ME+SE+TB+DA+VG"
         with tempfile.TemporaryDirectory() as tmp, ExitStack() as stack:
             directory = Path(tmp) / "sealed"
             output = Path(tmp) / "output"
@@ -347,7 +347,7 @@ class DevelopmentRunnerTests(unittest.TestCase):
             self.assertEqual(evaluator.call_count, len(ids))
             self.assertEqual([row["case_id"] for row in result["rows"]], list(ids))
             self.assertEqual([job for job, prompt in fake.calls], [
-                f"M4_P4_DEV_V1_FV2_P4R8_QR_AM_ME_SE_TB_DA_{suffix}" for suffix in
+                f"M4_P4_DEV_V1_FV2_P4R8_QR_AM_ME_SE_TB_DA_VG_{suffix}" for suffix in
                 (f"SMOKE_{protocol.CREDENTIAL_SLOT.upper()}", f"{ids[0]}_PRIMARY",
                  f"{ids[0]}_REPAIR_1", f"{ids[1]}_PRIMARY")])
             self.assertIn('"draft_version": "STORY_EXTRACTION_DRAFT_V1_1"', fake.calls[1][1])
@@ -358,6 +358,8 @@ class DevelopmentRunnerTests(unittest.TestCase):
             self.assertNotIn("gold_alignment", result)
             replay = runner.execute(**opts, mode="revalidate")
             self.assertEqual(replay["totals"]["new_structurally_valid"], len(ids))
+            self.assertTrue(result["vocabulary_guard"])
+            self.assertTrue(preflight["vocabulary_guard"])
             self.assertEqual(events.count("gold verified"), 1)
             reader.assert_called_once()
 
@@ -848,7 +850,8 @@ class DevelopmentRunnerTests(unittest.TestCase):
                                                     sentence_evidence=True, transfer_bounds=True,
                                                     date_anchor=True),
                                  "P4R7+QR+RB+EN+AM" + suffix + "+SE+TB+DA")
-        for option, suffix in (("sentence_evidence", "+SE"), ("transfer_bounds", "+TB"), ("date_anchor", "+DA")):
+        for option, suffix in (("sentence_evidence", "+SE"), ("transfer_bounds", "+TB"),
+                               ("date_anchor", "+DA"), ("vocabulary_guard", "+VG")):
             self.assertEqual(runner._run_variant("P4R7", False, False, **{option: True}), "P4R7" + suffix)
         for predicates in ((), ("Occurred",)):
             with self.subTest(invalid=predicates), self.assertRaisesRegex(runner.DevelopmentError, "predicates"):
@@ -860,7 +863,7 @@ class DevelopmentRunnerTests(unittest.TestCase):
         with self.fixture() as (opts, _, _):
             for flags in ({}, {"mention_evidence": False, "mention_evidence_predicates": ("NamedAs",),
                                "sentence_evidence": False, "transfer_bounds": False, "date_anchor": False,
-                               "fv2_dir": Path("unused"), "align_gold": False}):
+                               "vocabulary_guard": False, "fv2_dir": Path("unused"), "align_gold": False}):
                 clock = Clock()
                 run = {**opts, "output_root": opts["output_root"] / str(len(snapshots)),
                        "clock": clock, "wait": clock.wait}
@@ -872,9 +875,26 @@ class DevelopmentRunnerTests(unittest.TestCase):
         self.assertEqual(snapshots[0], snapshots[1])
         for filename in ("score.json", "revalidation.json"):
             for option in (b"mention_evidence", b"sentence_evidence", b"transfer_bounds", b"date_anchor",
-                           b"gold_alignment", b"gold_alignment_counts"):
+                           b"vocabulary_guard", b"gold_alignment", b"gold_alignment_counts"):
                 self.assertNotIn(b'"' + option, snapshots[0][Path(filename)])
         self.assertNotIn(Path("artifacts/DEV2_01/primary_resolved_draft.json"), snapshots[0])
+
+    def test_vocabulary_guard_alone_saves_the_primary_without_a_repair_request(self):
+        draft = deepcopy(self.draft)
+        prop = next(p for p in draft["propositions"] if p["predicate"] == "Participates")
+        prop["args"]["role"]["value"] = "INVENTED"
+        with self.fixture() as (opts, _, _):
+            fake = self.transport("P3+VG", script={("DEV2_01", "PRIMARY"): json.dumps(draft)})
+            score = runner.execute(**opts, vocabulary_guard=True, mode="run", transport=fake)
+            row, = score["rows"]
+            self.assertEqual(row["terminal_status"], "STRUCTURAL_VALID")
+            self.assertFalse(row["repair_used"])
+            saved = opts["output_root"] / "P3+VG" / "artifacts" / "DEV2_01"
+            self.assertEqual(json.loads((saved / "primary_draft.json").read_bytes()), draft)
+            resolved = json.loads((saved / "primary_resolved_draft.json").read_bytes())
+            self.assertEqual(resolved["propositions"], [p for p in draft["propositions"] if p != prop])
+            validation = json.loads((saved / "validation.json").read_bytes())["validation"]
+            self.assertEqual(validation["vocabulary_guard"]["assertions_dropped"], 1)
 
     def test_mention_evidence_applies_after_repairs_in_run_score_and_revalidation(self):
         for phase in ("primary", "repair_1"):
@@ -944,13 +964,19 @@ class DevelopmentRunnerTests(unittest.TestCase):
 
     def test_sentence_evidence_and_transfer_bounds_in_run_score_and_revalidation(self):
         draft, case, gold = transfer_case()
+        # A second claim about the transfer contains an unregistered role.
+        participates = next(p for p in draft["propositions"] if p["predicate"] == "Participates")
+        draft["propositions"].append({**participates, "handle": "PROP99", "args": {
+            **participates["args"], "role": fx.TOK("participant_role", "INVENTED")}})
+        claim = next(a for a in draft["assertions"] if a["proposition_handle"] == participates["handle"])
+        draft["assertions"].append({**claim, "handle": "A99", "proposition_handle": "PROP99"})
         invalid = {**draft, "unknown_field": True}
         raw = {"primary": json.dumps(invalid), "repair_1": json.dumps(draft)}
         flags = {"quote_resolution": True, "anchor_mentions": True, "mention_evidence": True,
-                 "sentence_evidence": True, "transfer_bounds": True, "date_anchor": True}
-        label = "P4R7+QR+AM+ME+SE+TB+DA"
+                 "sentence_evidence": True, "transfer_bounds": True, "date_anchor": True, "vocabulary_guard": True}
+        label = "P4R7+QR+AM+ME+SE+TB+DA+VG"
         order = ("resolve_quotes", "_anchor_mentions", "narrow_mention_evidence",
-                 "widen_to_sentence", "bound_by_transfer", "anchor_dates_to_events")
+                 "widen_to_sentence", "bound_by_transfer", "anchor_dates_to_events", "guard_vocabulary")
         repairs = Mock()
         no_provider = Mock(side_effect=AssertionError("offline"))
         with patch.object(self, "context", case.compiler_context), patch.object(self, "gold", gold), \
@@ -968,6 +994,7 @@ class DevelopmentRunnerTests(unittest.TestCase):
             self.assertTrue(score["sentence_evidence"])
             self.assertTrue(score["transfer_bounds"])
             self.assertTrue(score["date_anchor"])
+            self.assertTrue(score["vocabulary_guard"])
             repairs.reset_mock()
             self.assertEqual(runner.execute(**opts, **flags, mode="score", transport=no_provider), score)
             self.assertEqual(repairs.mock_calls, [])
@@ -1001,9 +1028,17 @@ class DevelopmentRunnerTests(unittest.TestCase):
             self.assertEqual(totals["sentence_evidence_report"]["evidence_items_added"], 4)
             self.assertEqual(totals["sentence_evidence_report"]["evidence_items_removed"], 4)
             self.assertTrue(replay["date_anchor"])
+            self.assertTrue(replay["vocabulary_guard"])
+            guard_totals = totals["vocabulary_guard_report"]
+            self.assertEqual(guard_totals["by_vocabulary"], {"participant_role": guard_totals["outcomes"]})
+            self.assertEqual(guard_totals["outcomes"]["DROPPED"], 2)
+            self.assertEqual(guard_totals["assertions_dropped"], 2)
             self.assertEqual(totals["date_anchor_report"], runner.anchor_dates_to_events({}, {})[1])
             for attempt in run_validation["attempts"]:
                 self.assertEqual(attempt["validation"]["date_anchor"], runner.anchor_dates_to_events({}, {})[1])
+                phase_report = totals["by_phase"][attempt["phase"]]["vocabulary_guard_report"]
+                self.assertEqual(phase_report, attempt["validation"]["vocabulary_guard"])
+                self.assertEqual(phase_report["outcomes"]["DROPPED"], 1)
             no_provider.assert_not_called()
 
     def test_rich_blockers_sanitize_values_extract_handles_and_restore_validator(self):
@@ -1188,7 +1223,7 @@ class DevelopmentRunnerTests(unittest.TestCase):
                         argv += ["--align-gold"]
                     if mode == "revalidate":
                         argv += ["--mention-evidence", "--mention-evidence-predicates", "NamedAs, RefersTo",
-                                 "--sentence-evidence", "--transfer-bounds"]
+                                 "--sentence-evidence", "--transfer-bounds", "--vocabulary-guard"]
                     for key in ("dev1_package", "dev1_ingestion_manifest", "dev1_source_root",
                                 "dev2_input", "dev2_gold"):
                         if key in opts:
@@ -1219,6 +1254,7 @@ class DevelopmentRunnerTests(unittest.TestCase):
                             self.assertEqual(returned[-1]['mention_evidence_predicates'], ['RefersTo', 'NamedAs'])
                             self.assertIn('sentence_evidence_report', returned[-1]['totals'])
                             self.assertIn('transfer_bounds_report', returned[-1]['totals'])
+                            self.assertIn('vocabulary_guard_report', returned[-1]['totals'])
                             self.assertEqual(set(returned[-1]['totals']['by_phase']), {'primary', 'repair_1'})
                         with patch.object(runner, "execute", side_effect=runner.DevelopmentError("private")), redirect_stdout(output):
                             self.assertEqual(runner.main(argv), 2)

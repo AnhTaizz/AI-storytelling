@@ -4,7 +4,7 @@
 
 *Header refreshed 2026-11-18; the dated sections below are history.*
 
-M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED; holdout closed, predictions NOT RUN. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. Annotation conventions V4: ACCEPTED (DEC-029). See M4-04B3W for the P4R8 development run on DEV2 and FV2-dev and the candidate for locked validation.
+M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED; holdout closed, predictions NOT RUN. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. Annotation conventions V4: ACCEPTED (DEC-029). See M4-04B3X for the vocabulary guard replay and the P4R8 development candidate for locked validation.
 
 M0 — Product Foundation: CLOSED (see M0 Closure).
 
@@ -43,7 +43,7 @@ M14 — Voice / Video Automation: GATED behind the Script Quality Gate (DEC-009)
   - The contract defines the standard. It does not show that any current Writer or critic meets it. The M9 Script Quality Gate is not evaluated.
 - M2 — Canonical Story Model: capability COMPLETE / FROZEN (DEC-016). The expected capability has been established as `canonical_story/v0` + `predicate_registry/v0.1`. M2 ran under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015).
 - M3 — Light Novel Ingestion: COMPLETE / FROZEN — `LIGHT_NOVEL_INGESTION/v0`, DEC-018, freeze record `benchmarks/m3_ingestion/LIGHT_NOVEL_INGESTION_V0_FROZEN.yaml`. The roadmap is unchanged.
-- M4 — Story Extraction: IN PROGRESS (M4-01/M4-02 accepted; M4-03 holdout sealed and closed, predictions not run; no extractor/model selected; nothing frozen). Annotation conventions V4: ACCEPTED (DEC-029). See M4-04B3W for the P4R8 development run on DEV2 and FV2-dev and the candidate for locked validation.
+- M4 — Story Extraction: IN PROGRESS (M4-01/M4-02 accepted; M4-03 holdout sealed and closed, predictions not run; no extractor/model selected; nothing frozen). Annotation conventions V4: ACCEPTED (DEC-029). See M4-04B3X for the vocabulary guard replay and the P4R8 development candidate for locked validation.
 - M5 — Persistent Story Memory: PROTOTYPE EXISTS; not frozen or M5 completion (see Implementation Status; DEC-021).
 - M6 — Retrieval: ACCEPTED BASELINE over brief memory (DEC-021, 2026-11-15).
 - M7 — Story Brief: ACCEPTED BASELINE (DEC-022, 2026-11-15).
@@ -1506,6 +1506,40 @@ The owner has yet to choose or authorize any of these candidates.
 4. **Recall.** Develop a coverage checklist for LocatedAt, Possesses, Manner, Attitude and mention resolution.
 5. **Draft V1.2 with existing entity names.** Requires a DEC.
 6. **Housekeeping.** Address FV1 packages and duplicate keys in `.env`.
+
+## M4-04B3X — HOST REPAIR VG (VOCABULARY GUARD) — Status: M4_04B3X_VG_DEVELOPMENT_CANDIDATE
+
+On 2026-11-22 the owner authorized option 3 of the M4-04B3W Next Candidate list with “ok làm cách 3 đi, dùng codex nhé”.
+
+- `tools/story_extraction/draft_vocabulary_guard_v1.py` checks TOKEN arguments using the same canonical predicate registry loader as the conformance check. VG normalizes a value if its uppercase, underscore form is in the vocabulary. Otherwise it drops the proposition and its assertions, then removes evidence left unreferenced by the drop. VG refuses the drop if another reference to the proposition exists. The dev option `--vocabulary-guard` is off by default and appends `+VG` as the final repair in QR+AM+ME+SE+TB+DA+VG.
+
+**DEVELOPMENT-ONLY.** Offline replay compared VG off and on using the same saved responses and the six base repairs. Replay made no model calls. Scoring aligned gold in memory for FV2-dev (V3 then V4) and DEV2 (V4). DEV1 used sealed gold. M4-04B3O remains the only validation result.
+
+| Run | VG | Valid | Recovered | Grounded | Predicted | Unsupported | L1 pass | Full success |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| FV2-dev P4R8 | off | 11 | 162 | 155 | 175 | 13 | 6 | 1 |
+| FV2-dev P4R8 | on | 12 | 176 | 169 | 189 | 13 | 7 | 1 |
+| DEV2 P4R8 | off | 9 | 89 | 82 | 113 | 24 | 4 | 0 |
+| DEV2 P4R8 | on | 9 | 89 | 82 | 111 | 22 | 4 | 0 |
+
+P4R6 runs and DEV1 identical with VG.
+
+Across all 12 FV2-dev cases with the same seven repairs, P4R8 recovered 176/194 required assertions (recall 0.907) versus 168/194 (0.866) for P4R6. Unsupported predictions were 13 versus 15, L1 passes 7 versus 6, and full successes 1 versus 1.
+
+- VG recovered the FV2-dev case lost to an out-of-vocabulary token. On DEV2, VG made one P4R8 primary attempt valid, replacing the repaired attempt and removing two unsupported predictions. Results were identical wherever no such token occurred, with no regression on any of the five saved runs.
+- P4R8 + QR+AM+ME+SE+TB+DA+VG is the development candidate for the next locked validation. Each prompt still has one model sample.
+
+The aggregate record is `benchmarks/m4_extraction/M4_04B3X_VOCABULARY_GUARD.yaml`.
+
+## Next Candidate
+
+The owner has yet to choose or authorize any of these candidates.
+
+1. **Next locked validation.** Validate P4R8 + QR+AM+ME+SE+TB+DA+VG on FV3 authored under V4 (recommended to keep the holdout for last), or on the holdout. A DEC binds the configuration before the run.
+2. **Second development sample.** Run P4R6 and P4R8 again on DEV2 and FV2-dev to measure run-to-run variance. This uses Gemini quota.
+3. **Recall.** Develop a coverage checklist for LocatedAt, Possesses, Manner, Attitude and mention resolution.
+4. **Draft V1.2 with existing entity names.** Requires a DEC.
+5. **Housekeeping.** Address FV1 packages and duplicate keys in `.env`.
 
 ## M8 Narrative Planning — ACCEPTED as a baseline (DEC-023, 2026-11-15)
 

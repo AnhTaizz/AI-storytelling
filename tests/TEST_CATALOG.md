@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 85 — test functions: 1200
+Suites: 9 — test files: 86 — test functions: 1207
 
 ## canonical_story
 
@@ -797,6 +797,16 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_tr
 - `TransferBoundsTests.test_two_bounds_require_located_sufficient_occurrence_in_text_order`
 - `TransferBoundsTests.test_bounded_draft_validates`
 
+### test_draft_vocabulary_guard_v1 (6)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_compiler_v1_1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.draft_vocabulary_guard_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.run_m4_p4_dev_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `VocabularyGuardTests.test_membership_normalization_polarity_and_unknown_vocabulary`
+- `VocabularyGuardTests.test_invalid_named_as_is_the_only_loss_in_canonical_validation`
+- `VocabularyGuardTests.test_only_evidence_orphaned_by_removed_claims_is_pruned`
+- `VocabularyGuardTests.test_external_references_refuse_entire_proposition_edit`
+- `VocabularyGuardTests.test_two_invalid_tokens_count_as_one_drop_in_either_argument_order`
+- `VocabularyGuardTests.test_malformed_records_are_left_for_validation`
+
 ### test_durable_research_executor_v1 (22)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.durable_research_executor_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.run_gemini_durable_qualification_v1`, `tools.story_ingestion.light_novel_adapter_v0`
 
@@ -1189,7 +1199,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `RunnerTests.test_every_request_uses_the_fv2_locked_credential_slot`
 - `RunnerTests.test_smoke_failure_run_cli_and_guard`
 
-### test_run_m4_p4_dev_v1 (19)
+### test_run_m4_p4_dev_v1 (20)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_compiler_v1_1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.m4_04b3f_fv1_protocol_v1`, `tools.story_extraction.run_m4_04b3o_fv2_predictions_v1`, `tools.story_extraction.run_m4_p4_dev_v1`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `DevelopmentRunnerTests.test_prompt_composition_sources_and_request_identity`
@@ -1205,6 +1215,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_co
 - `DevelopmentRunnerTests.test_quote_options_isolate_jobs_save_raw_and_resolved_and_record_metadata`
 - `DevelopmentRunnerTests.test_anchoring_compiles_preserves_originals_and_replays_all_attempts`
 - `DevelopmentRunnerTests.test_host_repair_labels_and_disabled_output_bytes`
+- `DevelopmentRunnerTests.test_vocabulary_guard_alone_saves_the_primary_without_a_repair_request`
 - `DevelopmentRunnerTests.test_mention_evidence_applies_after_repairs_in_run_score_and_revalidation`
 - `DevelopmentRunnerTests.test_sentence_evidence_and_transfer_bounds_in_run_score_and_revalidation`
 - `DevelopmentRunnerTests.test_rich_blockers_sanitize_values_extract_handles_and_restore_validator`

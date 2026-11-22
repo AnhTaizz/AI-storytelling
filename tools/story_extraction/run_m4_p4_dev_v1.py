@@ -30,6 +30,7 @@ from tools.story_extraction.draft_mention_evidence_v1 import (
 from tools.story_extraction.draft_sentence_evidence_v1 import widen_to_sentence
 from tools.story_extraction.draft_transfer_bounds_v1 import bound_by_transfer
 from tools.story_extraction.draft_date_anchor_v1 import anchor_dates_to_events
+from tools.story_extraction.draft_vocabulary_guard_v1 import guard_vocabulary
 from tools.story_extraction.check_annotation_conventions_v1 import RULE_IDS, check_batch
 from tools.story_extraction.check_annotation_conventions_v2 import align_mention_roles
 from tools.story_extraction.check_annotation_conventions_v3 import align_date_anchors
@@ -122,7 +123,8 @@ def _run_variant(variant: str, quote_resolution: bool, rich_repair_blockers: boo
                  existing_names: bool = False, anchor_mentions: bool = False,
                  mention_evidence: bool = False,
                  mention_evidence_predicates: Sequence[str] = MENTION_EVIDENCE_PREDICATES, *,
-                 sentence_evidence: bool = False, transfer_bounds: bool = False, date_anchor: bool = False) -> str:
+                 sentence_evidence: bool = False, transfer_bounds: bool = False, date_anchor: bool = False,
+                 vocabulary_guard: bool = False) -> str:
     label = (variant + ("+QR" if quote_resolution else "") + ("+RB" if rich_repair_blockers else "")
              + ("+EN" if existing_names else "") + ("+AM" if anchor_mentions else ""))
     if mention_evidence:
@@ -133,7 +135,7 @@ def _run_variant(variant: str, quote_resolution: bool, rich_repair_blockers: boo
             raise DevelopmentError("Mention evidence predicates must select RefersTo, NamedAs, or both")
         label += suffix[selected]
     return (label + ("+SE" if sentence_evidence else "") + ("+TB" if transfer_bounds else "")
-            + ("+DA" if date_anchor else ""))
+            + ("+DA" if date_anchor else "") + ("+VG" if vocabulary_guard else ""))
 
 
 def _with_existing_names(prepared: Mapping[str, Any], context: DraftCompilerContext) -> dict[str, Any]:
@@ -265,7 +267,8 @@ def build_primary_spec(variant: str, case: CaseInput, model: str = protocol.MODE
                        existing_names: bool = False, anchor_mentions: bool = False,
                        mention_evidence: bool = False,
                        mention_evidence_predicates: Sequence[str] = MENTION_EVIDENCE_PREDICATES,
-                       sentence_evidence: bool = False, transfer_bounds: bool = False, date_anchor: bool = False) -> DurableJobSpec:
+                       sentence_evidence: bool = False, transfer_bounds: bool = False, date_anchor: bool = False,
+                       vocabulary_guard: bool = False) -> DurableJobSpec:
     material = prompt_material(variant)
     user = protocol._render(material["primary_user_template"], {
         "CASE_ID": case.case_id,
@@ -273,7 +276,8 @@ def build_primary_spec(variant: str, case: CaseInput, model: str = protocol.MODE
     })
     label = _run_variant(variant, quote_resolution, rich_repair_blockers, existing_names, anchor_mentions,
                          mention_evidence, mention_evidence_predicates,
-                         sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor)
+                         sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor,
+                         vocabulary_guard=vocabulary_guard)
     return replace(protocol._spec(f"{_job_prefix(label, case.dataset)}_{case.case_id}_PRIMARY",
                                   material["primary_system"], user),
                    model=model, credential_slot=credential_slot, research_task_id=TASK_ID)
@@ -286,7 +290,8 @@ def build_repair_spec(variant: str, case: CaseInput, primary_raw: str, validatio
                       existing_names: bool = False, anchor_mentions: bool = False,
                       mention_evidence: bool = False,
                       mention_evidence_predicates: Sequence[str] = MENTION_EVIDENCE_PREDICATES,
-                      sentence_evidence: bool = False, transfer_bounds: bool = False, date_anchor: bool = False) -> DurableJobSpec:
+                      sentence_evidence: bool = False, transfer_bounds: bool = False, date_anchor: bool = False,
+                      vocabulary_guard: bool = False) -> DurableJobSpec:
     payload = protocol.sanitized_failure(validation["category"], validation["blockers"])
     material = prompt_material(variant)
     user = protocol._render(material["repair_user_template"], {
@@ -300,10 +305,12 @@ def build_repair_spec(variant: str, case: CaseInput, primary_raw: str, validatio
                                  existing_names=existing_names, anchor_mentions=anchor_mentions,
                                  mention_evidence=mention_evidence,
                                  mention_evidence_predicates=mention_evidence_predicates,
-                                 sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor)
+                                 sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor,
+                                 vocabulary_guard=vocabulary_guard)
     label = _run_variant(variant, quote_resolution, rich_repair_blockers, existing_names, anchor_mentions,
                          mention_evidence, mention_evidence_predicates,
-                         sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor)
+                         sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor,
+                         vocabulary_guard=vocabulary_guard)
     return replace(primary, job_id=f"{_job_prefix(label, case.dataset)}_{case.case_id}_REPAIR_1",
                    system_prompt=material["repair_system"], user_prompt=user)
 
@@ -344,6 +351,7 @@ def validate_attempt(raw: str, case: CaseInput, *, quote_resolution: bool = Fals
                      anchor_mentions: bool = False, mention_evidence: bool = False,
                      mention_evidence_predicates: Sequence[str] = MENTION_EVIDENCE_PREDICATES,
                      sentence_evidence: bool = False, transfer_bounds: bool = False, date_anchor: bool = False,
+                     vocabulary_guard: bool = False,
                      ) -> tuple[Any, Any, Any, dict]:
     """Validate one response with optional draft repairs and safe diagnostics.
 
@@ -351,9 +359,9 @@ def validate_attempt(raw: str, case: CaseInput, *, quote_resolution: bool = Fals
     Both the untouched draft and the draft actually validated are returned.
     """
     original_draft, report, anchoring_report, evidence_report = None, None, None, None
-    sentence_report, bounds_report, date_report = None, None, None
+    sentence_report, bounds_report, date_report, vocabulary_report = None, None, None, None
     host_repair = any((quote_resolution, anchor_mentions, mention_evidence, sentence_evidence,
-                       transfer_bounds, date_anchor))
+                       transfer_bounds, date_anchor, vocabulary_guard))
     if host_repair:
         try:
             original_draft = json.loads(raw)
@@ -374,6 +382,8 @@ def validate_attempt(raw: str, case: CaseInput, *, quote_resolution: bool = Fals
                 resolved, bounds_report = bound_by_transfer(resolved, case.prepared_input)
             if date_anchor:
                 resolved, date_report = anchor_dates_to_events(resolved, case.prepared_input)
+            if vocabulary_guard:
+                resolved, vocabulary_report = guard_vocabulary(resolved, case.prepared_input)
             raw = json.dumps(resolved, ensure_ascii=False)
     captures = []
     original_validator = compiler.validate_batch_guarded
@@ -405,6 +415,8 @@ def validate_attempt(raw: str, case: CaseInput, *, quote_resolution: bool = Fals
         validation["transfer_bounds"] = bounds_report
     if date_report is not None:
         validation["date_anchor"] = date_report
+    if vocabulary_report is not None:
+        validation["vocabulary_guard"] = vocabulary_report
     return original_draft if host_repair else draft, draft, batch, validation
 
 
@@ -414,7 +426,8 @@ def run_cases(cases: Sequence[CaseInput], specs: Sequence[DurableJobSpec], varia
               quote_resolution: bool = False, rich_repair_blockers: bool = False,
               existing_names: bool = False, anchor_mentions: bool = False, mention_evidence: bool = False,
               mention_evidence_predicates: Sequence[str] = MENTION_EVIDENCE_PREDICATES,
-              sentence_evidence: bool = False, transfer_bounds: bool = False, date_anchor: bool = False) -> None:
+              sentence_evidence: bool = False, transfer_bounds: bool = False, date_anchor: bool = False,
+              vocabulary_guard: bool = False) -> None:
     for case, primary in zip(cases, specs):
         directory = root / "artifacts" / case.case_id
         attempts = []
@@ -436,11 +449,12 @@ def run_cases(cases: Sequence[CaseInput], specs: Sequence[DurableJobSpec], varia
                 raw, case, quote_resolution=quote_resolution, rich_repair_blockers=rich_repair_blockers,
                 anchor_mentions=anchor_mentions, mention_evidence=mention_evidence,
                 mention_evidence_predicates=mention_evidence_predicates,
-                sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor)
+                sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor,
+                vocabulary_guard=vocabulary_guard)
             if draft is not None:
                 _write_json(directory / f"{phase}_draft.json", draft)
                 if any((quote_resolution, anchor_mentions, mention_evidence, sentence_evidence,
-                        transfer_bounds, date_anchor)):
+                        transfer_bounds, date_anchor, vocabulary_guard)):
                     _write_json(directory / f"{phase}_resolved_draft.json", resolved)
             attempt["validation"] = validation
             if validation["pass"] or phase == "repair_1":
@@ -451,7 +465,8 @@ def run_cases(cases: Sequence[CaseInput], specs: Sequence[DurableJobSpec], varia
                                      existing_names=existing_names, anchor_mentions=anchor_mentions,
                                      mention_evidence=mention_evidence,
                                      mention_evidence_predicates=mention_evidence_predicates,
-                                     sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor)
+                                     sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor,
+                                     vocabulary_guard=vocabulary_guard)
         compiled_sha256 = None
         if batch is not None:
             compiled_sha256 = _write_json(directory / "compiled_batch.json", batch)
@@ -575,11 +590,21 @@ def public_summary(score: Mapping[str, Any]) -> dict[str, Any]:
                 "conventions_cases_checked")}
 
 
+def _add_report_counts(total: dict, report: dict) -> None:
+    """Accumulate nested outcome counts, including newly observed vocabularies."""
+    for key, value in report.items():
+        if isinstance(value, dict):
+            _add_report_counts(total.setdefault(key, {}), value)
+        else:
+            total[key] = total.get(key, 0) + value
+
+
 def revalidate_cases(cases: Sequence[CaseInput], source: Path, destination: Path, *,
                      quote_resolution: bool, rich_repair_blockers: bool, anchor_mentions: bool = False,
                      mention_evidence: bool = False,
                      mention_evidence_predicates: Sequence[str] = MENTION_EVIDENCE_PREDICATES,
-                     sentence_evidence: bool = False, transfer_bounds: bool = False, date_anchor: bool = False) -> dict:
+                     sentence_evidence: bool = False, transfer_bounds: bool = False, date_anchor: bool = False,
+                     vocabulary_guard: bool = False) -> dict:
     """Replay saved attempts without touching checkpoints or original validations.
 
     All saved attempts are inspected, even when the new primary passes. The new
@@ -605,6 +630,8 @@ def revalidate_cases(cases: Sequence[CaseInput], source: Path, destination: Path
             counts["transfer_bounds_report"] = bound_by_transfer({}, {})[1]
         if date_anchor:
             counts["date_anchor_report"] = anchor_dates_to_events({}, {})[1]
+        if vocabulary_guard:
+            counts["vocabulary_guard_report"] = guard_vocabulary({})[1]
         return counts
 
     totals = statistics()
@@ -626,7 +653,8 @@ def revalidate_cases(cases: Sequence[CaseInput], source: Path, destination: Path
                     raw, case, quote_resolution=quote_resolution, rich_repair_blockers=rich_repair_blockers,
                     anchor_mentions=anchor_mentions, mention_evidence=mention_evidence,
                     mention_evidence_predicates=mention_evidence_predicates,
-                    sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor)
+                    sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor,
+                    vocabulary_guard=vocabulary_guard)
                 status = "STRUCTURAL_VALID" if batch is not None else validation["category"]
             elif attempt["validation"]["category"] == "TRANSPORT_FAILURE":
                 validation = attempt["validation"]
@@ -644,15 +672,9 @@ def revalidate_cases(cases: Sequence[CaseInput], source: Path, destination: Path
                     for kind, outcomes in validation.get("mention_anchoring", {}).items():
                         for code, count in outcomes.items():
                             counts["mention_anchoring_report"][kind][code] += count
-                if "date_anchor" in validation:
-                    report = validation["date_anchor"]
-                    aggregate = counts["date_anchor_report"]
-                    for key, count in report.items():
-                        if key == "outcomes":
-                            for outcome, amount in count.items():
-                                aggregate[key][outcome] += amount
-                        else:
-                            aggregate[key] += count
+                for name in ("date_anchor", "vocabulary_guard"):
+                    if name in validation:
+                        _add_report_counts(counts[f"{name}_report"], validation[name])
                 for name in repair_reports:
                     if name not in validation:
                         continue
@@ -692,6 +714,8 @@ def revalidate_cases(cases: Sequence[CaseInput], source: Path, destination: Path
         result["transfer_bounds"] = True
     if date_anchor:
         result["date_anchor"] = True
+    if vocabulary_guard:
+        result["vocabulary_guard"] = True
     _write_json(destination / "revalidation.json", result)
     return result
 
@@ -709,6 +733,7 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
             mention_evidence: bool = False,
             mention_evidence_predicates: Sequence[str] = MENTION_EVIDENCE_PREDICATES,
             sentence_evidence: bool = False, transfer_bounds: bool = False, date_anchor: bool = False,
+            vocabulary_guard: bool = False,
             run_directory: Path | None = None, align_gold: bool = False) -> dict[str, Any]:
     if mode not in ("preflight", "run", "score", "revalidate"):
         raise DevelopmentError("Unknown development mode")
@@ -735,7 +760,8 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
     hashes = prompt_hashes(variant)
     label = _run_variant(variant, quote_resolution, rich_repair_blockers, existing_names, anchor_mentions,
                          mention_evidence, mention_evidence_predicates,
-                         sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor)
+                         sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor,
+                         vocabulary_guard=vocabulary_guard)
     identity = label.replace("+", "_")
     base_root = Path(output_root) if dataset == "DEV2" else Path(output_root) / dataset
     root = base_root / label
@@ -759,7 +785,8 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
                  existing_names=existing_names, anchor_mentions=anchor_mentions,
                  mention_evidence=mention_evidence,
                  mention_evidence_predicates=mention_evidence_predicates,
-                 sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor) for case in loaded]
+                 sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor,
+                 vocabulary_guard=vocabulary_guard) for case in loaded]
         metadata = {"dataset": dataset, "variant": variant, "model": model, "credential_slot": credential_slot,
                     "case_count": len(loaded), "primary_specs": len(specs), "prompt_hashes": hashes,
                     "input_sha256": input_sha256, "gold_sha256": gold_sha256,
@@ -777,6 +804,8 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
             metadata["transfer_bounds"] = True
         if date_anchor:
             metadata["date_anchor"] = True
+        if vocabulary_guard:
+            metadata["vocabulary_guard"] = True
         if mode == "preflight":
             return {**metadata, "status": "PREFLIGHT_PASS"}
         if mode == "revalidate":
@@ -785,7 +814,8 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
                                     quote_resolution=quote_resolution, rich_repair_blockers=rich_repair_blockers,
                                     anchor_mentions=anchor_mentions, mention_evidence=mention_evidence,
                                     mention_evidence_predicates=mention_evidence_predicates,
-                                    sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor)
+                                    sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor,
+                                    vocabulary_guard=vocabulary_guard)
 
         def guard(*, include_gold: bool = False):
             verify(include_gold=include_gold)
@@ -830,7 +860,8 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
                       existing_names=existing_names, anchor_mentions=anchor_mentions,
                       mention_evidence=mention_evidence,
                       mention_evidence_predicates=mention_evidence_predicates,
-                      sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor)
+                      sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor,
+                      vocabulary_guard=vocabulary_guard)
         guard(include_gold=True)
         if dataset == "FV2":
             sealed_gold = scoring.read_gold(fv2_dir / fv2_protocol.FV2_GOLD_NAME)
@@ -873,6 +904,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="Bound possession validity using matching transfer anchors")
     parser.add_argument("--date-anchor", action="store_true",
                         help="Move a named calendar date to the sole event in its sentence")
+    parser.add_argument("--vocabulary-guard", action="store_true",
+                        help="Normalize TOKEN values or drop unreferenced invalid propositions")
     parser.add_argument("--rich-repair-blockers", action="store_true")
     parser.add_argument("--existing-names", action="store_true",
                         help="Add affirmed prior-context names and mention forms to model input")
