@@ -1,0 +1,85 @@
+status: SEALED
+set_id: M4_04B3Y_FRESH_VALIDATION_V3
+source_family: ORIGINAL_JA_MINI_NARRATIVES_FV3
+boundaries:
+  forbidden_reads_completed: 0
+  provider_calls: 0
+  network_calls: 0
+  predictions: 0
+ingestion:
+  cases: 16
+  manifests: 16
+  source_documents: 16
+  source_passages: 34
+  evidence_eligible_passages: 31
+  context_only_passages: 2
+  after_cutoff_passages: 1
+gold:
+  complete_for_profile: 16
+  coverage_notes: 31
+  required_assertions: 165
+  acceptable_optional_assertions: 0
+  prior_batches: 1
+  mixed_role_passages: 7
+  units_with_mixed_role_passages: 7
+  annotation_conventions_sha256: 32e315d553c683c804c50ab5dcb596064b16392b7a8f811cc52803ef4fda16f9
+case_ids: [fv3-01, fv3-02, fv3-03, fv3-04, fv3-05, fv3-06, fv3-07, fv3-08, fv3-09, fv3-10, fv3-11, fv3-12, fv3-13, fv3-14, fv3-15, fv3-16]
+annotation_checker:
+  v1_batches_checked: 17
+  v1_mechanical_rules: 10
+  v1_findings: 0
+  v1_per_rule_totals:
+    R-EVT-02: 0
+    R-LIT-01: 0
+    R-LIT-02: 0
+    R-LIT-04: 0
+    R-LIT-05: 0
+    R-MEN-01: 0
+    R-MEN-02: 0
+    R-ROLE-01: 0
+    R-ROLE-02: 0
+    R-TIME-02: 0
+  v3_batches_checked: 17
+  v3_mechanical_rules: 12
+  v3_findings: 0
+  v3_per_rule_totals:
+    R-EVR-01: 0
+    R-EVT-02: 0
+    R-LIT-01: 0
+    R-LIT-02: 0
+    R-LIT-04: 0
+    R-LIT-05: 0
+    R-MEN-01: 0
+    R-MEN-02: 0
+    R-ROLE-01: 0
+    R-ROLE-02: 0
+    R-TIME-02: 0
+    R-TIME-03: 0
+offline_representational_verification:
+  gold_batches_passing_frozen_validation: 16/16
+  draft_schema_and_compile_pass: 16/16
+  compiled_batches_passing_source_exact_validation: 16/16
+  canonical_semantic_support_graph_alpha_equivalence: 16/16
+  representable: 16/16
+private_packages:
+  sealed_artifacts: 3
+  input_sha256: 784f0276087795635aedd452a50cadbae761194bb3b9e55a176c758c457791be
+  gold_sha256: 24cb19e083eb34cbeaa4278c7e20aa733e62c7089ab82bd3717950ab8d3dfb12
+  blindness_manifest_sha256: 56586433c2d86a4b4e0b064f7af3be51412a1b045627c29d0d23215b049ab1f3
+verification:
+  completed_seals: 2
+  sealed_rebuild_comparisons: 1
+  artifacts_byte_identical: 3/3
+  final_verify_sealed: PASS
+  issues: 0
+repository_checks:
+  story_extraction:
+    status: FAIL
+    tests_run: 325
+    failures: 0
+    errors: 28
+    read_boundary_errors: 27
+    subprocess_boundary_errors: 1
+    skipped: 0
+    gated: 0
+    failing_tests_path: .local/m4_fv3/suite_failures.txt

@@ -897,3 +897,21 @@ DECISION:
 LIMITS:
 - R-TIME-03 was chosen after reading development gold; only a fresh set can show whether it holds.
 - DEV1 gold labels a body-part movement `MOVEMENT`, already wrong under V2's definition. The clarification is judged, so it is not aligned automatically.
+
+---
+
+## DEC-030 — FV3 Locked Blind Validation of P4R8 With Seven Host Repairs
+
+STATUS: ACCEPTED (Project Owner, 2026-11-22: "ok làm cách 1 đi, tạo FV3"; FV3 author chosen as Codex on a separate account: "Codex, đổi sang tk …23")
+
+CONTEXT:
+FV2 has been development data since M4-04B3R. The development candidate after M4-04B3S to M4-04B3X is prompt P4R8 with host repairs QR, AM, ME, SE, TB, DA and VG, scored under Annotation Conventions V4 (DEC-029). On FV2-dev it reached 176/194 required assertions against 168/194 for P4R6 with the same repairs; one sample per prompt.
+
+DECISION:
+1. **A new fresh set, FV3, is authored and sealed by an independent author.** Codex, signed in to a different account from the development work, authors 16 original Japanese mini-narrative units and their gold under Conventions V4 and seals them with the unchanged `fresh_validation_seal_v1` as `M4_04B3Y_FRESH_VALIDATION_V3`. The prompt and repair developer never opens FV3 source text or gold before the predictions are locked and hashed.
+2. **The FV3 protocol lock binds P4R8 with host repairs QR, AM, ME, SE, TB, DA and VG, in that order.** The lock hashes the P4R8 prompt and every repair module. Model, temperature, one primary and at most one structural repair per case, and the scorer follow the FV2 lock (DEC-027); the scorer applies no gold alignment because FV3 gold is authored under V4. The credential slot is chosen before the run and recorded in the lock.
+3. **FV3 is run once, blind.** A second run, or any change to the prompt, the repairs or the scoring after the gold is opened, makes FV3 development data.
+
+LIMITS:
+- P4R8 and all seven repairs were chosen on DEV1, DEV2 and FV2-dev. FV3 is the first set they have not seen.
+- Sixteen short authored units in one language do not measure extraction on real chapters; the holdout stays closed for a later decision.

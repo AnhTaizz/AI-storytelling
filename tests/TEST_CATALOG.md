@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 86 — test functions: 1207
+Suites: 9 — test files: 89 — test functions: 1211
 
 ## canonical_story
 
@@ -1169,6 +1169,11 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `ProtocolTests.test_seal_snapshot_and_request_policy_refusals`
 - `ProtocolTests.test_lock_cli_writes_validates_and_refuses_overwrite`
 
+### test_m4_04b3z_fv3_protocol_v1 (1)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.m4_04b3z_fv3_protocol_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `ProtocolTests.test_canonical_lock_binds_dependencies_and_refuses_drift`
+
 ### test_run_m4_04b3c_dev2_predictions_v1 (8)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.run_m4_04b3c_dev2_predictions_v1`, `tools.story_ingestion.light_novel_adapter_v0`
 
@@ -1198,6 +1203,12 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `RunnerTests.test_real_compiler_primary_repair_and_transport_outcomes`
 - `RunnerTests.test_every_request_uses_the_fv2_locked_credential_slot`
 - `RunnerTests.test_smoke_failure_run_cli_and_guard`
+
+### test_run_m4_04b3z_fv3_predictions_v1 (2)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.m4_04b3z_fv3_protocol_v1`, `tools.story_extraction.run_m4_04b3z_fv3_predictions_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `RunnerTests.test_blind_lifecycle_and_ordered_repair_options`
+- `RunnerTests.test_smoke_and_case_order_refusals`
 
 ### test_run_m4_p4_dev_v1 (20)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_compiler_v1_1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.m4_04b3f_fv1_protocol_v1`, `tools.story_extraction.run_m4_04b3o_fv2_predictions_v1`, `tools.story_extraction.run_m4_p4_dev_v1`, `tools.story_ingestion.light_novel_adapter_v0`
@@ -1237,6 +1248,11 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `ScorerTests.test_all_hash_changes_refuse_before_gold`
 - `ScorerTests.test_manifest_semantics_paths_inventory_and_terminal_refusals`
 - `ScorerTests.test_structural_failures_gold_metadata_and_cli`
+
+### test_score_m4_04b3z_fv3_v1 (1)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.m4_04b3z_fv3_protocol_v1`, `tools.story_extraction.run_m4_04b3z_fv3_predictions_v1`, `tools.story_extraction.score_m4_04b3z_fv3_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `ScorerTests.test_hash_refusals_then_verified_gold_access_and_counts_only_summary`
 
 ### test_story_extraction_contract_v0 (39)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.evaluate_extraction_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
