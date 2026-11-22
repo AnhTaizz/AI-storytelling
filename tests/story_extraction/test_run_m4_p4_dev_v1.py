@@ -379,6 +379,36 @@ class DevelopmentRunnerTests(unittest.TestCase):
             self.assertEqual(gold, original_gold)
             verifier.assert_called_with(directory, include_gold=True)
 
+    def test_fv3_dataset_uses_the_fv3_lock_loader_and_gold(self):
+        from tools.story_extraction import m4_04b3z_fv3_protocol_v1 as lock
+        from tools.story_extraction import run_m4_04b3z_fv3_predictions_v1 as fv3_loader
+        draft, case, gold = date_case()
+        ids = lock.CASE_IDS[1], lock.CASE_IDS[0]
+        loaded = [fv2_loader.CaseInput(cid, {"locked_input": True}, case.compiler_context) for cid in lock.CASE_IDS]
+        with tempfile.TemporaryDirectory() as tmp, ExitStack() as stack:
+            directory, output = Path(tmp) / "sealed", Path(tmp) / "output"
+            clock = Clock()
+            opts = dict(variant="P4R9", dataset="FV3", fv3_dir=directory, output_root=output, cases=ids,
+                        clock=clock, wait=clock.wait, frame_roles=True)
+            verifier = stack.enter_context(patch.object(lock, "verify_fv3_packages"))
+            stack.enter_context(patch.object(fv3_loader, "load_cases", return_value=loaded))
+            reader = stack.enter_context(patch.object(runner.scoring, "read_gold", return_value={
+                cid: {"gold_batch": gold, "gold_completeness": "COMPLETE_FOR_PROFILE"} for cid in ids}))
+            self.assertEqual(runner.selected_cases(None, "FV3"), lock.CASE_IDS)
+            with self.assertRaisesRegex(runner.DevelopmentError, "FV3 directory"):
+                runner.execute(**{**opts, "fv3_dir": None})
+            preflight = runner.execute(**opts)
+            self.assertEqual((preflight["dataset"], preflight["input_sha256"], preflight["gold_sha256"]),
+                             ("FV3", lock.FV3_INPUT_SHA256, lock.FV3_GOLD_SHA256))
+            fake = self.transport("P4R9+FR", dataset="FV3", script={
+                (cid, "PRIMARY"): json.dumps(draft) for cid in ids})
+            result = runner.execute(**opts, mode="run", transport=fake)
+            self.assertTrue((output / "FV3" / "P4R9+FR" / "score.json").is_file())
+            self.assertEqual([row["terminal_status"] for row in result["rows"]], ["STRUCTURAL_VALID"] * 2)
+            self.assertTrue(all(job.startswith("M4_P4_DEV_V1_FV3_P4R9_FR_") for job, _ in fake.calls))
+            reader.assert_called_once_with(directory / lock.FV3_GOLD_NAME)
+            verifier.assert_called_with(directory, include_gold=True)
+
     def test_existing_names_use_only_affirmed_base_facts_and_compiler_handles(self):
         ingestion, base = fx.ingest_text("Mira greeted Captain Mira and the stranger. Niko watched.")
         builder = fx.Builder(ingestion, base)
@@ -848,10 +878,11 @@ class DevelopmentRunnerTests(unittest.TestCase):
                                  "P3+QR+RB+EN+AM" + suffix)
                 self.assertEqual(runner._run_variant("P4R7", True, True, True, True, True, predicates,
                                                     sentence_evidence=True, transfer_bounds=True,
-                                                    date_anchor=True),
-                                 "P4R7+QR+RB+EN+AM" + suffix + "+SE+TB+DA")
+                                                    date_anchor=True, mention_role=True, frame_roles=True),
+                                 "P4R7+QR+RB+EN+AM" + suffix + "+SE+TB+DA+MR+FR")
         for option, suffix in (("sentence_evidence", "+SE"), ("transfer_bounds", "+TB"),
-                               ("date_anchor", "+DA"), ("vocabulary_guard", "+VG")):
+                               ("date_anchor", "+DA"), ("vocabulary_guard", "+VG"),
+                               ("mention_role", "+MR"), ("frame_roles", "+FR")):
             self.assertEqual(runner._run_variant("P4R7", False, False, **{option: True}), "P4R7" + suffix)
         for predicates in ((), ("Occurred",)):
             with self.subTest(invalid=predicates), self.assertRaisesRegex(runner.DevelopmentError, "predicates"):
@@ -863,7 +894,8 @@ class DevelopmentRunnerTests(unittest.TestCase):
         with self.fixture() as (opts, _, _):
             for flags in ({}, {"mention_evidence": False, "mention_evidence_predicates": ("NamedAs",),
                                "sentence_evidence": False, "transfer_bounds": False, "date_anchor": False,
-                               "vocabulary_guard": False, "fv2_dir": Path("unused"), "align_gold": False}):
+                               "vocabulary_guard": False, "mention_role": False, "frame_roles": False,
+                               "fv2_dir": Path("unused"), "fv3_dir": Path("unused"), "align_gold": False}):
                 clock = Clock()
                 run = {**opts, "output_root": opts["output_root"] / str(len(snapshots)),
                        "clock": clock, "wait": clock.wait}
@@ -875,7 +907,8 @@ class DevelopmentRunnerTests(unittest.TestCase):
         self.assertEqual(snapshots[0], snapshots[1])
         for filename in ("score.json", "revalidation.json"):
             for option in (b"mention_evidence", b"sentence_evidence", b"transfer_bounds", b"date_anchor",
-                           b"vocabulary_guard", b"gold_alignment", b"gold_alignment_counts"):
+                           b"vocabulary_guard", b"mention_role", b"frame_roles", b"gold_alignment",
+                           b"gold_alignment_counts"):
                 self.assertNotIn(b'"' + option, snapshots[0][Path(filename)])
         self.assertNotIn(Path("artifacts/DEV2_01/primary_resolved_draft.json"), snapshots[0])
 
@@ -973,10 +1006,12 @@ class DevelopmentRunnerTests(unittest.TestCase):
         invalid = {**draft, "unknown_field": True}
         raw = {"primary": json.dumps(invalid), "repair_1": json.dumps(draft)}
         flags = {"quote_resolution": True, "anchor_mentions": True, "mention_evidence": True,
-                 "sentence_evidence": True, "transfer_bounds": True, "date_anchor": True, "vocabulary_guard": True}
-        label = "P4R7+QR+AM+ME+SE+TB+DA+VG"
+                 "sentence_evidence": True, "transfer_bounds": True, "date_anchor": True, "vocabulary_guard": True,
+                 "mention_role": True, "frame_roles": True}
+        label = "P4R7+QR+AM+ME+SE+TB+DA+VG+MR+FR"
         order = ("resolve_quotes", "_anchor_mentions", "narrow_mention_evidence",
-                 "widen_to_sentence", "bound_by_transfer", "anchor_dates_to_events", "guard_vocabulary")
+                 "widen_to_sentence", "bound_by_transfer", "anchor_dates_to_events", "guard_vocabulary",
+                 "retag_mention_roles", "fix_frame_roles")
         repairs = Mock()
         no_provider = Mock(side_effect=AssertionError("offline"))
         with patch.object(self, "context", case.compiler_context), patch.object(self, "gold", gold), \
@@ -1039,6 +1074,10 @@ class DevelopmentRunnerTests(unittest.TestCase):
                 phase_report = totals["by_phase"][attempt["phase"]]["vocabulary_guard_report"]
                 self.assertEqual(phase_report, attempt["validation"]["vocabulary_guard"])
                 self.assertEqual(phase_report["outcomes"]["DROPPED"], 1)
+                for name in ("mention_role", "frame_roles"):
+                    self.assertEqual(totals["by_phase"][attempt["phase"]][f"{name}_report"],
+                                     attempt["validation"][name])
+            self.assertTrue(replay["mention_role"] and replay["frame_roles"])
             no_provider.assert_not_called()
 
     def test_rich_blockers_sanitize_values_extract_handles_and_restore_validator(self):
