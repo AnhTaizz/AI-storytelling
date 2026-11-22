@@ -1,6 +1,6 @@
 # Quality Gates
 
-Decision: DEC-019. Agent rules: `CLAUDE.md`. Code: `tools/ci/`.
+DEC-019 establishes the gate. Use the [repository rules](../../CLAUDE.md) and the [shared agent workflow](AGENT_WORKFLOW.md) for local verification and PR evidence. The [governance audit](GOVERNANCE_AUDIT_V1.md) records the observed enforcement limits.
 
 ## One command
 
@@ -44,8 +44,8 @@ review are the defence there.
 
 ## Environment gates
 
-Some tests need what CI does not have: the CPU torch stack, or the private 30-chapter
-corpus under `.local/`. They are declared in `tests/environment_gates.yaml` and reported
+Some tests need the CPU torch stack, private artifacts under `.local/`, or private
+corpus chapters. These cases are declared in `tests/environment_gates.yaml` and reported
 as GATED with the reason, never silently skipped. The policy only accepts gates that wait
 for an allow-listed heavy module or for a git-ignored path, so a gate cannot hide a test
 whose inputs belong in the repository. On a machine with everything, run `--strict`.
@@ -56,19 +56,16 @@ whose inputs belong in the repository. On a machine with everything, run `--stri
 locked M4 interfaces, recorded results in `benchmarks/`, `data/sample/`, and the gate
 rules themselves. New files may be added. Changing an existing one needs a decision in
 `docs/DECISIONS.md` in the same branch, which the project owner approves in review.
+The guard observes a change to that path. The reviewer must verify the owner decision
+covers the specific files and behavior.
 
-## Branch protection (project owner, one-time, on GitHub)
+## Default-branch ruleset
 
-The CI check only blocks merges once GitHub requires it:
-
-1. Repository → Settings → Branches → Add branch ruleset (or "Add rule") for `main`.
-2. Enable **Require a pull request before merging**.
-3. Enable **Require status checks to pass**, and select `quality-gate` (it appears after
-   the workflow has run once).
-4. Enable **Block force pushes**, and leave deletions blocked.
+On 22 November 2026 the active [Protect main ruleset](https://github.com/AnhTaizz/AI-storytelling/rules/27520620) required a PR and an up-to-date `quality-gate`, blocked deletion and force pushes, and had zero required approving reviews. Check the live ruleset when auditing a later revision.
 
 ## Claude Code hook
 
 `.claude/settings.json` runs `.claude/hooks/guard_bash.py` before every Bash command an
-agent runs in this repository. It denies pushes to `main`/`master`, `--force`/`-f`
-pushes, and commits while `.env`, `.local/` or private corpus chapters are staged.
+agent runs through that tool in this repository. It denies recognized direct protected-branch
+and force pushes and checks staged filenames on recognized commit commands. Other clients
+rely on the repository workflow and GitHub controls.
