@@ -877,3 +877,23 @@ DECISION:
 
 LIMITS:
 - The choice followed a review of disagreements in the FV2 and DEV gold. Only a fresh set can show whether the rule holds.
+
+---
+
+## DEC-029 — M4 Annotation Conventions V4: Event Dates on the Event's Own Anchor
+
+STATUS: ACCEPTED (Project Owner, 2026-11-22: chose "Gắn vào mốc sự kiện"; work authorized with "Oke thực hiện đi nào")
+
+CONTEXT:
+The M4-04B3U diagnosis of FV2 development data found temporal-structure misses paired with unsupported predictions. When a sentence states the date of one event, the FV2 gold puts the `AnchorDate` on the event's own `EVENT_TIME` anchor (2 dates), while the DEV2 gold creates a separate `NAMED_TIME` anchor (2 dates) and bounds a possession on it. V3 has no rule. The same diagnosis found a pick-up predicted as `TRANSFER` and a hand wave predicted as `MOVEMENT`, both already excluded by V2's definitions.
+
+DECISION:
+1. **V4 replaces V3.** `docs/research/m4/M4_ANNOTATION_CONVENTIONS_V4.md` replaces V3 (DEC-028) for new gold and extraction prompts. V3 stays unchanged as a record.
+2. **R-TIME-03.** A calendar date stated in the same sentence as the occurrence of exactly one event, and giving that event's time, is the `AnchorDate` of that event's own `EVENT_TIME` anchor. A `NAMED_TIME` anchor is used only for a time not tied to one event. Validity bounds and `TemporalRelation` refer to the event's anchor.
+3. **R-EVT-01 clarifications, no change in meaning.** Picking up or finding an object nobody holds is `GENERIC`; receiving from an unnamed giver is still `TRANSFER`. `MOVEMENT` needs a change of location; a gesture in place is `GENERIC`.
+4. **Sealed gold is never rewritten.** Development rescoring may align a gold copy in memory with `align_date_anchors` (checker `check_annotation_conventions_v3.py`), labelled development-only. M4-04B3O stays the only validation number.
+5. **Prompt and host.** Prompt variant P4R8 carries the matching rules; host repair DA (`draft_date_anchor_v1.py`, development option `--date-anchor`) moves a date from a `NAMED_TIME` anchor to the only event in its sentence. FV3 and holdout gold authored from now on follow V4.
+
+LIMITS:
+- R-TIME-03 was chosen after reading development gold; only a fresh set can show whether it holds.
+- DEV1 gold labels a body-part movement `MOVEMENT`, already wrong under V2's definition. The clarification is judged, so it is not aligned automatically.

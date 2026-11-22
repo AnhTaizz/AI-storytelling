@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 83 — test functions: 1193
+Suites: 9 — test files: 85 — test functions: 1199
 
 ## canonical_story
 
@@ -647,6 +647,13 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.check_an
 - `AnnotationConventionsV2Tests.test_alignment_of_a_base_ref_redirects_candidate_citations`
 - `AnnotationConventionsV2Tests.test_cli_reports_findings_and_refuses_unavailable_sources`
 
+### test_check_annotation_conventions_v3 (3)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.check_annotation_conventions_v3`, `tools.story_extraction.evaluate_extraction_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `ConventionsV3CheckerTests.test_flags_only_a_date_in_the_sentence_of_exactly_one_event`
+- `ConventionsV3CheckerTests.test_alignment_moves_dates_bounds_and_relations_in_a_copy`
+- `ConventionsV3CheckerTests.test_cli_reports_and_refuses`
+
 ### test_diagnose_m4_04b3i_fv1_v1 (5)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.diagnose_m4_04b3i_fv1_v1`, `tools.story_extraction.evaluate_extraction_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.score_m4_04b3h_fv1_v1`, `tools.story_ingestion.light_novel_adapter_v0`
 
@@ -734,6 +741,13 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_co
 - `DraftCompilerV11Tests.test_assertion_support_never_gains_implicit_mention_evidence`
 - `DraftCompilerV11Tests.test_collects_all_feasible_same_class_quote_blockers`
 - `DraftCompilerV11Tests.test_collects_independent_handle_blockers`
+
+### test_draft_date_anchor_v1 (3)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_compiler_v1_1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.draft_date_anchor_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.run_m4_04b3g_fv1_predictions_v1`, `tools.story_extraction.run_m4_p4_dev_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `DateAnchorTests.test_date_moves_to_the_event_anchor_with_its_references`
+- `DateAnchorTests.test_refusals_and_duplicates`
+- `DateAnchorTests.test_unlocated_and_degenerate_inputs`
 
 ### test_draft_mention_anchoring_v1 (7)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_mention_anchoring_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`

@@ -178,6 +178,14 @@ class DevelopmentRunnerTests(unittest.TestCase):
             self.assertEqual(material7[key], preamble7 + material6[key][len(preamble6):])
         for key in ("primary_user_template", "repair_user_template"):
             self.assertEqual(material7[key], material6[key])
+        path8 = runner.PROMPT_ROOT / "story_extraction_draft_p4r8_system_v1_1.txt"
+        preamble8, material8 = protocol._normalized_text(path8), runner.prompt_material("P4R8")
+        self.assertTrue(preamble8.startswith("STORY EXTRACTION DRAFT P4R8 V1.1"))
+        for rule in ("the AnchorDate of that event's own EVENT_TIME anchor", "そのとき, その時, 同時に (SIMULTANEOUS)",
+                     "picking up or finding an\nobject nobody holds is GENERIC", "MOVEMENT needs a change of location"):
+            self.assertIn(rule, preamble8)
+        for key in ("primary_system", "repair_system"):
+            self.assertEqual(material8[key], preamble8 + material7[key][len(preamble7):])
         self.assertEqual(runner.prompt_hashes("P4R6")["source_sha256"][path6.name],
                          protocol.sha256_bytes(original6))
         self.assertEqual(path6.read_bytes(), original6)
@@ -736,9 +744,10 @@ class DevelopmentRunnerTests(unittest.TestCase):
                 self.assertEqual(runner._run_variant("P3", True, True, True, True, True, predicates),
                                  "P3+QR+RB+EN+AM" + suffix)
                 self.assertEqual(runner._run_variant("P4R7", True, True, True, True, True, predicates,
-                                                    sentence_evidence=True, transfer_bounds=True),
-                                 "P4R7+QR+RB+EN+AM" + suffix + "+SE+TB")
-        for option, suffix in (("sentence_evidence", "+SE"), ("transfer_bounds", "+TB")):
+                                                    sentence_evidence=True, transfer_bounds=True,
+                                                    date_anchor=True),
+                                 "P4R7+QR+RB+EN+AM" + suffix + "+SE+TB+DA")
+        for option, suffix in (("sentence_evidence", "+SE"), ("transfer_bounds", "+TB"), ("date_anchor", "+DA")):
             self.assertEqual(runner._run_variant("P4R7", False, False, **{option: True}), "P4R7" + suffix)
         for predicates in ((), ("Occurred",)):
             with self.subTest(invalid=predicates), self.assertRaisesRegex(runner.DevelopmentError, "predicates"):
@@ -749,7 +758,7 @@ class DevelopmentRunnerTests(unittest.TestCase):
         snapshots = []
         with self.fixture() as (opts, _, _):
             for flags in ({}, {"mention_evidence": False, "mention_evidence_predicates": ("NamedAs",),
-                               "sentence_evidence": False, "transfer_bounds": False}):
+                               "sentence_evidence": False, "transfer_bounds": False, "date_anchor": False}):
                 clock = Clock()
                 run = {**opts, "output_root": opts["output_root"] / str(len(snapshots)),
                        "clock": clock, "wait": clock.wait}
@@ -760,7 +769,7 @@ class DevelopmentRunnerTests(unittest.TestCase):
                 snapshots.append({p.relative_to(root): p.read_bytes() for p in root.rglob("*") if p.is_file()})
         self.assertEqual(snapshots[0], snapshots[1])
         for filename in ("score.json", "revalidation.json"):
-            for option in (b"mention_evidence", b"sentence_evidence", b"transfer_bounds"):
+            for option in (b"mention_evidence", b"sentence_evidence", b"transfer_bounds", b"date_anchor"):
                 self.assertNotIn(b'"' + option, snapshots[0][Path(filename)])
         self.assertNotIn(Path("artifacts/DEV2_01/primary_resolved_draft.json"), snapshots[0])
 
@@ -835,10 +844,10 @@ class DevelopmentRunnerTests(unittest.TestCase):
         invalid = {**draft, "unknown_field": True}
         raw = {"primary": json.dumps(invalid), "repair_1": json.dumps(draft)}
         flags = {"quote_resolution": True, "anchor_mentions": True, "mention_evidence": True,
-                 "sentence_evidence": True, "transfer_bounds": True}
-        label = "P4R7+QR+AM+ME+SE+TB"
+                 "sentence_evidence": True, "transfer_bounds": True, "date_anchor": True}
+        label = "P4R7+QR+AM+ME+SE+TB+DA"
         order = ("resolve_quotes", "_anchor_mentions", "narrow_mention_evidence",
-                 "widen_to_sentence", "bound_by_transfer")
+                 "widen_to_sentence", "bound_by_transfer", "anchor_dates_to_events")
         repairs = Mock()
         no_provider = Mock(side_effect=AssertionError("offline"))
         with patch.object(self, "context", case.compiler_context), patch.object(self, "gold", gold), \
@@ -855,6 +864,7 @@ class DevelopmentRunnerTests(unittest.TestCase):
             self.assertTrue(score["rows"][0]["repair_used"])
             self.assertTrue(score["sentence_evidence"])
             self.assertTrue(score["transfer_bounds"])
+            self.assertTrue(score["date_anchor"])
             repairs.reset_mock()
             self.assertEqual(runner.execute(**opts, **flags, mode="score", transport=no_provider), score)
             self.assertEqual(repairs.mock_calls, [])
@@ -887,6 +897,10 @@ class DevelopmentRunnerTests(unittest.TestCase):
                     self.assertEqual(report["by_predicate"][predicate][code], value)
             self.assertEqual(totals["sentence_evidence_report"]["evidence_items_added"], 4)
             self.assertEqual(totals["sentence_evidence_report"]["evidence_items_removed"], 4)
+            self.assertTrue(replay["date_anchor"])
+            self.assertEqual(totals["date_anchor_report"], runner.anchor_dates_to_events({}, {})[1])
+            for attempt in run_validation["attempts"]:
+                self.assertEqual(attempt["validation"]["date_anchor"], runner.anchor_dates_to_events({}, {})[1])
             no_provider.assert_not_called()
 
     def test_rich_blockers_sanitize_values_extract_handles_and_restore_validator(self):

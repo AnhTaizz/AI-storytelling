@@ -1,0 +1,75 @@
+# M4-04B3V: Conventions V4 (R-TIME-03), host repair DA, prompt P4R8. Public aggregates only.
+# No case identifiers, source text, entity names or gold content.
+artifact: M4_04B3V_CONVENTIONS_V4_DATE_ANCHOR
+status: M4_04B3V_V4_ACCEPTED_DA_DEVELOPMENT_CANDIDATE
+date: '2026-11-22'
+authorization:
+  by: Project Owner
+  date: '2026-11-22'
+  instructions:
+    - "Oke thực hiện đi nào"
+    - "Chose 'Gắn vào mốc sự kiện' for the date rule (DEC-029)."
+    - "Chose 'Claude tự làm' when Codex hit its usage limit."
+  scope: Option 1 of the M4-04B3U Next Candidate list (event identity and temporal-anchor alignment).
+evaluation_data:
+  label: DEVELOPMENT-ONLY
+  sets: [FV2-dev, DEV2, DEV1]
+  only_validation_result: M4_04B3O_FV2_BLIND_RUN_RESULT.yaml
+diagnosis:
+  source: M4-04B3U private items, counts only.
+  misaligned_events:
+    count: 2
+    misses: 5
+    causes:
+      - A pick-up of an object nobody holds predicted as TRANSFER; gold GENERIC (already excluded from TRANSFER by V2).
+      - A hand wave predicted as MOVEMENT; gold GENERIC (no change of location).
+  temporal_structure:
+    misses: 3
+    causes:
+      - Two event dates predicted on separate NAMED_TIME anchors; gold puts them on the events' own anchors.
+      - One SIMULTANEOUS relation stated by an "at that moment" word was not predicted.
+  gold_disagreement:
+    rule: date of one event in the same sentence
+    FV2: 2 dates on the event's EVENT_TIME anchor
+    DEV2: 2 dates on a separate NAMED_TIME anchor, with a possession bound on it
+    DEV1: no dates
+  event_kind_in_gold:
+    TRANSFER_without_SOURCE: {DEV2: 2, DEV1: 1, note: receiving from an unnamed giver, still TRANSFER}
+    MOVEMENT_body_part_in_place: {DEV1: 1, note: wrong under V2's definition already; judged, not aligned}
+decision:
+  record: DEC-029
+  conventions: docs/research/m4/M4_ANNOTATION_CONVENTIONS_V4.md
+  new_rule: R-TIME-03
+  clarifications: R-EVT-01 (pick-up GENERIC; unnamed giver still TRANSFER; gestures in place GENERIC)
+built:
+  checker: tools/story_extraction/check_annotation_conventions_v3.py (V3 checks + R-TIME-03; align_date_anchors for development rescoring)
+  host_repair:
+    name: DA
+    module: tools/story_extraction/draft_date_anchor_v1.py
+    option: --date-anchor (suffix +DA after +TB; order QR, AM, ME, SE, TB, DA; off by default)
+    behaviour: Moves an AnchorDate from a NAMED_TIME anchor to the EVENT_TIME anchor of the only event whose Occurred evidence lies in the date's sentence; redirects bounds and relations; drops degenerate relations, duplicate dates and the unreferenced named anchor; refuses otherwise.
+  prompt:
+    variant: P4R8
+    file: tools/story_extraction/prompts/story_extraction_draft_p4r8_system_v1_1.txt
+    adds: [date on the event's own anchor, pick-up and gestures in place are GENERIC, そのとき/その時/同時に as SIMULTANEOUS]
+    model_run: not run
+gold_checker:
+  R-TIME-03_findings: {FV2: 0, DEV2: 2, DEV1: 0}
+  DEV2_aligned: 2
+  anchors_dropped: 2
+method:
+  replay: Offline replay of saved P4R6 responses, no model call.
+  base_repairs: QR+AM+ME+SE+TB
+  gold: FV2 V3-aligned (6 refs, no V4 finding); DEV2 V4-aligned (2 dates) where stated; sealed packages untouched.
+results:
+  - {set: FV2, gold: aligned, repairs: base, matched: 166, grounded: 157, required_recovered: 166, unsupported: 17, l1_pass: 6, full_success: 1, validity_errors: 1}
+  - {set: FV2, gold: aligned, repairs: base+DA, matched: 168, grounded: 159, required_recovered: 168, unsupported: 15, l1_pass: 6, full_success: 1, validity_errors: 1}
+  - {set: DEV2, gold: sealed, repairs: base, matched: 89, grounded: 86, unsupported: 21, l1_pass: 6, full_success: 0, validity_errors: 1}
+  - {set: DEV2, gold: sealed, repairs: base+DA, matched: 89, grounded: 86, unsupported: 19, l1_pass: 6, full_success: 0, validity_errors: 1}
+  - {set: DEV2, gold: V4-aligned, repairs: base, matched: 89, grounded: 86, unsupported: 21, l1_pass: 6, full_success: 0, validity_errors: 0}
+  - {set: DEV2, gold: V4-aligned, repairs: base+DA, matched: 89, grounded: 86, unsupported: 19, l1_pass: 6, full_success: 0, validity_errors: 0}
+  - {set: DEV1, gold: sealed, repairs: base and base+DA, matched: 8, grounded: 5, unsupported: 40, l1_pass: 6, full_success: 0, validity_errors: 0}
+interpretation:
+  - DA turns both FV2 temporal misses and their paired unsupported predictions into matches (recall +2, unsupported -2) with no regression on DEV1 or DEV2.
+  - The event-kind misses (5) and the missing SIMULTANEOUS (1) cannot be repaired mechanically; P4R8 states the rules and needs a development model run.
+  - Full-case success on FV2-dev stays at 1 of 12; the remaining blockers are recall omissions, mention resolutions and the misaligned events.

@@ -4,7 +4,7 @@
 
 *Header refreshed 2026-11-18; the dated sections below are history.*
 
-M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED; holdout closed, predictions NOT RUN. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. Annotation conventions V3: ACCEPTED (DEC-028). See M4-04B3U for the FV2-dev full-case blocker diagnosis.
+M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED; holdout closed, predictions NOT RUN. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. Annotation conventions V4: ACCEPTED (DEC-029). See M4-04B3V for the date-anchor rule, host repair DA and prompt P4R8.
 
 M0 — Product Foundation: CLOSED (see M0 Closure).
 
@@ -43,7 +43,7 @@ M14 — Voice / Video Automation: GATED behind the Script Quality Gate (DEC-009)
   - The contract defines the standard. It does not show that any current Writer or critic meets it. The M9 Script Quality Gate is not evaluated.
 - M2 — Canonical Story Model: capability COMPLETE / FROZEN (DEC-016). The expected capability has been established as `canonical_story/v0` + `predicate_registry/v0.1`. M2 ran under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015).
 - M3 — Light Novel Ingestion: COMPLETE / FROZEN — `LIGHT_NOVEL_INGESTION/v0`, DEC-018, freeze record `benchmarks/m3_ingestion/LIGHT_NOVEL_INGESTION_V0_FROZEN.yaml`. The roadmap is unchanged.
-- M4 — Story Extraction: IN PROGRESS (M4-01/M4-02 accepted; M4-03 holdout sealed and closed, predictions not run; no extractor/model selected; nothing frozen). Annotation conventions V3: ACCEPTED (DEC-028). See M4-04B3U for the FV2-dev full-case blocker diagnosis.
+- M4 — Story Extraction: IN PROGRESS (M4-01/M4-02 accepted; M4-03 holdout sealed and closed, predictions not run; no extractor/model selected; nothing frozen). Annotation conventions V4: ACCEPTED (DEC-029). See M4-04B3V for the date-anchor rule, host repair DA and prompt P4R8.
 - M5 — Persistent Story Memory: PROTOTYPE EXISTS; not frozen or M5 completion (see Implementation Status; DEC-021).
 - M6 — Retrieval: ACCEPTED BASELINE over brief memory (DEC-021, 2026-11-15).
 - M7 — Story Brief: ACCEPTED BASELINE (DEC-022, 2026-11-15).
@@ -1429,6 +1429,39 @@ All candidates await the owner’s decision and authorization.
 4. **Next locked validation.** Run P4R6+QR+AM+ME+SE+TB on FV3 authored under V3 or on the holdout.
 5. **Draft V1.2.** Requires a DEC.
 6. **Housekeeping.** Address missing FV1 packages and duplicate `.env` keys.
+
+## M4-04B3V — CONVENTIONS V4: EVENT DATES ON THE EVENT'S ANCHOR, HOST REPAIR DA, PROMPT P4R8 — Status: M4_04B3V_V4_ACCEPTED_DA_DEVELOPMENT_CANDIDATE
+
+On 2026-11-22 the project owner authorized option 1 of the M4-04B3U Next Candidate list ("Oke thực hiện đi nào"), chose "Gắn vào mốc sự kiện" for the date rule (DEC-029) and, when Codex hit its usage limit, chose "Claude tự làm".
+
+- **Diagnosis (FV2-dev, counts only).** The two misaligned events were event-kind choices: a pick-up of an unheld object predicted as TRANSFER and a hand wave predicted as MOVEMENT (gold GENERIC; both already excluded by V2's definitions). Two temporal misses were event dates put on separate NAMED_TIME anchors; one SIMULTANEOUS stated by "at that moment" was not predicted. The gold disagreed on dates: FV2 puts an event's date on its EVENT_TIME anchor (2), DEV2 on a separate NAMED_TIME anchor (2).
+- **Conventions V4.** `docs/research/m4/M4_ANNOTATION_CONVENTIONS_V4.md` adds R-TIME-03 (a date stated for exactly one event in its sentence goes on that event's anchor) and clarifies R-EVT-01 (pick-up and gestures in place are GENERIC; an unnamed giver is still TRANSFER). Checker `check_annotation_conventions_v3.py` flags R-TIME-03 (FV2 0, DEV2 2, DEV1 0) and offers `align_date_anchors` for development rescoring.
+- **Host repair DA.** `draft_date_anchor_v1.py` (`--date-anchor`, suffix +DA, off by default) moves the date to the event's anchor and redirects bounds and relations.
+- **Prompt P4R8.** P4R7 plus the date rule, the event-kind clarifications and そのとき/その時/同時に as SIMULTANEOUS. Not run against a model.
+
+**DEVELOPMENT-ONLY.** Offline replay of saved P4R6 responses with QR+AM+ME+SE+TB; gold aligned in memory (FV2 V3, DEV2 V4); sealed packages untouched. M4-04B3O remains the only validation result.
+
+| Set (gold) | Repairs | Matched | Grounded | Unsupported | Validity errors | L1 pass | Full success |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| FV2 (aligned) | base | 166 | 157 | 17 | 1 | 6 | 1 |
+| FV2 (aligned) | base+DA | 168 | 159 | 15 | 1 | 6 | 1 |
+| DEV2 (V4-aligned) | base | 89 | 86 | 21 | 0 | 6 | 0 |
+| DEV2 (V4-aligned) | base+DA | 89 | 86 | 19 | 0 | 6 | 0 |
+
+- DEV1 is unchanged by DA. On sealed DEV2 gold, DA also lowers unsupported from 21 to 19 with no other change.
+- DA turns both FV2 temporal misses and their paired unsupported predictions into matches with no regression. The event-kind misses and the missing SIMULTANEOUS need P4R8 and a development model run.
+
+The aggregate record is `benchmarks/m4_extraction/M4_04B3V_CONVENTIONS_V4_DATE_ANCHOR.yaml`.
+
+## Next Candidate
+
+The owner has yet to choose or authorize any of these candidates.
+
+1. **P4R8 development model run.** Run P4R8 + QR+AM+ME+SE+TB+DA on DEV2 and FV2-dev to check the event-kind, date and SIMULTANEOUS rules and recall (Gemini quota, about 50 requests).
+2. **Next locked validation.** Author FV3 under V4, or open the holdout, for a locked blind run of the best development configuration.
+3. **Recall.** Coverage checklist for LocatedAt, Possesses, Manner, Attitude and mention resolution.
+4. **Draft V1.2 with existing entity names.** Requires a DEC.
+5. **Housekeeping.** FV1 packages, `.env` duplicate keys.
 
 ## M8 Narrative Planning — ACCEPTED as a baseline (DEC-023, 2026-11-15)
 
