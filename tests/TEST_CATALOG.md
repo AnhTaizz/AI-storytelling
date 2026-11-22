@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 85 — test functions: 1199
+Suites: 9 — test files: 85 — test functions: 1200
 
 ## canonical_story
 
@@ -1189,12 +1189,13 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `RunnerTests.test_every_request_uses_the_fv2_locked_credential_slot`
 - `RunnerTests.test_smoke_failure_run_cli_and_guard`
 
-### test_run_m4_p4_dev_v1 (18)
-Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_compiler_v1_1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.m4_04b3f_fv1_protocol_v1`, `tools.story_extraction.run_m4_p4_dev_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+### test_run_m4_p4_dev_v1 (19)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_compiler_v1_1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.m4_04b3f_fv1_protocol_v1`, `tools.story_extraction.run_m4_04b3o_fv2_predictions_v1`, `tools.story_extraction.run_m4_p4_dev_v1`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `DevelopmentRunnerTests.test_prompt_composition_sources_and_request_identity`
 - `DevelopmentRunnerTests.test_hash_refusal_and_selection_validation`
 - `DevelopmentRunnerTests.test_preflight_selects_and_builds_one_spec_without_provider_work`
+- `DevelopmentRunnerTests.test_fv2_run_verifies_before_use_and_rescores_aligned_gold_offline`
 - `DevelopmentRunnerTests.test_existing_names_use_only_affirmed_base_facts_and_compiler_handles`
 - `DevelopmentRunnerTests.test_run_outcomes_artifacts_and_locked_resume`
 - `DevelopmentRunnerTests.test_interrupted_artifact_write_resumes_locked_response_and_variants_are_isolated`

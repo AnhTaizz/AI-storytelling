@@ -1,0 +1,82 @@
+# M4-04B3W: P4R8 development model run on DEV2 and FV2-dev. Public aggregates only.
+artifact: M4_04B3W_P4R8_DEV_MODEL_RUN
+status: M4_04B3W_P4R8_DEVELOPMENT_CANDIDATE
+date: '2026-11-22'
+authorization:
+  by: Project Owner
+  date: '2026-11-22'
+  instructions:
+    - "ok làm cách 1 đi, dùng codex nhé"
+  scope: Option 1 of the M4-04B3V Next Candidate list (P4R8 development model run).
+evaluation_data:
+  label: DEVELOPMENT-ONLY
+  sets: [DEV2, FV2-dev]
+  only_validation_result: M4_04B3O_FV2_BLIND_RUN_RESULT.yaml
+runner:
+  file: tools/story_extraction/run_m4_p4_dev_v1.py
+  dataset: '--dataset FV2 with --fv2-dir writes under <root>/FV2/ and uses the ..._FV2_... job prefix to avoid collisions with the locked FV2 runner, which still refuses reruns.'
+  scoring:
+    option: --align-gold
+    gold: Scoring only, in memory. Apply V3 align_mention_roles then V4 align_date_anchors.
+    aligned_output: score_aligned.json
+    gold_alignment: V4_DEVELOPMENT_ONLY
+    original_output_retained: score.json
+method:
+  live_prompt: P4R8
+  model: gemini-3.5-flash-lite
+  credential_slot: 21
+  host_repairs: QR+AM+ME+SE+TB+DA
+  samples_per_case: 1
+  primary_requests_per_case: 1
+  max_structural_repairs_per_case: 1
+  approximate_requests: {DEV2: 21, FV2-dev: 25}
+  comparison: Offline replay of saved P4R6 responses with the same host repairs and gold alignment as P4R8.
+  replay_sources: {DEV2: M4-04B3L2, FV2-dev: M4-04B3O}
+results:
+  DEV2:
+    cases: 10
+    required: 119
+    common_valid_cases: 9
+    structural_validity: Both runs failed on the same case.
+    common_valid_aligned:
+      - {prompt: P4R6, mode: replay, recovered: 89, grounded: 86, predicted: 108, unsupported: 19, l1_pass: 6, full_success: 0}
+      - {prompt: P4R8, mode: live, recovered: 89, grounded: 82, predicted: 113, unsupported: 24, l1_pass: 4, full_success: 0}
+    predicate_changes:
+      order: [P4R6, P4R8]
+      unsupported:
+        RefersTo: [6, 8]
+        NamedAs: [1, 3]
+        Says: [1, 2]
+        Participates: [3, 4]
+        PhysicalCondition: [1, 0]
+      misses:
+        Possesses: [2, 1]
+        TemporalRelation: [0, 1]
+      other_counts: Equal for all other predicates in each comparison.
+    alignment_effect: V4 gold alignment reduced validity errors from 1 to 0 for each prompt. All other scores were equal before and after alignment.
+  FV2-dev:
+    cases: 12
+    required: 194
+    structurally_valid: {P4R6: 12, P4R8: 11}
+    p4r8_official_development_score:
+      aligned: {recall: 0.905, precision: 0.926, l1_pass: 6, full_success: 1}
+      unaligned: {l1_pass: 4, full_success: 0}
+    common_valid_cases: 11
+    common_valid_aligned:
+      - {prompt: P4R6, mode: replay, recovered: 154, grounded: 145, unsupported: 14, l1_pass: 5, full_success: 1, missing_entity_resolutions: 7, validity_errors: 1}
+      - {prompt: P4R8, mode: live, recovered: 162, grounded: 155, unsupported: 13, l1_pass: 6, full_success: 1, missing_entity_resolutions: 4, validity_errors: 2}
+    excluded_case_p4r6: {recovered: 14, unsupported: 1}
+    p4r8_structural_failure:
+      primary: The model emitted a NamedAs name_kind token outside the vocabulary.
+      replay: Every subset of the six host repairs, including none and all six, reproduced the same failure on the saved response.
+      structural_repair: Failed on quote occurrences.
+    event_kind_gains:
+      source: The two event-kind misses diagnosed in M4-04B3V had the largest gains.
+      hand_wave: {additional_recovered: 2, unsupported_p4r6: 3, unsupported_p4r8: 1}
+      pick_up: {additional_recovered: 4, unsupported_p4r6: 5, unsupported_p4r8: 2}
+    full_success: One case gained full success and another lost it with three unsupported predictions.
+interpretation:
+  - On the 11 common valid FV2-dev cases, P4R8 recovered 8 more required items and grounded 10 more. Missing entity resolutions fell from 7 to 4 and unsupported predictions from 14 to 13.
+  - DEV2 recall was equal. The extra unsupported mention, name and speech predictions fall outside the new rules and are consistent with run-to-run variance. One sample per prompt cannot separate a prompt effect from variance.
+  - The FV2-dev vocabulary failure was unrelated to the P4R8 rule changes and reproduced without host repairs. A vocabulary guard before compilation could recover such cases.
+  - P4R8 + QR+AM+ME+SE+TB+DA is the candidate for the next locked validation.

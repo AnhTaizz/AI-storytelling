@@ -1,4 +1,4 @@
-"""Synthetic, offline behaviour tests for the DEV1/DEV2 prompt development runner."""
+"""Synthetic, offline behaviour tests for the prompt development runner."""
 from contextlib import contextmanager, ExitStack, redirect_stdout, redirect_stderr
 from copy import deepcopy
 from dataclasses import replace
@@ -12,9 +12,11 @@ from unittest.mock import Mock, patch
 from zipfile import ZipFile
 
 from tests.story_extraction import fixture_builder as fx
+from tests.story_extraction.test_draft_date_anchor_v1 import date_case
 from tests.story_extraction.test_run_m4_04b3g_fv1_predictions_v1 import Clock, FakeTransport
 from tools.story_extraction import run_m4_p4_dev_v1 as runner
 from tools.story_extraction import m4_04b3f_fv1_protocol_v1 as protocol
+from tools.story_extraction import run_m4_04b3o_fv2_predictions_v1 as fv2_loader
 from tools.story_extraction.draft_compiler_v1 import DraftCompilerContext
 from tools.story_extraction.draft_compiler_v1_1 import migrate_draft_v1_to_v1_1
 from tools.story_extraction.draft_coverage_v1 import canonical_gold_to_draft_v1
@@ -100,7 +102,7 @@ class DevelopmentRunnerTests(unittest.TestCase):
     def transport(self, variant="P3", script=None, smoke='{"status":"ok"}', slot=protocol.CREDENTIAL_SLOT,
                   dataset="DEV2"):
         variant = variant.replace("+", "_")
-        prefix = f"{runner.TASK_ID}_{'DEV1_' if dataset == 'DEV1' else ''}{variant}"
+        prefix = f"{runner.TASK_ID}_{'' if dataset == 'DEV2' else dataset + '_'}{variant}"
         values = {f"{prefix}_SMOKE_{slot.upper()}": [smoke]}
         for (cid, phase), raw in (script or {("DEV2_01", "PRIMARY"): self.good}).items():
             values[f"{prefix}_{cid}_{phase}"] = [raw]
@@ -275,6 +277,105 @@ class DevelopmentRunnerTests(unittest.TestCase):
                     self.assertEqual(result["status"], "PREFLIGHT_PASS")
             fake.assert_not_called()
             self.assertFalse(opts["output_root"].exists())
+
+    def test_fv2_run_verifies_before_use_and_rescores_aligned_gold_offline(self):
+        lock = runner.fv2_protocol
+        draft, case, gold = date_case()
+        original_gold = deepcopy(gold)
+        ids = lock.CASE_IDS[2], lock.CASE_IDS[0]
+        loaded = [fv2_loader.CaseInput(cid, {"locked_input": True}, case.compiler_context)
+                  for cid in lock.CASE_IDS]
+        flags = dict(quote_resolution=True, anchor_mentions=True, mention_evidence=True,
+                     sentence_evidence=True, transfer_bounds=True, date_anchor=True)
+        label = "P4R8+QR+AM+ME+SE+TB+DA"
+        with tempfile.TemporaryDirectory() as tmp, ExitStack() as stack:
+            directory = Path(tmp) / "sealed"
+            output = Path(tmp) / "output"
+            root = output / "FV2" / label
+            clock = Clock()
+            opts = dict(variant="P4R8", dataset="FV2", fv2_dir=directory, output_root=output,
+                        cases=ids, clock=clock, wait=clock.wait, **flags)
+            events = []
+
+            def verify(path, *, include_gold):
+                self.assertEqual(path, directory)
+                events.append("gold verified" if include_gold else "input verified")
+                if include_gold:
+                    for cid in ids:
+                        self.assertTrue((root / "artifacts" / cid / "validation.json").is_file())
+
+            def read_gold(path):
+                self.assertEqual(path, directory / lock.FV2_GOLD_NAME)
+                self.assertEqual(events[-1], "gold verified")
+                events.append("gold read")
+                return {cid: {"gold_batch": gold, "gold_completeness": "COMPLETE_FOR_PROFILE"} for cid in ids}
+
+            verifier = stack.enter_context(patch.object(lock, "verify_fv2_packages", side_effect=verify))
+            loader = stack.enter_context(patch.object(fv2_loader, "load_cases", return_value=loaded))
+            reader = stack.enter_context(patch.object(runner.scoring, "read_gold", side_effect=read_gold))
+            fake = self.transport(label, dataset="FV2", script={
+                (ids[0], "PRIMARY"): "{", (ids[0], "REPAIR_1"): json.dumps(draft),
+                (ids[1], "PRIMARY"): json.dumps(draft)})
+
+            def transport(*args):
+                self.assertEqual(events[-1], "input verified")
+                events.append("provider")
+                return fake(*args)
+
+            self.assertEqual(runner.selected_cases(None, "FV2"), lock.CASE_IDS)
+            with self.assertRaisesRegex(runner.DevelopmentError, "FV2 directory"):
+                runner.execute(**{**opts, "fv2_dir": None})
+            with self.assertRaisesRegex(runner.DevelopmentError, "FV2 selection"):
+                runner.execute(**{**opts, "cases": ["DEV2_01"]})
+            with patch.object(lock, "verify_fv2_packages", side_effect=lock.Fv2ProtocolError("mismatch")):
+                with self.assertRaises(lock.Fv2ProtocolError):
+                    runner.execute(**opts, mode="run", transport=transport)
+            loader.assert_not_called()
+            preflight = runner.execute(**opts, transport=transport)
+            self.assertEqual(events, ["input verified"])
+            loader.assert_called_once_with(directory)
+            self.assertFalse(output.exists())
+            self.assertEqual((preflight["dataset"], preflight["case_count"], preflight["input_sha256"],
+                              preflight["gold_sha256"]), ("FV2", 2, lock.FV2_INPUT_SHA256, lock.FV2_GOLD_SHA256))
+            with patch.object(runner.scoring.evaluator, "evaluate_case",
+                              wraps=runner.scoring.evaluator.evaluate_case) as evaluator:
+                result = runner.execute(**opts, mode="run", transport=transport)
+            for call in evaluator.call_args_list:
+                self.assertIs(call.kwargs["ingestion"], case.compiler_context.ingestion)
+                self.assertEqual(call.kwargs["case_spec"], {"mode": "REAL_SOURCE", "adjudications": [],
+                                 "gold_completeness": "COMPLETE_FOR_PROFILE", "acceptable_assertion_ids": []})
+            self.assertEqual(evaluator.call_count, len(ids))
+            self.assertEqual([row["case_id"] for row in result["rows"]], list(ids))
+            self.assertEqual([job for job, prompt in fake.calls], [
+                f"M4_P4_DEV_V1_FV2_P4R8_QR_AM_ME_SE_TB_DA_{suffix}" for suffix in
+                (f"SMOKE_{protocol.CREDENTIAL_SLOT.upper()}", f"{ids[0]}_PRIMARY",
+                 f"{ids[0]}_REPAIR_1", f"{ids[1]}_PRIMARY")])
+            self.assertIn('"draft_version": "STORY_EXTRACTION_DRAFT_V1_1"', fake.calls[1][1])
+            self.assertNotIn("locked_input", fake.calls[1][1])
+            self.assertEqual(events.count("gold verified"), 1)
+            self.assertEqual(events[-2:], ["gold verified", "gold read"])
+            raw_score = (root / "score.json").read_bytes()
+            self.assertNotIn("gold_alignment", result)
+            replay = runner.execute(**opts, mode="revalidate")
+            self.assertEqual(replay["totals"]["new_structurally_valid"], len(ids))
+            self.assertEqual(events.count("gold verified"), 1)
+            reader.assert_called_once()
+
+            argv = ["--dataset", "FV2", "--fv2-dir", str(directory), "--output-root", str(output),
+                    "--variant", "P4R8", "--cases", ",".join(ids), "--mode", "score", "--align-gold",
+                    *("--" + key.replace("_", "-") for key in flags)]
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(runner.main(argv), 0)
+            aligned = json.loads((root / "score_aligned.json").read_bytes())
+            self.assertEqual(aligned["gold_alignment"], "V4_DEVELOPMENT_ONLY")
+            self.assertEqual(aligned["gold_alignment_counts"]["date_anchors"], {
+                "flagged": 2, "aligned": 2, "refused": {}, "anchors_dropped": 2,
+                "relations_dropped": 2, "duplicates_dropped": 0})
+            self.assertIn("by_from_role", aligned["gold_alignment_counts"]["mention_roles"])
+            self.assertGreater(aligned["summary"]["assertion_recall"], result["summary"]["assertion_recall"])
+            self.assertEqual((root / "score.json").read_bytes(), raw_score)
+            self.assertEqual(gold, original_gold)
+            verifier.assert_called_with(directory, include_gold=True)
 
     def test_existing_names_use_only_affirmed_base_facts_and_compiler_handles(self):
         ingestion, base = fx.ingest_text("Mira greeted Captain Mira and the stranger. Niko watched.")
@@ -758,7 +859,8 @@ class DevelopmentRunnerTests(unittest.TestCase):
         snapshots = []
         with self.fixture() as (opts, _, _):
             for flags in ({}, {"mention_evidence": False, "mention_evidence_predicates": ("NamedAs",),
-                               "sentence_evidence": False, "transfer_bounds": False, "date_anchor": False}):
+                               "sentence_evidence": False, "transfer_bounds": False, "date_anchor": False,
+                               "fv2_dir": Path("unused"), "align_gold": False}):
                 clock = Clock()
                 run = {**opts, "output_root": opts["output_root"] / str(len(snapshots)),
                        "clock": clock, "wait": clock.wait}
@@ -769,7 +871,8 @@ class DevelopmentRunnerTests(unittest.TestCase):
                 snapshots.append({p.relative_to(root): p.read_bytes() for p in root.rglob("*") if p.is_file()})
         self.assertEqual(snapshots[0], snapshots[1])
         for filename in ("score.json", "revalidation.json"):
-            for option in (b"mention_evidence", b"sentence_evidence", b"transfer_bounds", b"date_anchor"):
+            for option in (b"mention_evidence", b"sentence_evidence", b"transfer_bounds", b"date_anchor",
+                           b"gold_alignment", b"gold_alignment_counts"):
                 self.assertNotIn(b'"' + option, snapshots[0][Path(filename)])
         self.assertNotIn(Path("artifacts/DEV2_01/primary_resolved_draft.json"), snapshots[0])
 
@@ -1081,6 +1184,8 @@ class DevelopmentRunnerTests(unittest.TestCase):
                             "--cases", ",".join(opts["cases"]), "--mode", mode, "--existing-names", "--anchor-mentions"]
                     if dataset == "DEV1":
                         argv += ["--dataset", dataset]
+                    if mode == "score":
+                        argv += ["--align-gold"]
                     if mode == "revalidate":
                         argv += ["--mention-evidence", "--mention-evidence-predicates", "NamedAs, RefersTo",
                                  "--sentence-evidence", "--transfer-bounds"]
@@ -1103,6 +1208,8 @@ class DevelopmentRunnerTests(unittest.TestCase):
                         with patch.object(runner, "execute", side_effect=execute_cli), redirect_stdout(output):
                             self.assertEqual(runner.main(argv), 0)
                         self.assertIsInstance(json.loads(output.getvalue()), dict)
+                        if mode == "score":
+                            self.assertEqual(returned[-1]["gold_alignment"], "V4_DEVELOPMENT_ONLY")
                         if mode == 'revalidate':
                             self.assertEqual(json.loads(output.getvalue()), returned[-1]['totals'])
                             self.assertIn('remaining_blocker_counts', returned[-1]['totals'])

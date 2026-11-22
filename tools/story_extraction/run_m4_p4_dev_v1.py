@@ -1,4 +1,4 @@
-"""Development-only prompt-variant Draft V1.1 runner on open-gold DEV1/DEV2 tuning data.
+"""Development-only prompt-variant Draft V1.1 runner on DEV1, DEV2 and FV2 tuning data.
 
 Preflight is offline. Run uses the durable Gemini path and automatically scores;
 score only reads saved artifacts. A changed request requires a fresh output root.
@@ -20,6 +20,7 @@ from zipfile import ZipFile
 from tools.story_extraction import m4_04b3f_fv1_protocol_v1 as protocol
 from tools.story_extraction import score_m4_04b3h_fv1_v1 as scoring
 from tools.story_extraction import m4_04b2_dev_protocol_v1 as dev1_protocol
+from tools.story_extraction import m4_04b3n_fv2_protocol_v1 as fv2_protocol
 from tools.story_extraction import draft_compiler_v1 as compiler
 from tools.story_extraction.draft_quote_resolution_v1 import OUTCOMES, resolve_quotes
 from tools.story_extraction.draft_mention_anchoring_v1 import anchor_mentions as _anchor_mentions
@@ -30,6 +31,8 @@ from tools.story_extraction.draft_sentence_evidence_v1 import widen_to_sentence
 from tools.story_extraction.draft_transfer_bounds_v1 import bound_by_transfer
 from tools.story_extraction.draft_date_anchor_v1 import anchor_dates_to_events
 from tools.story_extraction.check_annotation_conventions_v1 import RULE_IDS, check_batch
+from tools.story_extraction.check_annotation_conventions_v2 import align_mention_roles
+from tools.story_extraction.check_annotation_conventions_v3 import align_date_anchors
 from tools.story_extraction.draft_compiler_v1 import DraftCompilerContext
 from tools.story_extraction.draft_compiler_v1_1 import prepare_story_extraction_draft_v1_1
 from tools.story_extraction.durable_research_executor_v1 import (
@@ -41,7 +44,7 @@ from tools.story_extraction.run_m4_04b3c_dev2_predictions_v1 import (
     Dev2PredictionError, _member_path, load_case_inputs,
 )
 from tools.story_extraction.run_m4_04b3g_fv1_predictions_v1 import (
-    Transport, _run_job, _telemetry, _write_json, _write_text, smoke_spec, validate_raw,
+    Fv1PredictionError, Transport, _run_job, _telemetry, _write_json, _write_text, smoke_spec, validate_raw,
 )
 
 INPUT_SHA256 = "e63937252e69820ff6f4b097537f860524ea9937e1e0bbd7187f2ae52cd812d5"
@@ -100,9 +103,10 @@ def verify_packages(dev2_input: Path, dev2_gold: Path) -> None:
 
 
 def selected_cases(cases: Sequence[str] | None, dataset: str = "DEV2") -> tuple[str, ...]:
-    if dataset not in ("DEV1", "DEV2"):
+    datasets = {"DEV1": dev1_protocol.CASE_IDS, "DEV2": CASE_IDS, "FV2": fv2_protocol.CASE_IDS}
+    if dataset not in datasets:
         raise DevelopmentError("Unknown development dataset")
-    allowed = dev1_protocol.CASE_IDS if dataset == "DEV1" else CASE_IDS
+    allowed = datasets[dataset]
     selected = tuple(allowed if cases is None else cases)
     if not selected or len(set(selected)) != len(selected) or not set(selected) <= set(allowed):
         raise DevelopmentError(f"Unknown, empty or duplicate {dataset} selection")
@@ -111,7 +115,7 @@ def selected_cases(cases: Sequence[str] | None, dataset: str = "DEV2") -> tuple[
 
 def _job_prefix(variant: str, dataset: str) -> str:
     variant = variant.replace("+", "_")  # Durable job ids exclude '+'.
-    return f"{TASK_ID}_DEV1_{variant}" if dataset == "DEV1" else f"{TASK_ID}_{variant}"
+    return f"{TASK_ID}_{variant}" if dataset == "DEV2" else f"{TASK_ID}_{dataset}_{variant}"
 
 
 def _run_variant(variant: str, quote_resolution: bool, rich_repair_blockers: bool,
@@ -217,6 +221,14 @@ def load_dev1_cases(archive: Path, input_root: Path, selected: Sequence[str],
     return result, gold
 
 
+def _prepare_case(cid: str, context: DraftCompilerContext, variant: str,
+                  sources: tuple[bytes, ...], dataset: str) -> CaseInput:
+    run_prefix = variant if dataset == "DEV2" else f"{dataset}_{variant}"
+    context = replace(context, process_id=f"{TASK_ID}_{run_prefix}",
+                      process_version="v1.1", run_id=f"{run_prefix}_{cid}_PRIMARY")
+    return CaseInput(cid, prepare_story_extraction_draft_v1_1(context), context, sources, dataset)
+
+
 def load_cases(archive: Path, input_root: Path, selected: Sequence[str],
                case_loader: Callable = load_case_inputs, variant: str = "P3") -> list[CaseInput]:
     """Adapt B3C's context as B3D does, then prepare the actual V1.1 model input."""
@@ -232,11 +244,19 @@ def load_cases(archive: Path, input_root: Path, selected: Sequence[str],
         raise DevelopmentError("DEV2 loader case identity mismatch")
     result = []
     for cid in selected:
-        context = replace(by_id[cid].compiler_context, process_id=f"{TASK_ID}_{variant}",
-                          process_version="v1.1", run_id=f"{variant}_{cid}_PRIMARY")
-        result.append(CaseInput(cid, prepare_story_extraction_draft_v1_1(context), context,
-                                ((input_root / "m3_sources" / cid / "unit.txt").read_bytes(),)))
+        sources = ((input_root / "m3_sources" / cid / "unit.txt").read_bytes(),)
+        result.append(_prepare_case(cid, by_id[cid].compiler_context, variant, sources, "DEV2"))
     return result
+
+
+def load_fv2_cases(directory: Path, selected: Sequence[str], variant: str) -> list[CaseInput]:
+    # The FV2 protocol imports this module. Load its runner after both modules are initialized.
+    from tools.story_extraction.run_m4_04b3o_fv2_predictions_v1 import load_cases as load_sealed_cases
+
+    contexts = {case.case_id: case.compiler_context for case in load_sealed_cases(directory)}
+    return [_prepare_case(cid, contexts[cid], variant,
+                          tuple(doc.source_bytes for doc in contexts[cid].ingestion.documents), "FV2")
+            for cid in selected]
 
 
 def build_primary_spec(variant: str, case: CaseInput, model: str = protocol.MODEL,
@@ -464,17 +484,33 @@ def read_gold(archive: Path, selected: Sequence[str]) -> dict[str, dict]:
     return gold
 
 
+def _align_gold(batch: dict, context: DraftCompilerContext, totals: dict) -> dict:
+    sources = tuple(doc.source_bytes for doc in context.ingestion.documents)
+    for name, align in (("mention_roles", align_mention_roles), ("date_anchors", align_date_anchors)):
+        batch, report = align(batch, sources, context.base_document)
+        counts = totals.setdefault(name, {})
+        for key, count in report.items():
+            if isinstance(count, dict):
+                counts.setdefault(key, Counter()).update(count)
+            else:
+                counts[key] = counts.get(key, 0) + count
+    return batch
+
+
 def score_cases(cases: Sequence[CaseInput], specs: Sequence[DurableJobSpec],
-                gold: Mapping[str, dict], root: Path) -> dict[str, Any]:
+                gold: Mapping[str, dict], root: Path, *, align_gold: bool = False) -> dict[str, Any]:
     rows = []
     conventions = Counter({rule: 0 for rule in RULE_IDS})
     checked = Counter()
+    alignment_counts = {}
     for case, spec in zip(cases, specs):
         directory = root / "artifacts" / case.case_id
         saved = json.loads((directory / "validation.json").read_text(encoding="utf-8"))
         if saved["attempts"][0]["request_fingerprint"] != spec.request_fingerprint:
             raise CheckpointIntegrityError("Prediction request differs from selected development configuration")
         item = gold[case.case_id]
+        if align_gold:
+            item = {**item, "gold_batch": _align_gold(item["gold_batch"], case.compiler_context, alignment_counts)}
         report = None
         conventions_reason = None
         if saved["validation"]["pass"]:
@@ -514,9 +550,12 @@ def score_cases(cases: Sequence[CaseInput], specs: Sequence[DurableJobSpec],
                                         for key in sorted(scoring.evaluator.frozen.GOLD_COMPLETENESS)}
     summary["failure_code_counts"] = dict(sorted(Counter(
         f["code"] for row in rows for f in row["evaluation"].get("failures", [])).items()))
-    return {"rows": rows, "summary": summary, "conventions_counts": dict(conventions),
-            "conventions_checked": dict(checked), "conventions_cases_checked": sum(
-                row["conventions"] is not None for row in rows)}
+    score = {"rows": rows, "summary": summary, "conventions_counts": dict(conventions),
+             "conventions_checked": dict(checked), "conventions_cases_checked": sum(
+                 row["conventions"] is not None for row in rows)}
+    if align_gold:
+        score.update(gold_alignment="V4_DEVELOPMENT_ONLY", gold_alignment_counts=alignment_counts)
+    return score
 
 
 def public_summary(score: Mapping[str, Any]) -> dict[str, Any]:
@@ -658,7 +697,7 @@ def revalidate_cases(cases: Sequence[CaseInput], source: Path, destination: Path
 
 
 def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
-            dev2_gold: Path | None = None, dataset: str = "DEV2",
+            dev2_gold: Path | None = None, dataset: str = "DEV2", fv2_dir: Path | None = None,
             dev1_package: Path | None = None, dev1_ingestion_manifest: Path | None = None,
             dev1_source_root: Path | None = None, dev1_case_loader: Callable = load_dev_inputs,
             model: str = protocol.MODEL, credential_slot: str = protocol.CREDENTIAL_SLOT,
@@ -670,19 +709,23 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
             mention_evidence: bool = False,
             mention_evidence_predicates: Sequence[str] = MENTION_EVIDENCE_PREDICATES,
             sentence_evidence: bool = False, transfer_bounds: bool = False, date_anchor: bool = False,
-            run_directory: Path | None = None) -> dict[str, Any]:
+            run_directory: Path | None = None, align_gold: bool = False) -> dict[str, Any]:
     if mode not in ("preflight", "run", "score", "revalidate"):
         raise DevelopmentError("Unknown development mode")
     if run_directory is not None and mode != "revalidate":
         raise DevelopmentError("Run directory is only used for revalidation")
     selected = selected_cases(cases, dataset)
 
-    def verify():
+    def verify(*, include_gold: bool = False):
         if dataset == "DEV1":
             if dev1_package is None or dev1_ingestion_manifest is None or dev1_source_root is None:
                 raise DevelopmentError("DEV1 requires package, ingestion manifest and source root")
             if protocol.file_sha256(dev1_package) != DEV1_SHA256:
                 raise DevelopmentError("DEV1 archive hash mismatch")
+        elif dataset == "FV2":
+            if fv2_dir is None:
+                raise DevelopmentError("FV2 requires an FV2 directory")
+            fv2_protocol.verify_fv2_packages(fv2_dir, include_gold=include_gold)
         else:
             if dev2_input is None or dev2_gold is None:
                 raise DevelopmentError("DEV2 requires input and gold archives")
@@ -694,15 +737,20 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
                          mention_evidence, mention_evidence_predicates,
                          sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor)
     identity = label.replace("+", "_")
-    base_root = Path(output_root) / "DEV1" if dataset == "DEV1" else Path(output_root)
+    base_root = Path(output_root) if dataset == "DEV2" else Path(output_root) / dataset
     root = base_root / label
     job_prefix = _job_prefix(label, dataset)
     with tempfile.TemporaryDirectory() as tmp:
         if dataset == "DEV1":
             loaded, gold = load_dev1_cases(dev1_package, Path(tmp), selected, dev1_ingestion_manifest,
                                           dev1_source_root, identity, dev1_case_loader)
+            input_sha256 = gold_sha256 = DEV1_SHA256
+        elif dataset == "FV2":
+            loaded = load_fv2_cases(fv2_dir, selected, identity)
+            input_sha256, gold_sha256 = fv2_protocol.FV2_INPUT_SHA256, fv2_protocol.FV2_GOLD_SHA256
         else:
             loaded = load_cases(dev2_input, Path(tmp), selected, case_loader, identity)
+            input_sha256, gold_sha256 = INPUT_SHA256, GOLD_SHA256
         if existing_names:
             loaded = [replace(case, prepared_input=_with_existing_names(
                 case.prepared_input, case.compiler_context)) for case in loaded]
@@ -714,8 +762,7 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
                  sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor) for case in loaded]
         metadata = {"dataset": dataset, "variant": variant, "model": model, "credential_slot": credential_slot,
                     "case_count": len(loaded), "primary_specs": len(specs), "prompt_hashes": hashes,
-                    "input_sha256": DEV1_SHA256 if dataset == "DEV1" else INPUT_SHA256,
-                    "gold_sha256": DEV1_SHA256 if dataset == "DEV1" else GOLD_SHA256,
+                    "input_sha256": input_sha256, "gold_sha256": gold_sha256,
                     "quote_resolution": quote_resolution, "rich_repair_blockers": rich_repair_blockers,
                     "existing_names": existing_names}
         if anchor_mentions:
@@ -740,8 +787,8 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
                                     mention_evidence_predicates=mention_evidence_predicates,
                                     sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor)
 
-        def guard():
-            verify()
+        def guard(*, include_gold: bool = False):
+            verify(include_gold=include_gold)
             if prompt_hashes(variant) != hashes:
                 raise CheckpointIntegrityError("Development prompt sources changed during execution")
 
@@ -762,8 +809,8 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
                 transport = GeminiDevWindowTransport(slots[0], pacer, guard)
                 secrets = tuple(c._api_key for c in config.credentials)
             executor = DurableResearchExecutor(root / "checkpoints" / "jobs",
-                                               protocol_id=(f"{TASK_ID}:DEV1:{label}" if dataset == "DEV1"
-                                                            else f"{TASK_ID}:{label}"), clock=clock,
+                                               protocol_id=(f"{TASK_ID}:{label}" if dataset == "DEV2"
+                                                            else f"{TASK_ID}:{dataset}:{label}"), clock=clock,
                                                window_cooldown_seconds=protocol.WINDOW_COOLDOWN_SECONDS,
                                                forbidden_secrets=secrets)
             smoke = replace(smoke_spec(), job_id=f"{job_prefix}_SMOKE_{credential_slot.upper()}",
@@ -784,19 +831,26 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
                       mention_evidence=mention_evidence,
                       mention_evidence_predicates=mention_evidence_predicates,
                       sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor)
-        guard()
-        score = score_cases(loaded, specs, gold if dataset == "DEV1" else read_gold(dev2_gold, selected), root)
+        guard(include_gold=True)
+        if dataset == "FV2":
+            sealed_gold = scoring.read_gold(fv2_dir / fv2_protocol.FV2_GOLD_NAME)
+            gold = {cid: {**sealed_gold[cid], "acceptable_optional_assertion_ids": []} for cid in selected}
+        elif dataset == "DEV2":
+            gold = read_gold(dev2_gold, selected)
+        score = score_cases(loaded, specs, gold, root, align_gold=align_gold)
         score.update(metadata)
         score["snapshot_v2_sha256"] = scoring.SNAPSHOT_V2_SHA256
         score["evaluator_version"] = scoring.evaluator.EVALUATOR_VERSION
-        _write_json(root / "score.json", score)
+        _write_json(root / ("score_aligned.json" if align_gold else "score.json"), score)
         return score
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--variant", required=True)
-    parser.add_argument("--dataset", choices=("DEV1", "DEV2"), default="DEV2")
+    parser.add_argument("--dataset", choices=("DEV1", "DEV2", "FV2"), default="DEV2")
+    parser.add_argument("--fv2-dir", type=Path, help="Directory holding the sealed FV2 packages")
+    parser.add_argument("--align-gold", action="store_true", help="Align development gold in memory when scoring")
     parser.add_argument("--dev2-input", type=Path)
     parser.add_argument("--dev2-gold", type=Path)
     parser.add_argument("--dev1-package", type=Path)
@@ -830,7 +884,7 @@ def main(argv: list[str] | None = None) -> int:
         public = result["totals"] if args.mode == "revalidate" else (
             result if args.mode == "preflight" else public_summary(result))
         print(json.dumps(public, sort_keys=True))
-    except (DevelopmentError, Dev2PredictionError, dev1_protocol.DevBenchmarkProtocolError,
+    except (DevelopmentError, Dev2PredictionError, Fv1PredictionError, dev1_protocol.DevBenchmarkProtocolError,
             CheckpointIntegrityError, OSError, ValueError, KeyError,
             protocol.Fv1ProtocolError) as error:
         print(f"M4_P4_DEV_STOPPED: {type(error).__name__}")
