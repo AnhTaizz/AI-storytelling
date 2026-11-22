@@ -1,6 +1,6 @@
 # M13 Visual Pipeline Plan V0
 
-Status: **Draft plan — not started.** Agreed with the project owner on 2026-11-16.
+Status: **Draft plan — not started.** Initial plan agreed on 2026-11-16. Updated 2026-11-19 with the channel's editing workflow.
 
 ## Roadmap position
 
@@ -17,21 +17,20 @@ section per Narrative Plan beat, and each beat cites brief events by chapter
 
 ## Goal
 
-For every narration segment of a video script, show 1–2 still images on screen,
-each for about 10 seconds, at near-zero running cost.
+Build an editable first cut for a Vietnamese recap. The recorded or synthesized
+narration sets the pace. The editor can listen to a line, preview a few images
+in context, and replace one without rebuilding the episode.
 
-- **Manga-backed stories:** use the manga's own panels for the matching scene,
-  with dialogue erased.
-- **Light-novel-backed stories:** the LN has too few illustrations, so build a
-  character/emotion image library from manga panels and curated outside images
-  (e.g. Pinterest), and pick images that match the characters and emotion of the
-  scene the script describes.
+For light novels, retrieve illustrations from the channel's image library. For
+manga, illustrate selected moments with individual panels in story order.
+Connecting narration can use an original background, a title card, or a hold
+on the previous image. The number of panels follows the editorial choice.
 
 ## Decisions already made
 
 | Topic | Decision |
 |---|---|
-| Images per segment | 1–2, about 10 s each |
+| Picture timing | Start around 8–10 s per image. Cut earlier for a reveal or hold across several sentences when the scene stays quiet. |
 | Dialogue | Erased from panels before use; the original text is read (OCR) first and kept as metadata |
 | Video framing | 16:9 canvas, image centered, animated with motion presets (zoom in, zoom out, fly-in, …) |
 | Style per video | One style per video: all colorized or all black-and-white, never mixed |
@@ -46,21 +45,19 @@ each for about 10 seconds, at near-zero running cost.
 | P1 Panel crop + bubble whitening | Split pages into panels; blank out text in white bubbles | Pillow, numpy | 0 |
 | P2 Full dialogue removal | Detect text, OCR it, erase it (fill or inpaint) | comic-text-detector, manga-ocr / PaddleOCR, LaMa | torch install |
 | P3 Asset library + tagging | Store panels, face crops and outside images with labels | existing `tools/media_ingest`, human review | 0 |
-| P4 Shot selection | Pick 1–2 images per script segment | text match (manga), tag match (LN) | 0 |
+| P4 Shot selection | Suggest up to three candidates for a visual change | text match (manga), tag match (LN) | 0 |
 | P5 Colorization (optional) | Colorize only the images selected in P4 | ComfyUI, SD 1.5, ControlNet, IP-Adapter | 0 |
 | P6 Shot list | Machine-readable handoff to video assembly (M14) | JSON | 0 |
 
 ### P0 — Policy
 
-- **Sources and rights.** Every asset records its source URL, artist (for outside
-  images) and `rights_basis`. The current Roshidere manga pages come from a
-  third-party scan site and are `rights_basis=unknown`. Images that will appear in a
-  published video should come from purchased copies or official promotion.
-  Pinterest is not a rights holder; many images there are reposted fan art.
-- **Fair use is not a numeric rule.** Showing few images briefly helps, but it is
-  no safe harbor. The video's own commentary and analysis — not the image count —
-  carries most of the transformative weight. Colorizing a panel creates a derivative
-  work and does not add fair-use weight.
+- Record the source and basis for using each image in a published episode.
+  Show chapter, page and panel for manga and credit information where applicable.
+  Mark assets with unknown rights as **reference only**. Offer an original or
+  licensed alternative and flag any unresolved selection before publication.
+  The timing target is an editing preference. Buying a copy, erasing dialogue,
+  or displaying a panel briefly does not establish permission.
+
 - **Emotion vocabulary.** A fixed list of about 10 labels (proposal: neutral, happy,
   embarrassed, teasing, angry, sad, surprised, worried, determined, tender).
 - **Character color sheets.** For each character: hair, eye and outfit colors plus
@@ -112,25 +109,29 @@ existing corpus.
 
 ### P4 — Shot selection
 
-The unit is the **Narrative Plan beat**: the script has one section per beat, and
-each beat cites the brief events it tells (`c<N>.E<k>`), with their characters and
-verbatim evidence.
+Start from the approved script, the recorded voice and its sentence or beat
+timestamps. Link each proposed visual change to the existing `beat_id` and
+event references. Snap suggested cuts to a spoken phrase or change of action.
+For example, a reveal spoken at 0:11 should first appear at 0:11 even if the
+default cut would have been at 0:09.
 
-- **Manga mode:** beat → cited events → their chapter → the manga pages for that
-  chapter → panels whose original dialogue best matches the events' evidence →
-  choose 1–2.
-- **LN mode:** beat → cited events → characters present, emotion, setting → query
-  the library by character + emotion. Prefer assets from the nearest story point
-  (appearance and outfits change over the story) and avoid recent repeats.
-- **Chapter mapping.** LN chapters and manga chapters are numbered differently, and
-  the current image index states that the correspondence is unverified. P4 needs a
-  reviewed LN-chapter → manga-chapter/page mapping per series; without it, manga
-  mode can only search by dialogue text.
+| Source | Retrieve and rank | Editor choice |
+|---|---|---|
+| Light novel | Match characters, setting, action and emotion. Prefer the correct costume or story period. Penalize recent repeats. | Preview up to three distinct options, such as a wide shot, reaction or object detail. Allow a hold or a manual import. |
+| Manga | Search the reviewed chapter and page range. Follow panel reading order and the point reached in the narration. Use action and visual tags for silent panels, with OCR as an additional signal. | Offer up to three panels for the selected moment, labelled by page and panel. Let the editor inspect neighbours, choose one, or skip. Keep later reveals out of suggestions. |
+
+When illustrating an LN with its manga adaptation, use a reviewed passage-to-page
+mapping. If the mapping is uncertain, ask for a page range or use a library image.
+A chapter number alone cannot establish the match.
+
+Generate thumbnails, OCR and tags once per asset version. Start with local
+metadata filters and text matching over the P3 index. Refresh candidates only
+for the selected beat. Decide whether local embeddings are worthwhile from
+measured misses. Choosing, replacing and retiming a shot uses no model calls.
 
 ### P5 — Colorization (optional, after selection)
 
-Only the 1–2 images chosen per segment are colorized, so the cost scales with the
-video, not with the library.
+Colorize selected assets on demand and cache their derivatives for reuse.
 
 1. Soften the screentone (descreen) on the cleaned panel.
 2. Generate with ControlNet lineart (high strength), a fixed per-character prompt
@@ -146,19 +147,37 @@ colorization model on rented GPU time.
 
 ### P6 — Shot list (handoff to M14)
 
-One JSON entry per shot:
+P6 exports a versioned shot list for M14. Bundle the voice and caption cues with
+the draft, using a common timebase. Keep suggestions separate from the saved
+selection so refreshing candidates preserves manual edits.
 
-| Field | Example |
+| Field | Purpose |
 |---|---|
-| `beat_id` | Narrative Plan beat (script section) the shot illustrates |
-| `asset_id` | Image to show |
-| `duration_s` | ~10 |
-| `motion` | `zoom_in`, `zoom_out`, `fly_in_left`, `fly_in_right`, … |
-| `transition` | e.g. `crossfade` |
-| `style` | `color` or `bw` (must be the same across the whole video) |
+| `shot_id`, `beat_id` | Stable shot identity across edits and link back to the script. |
+| `start_ms`, `end_ms` | Position against the actual voice recording. A held image can span multiple cues. |
+| `asset_id`, `candidate_asset_ids` | Selected visual and alternatives. Resolve source, rights and thumbnails via the asset index. |
+| `motion`, `transition`, `style` | Start with a cut, slow zoom or crossfade and the episode's chosen visual style. |
+| `selection_state` | Distinguish a suggested placement from an editor-confirmed shot. |
 
-The image is centered on a 16:9 canvas. A contact sheet of all selected shots is
-generated for review before assembly.
+### Editing the draft (M14 handoff)
+
+Import the initial shot list once. The saved editor project owns subsequent
+timeline changes. Apply later suggestions by shot ID to the requested scene
+or track. Preserve confirmed choices and make each accepted change undoable.
+
+- Start with three tracks: narration, visuals and captions. Preview edits with
+  local thumbnails or proxies and render from the originals.
+- Drop files into the media bin to import them into project-managed storage.
+  Dropping an image on a shot replaces its picture and preserves its timing and
+  motion. Dropping between shots shows an insertion marker. Moving a picture
+  cut leaves voice and captions in place.
+- Re-recording a line can change its duration. Update the affected caption cues
+  and shift downstream material together. Let the editor loop the join before
+  accepting it. Autosave the project and retain manual choices after reopening.
+- First evaluate the stock open-source OpenChatCut editor. If entering shots by
+  hand dominates editing time, test a small adapter against a pinned release.
+  Consider a fork only after identifying a recurring limitation in the editor
+  itself. These are integration experiments for the M14 phase.
 
 ## Open questions
 
@@ -172,7 +191,16 @@ generated for review before assembly.
 
 ## First spikes when work starts
 
-1. P1 on about 20 Roshidere pages; measure how many pages split correctly.
-2. P5 on about 10 panels: plain automatic colorization versus the chosen SD 1.5 +
+1. Once the script gate permits work, use 60–90 seconds of approved chapter 5
+   narration from *The Angel Next Door* with a few cleared images. Time the first
+   cut and corrections per finished minute. Record how often one of the first
+   three suggestions is usable and why the others miss. Replace an image,
+   retime a cut, change one voice line and reopen the saved project. Check sync,
+   manual selections and the rendered result.
+2. Repeat selection on a short reviewed manga passage with a silent reaction
+   followed by a reveal. Verify reading order, reveal timing, source labels and
+   the option to skip panels. Record any paid calls in both trials.
+3. P1 on about 20 Roshidere pages; measure how many pages split correctly.
+4. P5 on about 10 panels: plain automatic colorization versus the chosen SD 1.5 +
    ControlNet + IP-Adapter setup, compared side by side for character color
    consistency.
