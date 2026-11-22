@@ -1,0 +1,59 @@
+# M4-04B4A: FV3 error diagnosis (FV3 is development data since M4-04B3Z). Public aggregates only.
+# No case identifiers, source text, entity names or gold content.
+artifact: M4_04B4A_FV3_ERROR_DIAGNOSIS
+status: M4_04B4A_DIAGNOSIS_RECORDED
+date: '2026-11-22'
+authorization:
+  by: Project Owner
+  date: '2026-11-22'
+  instructions:
+    - "ok làm cách 1 đi, dùng codex nhé"
+    - "Chose 'Claude tự chẩn đoán ngay' when Codex was out of quota."
+  scope: Option 1 of the M4-04B3Z Next Candidate list.
+evaluation_data:
+  label: DEVELOPMENT-ONLY
+  set: FV3 (locked predictions of M4-04B3Z, as scored; no replay, no gold alignment)
+  validation_results: [M4_04B3O_FV2_BLIND_RUN_RESULT.yaml, M4_04B3Z_FV3_BLIND_RUN_RESULT.yaml]
+method: Private script over the locked compiled batches and the opened FV3 gold, Snapshot V2 evaluator internals; counts only.
+reproduction: {valid_cases: 15, invalid_cases: 1, required_recovered: 115}
+gold_mixed_role_segments: {DEPICTION+NARRATION_SUMMARY: 3, DEPICTION+IN_WORLD_REPORT: 2, DEPICTION+RETROSPECTIVE: 1}
+role_errors:
+  total: 10
+  predicted_role: {DEPICTION: 10}
+  gold_role: {NARRATION_SUMMARY: 8, RETROSPECTIVE: 2}
+  location: {narration: 10, dialogue: 0}
+  evidence_cited_by:
+    mention_predicates_only: 6   # RefersTo, or RefersTo with NamedAs
+    other_predicates: 3          # Attitude; PhysicalCondition; Occurred with Participates
+    not_cited: 1
+  pattern: >-
+    Sentences that state a standing state, a long-lasting condition or a belief held before the scene (gold
+    NARRATION_SUMMARY), or an event before the scene (gold RETROSPECTIVE), were labelled DEPICTION, and so were the
+    mentions inside them. Under the gold, a mention takes the role of its narration sentence. Conventions V4 leave mention
+    roles in non-depicted narration unsettled (section 12); the P4R6+ prompt sets DEPICTION as the default role.
+unsupported_predictions:
+  total: 30
+  NamedAs:
+    total: 9
+    class: {no_gold_name_for_the_entity: 9}
+    pattern: >-
+      Role or occupation nouns for people and common nouns for objects or places were asserted as names (name_kind TITLE,
+      GIVEN or EPITHET). The gold asserts no name for these entities.
+  Participates:
+    total: 9
+    class: {PATIENT_vs_gold_THEME: 4, THEME_vs_gold_PATIENT: 1, event_not_aligned: 2, participant_not_in_gold_event: 2}
+  other: {Occurred: 3, Possesses: 2, RefersTo: 2, TemporalRelation: 1, Conveys: 1, Says: 1, Habitually: 1, AnchorDate: 1}
+missed:
+  MISSED_REQUIRED_ASSERTION: {Participates: 11, TemporalRelation: 4, Says: 2, Occurred: 2, NamedAs: 1, LocatedAt: 1,
+    OccursAt: 1, Attitude: 1, Habitually: 1, AnchorDate: 1}
+  MISSING_ENTITY_RESOLUTION: 5
+  note: Five Participates misses are the other half of the PATIENT/THEME pairs above; two follow from unaligned events.
+interpretation:
+  - Role errors are one systematic error, not noise. Every one is DEPICTION where gold uses NARRATION_SUMMARY or RETROSPECTIVE, in narration. The P4R6 prompt change that made DEPICTION the default (tuned on DEV2) overcorrected for sets that contain summary and flashback narration.
+  - Nine of 30 unsupported predictions are non-names asserted as NamedAs. A prompt rule (only proper names and name forms are NamedAs; role nouns and common nouns are not) or a convention clarification addresses them.
+  - Five Participates errors sit on the PATIENT/THEME boundary of R-ROLE-03 and count twice (one miss, one unsupported).
+  - Together these three patterns account for 10 role errors, 14 unsupported predictions and at least 5 misses.
+next_candidates:
+  - Conventions V5 (owner decision) on the evidence role of mentions in non-depicted narration (follow the sentence role), and on NamedAs for role and common nouns.
+  - Prompt P4R9 developed on FV2-dev and FV3-dev together, measured on both, with a host role propagation for mentions inside sentences whose other evidence carries NARRATION_SUMMARY or RETROSPECTIVE.
+  - Run-to-run variance sample before any further locked run; the holdout stays closed.

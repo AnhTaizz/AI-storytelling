@@ -4,7 +4,7 @@
 
 *Header refreshed 2026-11-22; the dated sections below are history.*
 
-M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED; holdout closed, predictions NOT RUN. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. Annotation conventions V4: ACCEPTED (DEC-029). See M4-04B3Z (FV3 blind run: recall 0.793, precision 0.782, L1 9/15, full 0/16).
+M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED; holdout closed, predictions NOT RUN. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. Annotation conventions V4: ACCEPTED (DEC-029). See M4-04B3Z (FV3 blind run: recall 0.793, precision 0.782, L1 9/15, full 0/16). FV3 error diagnosis: M4-04B4A.
 
 M0 — Product Foundation: CLOSED (see M0 Closure).
 
@@ -43,7 +43,7 @@ M14 — Voice / Video Automation: GATED behind the Script Quality Gate (DEC-009)
   - The contract defines the standard. It does not show that any current Writer or critic meets it. The M9 Script Quality Gate is not evaluated.
 - M2 — Canonical Story Model: capability COMPLETE / FROZEN (DEC-016). The expected capability has been established as `canonical_story/v0` + `predicate_registry/v0.1`. M2 ran under the roadmap's evidence-driven overlap semantics (see ROADMAP Execution Semantics, DEC-015).
 - M3 — Light Novel Ingestion: COMPLETE / FROZEN — `LIGHT_NOVEL_INGESTION/v0`, DEC-018, freeze record `benchmarks/m3_ingestion/LIGHT_NOVEL_INGESTION_V0_FROZEN.yaml`. The roadmap is unchanged.
-- M4 — Story Extraction: IN PROGRESS (M4-01/M4-02 accepted; M4-03 holdout sealed and closed, predictions not run; no extractor/model selected; nothing frozen). Annotation conventions V4: ACCEPTED (DEC-029). See M4-04B3Z (FV3 blind run: recall 0.793, precision 0.782, L1 9/15, full 0/16).
+- M4 — Story Extraction: IN PROGRESS (M4-01/M4-02 accepted; M4-03 holdout sealed and closed, predictions not run; no extractor/model selected; nothing frozen). Annotation conventions V4: ACCEPTED (DEC-029). See M4-04B3Z (FV3 blind run: recall 0.793, precision 0.782, L1 9/15, full 0/16). FV3 error diagnosis: M4-04B4A.
 - M5 — Persistent Story Memory: PROTOTYPE EXISTS; not frozen or M5 completion (see Implementation Status; DEC-021).
 - M6 — Retrieval: ACCEPTED BASELINE over brief memory (DEC-021, 2026-11-15).
 - M7 — Story Brief: ACCEPTED BASELINE (DEC-022, 2026-11-15).
@@ -1588,6 +1588,27 @@ The owner decides. None of the following work is authorized.
 4. Keep the holdout closed until the owner chooses a configuration using evidence from more than one fresh set.
 5. Consider Draft V1.2, which requires a DEC.
 6. Housekeeping.
+
+## M4-04B4A — FV3 ERROR DIAGNOSIS — Status: M4_04B4A_DIAGNOSIS_RECORDED
+
+On 2026-11-22 the project owner authorized option 1 of the M4-04B3Z Next Candidate list ("ok làm cách 1 đi, dùng codex nhé"); Codex was out of quota and the owner chose "Claude tự chẩn đoán ngay". **DEVELOPMENT-ONLY:** FV3 has been development data since M4-04B3Z; the diagnosis reads the locked predictions as scored.
+
+- **Role errors (10).** Every one is DEPICTION where the gold uses NARRATION_SUMMARY (8) or RETROSPECTIVE (2), all in narration, none in dialogue. Six are mention evidence inside those sentences. The DEPICTION default introduced in P4R6 (tuned on DEV2) overcorrected for summary and flashback narration; Conventions V4 leave mention roles in non-depicted narration unsettled.
+- **Unsupported NamedAs (9 of 30 unsupported).** Role or occupation nouns and common nouns for objects or places were asserted as names (TITLE, GIVEN, EPITHET); the gold names none of these entities.
+- **Participates (9 unsupported, 11 missed).** Five errors are PATIENT/THEME disagreements on the R-ROLE-03 boundary, each counted as one miss and one unsupported prediction; two follow from unaligned events.
+- **Other misses.** TemporalRelation 4, entity resolutions 5, a few single omissions.
+
+Together the three patterns account for 10 role errors, 14 unsupported predictions and at least 5 misses. The aggregate record is `benchmarks/m4_extraction/M4_04B4A_FV3_ERROR_DIAGNOSIS.yaml`.
+
+## Next Candidate
+
+The owner has yet to choose or authorize any of these candidates.
+
+1. **Conventions V5.** Owner decisions on the evidence role of mentions in non-depicted narration (follow the sentence role) and on NamedAs for role and common nouns.
+2. **Prompt P4R9 and a role-propagation host repair,** developed on FV2-dev and FV3-dev together and measured on both (Gemini quota for a development run).
+3. **Run-to-run variance sample** of the locked configuration before any further locked run.
+4. **Holdout stays closed** until a configuration has evidence from more than one fresh set.
+5. **Draft V1.2 with existing entity names.** Requires a DEC.
 
 ## M8 Narrative Planning — ACCEPTED as a baseline (DEC-023, 2026-11-15)
 
