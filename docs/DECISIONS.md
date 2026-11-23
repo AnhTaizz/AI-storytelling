@@ -934,3 +934,21 @@ DECISION:
 
 LIMITS:
 - Both rules were chosen after reading development data (FV3); only a fresh set can show whether they hold.
+
+---
+
+## DEC-032 — Local Image-Collection and Syosetu Corpus Tooling on Main; Pillow in CI
+
+STATUS: ACCEPTED (Project Owner, 2026-11-23: "ok đưa media_ingest với crawl_syosetu lên main đi"; chose "Chỉ đưa phần an toàn" and "File requirements mới + DEC")
+
+CONTEXT:
+The owner wrote local data-collection tools that were never committed: an image ingester and crawlers for a private image collection (`tools/media_ingest/`), and a Syosetu crawler that appends the author's public web-novel chapters to the local corpus (`tools/story_ingestion/crawl_syosetu.py`). The repository is public. Some of the owner's crawlers download whole manga chapters from unlicensed third-party aggregator sites; publishing them carries legal and takedown risk. The image tools need Pillow, which CI did not install, and the CI install step is a protected path.
+
+DECISION:
+1. **Only tools that read the owner's own files, publisher pages or the author's own site go on main:** `ingest_local_images.py`, `crawl_official_images.py`, `crawl_light_novel_art.py`, a shared `collection_io.py`, and `crawl_syosetu.py`, with their tests. Crawlers for third-party aggregator sites, and the chapter organizer that only processes their output, stay local and untracked.
+2. **Collected data is never tracked.** Images, manifests and indexes stay under ignored `data/sample/*/images/` and `.local/`; the Roshidere corpus folder and the Syosetu provenance folder are ignored as a whole. Corpus chapters other than 1–5 remain untracked.
+3. **Pillow joins CI** through a new scoped `requirements-media-ingest.txt`, added to the install step of `.github/workflows/ci.yml`.
+4. **This is tooling, not milestone work.** It does not start M12 (Manga) or M13 (Visual Production), which stay gated behind the Script Quality Gate (DEC-009).
+
+LIMITS:
+- Collecting an image establishes provenance only, not permission to reuse it in a published video.
