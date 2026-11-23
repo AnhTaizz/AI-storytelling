@@ -1052,3 +1052,26 @@ LIMITS:
 - The cost check detects a charge after a call. The free model rule and the single-model payload are the preventive controls.
 - Free providers' data policies vary.
 - Pipeline integration is planned for Phase 5.
+
+---
+
+## DEC-039 — Free-Plan Cloudflare Workers AI Provider (Phase 4)
+
+STATUS: PROPOSED (awaiting Project Owner)
+
+CONTEXT:
+Phase 3 added account-wide cooldowns for OpenRouter. Cloudflare Workers AI provides an OpenAI-compatible endpoint and measures its daily free allocation in Neurons. Workers Paid bills usage above that allocation.
+
+DECISION:
+1. Configure numbered account ID and token pairs. Keep the lowest numbered copy of a duplicate pair and group tokens by account. Use the account's first slot number as its scope alias. Treat both credential values as private.
+2. Require the shared free-only controls and accept only Workers Free declarations. Undeclared slots use the owner's standing confirmation unless disabled. Exclude paid or unverified slots and reject conflicting declarations for the same account.
+3. Select models from the reviewed Workers Free price table. The default chain is `@cf/openai/gpt-oss-120b` followed by `@cf/qwen/qwen3-30b-a3b-fp8`. Permit local narrowing and send one model per request.
+4. Track estimated Neurons per account and UTC day in the quota SQLite file. Stop sending prompts whose estimated input cost would exceed the local 9,000-Neuron default budget and block the account when a successful call reaches that budget. Persist account-wide cooldowns across models. Distinguish daily allocation from minute rate limits and temporary capacity.
+5. Run smoke checks offline by default. The owner's live opt-in sends one synthetic chat request with a 512-token output cap and no retry. The prompt asks for JSON, and the smoke check records estimated Neurons.
+
+LIMITS:
+- A token cannot show the Workers plan. The owner confirms the plan in the Cloudflare dashboard.
+- Cloudflare does not report Neurons per call. The ledger estimates usage from token counts or text lengths, and the budget is a local guard. Other clients and overlapping calls can consume the same account allocation.
+- The OpenAI-compatible endpoint's response shape and JSON mode remain unverified until a live run.
+- The 10,000-Neuron daily allocation is small, roughly 100,000–300,000 tokens for typical mixes depending on the model. It suits short tasks.
+- Pipeline integration is planned for Phase 5.

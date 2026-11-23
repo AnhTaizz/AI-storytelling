@@ -4,15 +4,67 @@ import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
-from fixtures import Clock, GROQ_TEST_KEY, OPENROUTER_MODEL, OPENROUTER_TEST_KEY, groq_settings, openrouter_settings, settings
+from fixtures import (
+    CF_ACCOUNT, CF_MODEL, CF_OTHER_ACCOUNT, CF_TOKEN, Clock, GROQ_TEST_KEY, OPENROUTER_MODEL, OPENROUTER_TEST_KEY,
+    cloudflare_settings, groq_settings, openrouter_settings, settings,
+)
 from tools.llm_infra.check_config import main
 from tools.llm_infra.groq_free_models_v1 import DEFAULT_MODEL_CHAIN
+from tools.llm_infra.neuron_ledger import NeuronLedger, utc_day
 from tools.llm_infra.openrouter_router import ACCOUNT_WIDE_MODEL
 from tools.llm_infra.quota_state import QuotaStateStore
 
 
 class CheckTests(unittest.TestCase):
+    def test_cloudflare_reports_daily_neurons_and_blocks_without_controlling_exit_status(self):
+        clock = Clock()
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / "state"
+            store = QuotaStateStore(path, clock=clock)
+            ledger = NeuronLedger(path)
+            ledger.add("cloudflare", "cloudflare_account_1", utc_day(clock()), 21, clock())
+            store.block("cloudflare", "*", "cloudflare_account_1", 2000, "RPD", clock())
+            store.block("cloudflare", "*", f"/accounts/{CF_ACCOUNT}/{CF_TOKEN}", 2000, "RPM", clock())
+            for gemini, values, status in [
+                ({}, cloudflare_settings(CF_ACCOUNT, CF_OTHER_ACCOUNT), "READY_FREE_ONLY"),
+                (settings(""), cloudflare_settings(CF_ACCOUNT) | {"CLOUDFLARE_MODEL": "test/paid"},
+                 "BLOCKED_MODEL_NOT_FREE_TIER"),
+                (settings(""), cloudflare_settings(CF_ACCOUNT) | {"CLOUDFLARE_PLAN_1": "WORKERS_PAID"},
+                 "BLOCKED_NO_ELIGIBLE_KEY"),
+                (settings(""), {"CLOUDFLARE_ACCOUNT_ID_1": CF_ACCOUNT}, "CONFIG_ERROR"),
+                (settings(""), {"CLOUDFLARE_API_TOKEN_1": CF_TOKEN}, "CONFIG_ERROR"),
+                (settings(""), {"CLOUDFLARE_ACCOUNT_ID_1": "", "CLOUDFLARE_API_TOKEN_1": ""}, None),
+            ]:
+                with self.subTest(status=status):
+                    capture = StringIO()
+                    with redirect_stdout(capture), patch("tools.llm_infra.cloudflare_transport._urllib_http") as http:
+                        result = main(["--env-file", str(Path(tmp) / "absent"), "--state", str(path)],
+                                      environ=gemini | values, clock=clock)
+                    http.assert_not_called()
+                    output = capture.getvalue()
+                    for secret in (CF_ACCOUNT, CF_OTHER_ACCOUNT, CF_TOKEN):
+                        if secret in values.values():
+                            self.assertNotIn(secret, output)
+                    self.assertEqual(result, int(not gemini))
+                    tree = json.loads(output.split("\nBilling:")[0])
+                    self.assertEqual(tree["blocked"], [])
+                    if status is None:
+                        self.assertNotIn("cloudflare", tree)
+                        continue
+                    report = tree["cloudflare"]
+                    self.assertEqual(report["status"], status)
+                    self.assertEqual({block["reason"] for block in report["blocked"]}, {"RPD", "RPM"})
+                    if status == "READY_FREE_ONLY":
+                        self.assertEqual(report["neurons_used_today"], {"cloudflare_account_1": 21,
+                                                                       "cloudflare_account_2": 0})
+                        self.assertEqual((report["keys_configured"], report["key_scopes"]), (2, 2))
+                        self.assertEqual(report["model_chain"][0], CF_MODEL)
+                        self.assertEqual(len(report["effective_allowlist"]), 8)
+                        self.assertEqual(report["daily_neuron_budget"], 9000)
+                        self.assertIn("A token cannot show the Workers plan.", report["notice"])
+
     def test_status_and_secret_safe_diagnostics(self):
         clock = Clock()
         with TemporaryDirectory() as tmp:

@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 11 — test files: 114 — test functions: 1361
+Suites: 11 — test files: 121 — test functions: 1398
 
 ## canonical_story
 
@@ -159,12 +159,69 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.ci.check`, `tools.ci.conf
 
 ## llm_infra
 
-### test_check_config (3)
-Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.check_config`, `tools.llm_infra.groq_free_models_v1`, `tools.llm_infra.openrouter_router`, `tools.llm_infra.quota_state`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+### test_check_config (4)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.check_config`, `tools.llm_infra.groq_free_models_v1`, `tools.llm_infra.neuron_ledger`, `tools.llm_infra.openrouter_router`, `tools.llm_infra.quota_state`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
+- `CheckTests.test_cloudflare_reports_daily_neurons_and_blocks_without_controlling_exit_status`
 - `CheckTests.test_status_and_secret_safe_diagnostics`
 - `CheckTests.test_groq_report_status_blocks_and_redaction_leave_gemini_exit_status`
 - `CheckTests.test_openrouter_status_counts_blocks_and_redaction_leave_gemini_exit_status`
+
+### test_cloudflare_config (5)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.cloudflare_config`, `tools.llm_infra.cloudflare_free_models_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `CloudflareConfigTests.test_pairs_use_numeric_priority_and_first_slot_alias_per_account`
+- `CloudflareConfigTests.test_rejects_bad_pairing_and_plan_conflicts_without_echoing_values`
+- `CloudflareConfigTests.test_only_workers_free_is_eligible`
+- `CloudflareConfigTests.test_narrowing_and_cost_controls_apply`
+- `CloudflareConfigTests.test_budget_bounds_and_hops`
+
+### test_cloudflare_free_models_v1 (1)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.cloudflare_free_models_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `CloudflareFreeModelsTests.test_reviewed_pricing_snapshot`
+
+### test_cloudflare_quota_policy (3)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.cloudflare_quota_policy`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `CloudflareQuotaPolicyTests.test_daily_uses_next_midnight_independently_of_headers`
+- `CloudflareQuotaPolicyTests.test_minute_limit_accepts_seconds_or_http_date_and_caps_wait`
+- `CloudflareQuotaPolicyTests.test_unknown_uses_phase_one_streak`
+
+### test_cloudflare_router (10)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.cloudflare_config`, `tools.llm_infra.cloudflare_free_models_v1`, `tools.llm_infra.cloudflare_router`, `tools.llm_infra.cloudflare_transport`, `tools.llm_infra.neuron_ledger`, `tools.llm_infra.quota_state`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `CloudflareRouterTests.test_precheck_skips_an_account_across_models_and_reports_earliest_resume`
+- `CloudflareRouterTests.test_success_adds_usage_or_estimates_missing_sides_and_blocks_at_budget`
+- `CloudflareRouterTests.test_all_accounts_over_budget_pause_even_just_before_midnight`
+- `CloudflareRouterTests.test_quota_refusals_hop_between_accounts_and_stop_at_limit`
+- `CloudflareRouterTests.test_minute_limit_can_wait_inline_once_then_succeed`
+- `CloudflareRouterTests.test_repeated_minute_blocks_pause_after_one_inline_wait_even_with_hops_left`
+- `CloudflareRouterTests.test_capacity_and_transport_retries_back_off_without_blocking_slot`
+- `CloudflareRouterTests.test_auth_failure_disables_only_slot_and_uses_next_token_for_same_account`
+- `CloudflareRouterTests.test_terminal_errors_raise_without_retrying_blocking_or_disabling`
+- `CloudflareRouterTests.test_default_client_writes_estimates_to_quota_file_and_checks_model_before_http`
+
+### test_cloudflare_smoke (6)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.cloudflare_free_models_v1`, `tools.llm_infra.cloudflare_smoke`, `tools.llm_infra.cloudflare_transport`, `tools.llm_infra.neuron_ledger`, `tools.llm_infra.quota_state`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `CloudflareSmokeTests.test_offline_reports_status_and_state_without_a_client`
+- `CloudflareSmokeTests.test_live_sends_one_prompt_and_records_reported_or_estimated_usage`
+- `CloudflareSmokeTests.test_live_failed_request_does_not_retry_or_add_neurons`
+- `CloudflareSmokeTests.test_live_respects_daily_budget_and_existing_blocks`
+- `CloudflareSmokeTests.test_live_rejects_invalid_configuration_and_model_before_network`
+- `CloudflareSmokeTests.test_live_default_transport_has_short_timeout`
+
+### test_cloudflare_transport (7)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.cloudflare_transport`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `CloudflareTransportTests.test_openai_request_and_response`
+- `CloudflareTransportTests.test_native_wrappers_and_optional_fields`
+- `CloudflareTransportTests.test_internal_codes_override_status_in_both_error_envelopes`
+- `CloudflareTransportTests.test_http_fallbacks_and_malformed_response`
+- `CloudflareTransportTests.test_refuses_unreviewed_models_and_invalid_credentials_before_http`
+- `CloudflareTransportTests.test_credentials_and_url_path_are_scrubbed_from_public_response_and_errors`
+- `CloudflareTransportTests.test_network_error_is_replaced_without_secret_containing_exception_context`
 
 ### test_cost_policy (3)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.cost_policy`, `tools.llm_infra.gemini_config`, `tools.llm_infra.gemini_free_models_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.gemini_key_pool_v1`, `tools.story_ingestion.light_novel_adapter_v0`
@@ -234,6 +291,14 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.groq_transport`
 - `GroqTransportTests.test_success_does_not_echo_key_in_content_or_metadata`
 - `GroqTransportTests.test_network_failures_hide_the_underlying_exception`
 - `GroqTransportTests.test_default_http_converts_urllib_http_error`
+
+### test_neuron_ledger (4)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.neuron_ledger`, `tools.llm_infra.quota_state`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `NeuronLedgerTests.test_sqlite_ledger_coexists_with_quota_schema_in_either_creation_order`
+- `NeuronLedgerTests.test_totals_are_isolated_by_provider_scope_and_utc_day_and_old_days_purge`
+- `NeuronLedgerTests.test_unusable_state_is_a_config_error`
+- `NeuronLedgerTests.test_estimates_use_combined_prices_and_ceiling`
 
 ### test_openrouter_config (3)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.openrouter_config`, `tools.llm_infra.openrouter_free_models_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.gemini_key_pool_v1`, `tools.story_ingestion.light_novel_adapter_v0`
