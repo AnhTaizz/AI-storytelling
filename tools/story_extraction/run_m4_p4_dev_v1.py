@@ -31,6 +31,7 @@ from tools.story_extraction.draft_sentence_evidence_v1 import widen_to_sentence
 from tools.story_extraction.draft_transfer_bounds_v1 import bound_by_transfer
 from tools.story_extraction.draft_date_anchor_v1 import anchor_dates_to_events
 from tools.story_extraction.draft_vocabulary_guard_v1 import guard_vocabulary
+from tools.story_extraction.draft_role_repairs_v1 import retag_mention_roles, fix_frame_roles
 from tools.story_extraction.check_annotation_conventions_v1 import RULE_IDS, check_batch
 from tools.story_extraction.check_annotation_conventions_v2 import align_mention_roles
 from tools.story_extraction.check_annotation_conventions_v3 import align_date_anchors
@@ -105,6 +106,8 @@ def verify_packages(dev2_input: Path, dev2_gold: Path) -> None:
 
 def selected_cases(cases: Sequence[str] | None, dataset: str = "DEV2") -> tuple[str, ...]:
     datasets = {"DEV1": dev1_protocol.CASE_IDS, "DEV2": CASE_IDS, "FV2": fv2_protocol.CASE_IDS}
+    if dataset == "FV3":
+        datasets["FV3"] = _fresh_set("FV3")[0].CASE_IDS
     if dataset not in datasets:
         raise DevelopmentError("Unknown development dataset")
     allowed = datasets[dataset]
@@ -124,7 +127,7 @@ def _run_variant(variant: str, quote_resolution: bool, rich_repair_blockers: boo
                  mention_evidence: bool = False,
                  mention_evidence_predicates: Sequence[str] = MENTION_EVIDENCE_PREDICATES, *,
                  sentence_evidence: bool = False, transfer_bounds: bool = False, date_anchor: bool = False,
-                 vocabulary_guard: bool = False) -> str:
+                 vocabulary_guard: bool = False, mention_role: bool = False, frame_roles: bool = False) -> str:
     label = (variant + ("+QR" if quote_resolution else "") + ("+RB" if rich_repair_blockers else "")
              + ("+EN" if existing_names else "") + ("+AM" if anchor_mentions else ""))
     if mention_evidence:
@@ -135,7 +138,8 @@ def _run_variant(variant: str, quote_resolution: bool, rich_repair_blockers: boo
             raise DevelopmentError("Mention evidence predicates must select RefersTo, NamedAs, or both")
         label += suffix[selected]
     return (label + ("+SE" if sentence_evidence else "") + ("+TB" if transfer_bounds else "")
-            + ("+DA" if date_anchor else "") + ("+VG" if vocabulary_guard else ""))
+            + ("+DA" if date_anchor else "") + ("+VG" if vocabulary_guard else "")
+            + ("+MR" if mention_role else "") + ("+FR" if frame_roles else ""))
 
 
 def _with_existing_names(prepared: Mapping[str, Any], context: DraftCompilerContext) -> dict[str, Any]:
@@ -251,13 +255,22 @@ def load_cases(archive: Path, input_root: Path, selected: Sequence[str],
     return result
 
 
-def load_fv2_cases(directory: Path, selected: Sequence[str], variant: str) -> list[CaseInput]:
-    # The FV2 protocol imports this module. Load its runner after both modules are initialized.
-    from tools.story_extraction.run_m4_04b3o_fv2_predictions_v1 import load_cases as load_sealed_cases
+def _fresh_set(dataset: str):
+    """(lock module, sealed-case loader, name prefix) of a fresh validation set used as development data."""
+    # The lock modules import this module. Load them after both modules are initialized.
+    if dataset == "FV2":
+        from tools.story_extraction.run_m4_04b3o_fv2_predictions_v1 import load_cases
+        return fv2_protocol, load_cases, "FV2"
+    from tools.story_extraction import m4_04b3z_fv3_protocol_v1 as fv3_protocol
+    from tools.story_extraction.run_m4_04b3z_fv3_predictions_v1 import load_cases
+    return fv3_protocol, load_cases, "FV3"
 
+
+def load_fv2_cases(directory: Path, selected: Sequence[str], variant: str, dataset: str = "FV2") -> list[CaseInput]:
+    _, load_sealed_cases, _ = _fresh_set(dataset)
     contexts = {case.case_id: case.compiler_context for case in load_sealed_cases(directory)}
     return [_prepare_case(cid, contexts[cid], variant,
-                          tuple(doc.source_bytes for doc in contexts[cid].ingestion.documents), "FV2")
+                          tuple(doc.source_bytes for doc in contexts[cid].ingestion.documents), dataset)
             for cid in selected]
 
 
@@ -268,7 +281,7 @@ def build_primary_spec(variant: str, case: CaseInput, model: str = protocol.MODE
                        mention_evidence: bool = False,
                        mention_evidence_predicates: Sequence[str] = MENTION_EVIDENCE_PREDICATES,
                        sentence_evidence: bool = False, transfer_bounds: bool = False, date_anchor: bool = False,
-                       vocabulary_guard: bool = False) -> DurableJobSpec:
+                       vocabulary_guard: bool = False, mention_role: bool = False, frame_roles: bool = False) -> DurableJobSpec:
     material = prompt_material(variant)
     user = protocol._render(material["primary_user_template"], {
         "CASE_ID": case.case_id,
@@ -277,7 +290,7 @@ def build_primary_spec(variant: str, case: CaseInput, model: str = protocol.MODE
     label = _run_variant(variant, quote_resolution, rich_repair_blockers, existing_names, anchor_mentions,
                          mention_evidence, mention_evidence_predicates,
                          sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor,
-                         vocabulary_guard=vocabulary_guard)
+                         vocabulary_guard=vocabulary_guard, mention_role=mention_role, frame_roles=frame_roles)
     return replace(protocol._spec(f"{_job_prefix(label, case.dataset)}_{case.case_id}_PRIMARY",
                                   material["primary_system"], user),
                    model=model, credential_slot=credential_slot, research_task_id=TASK_ID)
@@ -291,7 +304,7 @@ def build_repair_spec(variant: str, case: CaseInput, primary_raw: str, validatio
                       mention_evidence: bool = False,
                       mention_evidence_predicates: Sequence[str] = MENTION_EVIDENCE_PREDICATES,
                       sentence_evidence: bool = False, transfer_bounds: bool = False, date_anchor: bool = False,
-                      vocabulary_guard: bool = False) -> DurableJobSpec:
+                      vocabulary_guard: bool = False, mention_role: bool = False, frame_roles: bool = False) -> DurableJobSpec:
     payload = protocol.sanitized_failure(validation["category"], validation["blockers"])
     material = prompt_material(variant)
     user = protocol._render(material["repair_user_template"], {
@@ -306,11 +319,11 @@ def build_repair_spec(variant: str, case: CaseInput, primary_raw: str, validatio
                                  mention_evidence=mention_evidence,
                                  mention_evidence_predicates=mention_evidence_predicates,
                                  sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor,
-                                 vocabulary_guard=vocabulary_guard)
+                                 vocabulary_guard=vocabulary_guard, mention_role=mention_role, frame_roles=frame_roles)
     label = _run_variant(variant, quote_resolution, rich_repair_blockers, existing_names, anchor_mentions,
                          mention_evidence, mention_evidence_predicates,
                          sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor,
-                         vocabulary_guard=vocabulary_guard)
+                         vocabulary_guard=vocabulary_guard, mention_role=mention_role, frame_roles=frame_roles)
     return replace(primary, job_id=f"{_job_prefix(label, case.dataset)}_{case.case_id}_REPAIR_1",
                    system_prompt=material["repair_system"], user_prompt=user)
 
@@ -351,7 +364,7 @@ def validate_attempt(raw: str, case: CaseInput, *, quote_resolution: bool = Fals
                      anchor_mentions: bool = False, mention_evidence: bool = False,
                      mention_evidence_predicates: Sequence[str] = MENTION_EVIDENCE_PREDICATES,
                      sentence_evidence: bool = False, transfer_bounds: bool = False, date_anchor: bool = False,
-                     vocabulary_guard: bool = False,
+                     vocabulary_guard: bool = False, mention_role: bool = False, frame_roles: bool = False,
                      ) -> tuple[Any, Any, Any, dict]:
     """Validate one response with optional draft repairs and safe diagnostics.
 
@@ -360,8 +373,9 @@ def validate_attempt(raw: str, case: CaseInput, *, quote_resolution: bool = Fals
     """
     original_draft, report, anchoring_report, evidence_report = None, None, None, None
     sentence_report, bounds_report, date_report, vocabulary_report = None, None, None, None
+    mention_role_report, frame_roles_report = None, None
     host_repair = any((quote_resolution, anchor_mentions, mention_evidence, sentence_evidence,
-                       transfer_bounds, date_anchor, vocabulary_guard))
+                       transfer_bounds, date_anchor, vocabulary_guard, mention_role, frame_roles))
     if host_repair:
         try:
             original_draft = json.loads(raw)
@@ -384,6 +398,10 @@ def validate_attempt(raw: str, case: CaseInput, *, quote_resolution: bool = Fals
                 resolved, date_report = anchor_dates_to_events(resolved, case.prepared_input)
             if vocabulary_guard:
                 resolved, vocabulary_report = guard_vocabulary(resolved, case.prepared_input)
+            if mention_role:
+                resolved, mention_role_report = retag_mention_roles(resolved, case.prepared_input)
+            if frame_roles:
+                resolved, frame_roles_report = fix_frame_roles(resolved, case.prepared_input)
             raw = json.dumps(resolved, ensure_ascii=False)
     captures = []
     original_validator = compiler.validate_batch_guarded
@@ -417,6 +435,10 @@ def validate_attempt(raw: str, case: CaseInput, *, quote_resolution: bool = Fals
         validation["date_anchor"] = date_report
     if vocabulary_report is not None:
         validation["vocabulary_guard"] = vocabulary_report
+    if mention_role_report is not None:
+        validation["mention_role"] = mention_role_report
+    if frame_roles_report is not None:
+        validation["frame_roles"] = frame_roles_report
     return original_draft if host_repair else draft, draft, batch, validation
 
 
@@ -427,7 +449,7 @@ def run_cases(cases: Sequence[CaseInput], specs: Sequence[DurableJobSpec], varia
               existing_names: bool = False, anchor_mentions: bool = False, mention_evidence: bool = False,
               mention_evidence_predicates: Sequence[str] = MENTION_EVIDENCE_PREDICATES,
               sentence_evidence: bool = False, transfer_bounds: bool = False, date_anchor: bool = False,
-              vocabulary_guard: bool = False) -> None:
+              vocabulary_guard: bool = False, mention_role: bool = False, frame_roles: bool = False) -> None:
     for case, primary in zip(cases, specs):
         directory = root / "artifacts" / case.case_id
         attempts = []
@@ -450,11 +472,11 @@ def run_cases(cases: Sequence[CaseInput], specs: Sequence[DurableJobSpec], varia
                 anchor_mentions=anchor_mentions, mention_evidence=mention_evidence,
                 mention_evidence_predicates=mention_evidence_predicates,
                 sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor,
-                vocabulary_guard=vocabulary_guard)
+                vocabulary_guard=vocabulary_guard, mention_role=mention_role, frame_roles=frame_roles)
             if draft is not None:
                 _write_json(directory / f"{phase}_draft.json", draft)
                 if any((quote_resolution, anchor_mentions, mention_evidence, sentence_evidence,
-                        transfer_bounds, date_anchor, vocabulary_guard)):
+                        transfer_bounds, date_anchor, vocabulary_guard, mention_role, frame_roles)):
                     _write_json(directory / f"{phase}_resolved_draft.json", resolved)
             attempt["validation"] = validation
             if validation["pass"] or phase == "repair_1":
@@ -466,7 +488,7 @@ def run_cases(cases: Sequence[CaseInput], specs: Sequence[DurableJobSpec], varia
                                      mention_evidence=mention_evidence,
                                      mention_evidence_predicates=mention_evidence_predicates,
                                      sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor,
-                                     vocabulary_guard=vocabulary_guard)
+                                     vocabulary_guard=vocabulary_guard, mention_role=mention_role, frame_roles=frame_roles)
         compiled_sha256 = None
         if batch is not None:
             compiled_sha256 = _write_json(directory / "compiled_batch.json", batch)
@@ -604,7 +626,7 @@ def revalidate_cases(cases: Sequence[CaseInput], source: Path, destination: Path
                      mention_evidence: bool = False,
                      mention_evidence_predicates: Sequence[str] = MENTION_EVIDENCE_PREDICATES,
                      sentence_evidence: bool = False, transfer_bounds: bool = False, date_anchor: bool = False,
-                     vocabulary_guard: bool = False) -> dict:
+                     vocabulary_guard: bool = False, mention_role: bool = False, frame_roles: bool = False) -> dict:
     """Replay saved attempts without touching checkpoints or original validations.
 
     All saved attempts are inspected, even when the new primary passes. The new
@@ -632,6 +654,10 @@ def revalidate_cases(cases: Sequence[CaseInput], source: Path, destination: Path
             counts["date_anchor_report"] = anchor_dates_to_events({}, {})[1]
         if vocabulary_guard:
             counts["vocabulary_guard_report"] = guard_vocabulary({})[1]
+        if mention_role:
+            counts["mention_role_report"] = retag_mention_roles({}, {})[1]
+        if frame_roles:
+            counts["frame_roles_report"] = fix_frame_roles({})[1]
         return counts
 
     totals = statistics()
@@ -654,7 +680,7 @@ def revalidate_cases(cases: Sequence[CaseInput], source: Path, destination: Path
                     anchor_mentions=anchor_mentions, mention_evidence=mention_evidence,
                     mention_evidence_predicates=mention_evidence_predicates,
                     sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor,
-                    vocabulary_guard=vocabulary_guard)
+                    vocabulary_guard=vocabulary_guard, mention_role=mention_role, frame_roles=frame_roles)
                 status = "STRUCTURAL_VALID" if batch is not None else validation["category"]
             elif attempt["validation"]["category"] == "TRANSPORT_FAILURE":
                 validation = attempt["validation"]
@@ -672,7 +698,7 @@ def revalidate_cases(cases: Sequence[CaseInput], source: Path, destination: Path
                     for kind, outcomes in validation.get("mention_anchoring", {}).items():
                         for code, count in outcomes.items():
                             counts["mention_anchoring_report"][kind][code] += count
-                for name in ("date_anchor", "vocabulary_guard"):
+                for name in ("date_anchor", "vocabulary_guard", "mention_role", "frame_roles"):
                     if name in validation:
                         _add_report_counts(counts[f"{name}_report"], validation[name])
                 for name in repair_reports:
@@ -716,12 +742,17 @@ def revalidate_cases(cases: Sequence[CaseInput], source: Path, destination: Path
         result["date_anchor"] = True
     if vocabulary_guard:
         result["vocabulary_guard"] = True
+    if mention_role:
+        result["mention_role"] = True
+    if frame_roles:
+        result["frame_roles"] = True
     _write_json(destination / "revalidation.json", result)
     return result
 
 
 def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
             dev2_gold: Path | None = None, dataset: str = "DEV2", fv2_dir: Path | None = None,
+            fv3_dir: Path | None = None,
             dev1_package: Path | None = None, dev1_ingestion_manifest: Path | None = None,
             dev1_source_root: Path | None = None, dev1_case_loader: Callable = load_dev_inputs,
             model: str = protocol.MODEL, credential_slot: str = protocol.CREDENTIAL_SLOT,
@@ -733,13 +764,14 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
             mention_evidence: bool = False,
             mention_evidence_predicates: Sequence[str] = MENTION_EVIDENCE_PREDICATES,
             sentence_evidence: bool = False, transfer_bounds: bool = False, date_anchor: bool = False,
-            vocabulary_guard: bool = False,
+            vocabulary_guard: bool = False, mention_role: bool = False, frame_roles: bool = False,
             run_directory: Path | None = None, align_gold: bool = False) -> dict[str, Any]:
     if mode not in ("preflight", "run", "score", "revalidate"):
         raise DevelopmentError("Unknown development mode")
     if run_directory is not None and mode != "revalidate":
         raise DevelopmentError("Run directory is only used for revalidation")
     selected = selected_cases(cases, dataset)
+    fresh_dir = fv2_dir if dataset == "FV2" else fv3_dir
 
     def verify(*, include_gold: bool = False):
         if dataset == "DEV1":
@@ -747,10 +779,11 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
                 raise DevelopmentError("DEV1 requires package, ingestion manifest and source root")
             if protocol.file_sha256(dev1_package) != DEV1_SHA256:
                 raise DevelopmentError("DEV1 archive hash mismatch")
-        elif dataset == "FV2":
-            if fv2_dir is None:
-                raise DevelopmentError("FV2 requires an FV2 directory")
-            fv2_protocol.verify_fv2_packages(fv2_dir, include_gold=include_gold)
+        elif dataset in ("FV2", "FV3"):
+            if fresh_dir is None:
+                raise DevelopmentError(f"{dataset} requires an {dataset} directory")
+            lock, _, prefix = _fresh_set(dataset)
+            getattr(lock, f"verify_{prefix.lower()}_packages")(fresh_dir, include_gold=include_gold)
         else:
             if dev2_input is None or dev2_gold is None:
                 raise DevelopmentError("DEV2 requires input and gold archives")
@@ -761,7 +794,7 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
     label = _run_variant(variant, quote_resolution, rich_repair_blockers, existing_names, anchor_mentions,
                          mention_evidence, mention_evidence_predicates,
                          sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor,
-                         vocabulary_guard=vocabulary_guard)
+                         vocabulary_guard=vocabulary_guard, mention_role=mention_role, frame_roles=frame_roles)
     identity = label.replace("+", "_")
     base_root = Path(output_root) if dataset == "DEV2" else Path(output_root) / dataset
     root = base_root / label
@@ -771,9 +804,11 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
             loaded, gold = load_dev1_cases(dev1_package, Path(tmp), selected, dev1_ingestion_manifest,
                                           dev1_source_root, identity, dev1_case_loader)
             input_sha256 = gold_sha256 = DEV1_SHA256
-        elif dataset == "FV2":
-            loaded = load_fv2_cases(fv2_dir, selected, identity)
-            input_sha256, gold_sha256 = fv2_protocol.FV2_INPUT_SHA256, fv2_protocol.FV2_GOLD_SHA256
+        elif dataset in ("FV2", "FV3"):
+            loaded = load_fv2_cases(fresh_dir, selected, identity, dataset)
+            lock, _, prefix = _fresh_set(dataset)
+            input_sha256 = getattr(lock, f"{prefix}_INPUT_SHA256")
+            gold_sha256 = getattr(lock, f"{prefix}_GOLD_SHA256")
         else:
             loaded = load_cases(dev2_input, Path(tmp), selected, case_loader, identity)
             input_sha256, gold_sha256 = INPUT_SHA256, GOLD_SHA256
@@ -786,7 +821,7 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
                  mention_evidence=mention_evidence,
                  mention_evidence_predicates=mention_evidence_predicates,
                  sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor,
-                 vocabulary_guard=vocabulary_guard) for case in loaded]
+                 vocabulary_guard=vocabulary_guard, mention_role=mention_role, frame_roles=frame_roles) for case in loaded]
         metadata = {"dataset": dataset, "variant": variant, "model": model, "credential_slot": credential_slot,
                     "case_count": len(loaded), "primary_specs": len(specs), "prompt_hashes": hashes,
                     "input_sha256": input_sha256, "gold_sha256": gold_sha256,
@@ -806,6 +841,10 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
             metadata["date_anchor"] = True
         if vocabulary_guard:
             metadata["vocabulary_guard"] = True
+        if mention_role:
+            metadata["mention_role"] = True
+        if frame_roles:
+            metadata["frame_roles"] = True
         if mode == "preflight":
             return {**metadata, "status": "PREFLIGHT_PASS"}
         if mode == "revalidate":
@@ -815,7 +854,7 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
                                     anchor_mentions=anchor_mentions, mention_evidence=mention_evidence,
                                     mention_evidence_predicates=mention_evidence_predicates,
                                     sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor,
-                                    vocabulary_guard=vocabulary_guard)
+                                    vocabulary_guard=vocabulary_guard, mention_role=mention_role, frame_roles=frame_roles)
 
         def guard(*, include_gold: bool = False):
             verify(include_gold=include_gold)
@@ -861,10 +900,11 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
                       mention_evidence=mention_evidence,
                       mention_evidence_predicates=mention_evidence_predicates,
                       sentence_evidence=sentence_evidence, transfer_bounds=transfer_bounds, date_anchor=date_anchor,
-                      vocabulary_guard=vocabulary_guard)
+                      vocabulary_guard=vocabulary_guard, mention_role=mention_role, frame_roles=frame_roles)
         guard(include_gold=True)
-        if dataset == "FV2":
-            sealed_gold = scoring.read_gold(fv2_dir / fv2_protocol.FV2_GOLD_NAME)
+        if dataset in ("FV2", "FV3"):
+            lock, _, prefix = _fresh_set(dataset)
+            sealed_gold = scoring.read_gold(fresh_dir / getattr(lock, f"{prefix}_GOLD_NAME"))
             gold = {cid: {**sealed_gold[cid], "acceptable_optional_assertion_ids": []} for cid in selected}
         elif dataset == "DEV2":
             gold = read_gold(dev2_gold, selected)
@@ -879,8 +919,9 @@ def execute(*, variant: str, output_root: Path, dev2_input: Path | None = None,
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--variant", required=True)
-    parser.add_argument("--dataset", choices=("DEV1", "DEV2", "FV2"), default="DEV2")
+    parser.add_argument("--dataset", choices=("DEV1", "DEV2", "FV2", "FV3"), default="DEV2")
     parser.add_argument("--fv2-dir", type=Path, help="Directory holding the sealed FV2 packages")
+    parser.add_argument("--fv3-dir", type=Path, help="Directory holding the sealed FV3 packages")
     parser.add_argument("--align-gold", action="store_true", help="Align development gold in memory when scoring")
     parser.add_argument("--dev2-input", type=Path)
     parser.add_argument("--dev2-gold", type=Path)
@@ -906,6 +947,10 @@ def main(argv: list[str] | None = None) -> int:
                         help="Move a named calendar date to the sole event in its sentence")
     parser.add_argument("--vocabulary-guard", action="store_true",
                         help="Normalize TOKEN values or drop unreferenced invalid propositions")
+    parser.add_argument("--mention-role", action="store_true",
+                        help="Give mention evidence outside dialogue the single role of its sentence")
+    parser.add_argument("--frame-roles", action="store_true",
+                        help="Turn PATIENT into THEME where the event frame has no PATIENT")
     parser.add_argument("--rich-repair-blockers", action="store_true")
     parser.add_argument("--existing-names", action="store_true",
                         help="Add affirmed prior-context names and mention forms to model input")

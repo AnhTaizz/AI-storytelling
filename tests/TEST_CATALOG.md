@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 90 — test functions: 1213
+Suites: 9 — test files: 91 — test functions: 1217
 
 ## canonical_story
 
@@ -788,6 +788,13 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_co
 - `QuoteResolutionTests.test_pass_order_preserves_local_matches_then_orders_moved_mentions`
 - `QuoteResolutionTests.test_resolved_substring_compiles_to_precise_source_positions`
 
+### test_draft_role_repairs_v1 (3)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_compiler_v1_1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.draft_role_repairs_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.run_m4_04b3g_fv1_predictions_v1`, `tools.story_extraction.run_m4_p4_dev_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `MentionRoleTests.test_mention_evidence_takes_the_single_sentence_role`
+- `MentionRoleTests.test_shared_items_are_not_edited_in_place_and_odd_inputs_are_safe`
+- `FrameRoleTests.test_patient_becomes_theme_only_where_the_frame_has_no_patient`
+
 ### test_draft_sentence_evidence_v1 (4)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_sentence_evidence_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.run_m4_04b3g_fv1_predictions_v1`, `tools.story_ingestion.light_novel_adapter_v0`
 
@@ -1216,13 +1223,14 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `RunnerTests.test_blind_lifecycle_and_ordered_repair_options`
 - `RunnerTests.test_smoke_and_case_order_refusals`
 
-### test_run_m4_p4_dev_v1 (20)
-Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_compiler_v1_1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.m4_04b3f_fv1_protocol_v1`, `tools.story_extraction.run_m4_04b3o_fv2_predictions_v1`, `tools.story_extraction.run_m4_p4_dev_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+### test_run_m4_p4_dev_v1 (21)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.draft_compiler_v1`, `tools.story_extraction.draft_compiler_v1_1`, `tools.story_extraction.draft_coverage_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.m4_04b3f_fv1_protocol_v1`, `tools.story_extraction.m4_04b3z_fv3_protocol_v1`, `tools.story_extraction.run_m4_04b3o_fv2_predictions_v1`, `tools.story_extraction.run_m4_04b3z_fv3_predictions_v1`, `tools.story_extraction.run_m4_p4_dev_v1`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `DevelopmentRunnerTests.test_prompt_composition_sources_and_request_identity`
 - `DevelopmentRunnerTests.test_hash_refusal_and_selection_validation`
 - `DevelopmentRunnerTests.test_preflight_selects_and_builds_one_spec_without_provider_work`
 - `DevelopmentRunnerTests.test_fv2_run_verifies_before_use_and_rescores_aligned_gold_offline`
+- `DevelopmentRunnerTests.test_fv3_dataset_uses_the_fv3_lock_loader_and_gold`
 - `DevelopmentRunnerTests.test_existing_names_use_only_affirmed_base_facts_and_compiler_handles`
 - `DevelopmentRunnerTests.test_run_outcomes_artifacts_and_locked_resume`
 - `DevelopmentRunnerTests.test_interrupted_artifact_write_resumes_locked_response_and_variants_are_isolated`
