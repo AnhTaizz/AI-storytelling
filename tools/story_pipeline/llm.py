@@ -234,6 +234,7 @@ class CallLog:
     """Collects every model call of a run so it can be written to disk."""
 
     entries: List[Dict[str, Any]] = field(default_factory=list)
+    include_provider: bool = True
 
     def add(self, entry: Dict[str, Any]) -> None:
         self.entries.append(entry)
@@ -285,7 +286,11 @@ def run_json_stage(
             errors = soft_check(obj)
             soft_only = bool(errors)
         if log is not None:
+            provider = record.get("provider")
+            if provider == "Google Gemini API":
+                provider = "gemini"
             log.add({
+                **({"provider": provider} if log.include_provider and provider else {}),
                 "stage": stage,
                 "request_id": request_id,
                 "attempt": attempt,

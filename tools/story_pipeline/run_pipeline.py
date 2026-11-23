@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import dataclasses
 import json
+import os
 import re
 import sys
 import time
@@ -24,6 +25,8 @@ REPO = Path(__file__).resolve().parents[2]
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
+from tools.llm_infra.routing_policy import DEFAULT_POLICY, PROVIDERS, RoutingPolicy, load_policy  # noqa: E402
+from tools.llm_infra.telemetry import usage_counts  # noqa: E402
 from tools.story_memory import glossary_v0  # noqa: E402
 from tools.story_memory.memory_v0 import StoryMemory, build_roster, recap_context, recap_event_refs  # noqa: E402
 from tools.story_pipeline import brief_check as brief_checker  # noqa: E402
@@ -260,8 +263,16 @@ def usage_summary(entries: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
         row = stages_.setdefault(entry.get("stage", "?"), {"calls": 0, **{k: 0 for k in USAGE_FIELDS}})
         row["calls"] += 1
         usage = entry.get("usage") or {}
-        for key, field in USAGE_FIELDS.items():
-            row[key] += int(usage.get(field) or 0)
+        if entry.get("provider") in {"groq", "openrouter", "cloudflare"}:
+            counts = usage_counts({"usage_metadata": usage})
+            row["prompt"] += counts["input_tokens"] or 0
+            row["output"] += counts["output_tokens"] or 0
+            row["thoughts"] += counts["reasoning_tokens"] or 0
+            if type(tokens := usage.get("total_tokens")) is int and tokens >= 0:
+                row["total"] += tokens
+        else:
+            for key, field in USAGE_FIELDS.items():
+                row[key] += int(usage.get(field) or 0)
     total = {"calls": sum(r["calls"] for r in stages_.values()),
              **{k: sum(r[k] for r in stages_.values()) for k in USAGE_FIELDS}}
     return {"by_stage": stages_, "total": total}
@@ -501,11 +512,14 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         source_check: bool = True, source_check_samples: int = 1, full_revision_rounds: int = 1,
         full_recheck: bool = False, source_check_chunk: int = 4, owner_review: Optional[Path | str] = None,
         callbacks: bool = True, check_briefs: bool = True,
-        invocation: Optional[Dict[str, Any]] = None, progress: Callable[[str], None] = lambda message: None) -> Dict[str, Any]:
+        invocation: Optional[Dict[str, Any]] = None, locked: bool = False,
+        progress: Callable[[str], None] = lambda message: None) -> Dict[str, Any]:
     """`scope` is the episode. `background` are earlier chapters, summarised from memory as a
     recap (never later chapters). With `memory`, chapter briefs are reused across runs."""
     out_dir.mkdir(parents=True, exist_ok=True)
-    log = CallLog()
+    if hasattr(client, "for_run"):
+        client = client.for_run(out_dir.name)
+    log = CallLog(include_provider=not locked)
     started = time.time()
     manifest: Dict[str, Any] = {
         "pipeline_version": PIPELINE_VERSION,
@@ -870,6 +884,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--model", default=None,
                         help="Gemini model id, or a comma-separated fallback chain tried in order when a "
                              "model is overloaded or out of quota (defaults to GEMINI_MODEL or the built-in free-tier chain)")
+    parser.add_argument("--provider", choices=(*PROVIDERS, "auto"), default=None,
+                        help="free LLM provider (default: LLM_PROVIDER or gemini)")
+    parser.add_argument("--routing-policy", dest="routing_policy_path", default=None, metavar="PATH",
+                        help=f"routing policy for auto (default: {DEFAULT_POLICY.name})")
     parser.add_argument("--temperature", type=float, default=0.4)
     parser.add_argument("--dotenv", default=str(REPO / ".env"))
     parser.add_argument("--facts", default=None, help="optional story_facts/v0 JSON from upstream extraction")
@@ -894,17 +912,90 @@ def episode_scope(manifest_path: Path | str, start: int, end: int, source_root: 
     return load_scope(manifest_path, (start, end), source_root), []
 
 
+ROUTING_OPTIONS = ("provider", "routing_policy_path", "routing_policy_sha256")
+
+
+def routing_locked(directory: Optional[Path]) -> bool:
+    return os.environ.get("LLM_ROUTING_LOCKED") == "1" or (
+        directory is not None and any((path / "gate_lock.json").is_file() for path in (directory, directory.parent)))
+
+
+def check_routing_identity(args: argparse.Namespace, saved: Dict[str, Any]) -> None:
+    if args.provider != (saved.get("provider") or "gemini"):
+        raise ValueError("Cannot resume with a different LLM provider")
+    if args.routing_policy_sha256 != saved.get("routing_policy_sha256"):
+        raise ValueError("Cannot resume with a different routing policy SHA-256")
+
+
+def prepare_routing(args: argparse.Namespace, directory: Optional[Path] = None,
+                    recorded: Optional[Dict[str, Any]] = None) -> None:
+    """Resolve CLI/environment defaults and check the saved routing identity before any calls."""
+    saved = (recorded.get("invocation") or {}) if recorded is not None else {}
+    provider = getattr(args, "provider", None) or os.environ.get("LLM_PROVIDER")
+    args.provider = provider or saved.get("provider") or "gemini"
+    args.locked = routing_locked(directory)
+    if args.provider not in (*PROVIDERS, "auto"):
+        raise ValueError("Invalid LLM provider. Choose gemini, groq, openrouter, cloudflare or auto.")
+    if args.locked and args.provider != "gemini":
+        raise ValueError("Locked story runs require --provider gemini")
+    if recorded is not None and args.provider != (saved.get("provider") or "gemini"):
+        raise ValueError("Cannot resume with a different LLM provider")
+    args.routing_policy = None
+    args.routing_policy_sha256 = None
+    if args.provider == "auto":
+        if args.model:
+            raise ValueError("With --provider auto, select models in the routing policy")
+        path = getattr(args, "routing_policy_path", None) or saved.get("routing_policy_path") or DEFAULT_POLICY
+        args.routing_policy_path = str(Path(path).resolve())
+        args.routing_policy = load_policy(args.routing_policy_path)
+        args.routing_policy_sha256 = args.routing_policy.sha256
+    else:
+        args.routing_policy_path = None
+    if recorded is not None:
+        check_routing_identity(args, saved)
+
+
 def make_client(args: argparse.Namespace) -> Optional[LLMClient]:
-    """Build the keys-only Gemini client, or print setup guidance for an invalid configuration."""
+    """Build the legacy Gemini path or a provider client governed by the free-only routers."""
     from tools.llm_infra.gemini_config import merged_settings, state_path
+    from tools.llm_infra.pipeline_clients import build_adapter, configured_secrets
+    from tools.llm_infra.quota_state import QuotaStateStore
+    from tools.llm_infra.telemetry import DEFAULT_TELEMETRY, Telemetry
+    from tools.llm_infra.unified_router import ObservedGeminiClient, UnifiedLLMClient
     from tools.story_extraction.gemini_key_pool_v1 import GeminiConfigError
     from tools.story_pipeline.llm import GeminiLLMClient
+
+    secrets = ()
     try:
+        if not hasattr(args, "routing_policy"):
+            prepare_routing(args)
         settings = merged_settings(args.dotenv)
-        return GeminiLLMClient(args.model, dotenv_path=args.dotenv, temperature=args.temperature,
-                               quota_state_path=state_path(settings), environ=settings)
-    except GeminiConfigError as exc:
-        print(f"config error: {exc}. Run python -m tools.llm_infra.check_config "
+        secrets = configured_secrets(settings)
+        path = state_path(settings)
+        telemetry = Telemetry(settings.get("LLM_TELEMETRY_PATH") or DEFAULT_TELEMETRY, secrets=secrets)
+        if args.provider == "gemini":
+            client = GeminiLLMClient(args.model, dotenv_path=args.dotenv, temperature=args.temperature,
+                                     quota_state_path=path, environ=settings)
+            return client if args.locked else ObservedGeminiClient(client, telemetry)
+        if any(secret in str(path) for secret in secrets):
+            raise GeminiConfigError("Quota state path contains credential material")
+        store = QuotaStateStore(path)
+        auto = args.provider == "auto"
+        policy = args.routing_policy if auto else RoutingPolicy.single_provider(args.provider)
+        adapters = {}
+        for provider in PROVIDERS if auto else (args.provider,):
+            try:
+                adapters[provider] = build_adapter(provider, settings, store, model=args.model,
+                                                   temperature=args.temperature, strict=not auto, secrets=secrets)
+            except GeminiConfigError:
+                if not auto:
+                    raise
+        return UnifiedLLMClient(policy, adapters, telemetry=telemetry, provider=args.provider)
+    except (GeminiConfigError, ValueError) as exc:
+        message = str(exc)
+        for secret in secrets:
+            message = message.replace(secret, "[REDACTED]")
+        print(f"config error: {message}. Run python -m tools.llm_infra.check_config "
               f"and see docs/guides/FREE_LLM_PROVIDER_SETUP.md.", file=sys.stderr)
         return None
 
@@ -924,11 +1015,12 @@ def run_options(args: argparse.Namespace) -> Dict[str, Any]:
 RESUMABLE_OPTIONS = ("no_brief_check", "manifest", "source_root", "chapters", "recap", "memory", "no_memory", "full_revision_rounds",
                      "source_check_samples", "source_check_chunk", "full_recheck", "no_source_check", "profile",
                      "min_words", "max_words", "model", "temperature", "facts", "max_repairs", "revision_rounds",
-                     "revise_severities", "stop_after", "no_callbacks")
+                     "revise_severities", "stop_after", "no_callbacks", *ROUTING_OPTIONS)
 
 
 def invocation_of(args: argparse.Namespace) -> Dict[str, Any]:
-    return {key: getattr(args, key) for key in RESUMABLE_OPTIONS if hasattr(args, key)}
+    return {key: getattr(args, key) for key in RESUMABLE_OPTIONS if hasattr(args, key)
+            and not (getattr(args, "locked", False) and key in ROUTING_OPTIONS)}
 
 
 def given_options(parser: argparse.ArgumentParser, argv: Optional[List[str]]) -> Set[str]:
@@ -965,24 +1057,29 @@ def restore_invocation(args: argparse.Namespace, given: Set[str], run_dir: Path)
     """Fill the options a resumed run was started with, except those given again; returns
     the names restored. A resume with other check settings would redo stages it has saved."""
     path = run_dir / "run_manifest.json"
-    if not path.is_file():
-        return []
-    manifest = json.loads(path.read_text(encoding="utf-8"))
-    recorded = manifest.get("invocation") or _legacy_invocation(manifest)
+    manifest = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None
+    recorded = (manifest.get("invocation") or _legacy_invocation(manifest)) if manifest is not None else {}
     restored = []
     for key, value in recorded.items():
-        if key in RESUMABLE_OPTIONS and key not in given and getattr(args, key, value) != value:
+        if key in RESUMABLE_OPTIONS and key not in ROUTING_OPTIONS and key not in given and getattr(args, key, value) != value:
             setattr(args, key, value)
             restored.append(key)
+    prepare_routing(args, run_dir, manifest)
     return restored
 
 
 def main(argv: Optional[List[str]] = None) -> int:
     args = build_parser().parse_args(argv)
-    if args.resume:
-        restored = restore_invocation(args, given_options(build_parser(), argv), Path(args.resume))
-        if restored:
-            print(f"resume: using the run's own {', '.join(restored)}", flush=True)
+    try:
+        if args.resume:
+            restored = restore_invocation(args, given_options(build_parser(), argv), Path(args.resume))
+            if restored:
+                print(f"resume: using the run's own {', '.join(restored)}", flush=True)
+        else:
+            prepare_routing(args, Path(args.out) if args.out else None)
+    except ValueError as exc:
+        print(f"config error: {exc}", file=sys.stderr)
+        return 2
     start, end = parse_range(args.chapters)
     scope, background = episode_scope(args.manifest, start, end, args.source_root, args.recap)
     memory = None if args.no_memory else StoryMemory(args.memory, scope.story_id)
@@ -1003,7 +1100,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         print(f"warning: {warning}", flush=True)
     manifest = run(client, scope, profile, out_dir, facts=facts, resume=resume, background=background,
                    memory=memory, progress=lambda message: print(f"  ... {message}", flush=True),
-                   invocation=invocation_of(args), **run_options(args))
+                   invocation=invocation_of(args), locked=args.locked, **run_options(args))
     status = manifest["status"]
     print(f"status: {STATUS_VI.get(status, status)}  calls: {manifest['model_calls']}  seconds: {manifest['seconds']}")
     for reason in manifest.get("review_reasons", []):

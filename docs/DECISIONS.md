@@ -1076,3 +1076,13 @@ LIMITS:
 - The OpenAI-compatible endpoint's response shape and JSON mode remain unverified until a live run.
 - The 10,000-Neuron daily allocation is small, roughly 100,000–300,000 tokens for typical mixes depending on the model. It suits short tasks.
 - Pipeline integration is planned for Phase 5.
+
+---
+
+## DEC-040 ? Unified Free LLM Router (Phase 5)
+
+STATUS: PROPOSED (awaiting Project Owner review in the PR)
+
+Keep Gemini as the default story pipeline route. Opt-in named providers and AUTO reuse the free-only routers, quota stores, and cost checks from DEC-034 and DEC-036 through DEC-039. AUTO uses an owner-editable policy and preflights requests against known limits or a conservative fallback for unknown contexts. Candidate order reflects owner preference. The default quality-critical tier stays on Gemini.
+
+Record the selected provider and AUTO policy hash for resume. Log metadata-only telemetry for unlocked runs. Preserve the legacy Gemini path under DEC-033's gate lock. The owner decides when Phase 5 can merge around the locked sample.

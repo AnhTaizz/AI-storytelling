@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 11 — test files: 121 — test functions: 1399
+Suites: 11 — test files: 127 — test functions: 1423
 
 ## canonical_story
 
@@ -159,9 +159,10 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.ci.check`, `tools.ci.conf
 
 ## llm_infra
 
-### test_check_config (4)
+### test_check_config (5)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.check_config`, `tools.llm_infra.groq_free_models_v1`, `tools.llm_infra.neuron_ledger`, `tools.llm_infra.openrouter_router`, `tools.llm_infra.quota_state`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
+- `CheckTests.test_routing_report_filters_free_models_and_active_blocks`
 - `CheckTests.test_cloudflare_reports_daily_neurons_and_blocks_without_controlling_exit_status`
 - `CheckTests.test_status_and_secret_safe_diagnostics`
 - `CheckTests.test_groq_report_status_blocks_and_redaction_leave_gemini_exit_status`
@@ -293,6 +294,11 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.groq_transport`
 - `GroqTransportTests.test_network_failures_hide_the_underlying_exception`
 - `GroqTransportTests.test_default_http_converts_urllib_http_error`
 
+### test_model_capabilities_v1 (1)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.cloudflare_free_models_v1`, `tools.llm_infra.gemini_free_models_v1`, `tools.llm_infra.groq_free_models_v1`, `tools.llm_infra.model_capabilities_v1`, `tools.llm_infra.openrouter_free_models_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `CapabilityTests.test_snapshot_covers_maintained_free_models`
+
 ### test_neuron_ledger (4)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.neuron_ledger`, `tools.llm_infra.quota_state`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
@@ -357,6 +363,15 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.openrouter_tran
 - `OpenRouterTransportTests.test_default_urllib_adapter_sends_get_and_post_without_redirects`
 - `OpenRouterTransportTests.test_invalid_client_arguments_are_rejected_before_http`
 
+### test_pipeline_clients (5)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.cloudflare_transport`, `tools.llm_infra.groq_transport`, `tools.llm_infra.openrouter_transport`, `tools.llm_infra.pipeline_clients`, `tools.llm_infra.quota_state`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.gemini_key_pool_v1`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.llm`
+
+- `AdapterTests.test_generate_via_existing_router_and_transport`
+- `AdapterTests.test_paid_and_non_free_models_are_refused_before_factory`
+- `AdapterTests.test_transport_error_mapping`
+- `AdapterTests.test_dispatch_budget_bounds_authentication_hops`
+- `AdapterTests.test_direct_endpoint_and_sdk_are_absent_from_tools`
+
 ### test_quota_policy (2)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.quota_policy`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
@@ -367,6 +382,35 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.quota_policy`, 
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.quota_state`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `StoreTests.test_lifecycle_and_validation`
+
+### test_routing_policy (2)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.routing_policy`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `PolicyTests.test_raw_hash_and_stage_settings`
+- `PolicyTests.test_rejects_bad_policy_without_echoing_input`
+
+### test_telemetry (2)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.pipeline_clients`, `tools.llm_infra.telemetry`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `TelemetryTests.test_schema_and_all_columns_exclude_injected_secrets`
+- `TelemetryTests.test_unsupported_schema_warns_without_overwriting_version`
+
+### test_token_estimate (1)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.token_estimate`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `EstimateTests.test_rounds_total_utf8_bytes_up`
+
+### test_unified_router (8)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.model_capabilities_v1`, `tools.llm_infra.pipeline_clients`, `tools.llm_infra.routing_policy`, `tools.llm_infra.telemetry`, `tools.llm_infra.unified_router`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.llm`
+
+- `UnifiedTests.test_first_eligible_provider_and_capacity_skips`
+- `UnifiedTests.test_quality_tier_never_crosses_providers`
+- `UnifiedTests.test_utility_fallback_only_on_eligible_failures`
+- `UnifiedTests.test_all_quota_pauses_but_mixed_skips_do_not`
+- `UnifiedTests.test_policy_filters_unsupported_json_and_honors_known_context`
+- `UnifiedTests.test_router_dispatch_cap_counts_candidates`
+- `UnifiedTests.test_telemetry_failure_does_not_fail_call`
+- `UnifiedTests.test_legacy_gemini_records_usage_and_preserves_errors`
 
 ## media_ingest
 
@@ -1794,8 +1838,8 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `ReviewSummaryTests.test_forms_are_parsed_and_owner_and_agent_kept_apart`
 - `ReviewSummaryTests.test_quoted_errors_are_read_from_the_form`
 
-### test_run_story (9)
-Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.llm`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.run_story`
+### test_run_story (11)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.openrouter_router`, `tools.llm_infra.pipeline_clients`, `tools.llm_infra.quota_state`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.llm`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.run_story`
 
 - `PlanTests.test_episodes_cover_the_range_in_order`
 - `SeasonTests.test_daily_quota_pauses_plan_and_resume_reuses_brief`
@@ -1805,9 +1849,11 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `SeasonTests.test_quota_pauses_and_failures_stop_unless_told_to_keep_going`
 - `SeasonTests.test_season_with_the_real_pipeline_and_shared_memory`
 - `SeasonTests.test_source_check_quota_saves_the_draft_and_resumes_before_next_episode`
+- `CliTests.test_auto_quota_resumes_the_season_with_saved_policy_and_checkpoints`
+- `CliTests.test_locked_season_refuses_new_providers_and_keeps_legacy_gemini`
 - `CliTests.test_bad_episode_plan_is_rejected_before_any_call`
 
-### test_story_pipeline_v0 (51)
+### test_story_pipeline_v0 (53)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.check_config`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.episode_brief`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
 
 - `test_profile`
@@ -1855,6 +1901,8 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.check_config`, 
 - `EndToEndTests.test_memory_brief_failing_current_checks_is_regenerated`
 - `EndToEndTests.test_chinese_names_use_sino_vietnamese_readings_without_touching_other_languages` — DEC-020: the profile's name reading reaches Chinese briefs only.
 - `EndToEndTests.test_cli_episode_mode`
+- `EndToEndTests.test_provider_error_preserves_checkpoints_and_reported_usage`
+- `EndToEndTests.test_cli_refuses_provider_and_policy_changes_on_resume`
 - `EndToEndTests.test_plan_may_call_back_to_recap_but_must_cover_episode`
 - `EndToEndTests.test_stage_failure_is_recorded`
 - `EndToEndTests.test_gate_report_severity`
