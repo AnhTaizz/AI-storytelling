@@ -1014,17 +1014,20 @@ An API key cannot verify project billing. The model list can go stale. Keys from
 ## DEC-037 — Free-Plan Groq Provider (Phase 2)
 
 STATUS: ACCEPTED (Project Owner, 2026-11-23: "ok merge PR #27 rồi làm Phase 3 bằng codex đi")
+AMENDED 2026-11-23 before merge, approved by the Project Owner ("oke hợp lí đó, tiếp tục đi nào"; "Mặc định nhóm tất cả GROQ_API_KEY_N chưa có thông tin organization vào một quota scope chung ... Chỉ dùng key dự phòng khi key chính không hợp lệ hoặc bị thu hồi"): shared `org` scope, priority order, gpt-oss models only, REQUEST_TOO_LARGE, offline smoke by default.
 
 CONTEXT:
 Phase 1 introduced keys-only setup and persisted cooldowns for Gemini. Groq provides an OpenAI-compatible chat API with limits per organization. Phase 2 adds Groq to the shared infrastructure ahead of unified routing.
 
 DECISION:
-1. Accept numbered Groq keys and retain the lowest numbered copy of each key. Treat unlabeled keys as separate scopes and allow optional labels to group keys from one organization.
-2. Require the shared free-only cost controls. Use the standing Free plan declaration for undeclared keys unless explicitly disabled. Exclude paid or unverified keys and reject conflicting declarations on a shared label.
-3. Maintain a reviewed production text model list and a default model chain. A local override can only narrow the allowlist.
-4. Record cooldowns in SQLite by provider, model, and organization scope. Use Groq message and header evidence to bound cooldowns and cap rate-limit hops per request. Provide offline diagnostics and a standalone smoke command.
+1. Start with one numbered Groq key and retain the lowest numbered copy of each key. Unlabeled keys share the `org` quota scope. Use optional labels only for different organizations the owner controls.
+2. Require the shared free-only cost controls. Use the standing Free plan declaration for undeclared keys unless explicitly disabled. Exclude paid or unverified keys and reject conflicting effective plans in any organization scope.
+3. Allow only `openai/gpt-oss-120b` and `openai/gpt-oss-20b`, in that default order. A local override can only narrow the allowlist.
+4. Choose the first eligible key in configuration order. A later key in the same organization is used only after an authentication failure disables an earlier key. Record cooldowns in SQLite by provider, model, and organization scope. A quota 429 blocks that scope for the model. Bound cooldowns using Groq message and header evidence and cap rate-limit hops per request.
+5. Classify HTTP 413 and HTTP 400 or 429 with a “Request too large” message as `REQUEST_TOO_LARGE`. Raise it immediately without retrying or blocking the scope.
+6. Run `groq_smoke` offline by default. The owner's `--live` opt-in sends one synthetic JSON-mode request using the first eligible key, with a 32-token output cap, a 20-second timeout, and no retry or fallback.
 
 LIMITS:
 - An API key cannot show the Groq plan. The Developer plan charges per token.
-- The reviewed model list and limits can go stale. Free limits apply per organization.
-- Pipeline integration is planned for Phase 5. Phase 2 makes no script-quality claim.
+- The reviewed model list and limits can go stale. Free limits apply per organization. The 8,000 tokens-per-minute limit includes reasoning tokens and rules out long pipeline prompts.
+- Pipeline integration is deferred until the M9 gate sample ends and is planned for Phase 5.

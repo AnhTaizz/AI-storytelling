@@ -51,8 +51,11 @@ class FakeGroq:
     def __init__(self, *actions):
         self.actions = list(actions)
         self.calls = []
+        self.factory_calls = []
 
     def factory(self, key):
+        self.factory_calls.append(key)
+
         def generate(**args):
             self.calls.append((key, args))
             if self.actions:
@@ -61,6 +64,6 @@ class FakeGroq:
                     raise action
                 return action
             return SimpleNamespace(text='{"status":"ok"}', usage={"total_tokens": 14},
-                                   model=args["model"], headers={})
+                                   model=args["model"], headers={}, status=200)
 
         return SimpleNamespace(generate=generate)

@@ -19,11 +19,11 @@ A 429 moves to another eligible group until the router reaches its per-call 429 
 
 ## Phase 2 · Groq
 
-Add numbered `GROQ_API_KEY_<n>` settings to use Groq. Process settings override dotenv, and the lowest numbered copy of each key wins. Unlabeled keys get their own `groq_slot_<n>` scopes. Set the same `GROQ_ORG_LABEL_<n>` for keys from one organization to share cooldowns. Groq applies free limits per organization. [Groq console limits](https://console.groq.com/settings/limits)
+Start with `GROQ_API_KEY_1`. Process settings override dotenv, and the lowest numbered copy of each key wins. All unlabeled keys share the `org` scope. Use `GROQ_ORG_LABEL_<n>` only for a different organization you control. Groq applies Free limits per organization. [Groq console limits](https://console.groq.com/settings/limits)
 
-The standing declaration treats undeclared keys as Free plan keys. Set `GROQ_KEYS_FREE_PLAN_CONFIRMED=false` to require explicit declarations. `GROQ_ORG_PLAN_<n>=FREE_PLAN_CONFIRMED` opts in a key, while `UNVERIFIED` and `PAID_PLAN` exclude it. Declarations must agree within a shared label. An API key cannot establish the plan, and the Developer plan charges per token. The application requires the shared free-only settings and a zero paid spending limit.
+The standing declaration treats undeclared keys as Free plan keys. Set `GROQ_KEYS_FREE_PLAN_CONFIRMED=false` to require explicit declarations. `GROQ_ORG_PLAN_<n>=FREE_PLAN_CONFIRMED` opts in a key, while `UNVERIFIED` and `PAID_PLAN` exclude it. Effective plans must agree within every scope, including `org`. An API key cannot establish the plan, and the Developer plan charges per token. The application requires the shared free-only settings and a zero paid spending limit.
 
-The production model snapshot records the Groq model list as reviewed on 2026-11-23. The default chain is `openai/gpt-oss-120b`, then `llama-3.3-70b-versatile`. Set `GROQ_MODEL` to select a chain and `GROQ_FREE_MODELS` to narrow the allowlist. The offline `check_config` reports Groq eligibility, models, and active cooldowns. [Production model snapshot](../../tools/llm_infra/groq_free_models_v1.py) · [Groq models](https://console.groq.com/docs/models)
+The production model snapshot reviewed on 2026-11-23 allows `openai/gpt-oss-120b` and `openai/gpt-oss-20b`, in that default order. The two Llama IDs were removed after their 2026-08-16 shutdown. Set `GROQ_MODEL` to select a chain and `GROQ_FREE_MODELS` to narrow the allowlist. The offline `check_config` reports Groq eligibility, models, and active cooldowns. [Production model snapshot](../../tools/llm_infra/groq_free_models_v1.py) · [Groq deprecations](https://console.groq.com/docs/deprecations)
 
 The message takes precedence over the headers when identifying the limit. The latest applicable time from Retry-After, the message, and a matching reset header wins. [Groq rate limits](https://console.groq.com/docs/rate-limits)
 
@@ -35,9 +35,11 @@ The message takes precedence over the headers when identifying the limit. The la
 | Requests per minute (RPM) in the message | Retry delay, otherwise 60 seconds |
 | Unknown 429 | Retry delay, otherwise 60, 120, 240, 480, then 900 seconds on consecutive failures |
 
-Blocks are capped at 26 hours and persist by provider, model, and organization scope in the shared SQLite file. A successful response clears the unknown streak. A success with zero remaining requests also records an RPD cooldown. The router pauses after three 429 responses per call by default. If every scope is blocked, it can wait once within 60 seconds, otherwise it reports the earliest resume time. Authentication failures disable individual slots for the life of the router.
+The router picks the first unblocked, enabled key in configuration order. Later keys in the same scope are used only after authentication failures disable earlier keys for the life of the router. Blocks are capped at 26 hours and persist by provider, model, and organization scope in the shared SQLite file. A successful response clears the unknown streak. A success with zero remaining requests also records an RPD cooldown. The router pauses after three quota 429s per call by default. If every scope is blocked, it can wait once within 60 seconds. Otherwise it reports the earliest resume time.
 
-The owner can run `python -m tools.llm_infra.groq_smoke --env-file .env` for a single small JSON-mode request. The smoke command selects the first model in the chain unless given `--model`. The pipeline integration is planned for Phase 5.
+HTTP 413 and HTTP 400 or 429 with a “Request too large” message return `REQUEST_TOO_LARGE` immediately without retrying or recording a block. The Free limit of 8,000 tokens per minute includes reasoning tokens and is too low for long pipeline prompts. Pipeline integration is deferred until the M9 gate sample ends and is planned for Phase 5.
+
+Run `python -m tools.llm_infra.groq_smoke` to inspect settings and active blocks offline. With the owner's `--live` opt-in, the first eligible key sends one synthetic JSON-mode request using `openai/gpt-oss-20b` or an allowlisted `--model`. It has a 32-token output cap, a 20-second timeout, and no retry, fallback, or quota-state update. [Groq Free setup guide](../guides/GROQ_FREE_SETUP.md)
 
 ## Routing phases
 

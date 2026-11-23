@@ -43,17 +43,21 @@ class GroqTransportTests(unittest.TestCase):
         self.assertNotIn(GROQ_TEST_KEY, repr(client))
 
     def test_error_status_and_error_code_mapping(self):
-        for status, code, kind in [
-            (429, "rate_limit_exceeded", "RATE_LIMIT"),
-            *((n, None, "AUTH_FAILURE") for n in (401, 403)),
-            *((n, None, "SERVER_FAILURE") for n in (498, 500, 502, 503, 504)),
-            (404, None, "MODEL_UNAVAILABLE"), (400, "model_not_found", "MODEL_UNAVAILABLE"),
-            (400, "model_decommissioned", "MODEL_UNAVAILABLE"),
-            (400, "invalid_request_error", "REQUEST_FAILURE"), (422, None, "REQUEST_FAILURE"),
-            (302, None, "REQUEST_FAILURE"),
+        for status, code, prefix, kind in [
+            (429, "rate_limit_exceeded", "echo", "RATE_LIMIT"),
+            (429, "rate_limit_exceeded", "Rate limit on tokens per minute", "RATE_LIMIT"),
+            (413, None, "echo", "REQUEST_TOO_LARGE"),
+            (429, "rate_limit_exceeded", "Request too large", "REQUEST_TOO_LARGE"),
+            (400, "invalid_request_error", "REQUEST TOO LARGE", "REQUEST_TOO_LARGE"),
+            *((n, None, "echo", "AUTH_FAILURE") for n in (401, 403)),
+            *((n, None, "echo", "SERVER_FAILURE") for n in (498, 500, 502, 503, 504)),
+            (404, None, "echo", "MODEL_UNAVAILABLE"), (400, "model_not_found", "echo", "MODEL_UNAVAILABLE"),
+            (400, "model_decommissioned", "echo", "MODEL_UNAVAILABLE"),
+            (400, "invalid_request_error", "echo", "REQUEST_FAILURE"), (422, None, "echo", "REQUEST_FAILURE"),
+            (302, None, "echo", "REQUEST_FAILURE"),
         ]:
-            with self.subTest(status=status, code=code):
-                payload = {"error": {"code": code, "message": f"echo {GROQ_TEST_KEY}", GROQ_TEST_KEY: GROQ_TEST_KEY}}
+            with self.subTest(status=status, code=code, message=prefix):
+                payload = {"error": {"code": code, "message": f"{prefix} {GROQ_TEST_KEY}", GROQ_TEST_KEY: GROQ_TEST_KEY}}
                 client = GroqClient(GROQ_TEST_KEY, http=lambda *_: (
                     status, {"X-Echo": GROQ_TEST_KEY, "Retry-After": "5"}, json.dumps(payload).encode()))
                 with self.assertRaises(GroqHTTPError) as caught:
@@ -61,7 +65,8 @@ class GroqTransportTests(unittest.TestCase):
                 error = caught.exception
                 self.assertEqual((error.status, error.kind), (status, kind))
                 self.assertEqual(error.headers, {"x-echo": "[REDACTED]", "retry-after": "5"})
-                self.assertEqual(error.body["error"]["message"], "echo [REDACTED]")
+                self.assertEqual(error.body["error"]["message"], f"{prefix} [REDACTED]")
+                self.assertNotIn(prefix, str(error))
                 for exposed in (str(error), repr(error), repr(error.body), repr(error.headers)):
                     self.assertNotIn(GROQ_TEST_KEY, exposed)
 

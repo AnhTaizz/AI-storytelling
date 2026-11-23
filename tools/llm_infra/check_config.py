@@ -4,7 +4,7 @@ import json
 import time
 
 from tools.llm_infra.gemini_config import inspect_settings, merged_settings, state_path
-from tools.llm_infra.groq_config import GROQ_KEY_PATTERN, _read_groq_settings
+from tools.llm_infra.groq_config import GROQ_KEY_PATTERN, inspect_groq_settings
 from tools.llm_infra.groq_transport import redact_groq_data
 from tools.llm_infra.quota_state import QuotaStateError, QuotaStateStore
 from tools.story_extraction.gemini_key_pool_v1 import GeminiConfigError, UNKNOWN_PROJECT_LABEL, _KEY_PATTERN
@@ -22,7 +22,7 @@ def _groq_report(settings, state, blocks, clock):
         if blocks is None:
             blocks = QuotaStateStore(state, clock=clock).active_blocks(clock())
         report["blocked"] = _public_blocks(blocks, "groq")
-        config = _read_groq_settings(settings)
+        config = inspect_groq_settings(settings, validate_models=False)
         report.update(config.public_summary())
         config.check_eligible()
         config.check_models(config.model_chain)

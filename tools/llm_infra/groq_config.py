@@ -13,6 +13,7 @@ from tools.story_extraction.gemini_key_pool_v1 import GeminiConfigError
 
 
 GROQ_KEY_PATTERN = re.compile(r"GROQ_API_KEY_([0-9]+)")
+DEFAULT_ORG_SCOPE = "org"
 PLAN_STATUSES = ("FREE_PLAN_CONFIRMED", "UNVERIFIED", "PAID_PLAN")
 
 
@@ -89,8 +90,8 @@ def _read_groq_settings(settings, model=None):
 
     secrets = set()
     slots = []
-    unlabeled = set()
-    labeled_plans = {}
+    labels = set()
+    scope_plans = {}
     plans = Counter()
     duplicates = 0
     for number, suffix, secret in numbered:
@@ -100,21 +101,20 @@ def _read_groq_settings(settings, model=None):
         secrets.add(secret)
         slot_id = f"groq_slot_{number}"
         label = settings.get(f"GROQ_ORG_LABEL_{suffix}", "").strip()
+        scope = label or DEFAULT_ORG_SCOPE
         plan = settings.get(f"GROQ_ORG_PLAN_{suffix}", "").strip() or default_plan
         if plan not in PLAN_STATUSES:
             raise GeminiConfigError("Invalid Groq organization plan declaration")
+        if scope_plans.setdefault(scope, plan) != plan:
+            raise GeminiConfigError("Conflicting plan declarations for a shared Groq organization; "
+                                    "label keys from different organizations with GROQ_ORG_LABEL_<n>")
         if label:
-            if labeled_plans.setdefault(label, plan) != plan:
-                raise GeminiConfigError("Conflicting plan declarations for a shared Groq organization label")
-        else:
-            unlabeled.add(slot_id)
+            labels.add(label)
         plans[plan] += 1
         if plan == "FREE_PLAN_CONFIRMED":
-            slots.append(GroqSlot(slot_id, label or slot_id, secret))
+            slots.append(GroqSlot(slot_id, scope, secret))
 
-    scopes = unlabeled | labeled_plans.keys()
-    if unlabeled & labeled_plans.keys():
-        raise GeminiConfigError("Groq organization label conflicts with an unlabeled scope")
+    scopes = scope_plans.keys()
     override = settings.get("GROQ_FREE_MODELS", "").strip()
     reviewed = frozenset(FREE_TIER_TEXT_MODELS)
     local_models = frozenset(_models(override))
@@ -137,14 +137,15 @@ def _read_groq_settings(settings, model=None):
         raise GeminiConfigError("GROQ_MAX_RATE_LIMIT_HOPS must be an integer >= 1")
     return GroqRoutingConfig(
         tuple(slots), chain, "configured" if configured else "default", hops, duplicates,
-        effective, ignored, len(scopes), len(labeled_plans), tuple(plans[s] for s in PLAN_STATUSES),
+        effective, ignored, len(scopes), len(labels), tuple(plans[s] for s in PLAN_STATUSES),
         tuple(sorted(secrets, key=len, reverse=True)),
     )
 
 
-def inspect_groq_settings(settings, model=None):
+def inspect_groq_settings(settings, model=None, *, validate_models=True):
     config = _read_groq_settings(settings, model)
-    config.check_models(config.model_chain)
+    if validate_models:
+        config.check_models(config.model_chain)
     return config
 
 

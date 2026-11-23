@@ -1,5 +1,4 @@
 """Route Free plan Groq calls across eligible slots and persisted cooldowns."""
-from collections import deque
 import math
 from threading import Lock
 import time
@@ -40,16 +39,13 @@ class GroqRouter:
         self._max_wait = max_inline_wait_seconds
         self._clock = clock
         self._sleep = sleep
-        self._slots = deque(config.slots)
         self._disabled = set()
         self._lock = Lock()
 
     def _next_slot(self, model, now):
         blocked = {}
         with self._lock:
-            for _ in range(len(self._slots)):
-                slot = self._slots[0]
-                self._slots.rotate(-1)
+            for slot in self._config.slots:
                 if slot.slot_id in self._disabled or slot.scope in blocked:
                     continue
                 until = self._store.blocked_until("groq", model, slot.scope, now)

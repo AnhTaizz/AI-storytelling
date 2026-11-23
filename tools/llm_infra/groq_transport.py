@@ -38,6 +38,7 @@ class GroqResponse:
     model: str | None
     headers: dict
     response_id: str | None = None
+    status: int = 200
 
 
 class _NoRedirect(HTTPRedirectHandler):
@@ -64,13 +65,17 @@ def _json_object(body):
 
 
 def _error_kind(status, body):
+    error = body.get("error")
+    message = error.get("message") if isinstance(error, dict) else None
+    if status == 413 or (status in (400, 429) and isinstance(message, str)
+                         and "request too large" in message.casefold()):
+        return "REQUEST_TOO_LARGE"
     if status == 429:
         return "RATE_LIMIT"
     if status in (401, 403):
         return "AUTH_FAILURE"
     if status in (498, 500, 502, 503, 504):
         return "SERVER_FAILURE"
-    error = body.get("error")
     code = error.get("code") if isinstance(error, dict) else None
     if status == 404 or code in ("model_not_found", "model_decommissioned"):
         return "MODEL_UNAVAILABLE"
@@ -125,4 +130,4 @@ class GroqClient:
         usage, model, response_id = data.get("usage"), data.get("model"), data.get("id")
         return GroqResponse(content, usage if isinstance(usage, dict) else {},
                             model if isinstance(model, str) else None, safe_headers,
-                            response_id if isinstance(response_id, str) else None)
+                            response_id if isinstance(response_id, str) else None, status=status)

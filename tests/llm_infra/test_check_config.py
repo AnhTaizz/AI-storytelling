@@ -60,15 +60,16 @@ class CheckTests(unittest.TestCase):
             store.block("groq", model, GROQ_TEST_KEY, 2000, "RPD", clock())
             store.block("gemini", "gemini-3.8-flash", "gemini", 2000, "RPM", clock())
             for gemini, changes, groq_status in [
-                ({}, {"GROQ_API_KEY_9": GROQ_TEST_KEY}, "READY_FREE_ONLY"),
+                ({}, groq_settings("", "", "") | {"GROQ_API_KEY_9": GROQ_TEST_KEY}, "READY_FREE_ONLY"),
                 (settings("gemini"), {"GROQ_FREE_MODELS": f"{model},preview", "GROQ_MODEL": "preview"},
                  "BLOCKED_MODEL_NOT_FREE_TIER"),
                 (settings("gemini"), {"GROQ_KEYS_FREE_PLAN_CONFIRMED": "false"}, "BLOCKED_NO_ELIGIBLE_KEY"),
                 (settings("gemini"), {"GROQ_ORG_LABEL_1": GROQ_TEST_KEY}, "CONFIG_ERROR"),
+                (settings("gemini"), groq_settings("", "") | {"GROQ_ORG_PLAN_2": "PAID_PLAN"}, "CONFIG_ERROR"),
             ]:
                 with self.subTest(groq_status=groq_status):
                     capture = StringIO()
-                    environ = groq_settings("org") | gemini | changes
+                    environ = groq_settings("") | gemini | changes
                     with redirect_stdout(capture):
                         result = main(["--env-file", str(Path(tmp) / "absent"), "--state", str(path)],
                                       environ=environ, clock=clock)
@@ -85,10 +86,10 @@ class CheckTests(unittest.TestCase):
                     self.assertEqual([b["scope"] for b in tree["blocked"]], ["gemini"])
                     if groq_status == "READY_FREE_ONLY":
                         self.assertEqual((groq["keys_configured"], groq["duplicates_dropped"], groq["key_scopes"],
-                                          groq["labels_used"]), (2, 1, 1, 1))
+                                          groq["labels_used"]), (4, 1, 1, 0))
                         self.assertEqual(groq["model_chain"], list(DEFAULT_MODEL_CHAIN))
                         self.assertEqual(groq["model_source"], "default")
-                        self.assertEqual(groq["plan_status_counts"]["FREE_PLAN_CONFIRMED"], 1)
+                        self.assertEqual(groq["plan_status_counts"]["FREE_PLAN_CONFIRMED"], 3)
                         self.assertIn("An API key cannot show the Groq plan", groq["notice"])
                     elif groq_status == "BLOCKED_MODEL_NOT_FREE_TIER":
                         self.assertEqual(groq["effective_allowlist"], [model])
