@@ -36,7 +36,7 @@ def _live_request(model, slot, client_factory, clock):
     try:
         response = client.generate(
             model=model, system_instruction="Reply with JSON only.", user_content='Return {"status":"ok"}',
-            generation_config={"temperature": 0, "max_output_tokens": 32, "response_mime_type": "application/json"},
+            generation_config={"temperature": 0, "max_output_tokens": 512, "response_mime_type": "application/json"},
         )
     except OpenRouterHTTPError as error:
         report.update(outcome=error.kind, http_status=error.status)

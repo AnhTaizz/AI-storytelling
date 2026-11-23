@@ -57,7 +57,7 @@ The router tries scopes in order of their first key and uses the lowest-numbered
 
 Retry-After can extend a reset-based cooldown, and every cooldown is capped at 26 hours. A 429 with `metadata.provider_code` uses the upstream capacity rule even if it contains quota-like evidence. [OpenRouter rate-limit response format](https://openrouter.ai/docs/api/reference/limits#handling-429-errors)
 
-Run `python -m tools.llm_infra.openrouter_smoke` or `python -m tools.llm_infra.check_config` to inspect settings and active blocks offline. The owner's `--live` smoke opt-in reads public counts from `GET /key` and sends one synthetic JSON-mode chat using the first configured model or a free `--model`. Both calls use a 20-second timeout and the chat has a 32-token output cap. The smoke test performs no retries or quota-state updates. Pipeline integration is planned for Phase 5. [OpenRouter Free setup guide](../guides/OPENROUTER_FREE_SETUP.md)
+Run `python -m tools.llm_infra.openrouter_smoke` or `python -m tools.llm_infra.check_config` to inspect settings and active blocks offline. The owner's `--live` smoke opt-in reads public counts from `GET /key` and sends one synthetic JSON-mode chat using the first configured model or a free `--model`. Both calls use a 20-second timeout and the chat has a 512-token output cap, which leaves room for reasoning tokens. Requests send a generic `User-Agent`, because CDN edges can refuse the urllib default; a 403 without an API error body is reported as `EDGE_BLOCKED` and disables no key. The smoke test performs no retries or quota-state updates. Pipeline integration is planned for Phase 5. [OpenRouter Free setup guide](../guides/OPENROUTER_FREE_SETUP.md)
 
 ## Routing phases
 

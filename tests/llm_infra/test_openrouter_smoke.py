@@ -76,7 +76,7 @@ class OpenRouterSmokeTests(unittest.TestCase):
                     ("key", OPENROUTER_TEST_KEY, None), ("generate", OPENROUTER_TEST_KEY, {
                         "model": model, "system_instruction": "Reply with JSON only.",
                         "user_content": 'Return {"status":"ok"}',
-                        "generation_config": {"temperature": 0, "max_output_tokens": 32,
+                        "generation_config": {"temperature": 0, "max_output_tokens": 512,
                                               "response_mime_type": "application/json"},
                     }),
                 ])

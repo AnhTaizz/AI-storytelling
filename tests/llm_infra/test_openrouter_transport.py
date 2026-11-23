@@ -7,7 +7,7 @@ from urllib.error import HTTPError, URLError
 from fixtures import (
     FakeOpenRouterHTTP, OPENROUTER_KEY_COUNTS, OPENROUTER_MODEL, OPENROUTER_TEST_KEY, openrouter_body,
 )
-from tools.llm_infra.openrouter_transport import OpenRouterClient, OpenRouterHTTPError
+from tools.llm_infra.openrouter_transport import USER_AGENT, OpenRouterClient, OpenRouterHTTPError
 
 
 class OpenRouterTransportTests(unittest.TestCase):
@@ -29,7 +29,7 @@ class OpenRouterTransportTests(unittest.TestCase):
                 response = client.generate("openrouter/free", "system", "user", config)
                 self.assertEqual(http.calls, [(
                     "https://openrouter.ai/api/v1/chat/completions",
-                    {"Authorization": f"Bearer {OPENROUTER_TEST_KEY}", "Content-Type": "application/json"},
+                    {"Authorization": f"Bearer {OPENROUTER_TEST_KEY}", "User-Agent": USER_AGENT, "Content-Type": "application/json"},
                     {"model": "openrouter/free", "usage": {"include": True}, "messages": [
                         {"role": "system", "content": "system"}, {"role": "user", "content": "user"},
                     ]} | extras, 12,
@@ -94,6 +94,12 @@ class OpenRouterTransportTests(unittest.TestCase):
                     self.assertEqual(error.body["error"]["message"], "[REDACTED]")
                     self.assertEqual(error.headers, {"x-echo": "[REDACTED]"})
                     self.assertNotIn(OPENROUTER_TEST_KEY, repr(error))
+        for body in (b"error code: 1010", {"message": "blocked"}):
+            with self.subTest(edge_body=body):
+                http = FakeOpenRouterHTTP((403, {"Server": "cloudflare"}, body))
+                with self.assertRaises(OpenRouterHTTPError) as caught:
+                    OpenRouterClient(OPENROUTER_TEST_KEY, http=http).generate(OPENROUTER_MODEL, "", "", {})
+                self.assertEqual((caught.exception.kind, caught.exception.status), ("EDGE_BLOCKED", 403))
 
     def test_malformed_success_is_rejected(self):
         for body in (b"\xff", [], openrouter_body(choices=[]), openrouter_body(model=None),
@@ -116,7 +122,7 @@ class OpenRouterTransportTests(unittest.TestCase):
                 http = FakeOpenRouterHTTP((200, {}, {"data": data}))
                 self.assertEqual(OpenRouterClient(OPENROUTER_TEST_KEY, http=http).key_info(), expected)
                 self.assertEqual(http.calls, [("https://openrouter.ai/api/v1/key",
-                                              {"Authorization": f"Bearer {OPENROUTER_TEST_KEY}"}, None, 120)])
+                                              {"Authorization": f"Bearer {OPENROUTER_TEST_KEY}", "User-Agent": USER_AGENT}, None, 120)])
         http = FakeOpenRouterHTTP((200, {}, {"data": []}))
         with self.assertRaisesRegex(OpenRouterHTTPError, "MALFORMED_RESPONSE"):
             OpenRouterClient(OPENROUTER_TEST_KEY, http=http).key_info()

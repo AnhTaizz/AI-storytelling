@@ -10,6 +10,8 @@ from tools.llm_infra.openrouter_free_models_v1 import is_free_model
 
 
 BASE_URL = "https://openrouter.ai/api/v1"
+# Explicit and generic: CDN edges may refuse urllib's default agent, and no project name leaves the machine.
+USER_AGENT = "llm-infra-client/1.0"
 _ERROR_KINDS = {
     400: "REQUEST_FAILURE",
     401: "AUTH_FAILURE",
@@ -85,6 +87,9 @@ def _json_object(body):
 
 
 def _response_error(status, data):
+    if status == 403 and not isinstance(data.get("error"), dict):
+        # A CDN edge refusal (no API error body) says nothing about the key.
+        return "EDGE_BLOCKED"
     if not 200 <= status < 300:
         return _ERROR_KINDS.get(status, "REQUEST_FAILURE")
     if "error" in data:
@@ -126,7 +131,7 @@ class OpenRouterClient:
         self._data_collection = data_collection
 
     def _request(self, path, payload=None):
-        headers = {"Authorization": f"Bearer {self._api_key}"}
+        headers = {"Authorization": f"Bearer {self._api_key}", "User-Agent": USER_AGENT}
         body = None
         if payload is not None:
             body = json.dumps(payload).encode("utf-8")
