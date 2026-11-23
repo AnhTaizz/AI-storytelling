@@ -1026,6 +1026,7 @@ DECISION:
 4. Choose the first eligible key in configuration order. A later key in the same organization is used only after an authentication failure disables an earlier key. Record cooldowns in SQLite by provider, model, and organization scope. A quota 429 blocks that scope for the model. Bound cooldowns using Groq message and header evidence and cap rate-limit hops per request.
 5. Classify HTTP 413 and HTTP 400 or 429 with a “Request too large” message as `REQUEST_TOO_LARGE`. Raise it immediately without retrying or blocking the scope.
 6. Run `groq_smoke` offline by default. The owner's `--live` opt-in sends one synthetic JSON-mode request using the first eligible key, with a 32-token output cap, a 20-second timeout, and no retry or fallback.
+NOTE 2026-11-23 (first live smoke run, fix PR pending owner review): Groq's edge returned 403 error 1010 to the default `Python-urllib` agent, so the transport now sends a generic `User-Agent` and a 403 without the API's JSON error is `EDGE_BLOCKED` (no key is disabled). JSON mode with a 32-token cap failed with `json_validate_failed` because gpt-oss spends tokens on reasoning, so the live smoke request is plain text; pipeline use of JSON mode must leave room for reasoning tokens.
 
 LIMITS:
 - An API key cannot show the Groq plan. The Developer plan charges per token.
