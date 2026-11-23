@@ -996,7 +996,7 @@ LIMITS:
 
 ## DEC-036 — Plug-and-Play Gemini Key Pool (SIMPLE_KEY_POOL)
 
-STATUS: PROPOSED (awaiting Project Owner review in the PR)
+STATUS: ACCEPTED (Project Owner, 2026-11-23: "ok merge PR #26 luôn đi")
 
 CONTEXT:
 On 2026-11-23 the owner said “Tôi k muốn mất công phải chỉnh proj, chỉ cho key free là dùng được”, “gemini key tôi chỉ dùng duy nhất tier free thôi” and “chọn 1, đóng PR #25 đi”. PR #25 (DEC-035, required labels) was closed. This proposal amends DEC-034 item 2. Basic setup requires neither a billing confirmation nor a user-maintained model list.

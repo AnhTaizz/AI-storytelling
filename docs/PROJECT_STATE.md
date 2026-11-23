@@ -1687,10 +1687,10 @@ DEC-034 accepted by the owner on 2026-11-23.
 
 ## Gemini simple key pool (2026-11-23)
 
-Status: GEMINI_SIMPLE_KEY_POOL_PENDING_REVIEW
+Status: GEMINI_SIMPLE_KEY_POOL_ACCEPTED
 
 Numbered keys select a reviewed free-tier model chain. Optional labels share cooldowns.
-The router pauses after three 429s per model request by default. DEC-036 awaits owner review.
+The router pauses after three 429s per model request by default. DEC-036 accepted by the owner on 2026-11-23.
 
 ## Next Candidate
 
