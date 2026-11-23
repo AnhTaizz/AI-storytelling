@@ -3,9 +3,13 @@ import argparse
 import json
 import time
 
+from tools.llm_infra.cloudflare_config import cloudflare_secrets, inspect_cloudflare_settings
+from tools.llm_infra.cloudflare_router import cloudflare_quota_summary
+from tools.llm_infra.cloudflare_transport import redact_cloudflare_data
 from tools.llm_infra.gemini_config import inspect_settings, merged_settings, state_path
 from tools.llm_infra.groq_config import GROQ_KEY_PATTERN, inspect_groq_settings
 from tools.llm_infra.groq_transport import redact_groq_data
+from tools.llm_infra.neuron_ledger import NeuronLedger
 from tools.llm_infra.openrouter_config import OPENROUTER_KEY_PATTERN, inspect_openrouter_settings
 from tools.llm_infra.openrouter_transport import redact_openrouter_data
 from tools.llm_infra.quota_state import QuotaStateError, QuotaStateStore
@@ -57,6 +61,28 @@ def _openrouter_report(settings, state, blocks, clock):
     return report
 
 
+def _cloudflare_report(settings, state, blocks, clock):
+    report = {"status": "CONFIG_ERROR", "blocked": []}
+    try:
+        now = clock()
+        if blocks is None:
+            blocks = QuotaStateStore(state, clock=clock).active_blocks(now)
+        report["blocked"] = _public_blocks(blocks, "cloudflare")
+        config = inspect_cloudflare_settings(settings, validate_models=False)
+        report.update(config.public_summary())
+        report.update(cloudflare_quota_summary(config, NeuronLedger(state), blocks, now))
+        config.check_eligible()
+        config.check_models(config.model_chain)
+        report["status"] = "READY_FREE_ONLY"
+    except (GeminiConfigError, OSError) as error:
+        report["error"] = str(error) if not isinstance(error, OSError) else "Cannot read Cloudflare configuration"
+        if report["error"].startswith("MODEL_NOT_FREE_TIER:"):
+            report["status"] = "BLOCKED_MODEL_NOT_FREE_TIER"
+        elif report["error"].startswith("NO_ELIGIBLE_KEY:"):
+            report["status"] = "BLOCKED_NO_ELIGIBLE_KEY"
+    return report
+
+
 def main(argv=None, *, environ=None, clock=time.time):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--env-file", default=".env")
@@ -67,9 +93,11 @@ def main(argv=None, *, environ=None, clock=time.time):
     secrets = []
     groq_secrets = []
     openrouter_secrets = []
+    cf_secrets = ()
     blocks = None
     try:
         settings = merged_settings(args.env_file, environ)
+        cf_secrets = cloudflare_secrets(settings)
         secrets = [v.strip() for k, v in settings.items() if _KEY_PATTERN.fullmatch(k) and v.strip()]
         groq_secrets = sorted({v.strip() for k, v in settings.items() if GROQ_KEY_PATTERN.fullmatch(k) and v.strip()},
                               key=len, reverse=True)
@@ -113,6 +141,9 @@ def main(argv=None, *, environ=None, clock=time.time):
         report = redact_openrouter_data(report, openrouter_secrets)
     if groq_secrets:
         report = redact_groq_data(report, groq_secrets)
+    if cf_secrets:
+        report["cloudflare"] = _cloudflare_report(settings, args.state or state_path(settings), blocks, clock)
+        report = redact_cloudflare_data(report, cf_secrets)
     output = json.dumps(report, ensure_ascii=False, indent=2)
     for secret in secrets:
         output = output.replace(secret, "[REDACTED]")

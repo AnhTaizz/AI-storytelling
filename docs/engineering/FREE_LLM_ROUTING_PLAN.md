@@ -59,11 +59,35 @@ Retry-After can extend a reset-based cooldown, and every cooldown is capped at 2
 
 Run `python -m tools.llm_infra.openrouter_smoke` or `python -m tools.llm_infra.check_config` to inspect settings and active blocks offline. The owner's `--live` smoke opt-in reads public counts from `GET /key` and sends one synthetic JSON-mode chat using the first configured model or a free `--model`. Both calls use a 20-second timeout and the chat has a 512-token output cap, which leaves room for reasoning tokens. Requests send a generic `User-Agent`, because CDN edges can refuse the urllib default; a 403 without an API error body is reported as `EDGE_BLOCKED` and disables no key. The smoke test performs no retries or quota-state updates. Pipeline integration is planned for Phase 5. [OpenRouter Free setup guide](../guides/OPENROUTER_FREE_SETUP.md)
 
+## Phase 4 · Cloudflare Workers AI
+
+Set `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` together for slot 1. The numbered pair `CLOUDFLARE_ACCOUNT_ID_1` and `CLOUDFLARE_API_TOKEN_1` also works. Each pair requires both values. If both forms are set, identical pairs count as one slot and one duplicate, and different pairs produce a configuration error. Use the suffixes `_2`, `_3`, and so on for additional slots. Keep the lowest numbered copy of each pair. Tokens with the same account ID share the alias `cloudflare_account_<n>` from that account's first slot. The router tries accounts in first-slot order and uses the first enabled token in each account. Authentication failures disable only the affected slot. Keep slot numbers stable so persisted totals and cooldowns remain associated with the same accounts. Public records and status output use aliases and redact both credential values.
+
+The shared free-only controls apply. The owner confirms Workers Free for undeclared slots by default. Set `CLOUDFLARE_KEYS_FREE_PLAN_CONFIRMED=false` to require explicit declarations. Use `CLOUDFLARE_PLAN_<n>=WORKERS_FREE_CONFIRMED` for eligible slots. Both credential forms for slot 1 use `CLOUDFLARE_PLAN_1`. Both `UNVERIFIED` and `WORKERS_PAID` exclude slots, and declarations must agree within each account. A token cannot show the plan. The free allocation is 10,000 Neurons per account per UTC day. Workers Free stops there. Workers Paid bills $0.011 per 1,000 Neurons above that amount. Text generation defaults to 300 requests per minute, with a separate 20 per minute limit for models that require Workers Paid. [Cloudflare pricing](https://developers.cloudflare.com/workers-ai/platform/pricing/) · [Rate limits](https://developers.cloudflare.com/workers-ai/platform/limits/)
+
+The reviewed Neuron price table supplies the eight-model allowlist. `CLOUDFLARE_MODEL` selects a chain and defaults to `@cf/openai/gpt-oss-120b` followed by `@cf/qwen/qwen3-30b-a3b-fp8`. `CLOUDFLARE_FREE_MODELS` can narrow that list. Each HTTP request sends a single model. The prompt asks for JSON because `response_format` support on this endpoint remains unverified. [Model price snapshot](../../tools/llm_infra/cloudflare_free_models_v1.py) · [Chat completions API](https://developers.cloudflare.com/workers-ai/configuration/open-ai-compatibility/)
+
+The Neuron ledger stores estimates per account and UTC day in its own table in the shared quota SQLite file. Before sending, the router estimates input cost at one token per three characters. If that cost would exceed the account's budget, the router records an `RPD` block. On success it rounds up the combined token cost, estimating missing counts from the corresponding text length, and records a block if the total reaches the budget. `CLOUDFLARE_DAILY_NEURON_BUDGET` accepts 1–10,000 and defaults to 9,000 to leave headroom. The ledger reflects requests observed by this client, with successful calls counted on their completion day. Cooldowns use provider `cloudflare` and model `*` so they apply across models.
+
+| Evidence | Outcome |
+| --- | --- |
+| Daily allocation exhausted, code 3036 | `RPD` until the next 00:00 UTC |
+| Other rate limit, HTTP 429 | `RPM` for Retry-After or 60 seconds |
+| Temporary capacity, code 3040; HTTP 5xx | Retry with backoff |
+| Network failure; codes 3007 and 3008; HTTP 408 | Retry with backoff |
+| Code 10000 or HTTP 401 | Disable the affected token |
+| Paid model, blocked account, unavailable model, forbidden request, or edge refusal without a JSON error | Raise immediately |
+| Oversized, incomplete or invalid request, or malformed success response | Raise immediately |
+
+The router hops to another account after a quota refusal, pauses after two such refusals by default, and can wait inline once for up to 60 seconds when every usable account is blocked. The quota policy uses the Phase 1 streak backoff for unknown kinds and caps cooldowns at 26 hours. [Cloudflare error codes](https://developers.cloudflare.com/workers-ai/platform/errors/)
+
+Run `python -m tools.llm_infra.cloudflare_smoke` or `python -m tools.llm_infra.check_config` to inspect settings, usage estimates and cooldowns offline. With `--live`, the smoke command sends one synthetic chat request through the first eligible slot if its account is available. It uses a 20-second timeout and up to 512 output tokens, performs no retries, reports whether the response parses as JSON, and records the estimated usage. Pipeline integration is planned for Phase 5. [Workers Free setup guide](../guides/CLOUDFLARE_FREE_SETUP.md)
+
 ## Routing phases
 
 | Phase | Work |
 | --- | --- |
 | 2 · Groq | Done. Free plan declarations, a production model allowlist, and organization quota handling. |
 | 3 · OpenRouter | Done. Free model routing, post-response cost checks, and account-wide cooldowns. |
-| 4 · Cloudflare Workers AI | Use a free-plan token with account-scoped permissions. Budget and track Neurons. |
+| 4 · Cloudflare Workers AI | Done. Workers Free plan declarations, account-wide cooldowns, and a daily Neuron budget. |
 | 5 · Unified routing | Route across eligible providers and benchmark script quality under the existing Script Quality Contract, preserving the frozen review criteria. |

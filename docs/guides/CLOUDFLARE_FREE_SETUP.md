@@ -1,0 +1,13 @@
+# Cài đặt Cloudflare Workers Free
+
+1. Trong Cloudflare Dashboard, kiểm tra tài khoản đang dùng **Workers Free** và giữ nguyên gói này. Khi hết 10.000 Neuron miễn phí trong ngày, Workers Free dừng xử lý yêu cầu. Workers Paid tính $0,011 cho mỗi 1.000 Neuron vượt hạn mức. [Giá Workers AI](https://developers.cloudflare.com/workers-ai/platform/pricing/)
+2. Mở **Workers AI → Use REST API → Create a Workers AI API Token**. Dùng mẫu **Workers AI** với hai quyền **Workers AI - Read** và **Workers AI - Edit**, giới hạn token vào tài khoản sẽ dùng. Sao chép token sau khi tạo. [Hướng dẫn REST API](https://developers.cloudflare.com/workers-ai/get-started/rest-api/)
+3. Ở mục **Get Account ID** trên cùng trang, sao chép Account ID. Trong tệp `.env` ở thư mục gốc, thêm hai dòng `CLOUDFLARE_ACCOUNT_ID=` và `CLOUDFLARE_API_TOKEN=`, rồi điền giá trị tương ứng sau dấu `=`. Giữ kín cả hai giá trị.
+
+   Slot 1 cũng chấp nhận cặp `CLOUDFLARE_ACCOUNT_ID_1` và `CLOUDFLARE_API_TOKEN_1`. Mỗi cặp cần đủ hai giá trị. Nếu khai báo cả hai cặp, các giá trị tương ứng phải giống nhau và chỉ tạo một slot. Dùng `CLOUDFLARE_PLAN_1` để khai báo gói cho slot 1 với cả hai cách đặt tên. Các slot bổ sung dùng hậu tố `_2`, `_3`, … cho cả Account ID và token. Các token của cùng một tài khoản dùng chung hạn mức.
+4. Chạy `python -m tools.llm_infra.cloudflare_smoke`. Lệnh mặc định kiểm tra cấu hình ngoại tuyến và hiển thị lượng Neuron đã ghi nhận trong ngày. `READY_FREE_ONLY` cho biết cấu hình và chuỗi model đáp ứng quy tắc Workers Free. Chủ tài khoản kiểm tra gói trực tiếp trên Dashboard vì token chỉ dùng để xác thực.
+5. Khi chủ dự án muốn kiểm tra kết nối, chạy `python -m tools.llm_infra.cloudflare_smoke --live`. Nếu tài khoản còn ngân sách, lệnh gửi đúng một yêu cầu mẫu với tối đa 512 token đầu ra, dùng model đầu tiên hoặc model chỉ định bằng `--model`. Lệnh chỉ in thông tin kết quả và ghi số Neuron ước tính. Yêu cầu JSON được viết trong prompt.
+
+Hạn mức 10.000 Neuron đặt lại lúc 00:00 UTC (07:00 giờ Việt Nam). Ví dụ, một yêu cầu gồm khoảng 300 token đầu vào và 100 token đầu ra trên `@cf/openai/gpt-oss-120b` được làm tròn lên 17 Neuron, tương đương khoảng 590 yêu cầu như vậy mỗi ngày. Ngân sách cục bộ mặc định là 9.000 Neuron, tương đương khoảng 530 yêu cầu. Token suy luận làm tăng mức sử dụng thực tế. Trong Dashboard, mục Workers AI hiển thị lượng Neuron Cloudflare ghi nhận trên toàn tài khoản. [Giá theo model](https://developers.cloudflare.com/workers-ai/platform/pricing/#llm-model-pricing)
+
+Việc tích hợp vào pipeline được lên kế hoạch cho Phase 5.

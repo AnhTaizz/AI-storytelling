@@ -130,3 +130,32 @@ class FakeOpenRouter:
                                    model=OPENROUTER_MODEL, headers={}, status=200, response_id=None, cost=0)
 
         return SimpleNamespace(key_info=key_info, generate=generate)
+
+
+CF_ACCOUNT = "0123456789abcdef0123456789abcdef"
+CF_OTHER_ACCOUNT = "fedcba9876543210fedcba9876543210"
+CF_TOKEN = "test-cf-token-not-real-1"
+CF_MODEL = "@cf/openai/gpt-oss-120b"
+
+
+def cloudflare_settings(*accounts):
+    source = {}
+    for number, account in enumerate(accounts, 1):
+        source[f"CLOUDFLARE_ACCOUNT_ID_{number}"] = account
+        source[f"CLOUDFLARE_API_TOKEN_{number}"] = f"test-cf-token-not-real-{number}"
+    return source
+
+
+def cloudflare_body(**fields):
+    return openrouter_body(model=CF_MODEL, usage={"prompt_tokens": 30, "completion_tokens": 10}) | fields
+
+
+class FakeCloudflare:
+    def __init__(self, client, *responses):
+        self.http = FakeOpenRouterHTTP(*responses)
+        self._client = client
+        self.factory_calls = []
+
+    def factory(self, account, token):
+        self.factory_calls.append((account, token))
+        return self._client(account, token, http=self.http)
