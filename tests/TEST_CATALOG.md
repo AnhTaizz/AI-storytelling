@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 9 — test files: 91 — test functions: 1217
+Suites: 10 — test files: 96 — test functions: 1277
 
 ## canonical_story
 
@@ -156,6 +156,68 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.ci.check`, `tools.ci.conf
 - `GuardTests.test_coverage_keys_match_git_paths_on_windows`
 - `GuardTests.test_git_diff_helpers_and_cli`
 - `GuardTests.test_protected_pattern_file_covers_frozen_layers`
+
+## media_ingest
+
+### test_collection_io (4)
+Covers: `tools.canonical_story.conformance_v0`, `tools.media_ingest.collection_io`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `CollectionIoTests.test_paths_must_stay_strictly_inside_the_collection`
+- `CollectionIoTests.test_reports_and_csv_are_written_whole`
+- `CollectionIoTests.test_a_briefly_locked_report_is_retried_and_a_lasting_lock_is_raised`
+- `CollectionIoTests.test_aggregate_counts_every_category_and_rights_basis`
+
+### test_crawl_light_novel_art (8)
+Covers: `tools.canonical_story.conformance_v0`, `tools.media_ingest.crawl_light_novel_art`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `PublisherArtworkIdentityTests.test_cover_selection_ignores_navigation_and_other_volumes`
+- `PublisherArtworkIdentityTests.test_manga_or_another_series_cannot_be_labelled_as_ln`
+- `PublisherArtworkIdentityTests.test_ambiguous_cover_stops_selection`
+- `PublisherArtworkIdentityTests.test_volume_comes_from_variant_metadata_not_filename`
+- `PublisherArtworkIdentityTests.test_different_product_metadata_is_rejected`
+- `PublisherFetchTests.test_requests_stay_on_publisher_hosts_and_retry_only_transient_errors`
+- `PublisherRunTests.test_discovery_follows_only_listed_ln_volumes`
+- `PublisherRunTests.test_apply_stores_reference_assets_and_a_rerun_adds_nothing`
+
+### test_crawl_official_images (10)
+Covers: `tools.canonical_story.conformance_v0`, `tools.media_ingest.crawl_official_images`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `SourceSelectionTests.test_interrupted_staging_file_is_repaired_before_ingest`
+- `SourceSelectionTests.test_only_publisher_article_body_images`
+- `SourceSelectionTests.test_lookalike_image_host_is_excluded`
+- `SourceSelectionTests.test_only_requested_manga_pages_are_selected_in_order`
+- `FetchAndDiscoveryTests.test_fetch_needs_https_and_bounds_the_response`
+- `FetchAndDiscoveryTests.test_roshidere_articles_skip_the_heading_image_and_key_visuals_are_deduplicated`
+- `FetchAndDiscoveryTests.test_angel_title_takes_covers_and_only_readable_chapters_of_title_1480`
+- `SeriesRunTests.test_dry_run_only_lists_candidates`
+- `SeriesRunTests.test_apply_ingests_the_batch_and_writes_a_page_ordered_index`
+- `SeriesRunTests.test_main_reports_a_series_without_downloads_as_a_failure`
+
+### test_ingest_local_images (22)
+Covers: `tools.canonical_story.conformance_v0`, `tools.media_ingest.ingest_local_images`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `HeaderTests.test_png`
+- `HeaderTests.test_all_jpeg_sof_markers`
+- `HeaderTests.test_gif_versions`
+- `HeaderTests.test_all_webp_headers_with_padded_metadata`
+- `HeaderTests.test_truncated_unknown_and_zero_headers`
+- `HeaderTests.test_malformed_webp_chunks_and_jpeg_segments`
+- `CliTests.test_dry_run_writes_nothing`
+- `CliTests.test_apply_copies_and_complete_manifest`
+- `CliTests.test_duplicate_within_run_and_across_runs`
+- `CliTests.test_small_unreadable_and_unsupported`
+- `CliTests.test_custom_minimum`
+- `CliTests.test_numbering_continues_from_manifest_and_existing_files`
+- `CliTests.test_labels_override_defaults_and_preserve_unicode`
+- `CliTests.test_invalid_labels_exit_two_before_any_writes`
+- `CliTests.test_invalid_labels_leave_existing_output_unchanged`
+- `CliTests.test_malformed_csv_and_missing_labels`
+- `CliTests.test_output_inside_incoming_is_excluded`
+- `CliTests.test_default_output_and_roshidere_prefix_in_temporary_repo`
+- `CliTests.test_manifest_is_written_by_atomic_replace`
+- `CliTests.test_incompatible_manifest_fails_without_modification`
+- `CliTests.test_protected_tree_is_pruned_without_listing_it`
+- `CliTests.test_no_network_modules_in_tool_source`
 
 ## script_quality
 
@@ -1312,6 +1374,26 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.evaluate
 - `TestNoExtractionOrModelInTooling.test_tools_contain_no_model_or_network_calls`
 
 ## story_ingestion
+
+### test_crawl_syosetu (16)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.crawl_syosetu`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `ChapterIdentityTests.test_main_body_order_ruby_and_notes`
+- `ChapterIdentityTests.test_wrong_episode_url_rejected`
+- `ChapterIdentityTests.test_index_title_mismatch_rejected`
+- `ChapterIdentityTests.test_display_number_must_agree_with_url`
+- `ChapterIdentityTests.test_empty_or_duplicate_main_body_rejected`
+- `ChapterIdentityTests.test_inline_image_is_not_silently_lost`
+- `ChapterIdentityTests.test_index_excludes_other_works_and_non_episode_links`
+- `CachedSourceTests.test_resume_validates_source_and_does_not_fetch_or_rewrite`
+- `CachedSourceTests.test_existing_unproven_text_is_never_overwritten`
+- `CorpusRunTests.test_paginated_index_is_merged_and_saved`
+- `CorpusRunTests.test_inconsistent_indexes_are_rejected`
+- `CorpusRunTests.test_apply_adds_missing_chapters_and_writes_manifests`
+- `CorpusRunTests.test_failures_stop_before_the_manifests_are_written`
+- `CorpusRunTests.test_a_source_index_that_changes_during_the_crawl_is_rejected`
+- `CorpusRunTests.test_a_changed_historical_chapter_stops_the_run`
+- `FetcherTests.test_requests_stay_on_the_work_and_retry_only_transient_errors`
 
 ### test_light_novel_adapter_v0 (50)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_ingestion.paragraph_pack_v1`

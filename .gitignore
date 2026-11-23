@@ -17,3 +17,14 @@ data/sample/otonari_no_tenshi/wn_jp/raw/chapter_*.txt
 # Python bytecode
 __pycache__/
 .claude/worktrees/
+
+# Roshidere: the entire corpus is local/private; nothing is tracked or redistributed.
+data/sample/roshidere/
+
+# Local/private image ingestion output and staging (never commit images).
+data/sample/*/images/
+data/sample/*/_incoming_images/
+
+# Syosetu corpus provenance and generated full-corpus manifests.
+data/sample/otonari_no_tenshi/wn_jp/syosetu_local/
+data/sample/otonari_no_tenshi/wn_jp/LIGHT_NOVEL_SOURCE_MANIFEST_LATEST_LOCAL.json

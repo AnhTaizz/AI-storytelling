@@ -1,0 +1,9 @@
+# Dependencies for the local image-collection tooling (tools/media_ingest, tests/media_ingest).
+# Scoped to this tooling; it is not a project-wide packaging decision (DEC-032).
+#
+# Install:   python -m pip install -r requirements-media-ingest.txt
+# Test:      python -m unittest discover -s tests/media_ingest -t . -p "test_*.py"
+#
+# Pillow decodes downloaded images to check them before they are ingested.
+Pillow>=11,<13
+PyYAML>=6.0,<7
