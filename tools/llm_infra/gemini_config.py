@@ -5,6 +5,7 @@ from pathlib import Path
 import tempfile
 
 from tools.llm_infra.cost_policy import CostPolicy
+from tools.llm_infra.gemini_free_models_v1 import DEFAULT_MODEL_CHAIN
 from tools.llm_infra.quota_state import validate_scope
 from tools.story_extraction.gemini_key_pool_v1 import (
     CredentialConfig, GeminiConfigError, _KEY_PATTERN, _parse_dotenv,
@@ -26,11 +27,13 @@ def state_path(settings):
 class RoutingConfig:
     credentials: tuple[CredentialConfig, ...]
     model: str
+    model_source: str
+    max_rate_limit_hops: int
     policy: CostPolicy
     duplicates_dropped: int
 
 
-def inspect_settings(settings):
+def inspect_settings(settings, model=None):
     filtered = dict(settings)
     numbered = sorted((int(m[1]), name, value.strip()) for name, value in settings.items()
                       if (m := _KEY_PATTERN.fullmatch(name)) and value.strip())
@@ -48,19 +51,27 @@ def inspect_settings(settings):
     with tempfile.TemporaryDirectory() as directory:
         config = load_runtime_config(Path(directory) / "absent", filtered)
     # An unlabeled key is its own quota scope, so the owner need not map keys to projects.
-    # Keys that share a project then cost at most one refused call each per window.
     creds = config.credentials
     policy = CostPolicy.from_settings(settings, creds)
-    public_models = set(policy.confirmed_models) | {m.strip() for m in config.model.split(",") if m.strip()}
+    configured = (model or "").strip() or config.model
+    selected = configured or ",".join(DEFAULT_MODEL_CHAIN)
+    chain = {m.strip() for m in selected.split(",") if m.strip()}
+    public_models = chain | policy.effective_allowlist | policy.ignored_models
     if any(secret in value for secret in seen for value in (*public_models, str(state_path(settings)))):
         raise GeminiConfigError("Public configuration contains credential material")
     try:
         validate_scope(*public_models, *(c.group_id for c in creds))
     except ValueError:
         raise GeminiConfigError("Invalid model or project alias") from None
-    return RoutingConfig(creds, config.model, policy, duplicates)
+    try:
+        hops = int(settings.get("GEMINI_MAX_RATE_LIMIT_HOPS", "3"))
+    except ValueError:
+        hops = 0
+    if hops < 1:
+        raise GeminiConfigError("GEMINI_MAX_RATE_LIMIT_HOPS must be an integer >= 1")
+    return RoutingConfig(creds, selected, "configured" if configured else "default", hops, policy, duplicates)
 
 
-def load_routing_config(dotenv_path, environ=None):
-    config = inspect_settings(merged_settings(dotenv_path, environ))
+def load_routing_config(dotenv_path, environ=None, *, model=None):
+    config = inspect_settings(merged_settings(dotenv_path, environ), model)
     return replace(config, credentials=config.policy.eligible_credentials(config.credentials))

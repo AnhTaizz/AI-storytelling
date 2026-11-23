@@ -20,9 +20,12 @@ class GeminiQuotaPaused(GeminiTransportError):
 class GeminiRouter:
     def __init__(self, pool, store, client_factory=official_client_factory, *,
                  max_transport_retries=2, base_backoff_seconds=1.0, max_inline_wait_seconds=60.0,
-                 clock=time.time, sleep=time.sleep):
+                 max_rate_limit_hops: int = 3, clock=time.time, sleep=time.sleep):
         if min(max_transport_retries, base_backoff_seconds, max_inline_wait_seconds) < 0:
             raise GeminiConfigError("Retry and wait limits must be non-negative")
+        if type(max_rate_limit_hops) is not int or max_rate_limit_hops < 1:
+            raise GeminiConfigError("max_rate_limit_hops must be an integer >= 1")
+        self.max_rate_limit_hops = max_rate_limit_hops
         self.pool = pool
         self.store = store
         self.factory = client_factory
@@ -37,6 +40,8 @@ class GeminiRouter:
         attempts = []
         groups = self.pool.group_ids()
         cap = self.retries + 1 + len(groups)
+        rate_limits = 0
+        refused_groups = set()
         waited = False
         last_code = "POOL_EXHAUSTED"
         if self.pool.redact(model) != model:
@@ -85,6 +90,14 @@ class GeminiRouter:
                     now = self.clock()
                     decision = decide_rate_limit(error, now, self.store.unknown_streak(*scope))
                     self.store.block(*scope, decision.blocked_until, decision.reason, now)
+                    # Unlabeled keys may share one project. Repeated refusals suggest
+                    # shared exhaustion, so bound wasted calls across those keys.
+                    rate_limits += 1
+                    refused_groups.add(lease.group_id)
+                    if rate_limits >= self.max_rate_limit_hops:
+                        resume = min(self.store.blocked_until("gemini", model, group, now) or now
+                                     for group in refused_groups)
+                        raise GeminiQuotaPaused(len(attempts), resume) from None
                 elif last_code == "AUTH_FAILURE":
                     self.pool.disable_slot(lease.slot_id)
                 elif last_code in ("SERVER_FAILURE", "TRANSPORT_FAILURE") and len(attempts) <= self.retries:

@@ -92,3 +92,21 @@ class RouterTests(unittest.TestCase):
         with self.assertRaises(GeminiTransportError) as caught:
             self.generate(self.router(*(["a"]*6), max_transport_retries=0))
         self.assertEqual(caught.exception.attempts, 2)
+
+    def test_round_robin_unlabeled_keys(self):
+        for count in (1, 10):
+            with self.subTest(count=count):
+                router = self.router(*([""] * count))
+                self.assertEqual([self.generate(router)["slot_id"] for _ in range(count)],
+                                 [f"gemini_slot_{n}" for n in range(1, count + 1)])
+
+    def test_rate_limit_hop_cap_leaves_untried_keys_available(self):
+        router = self.router(*([""] * 10))
+        self.actions = [Error(delay=f"{n}s") for n in (30, 10, 20)] + [Error()] * 7
+        with self.assertRaises(GeminiQuotaPaused) as paused:
+            self.generate(router)
+        self.assertEqual((paused.exception.code, paused.exception.resume_after), ("QUOTA_EXHAUSTED", 1010))
+        self.assertEqual([key for key, _ in self.calls], [f"test-key-not-real-{n}" for n in (1, 2, 3)])
+        self.assertEqual(self.clock.waits, [])
+        self.actions.clear()
+        self.assertEqual(self.generate(router)["slot_id"], "gemini_slot_4")

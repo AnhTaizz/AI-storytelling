@@ -92,7 +92,7 @@ class _ObservedClient:
 class GeminiLLMClient:
     """Routes free-only Gemini calls through the M4 key pool (reads `.env` and the environment).
 
-    `model` may be a comma-separated chain, e.g. "gemini-3.6-flash,gemini-3.5-flash": each
+    `model` may be a comma-separated chain, e.g. "gemini-3.8-flash,gemini-3.6-flash": each
     call uses the first model and moves to the next only after the transport has exhausted
     its retries with an overload, quota or network failure. Every record says which model
     served it and which ones failed first.
@@ -106,6 +106,7 @@ class GeminiLLMClient:
         quota_state_path: Optional[Path | str] = None,
         temperature: float = 0.4,
         max_transport_retries: int = 3,
+        max_rate_limit_hops: Optional[int] = None,
         base_backoff_seconds: float = 5.0,
         client_factory: Optional[Callable[[str], Any]] = None,
         environ: Optional[Dict[str, str]] = None,
@@ -115,18 +116,14 @@ class GeminiLLMClient:
         from tools.llm_infra.gemini_config import load_routing_config
         from tools.llm_infra.gemini_router import GeminiRouter
         from tools.llm_infra.quota_state import QuotaStateStore
-        from tools.story_extraction.gemini_key_pool_v1 import GeminiConfigError, GeminiKeyPool
+        from tools.story_extraction.gemini_key_pool_v1 import GeminiKeyPool
         from tools.story_extraction.gemini_transport_v1 import GeminiTransportError, official_client_factory
 
-        config = load_routing_config(dotenv_path, environ)
-        self.models = [m.strip() for m in (model or config.model or "").split(",") if m.strip()]
-        if not self.models:
-            raise GeminiConfigError(
-                "No Gemini model: pass --model or set GEMINI_MODEL in .env")
-        pool = GeminiKeyPool(config.credentials, clock=clock)
-        if any(pool.redact(m) != m for m in self.models):
-            raise GeminiConfigError("Model contains credential material")
+        config = load_routing_config(dotenv_path, environ, model=model)
+        self.models = [m.strip() for m in config.model.split(",") if m.strip()]
+        self.model_source = config.model_source
         config.policy.check_models(self.models)
+        pool = GeminiKeyPool(config.credentials, clock=clock)
         self.model = self.models[0]
         self.temperature = temperature
         self.name = "gemini:" + ",".join(self.models)
@@ -137,6 +134,7 @@ class GeminiLLMClient:
             pool, QuotaStateStore(quota_state_path, clock=clock),
             lambda api_key: _ObservedClient(factory(api_key), self.attempt_failures, pool.redact),
             max_transport_retries=max_transport_retries,
+            max_rate_limit_hops=config.max_rate_limit_hops if max_rate_limit_hops is None else max_rate_limit_hops,
             base_backoff_seconds=base_backoff_seconds,
             sleep=sleep,
             clock=clock,

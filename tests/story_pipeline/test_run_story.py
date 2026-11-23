@@ -4,6 +4,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
@@ -70,9 +71,10 @@ class SeasonTests(unittest.TestCase):
             def generate(self, **kwargs):
                 raise DailyLimit("test-key-not-real-1")
 
-        settings = {"GEMINI_API_KEY_1": "test-key-not-real-1", "GEMINI_FREE_MODELS": "model-a",
-                    "GEMINI_PROJECT_BILLING_1": "FREE_TIER_CONFIRMED"}
-        gemini = GeminiLLMClient("model-a", dotenv_path=self.season_dir / "absent", environ=settings,
+        self.enterContext(patch("tools.story_extraction.gemini_transport_v1.official_client_factory",
+                                side_effect=AssertionError("unexpected SDK construction")))
+        settings = {"GEMINI_API_KEY_1": "test-key-not-real-1"}
+        gemini = GeminiLLMClient("gemini-3.8-flash", dotenv_path=self.season_dir / "absent", environ=settings,
                                  clock=lambda: 1000, sleep=self.fail, client_factory=lambda key: ExhaustedSDK())
         responder = FakeModel()
 

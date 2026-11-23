@@ -869,7 +869,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-words", type=int, default=None, help="override profile maximum length")
     parser.add_argument("--model", default=None,
                         help="Gemini model id, or a comma-separated fallback chain tried in order when a "
-                             "model is overloaded or out of quota (default: GEMINI_MODEL)")
+                             "model is overloaded or out of quota (defaults to GEMINI_MODEL or the built-in free-tier chain)")
     parser.add_argument("--temperature", type=float, default=0.4)
     parser.add_argument("--dotenv", default=str(REPO / ".env"))
     parser.add_argument("--facts", default=None, help="optional story_facts/v0 JSON from upstream extraction")
@@ -895,7 +895,7 @@ def episode_scope(manifest_path: Path | str, start: int, end: int, source_root: 
 
 
 def make_client(args: argparse.Namespace) -> Optional[LLMClient]:
-    """The Gemini client for the CLI, or None (with a message) when keys are missing."""
+    """Build the keys-only Gemini client, or print setup guidance for an invalid configuration."""
     from tools.llm_infra.gemini_config import merged_settings, state_path
     from tools.story_extraction.gemini_key_pool_v1 import GeminiConfigError
     from tools.story_pipeline.llm import GeminiLLMClient
