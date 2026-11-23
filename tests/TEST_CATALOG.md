@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 10 — test files: 96 — test functions: 1277
+Suites: 10 — test files: 97 — test functions: 1284
 
 ## canonical_story
 
@@ -1525,6 +1525,17 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `EpisodeBriefTests.test_renderings_show_every_item_with_its_sources`
 - `EpisodeBriefTests.test_owner_edits_round_trip_through_the_form`
 - `EpisodeBriefTests.test_edits_apply_to_copies_and_every_change_is_recorded`
+
+### test_gate_review (7)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.gate_review`
+
+- `FormWritingTests.test_request_record_and_candidates_come_from_the_run`
+- `FormWritingTests.test_a_season_expands_to_its_episodes`
+- `VerdictTests.test_verdicts_follow_the_contract_order`
+- `VerdictTests.test_incomplete_forms_get_no_verdict`
+- `GateRuleTests.test_the_protocol_rule`
+- `LockTests.test_lock_freezes_chapter_hashes_once`
+- `CommandLineTests.test_form_score_and_summary_over_a_season`
 
 ### test_lexicon (7)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.lexicon`
