@@ -991,3 +991,20 @@ DECISION:
 LIMITS:
 - The owner verifies billing and model availability. An application spending limit cannot prevent provider charges on a billed project.
 - Phase 1 supports Gemini only. The remaining providers and unified quality benchmark are planned.
+
+---
+
+## DEC-036 — Plug-and-Play Gemini Key Pool (SIMPLE_KEY_POOL)
+
+STATUS: ACCEPTED (Project Owner, 2026-11-23: "ok merge PR #26 luôn đi")
+
+CONTEXT:
+On 2026-11-23 the owner said “Tôi k muốn mất công phải chỉnh proj, chỉ cho key free là dùng được”, “gemini key tôi chỉ dùng duy nhất tier free thôi” and “chọn 1, đóng PR #25 đi”. PR #25 (DEC-035, required labels) was closed. This proposal amends DEC-034 item 2. Basic setup requires neither a billing confirmation nor a user-maintained model list.
+
+DECISION:
+1. Numbered keys alone select the default free model chain. The maintained code list records the pricing source and review date. An override can only narrow it.
+2. Rotate unlabeled keys in separate scopes. Optional shared labels pool quota state. Stop after three 429 responses per router request by default and preserve the remaining keys for later requests.
+3. Use the owner's standing free-tier declaration for undeclared keys. Explicit false blocks undeclared keys. Explicit billing-enabled or unverified declarations exclude those slots, and conflicting declarations on a shared label fail configuration.
+
+LIMITS:
+An API key cannot verify project billing. The model list can go stale. Keys from one project may incur up to three refused calls per model request window at the default limit. Google may use free-tier content to improve its products.

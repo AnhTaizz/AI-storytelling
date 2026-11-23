@@ -1410,6 +1410,10 @@ class EndToEndTests(unittest.TestCase):
 
 
 class GeminiClientTests(unittest.TestCase):
+    def setUp(self):
+        self.sdk = self.enterContext(mock.patch("tools.story_extraction.gemini_transport_v1.official_client_factory",
+                                               side_effect=AssertionError("unexpected SDK construction")))
+
     def test_cli_configuration_blocks_paid_use_before_sdk_construction(self):
         from contextlib import redirect_stderr
         from io import StringIO
@@ -1419,32 +1423,33 @@ class GeminiClientTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "settings"
-            state = Path(tmp) / "quota"
-            path.write_text("GEMINI_API_KEY_1=test-key-not-real-1\nGEMINI_MODEL=chosen\n"
-                            "GEMINI_FREE_MODELS=chosen\nGEMINI_PROJECT_BILLING_1=FREE_TIER_CONFIRMED\n"
-                            f"LLM_QUOTA_STATE_PATH={state}\n", encoding="utf-8")
+            self.enterContext(patch("tools.llm_infra.gemini_config.DEFAULT_STATE", Path(tmp) / "quota"))
+            path.write_text("GEMINI_API_KEY_1=test-key-not-real-1\n", encoding="utf-8")
             args = SimpleNamespace(model=None, dotenv=path, temperature=0.4)
             for overrides, expected in [
-                ({}, None), ({"GEMINI_PROJECT_BILLING_1": "UNVERIFIED"}, "NO_FREE_TIER_CONFIRMED_PROJECT"),
-                ({"GEMINI_PROJECT_BILLING_1": "BILLING_ENABLED"}, "NO_FREE_TIER_CONFIRMED_PROJECT"),
-                ({"GEMINI_FREE_MODELS": "other"}, "MODEL_NOT_CONFIRMED_FREE"),
-                # Keys only: one confirmation line, no billing line per key, no model list.
+                ({}, None), ({"GEMINI_PROJECT_BILLING_1": "UNVERIFIED"}, "NO_ELIGIBLE_KEY"),
+                ({"GEMINI_PROJECT_BILLING_1": "BILLING_ENABLED"}, "NO_ELIGIBLE_KEY"),
+                ({"GEMINI_FREE_MODELS": "other"}, "MODEL_NOT_FREE_TIER"),
+                ({"GEMINI_MODEL": "gemini-4-carbon"}, "MODEL_NOT_FREE_TIER"),
+                ({"GEMINI_MODEL": "gemini-3.8-flash,gemini-4-carbon"}, "MODEL_NOT_FREE_TIER"),
+                ({"GEMINI_MAX_RATE_LIMIT_HOPS": "0"}, "GEMINI_MAX_RATE_LIMIT_HOPS"),
+                ({"GEMINI_MAX_RATE_LIMIT_HOPS": "abc"}, "GEMINI_MAX_RATE_LIMIT_HOPS"),
+                # Explicit confirmation remains supported.
                 ({"GEMINI_PROJECT_BILLING_1": "", "GEMINI_FREE_MODELS": "",
                   "GEMINI_KEYS_FREE_TIER_CONFIRMED": "true"}, None),
                 ({"LLM_ALLOW_PAID": "true"}, "Phase 1"), ({"MAX_PAID_SPEND_USD": "5"}, "Phase 1")]:
-                with self.subTest(overrides=overrides), patch.dict("os.environ", overrides, clear=True), \
-                        patch("tools.story_extraction.gemini_transport_v1.official_client_factory") as sdk:
+                with self.subTest(overrides=overrides), patch.dict("os.environ", overrides, clear=True):
                     output = StringIO()
                     with redirect_stderr(output):
                         client = make_client(args)
-                    sdk.assert_not_called()
+                    self.sdk.assert_not_called()
                     if expected:
                         self.assertIsNone(client)
                         self.assertIn(expected, output.getvalue())
                         self.assertIn("tools.llm_infra.check_config", output.getvalue())
                         self.assertNotIn("test-key-not-real", output.getvalue())
                     else:
-                        self.assertEqual(client.name, "gemini:chosen")
+                        self.assertEqual(client.name, "gemini:gemini-3.8-flash,gemini-3.6-flash")
 
     def test_uses_existing_transport_with_fake_sdk(self):
         class FakeResponse:
@@ -1469,15 +1474,15 @@ class GeminiClientTests(unittest.TestCase):
                 return FakeResponse()
 
         sdk = FakeSDK()
-        client = GeminiLLMClient("fake-model", dotenv_path=REPO / "does-not-exist.env",
+        client = GeminiLLMClient("gemini-3.8-flash", dotenv_path=REPO / "does-not-exist.env",
                                  client_factory=lambda key: sdk,
                                  environ={"GEMINI_API_KEY_1": "test-key-not-real",
                                           "GEMINI_PROJECT_BILLING_1": "FREE_TIER_CONFIRMED",
-                                          "GEMINI_FREE_MODELS": "fake-model"})
+                                          "GEMINI_FREE_MODELS": "gemini-3.8-flash"})
         record = client.complete(system="s", user="u", request_id="t:1")
         self.assertEqual(record["raw_content"], '{"n": 1}')
-        self.assertEqual(sdk.kwargs["model"], "fake-model")
-        self.assertEqual(client.name, "gemini:fake-model")
+        self.assertEqual(sdk.kwargs["model"], "gemini-3.8-flash")
+        self.assertEqual(client.name, "gemini:gemini-3.8-flash")
         self.assertEqual(record["fallback_from"], [])
 
     def test_model_fallback_chain(self):
@@ -1526,36 +1531,36 @@ class GeminiClientTests(unittest.TestCase):
             def sleep(seconds):
                 now[0] += seconds
 
-            return GeminiLLMClient("busy-model, spare-model", dotenv_path=REPO / "does-not-exist.env",
+            return GeminiLLMClient("gemini-3.8-flash, gemini-3.6-flash", dotenv_path=REPO / "does-not-exist.env",
                                    client_factory=lambda key: sdk, max_transport_retries=1,
                                    sleep=sleep, clock=lambda: now[0],
                                    environ={"GEMINI_API_KEY_1": "test-key-not-real",
                                             "GEMINI_PROJECT_BILLING_1": "FREE_TIER_CONFIRMED",
-                                            "GEMINI_FREE_MODELS": "busy-model,spare-model"})
+                                            "GEMINI_FREE_MODELS": "gemini-3.8-flash,gemini-3.6-flash"})
 
         cases = [
-            ("overloaded first model falls back", {"busy-model": 503}, "ok",
-             ["busy-model", "busy-model", "spare-model"]),
-            ("quota on first model falls back", {"busy-model": 429}, "ok", None),
-            ("rejected request does not fall back", {"busy-model": 400}, "raise", ["busy-model"]),
-            ("unclassified error after a retry falls back", {"busy-model": [503, 400]}, "ok",
-             ["busy-model", "busy-model", "spare-model"]),
-            ("dropped connection is retried, then falls back", {"busy-model": ["timeout", "timeout"]}, "ok",
-             ["busy-model", "busy-model", "spare-model"]),
-            ("every model down raises", {"busy-model": 503, "spare-model": 503}, "raise", None),
+            ("overloaded first model falls back", {"gemini-3.8-flash": 503}, "ok",
+             ["gemini-3.8-flash", "gemini-3.8-flash", "gemini-3.6-flash"]),
+            ("quota on first model falls back", {"gemini-3.8-flash": 429}, "ok", None),
+            ("rejected request does not fall back", {"gemini-3.8-flash": 400}, "raise", ["gemini-3.8-flash"]),
+            ("unclassified error after a retry falls back", {"gemini-3.8-flash": [503, 400]}, "ok",
+             ["gemini-3.8-flash", "gemini-3.8-flash", "gemini-3.6-flash"]),
+            ("dropped connection is retried, then falls back", {"gemini-3.8-flash": ["timeout", "timeout"]}, "ok",
+             ["gemini-3.8-flash", "gemini-3.8-flash", "gemini-3.6-flash"]),
+            ("every model down raises", {"gemini-3.8-flash": 503, "gemini-3.6-flash": 503}, "raise", None),
             # Season S2: a model that runs out of output tokens (thinking) cuts its JSON off.
-            ("answer cut off by the token limit falls back", {"busy-model": "truncated"}, "ok",
-             ["busy-model", "spare-model"]),
+            ("answer cut off by the token limit falls back", {"gemini-3.8-flash": "truncated"}, "ok",
+             ["gemini-3.8-flash", "gemini-3.6-flash"]),
         ]
         for label, failures, outcome, expected_calls in cases:
             with self.subTest(label):
                 sdk = FakeSDK(failures)
                 client = client_for(sdk)
-                self.assertEqual(client.name, "gemini:busy-model,spare-model")
+                self.assertEqual(client.name, "gemini:gemini-3.8-flash,gemini-3.6-flash")
                 if outcome == "ok":
                     record = client.complete(system="s", user="u", request_id="t:1")
-                    self.assertEqual(record["model_requested"], "spare-model")
-                    self.assertEqual(record["fallback_from"][0]["model"], "busy-model")
+                    self.assertEqual(record["model_requested"], "gemini-3.6-flash")
+                    self.assertEqual(record["fallback_from"][0]["model"], "gemini-3.8-flash")
                     # Every earlier call failed in transport, except a cut-off answer, which arrived.
                     cut_off = sum(1 for f in record["fallback_from"] if f["code"] == "MAX_TOKENS")
                     self.assertEqual(len(record["attempt_failures"]), len(sdk.calls) - 1 - cut_off)

@@ -14,7 +14,7 @@ class ConfigTests(unittest.TestCase):
             path.write_text("GEMINI_MODEL=file-model\nGEMINI_API_KEY_9=test-key-not-real-1\n"
                             "GEMINI_PROJECT_LABEL_9=discarded\n", encoding="utf-8")
             cfg = load_routing_config(path, settings("", ""))
-            self.assertEqual(cfg.model, "model-a")
+            self.assertEqual(cfg.model, "gemini-3.8-flash")
             self.assertEqual(cfg.duplicates_dropped, 1)
             self.assertEqual([(c.slot_id,c.group_id) for c in cfg.credentials],
                              [("gemini_slot_1", f"{UNKNOWN}:gemini_slot_1"), ("gemini_slot_2", f"{UNKNOWN}:gemini_slot_2")])

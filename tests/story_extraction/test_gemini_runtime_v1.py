@@ -339,20 +339,14 @@ class TestRepositorySecurity(unittest.TestCase):
         self.assertEqual(ignored.returncode, 0)
         self.assertNotEqual(example.returncode, 0)
 
-    def test_env_example_has_blank_key_and_label_placeholders_without_fixed_model(self):
+    def test_env_example_has_blank_keys_and_optional_label_and_model(self):
         content = (REPO / ".env.example").read_text(encoding="utf-8")
-        assignments = [line for line in content.splitlines() if line and not line.startswith("#")]
-        self.assertTrue(assignments)
-        key_assignments = [line for line in assignments if line.startswith("GEMINI_API_KEY_")]
-        label_assignments = [
-            line for line in assignments if line.startswith("GEMINI_PROJECT_LABEL_")
-        ]
-        self.assertEqual(len(key_assignments), 3)
-        self.assertEqual(len(label_assignments), 3)
-        self.assertTrue(all(line.endswith("=") for line in key_assignments))
-        self.assertTrue(all(line.endswith("=") for line in label_assignments))
-        self.assertIn("GEMINI_MODEL=", assignments)
-        self.assertNotIn("GEMINI_MODEL=gemini-", content)
+        basic, advanced = content.split("# --- Advanced (all optional) ---")
+        assignments = [line for line in basic.splitlines() if line and not line.startswith("#")]
+        self.assertEqual(assignments, [f"GEMINI_API_KEY_{n}=" for n in range(1, 4)])
+        self.assertIn("# GEMINI_PROJECT_LABEL_<n>=", advanced)
+        self.assertIn("# GEMINI_MODEL=", advanced)
+        self.assertNotRegex(advanced, r"(?m)^(GEMINI_API_KEY_|GEMINI_PROJECT_LABEL_|GEMINI_MODEL=)")
         self.assertNotIn("AIza", content)
         self.assertNotIn(FAKE_SECRET, content)
 

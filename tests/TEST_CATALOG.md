@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 11 — test files: 103 — test functions: 1297
+Suites: 11 — test files: 103 — test functions: 1300
 
 ## canonical_story
 
@@ -164,24 +164,27 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.check_config`, 
 
 - `CheckTests.test_status_and_secret_safe_diagnostics`
 
-### test_cost_policy (2)
-Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.cost_policy`, `tools.llm_infra.gemini_config`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.gemini_key_pool_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+### test_cost_policy (3)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.cost_policy`, `tools.llm_infra.gemini_config`, `tools.llm_infra.gemini_free_models_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.gemini_key_pool_v1`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `CostTests.test_closed_configuration`
 - `CostTests.test_eligible_slots_and_all_missing_models`
+- `CostTests.test_override_only_narrows_reviewed_models`
 
 ### test_gemini_config (1)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.gemini_config`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.gemini_key_pool_v1`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `ConfigTests.test_merge_then_deduplicate_and_keep_unlabeled_keys_separate`
 
-### test_gemini_router (4)
+### test_gemini_router (6)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.gemini_config`, `tools.llm_infra.gemini_router`, `tools.llm_infra.quota_state`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.gemini_key_pool_v1`, `tools.story_extraction.gemini_transport_v1`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `RouterTests.test_project_model_rotation_restart_and_expiry`
 - `RouterTests.test_pause_with_resume_time_and_one_inline_wait`
 - `RouterTests.test_auth_disables_only_one_slot_and_exhaustion_is_distinct`
 - `RouterTests.test_transport_retry_limit_and_call_cap`
+- `RouterTests.test_round_robin_unlabeled_keys`
+- `RouterTests.test_rate_limit_hop_cap_leaves_untried_keys_available`
 
 ### test_quota_policy (2)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.quota_policy`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
@@ -1143,7 +1146,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `TestTransport.test_exception_message_is_sanitized`
 - `TestRepositorySecurity.test_no_local_model_fallback_in_runtime`
 - `TestRepositorySecurity.test_env_is_ignored_and_example_is_allowed`
-- `TestRepositorySecurity.test_env_example_has_blank_key_and_label_placeholders_without_fixed_model`
+- `TestRepositorySecurity.test_env_example_has_blank_keys_and_optional_label_and_model`
 
 ### test_holdout_seal_v1 (29)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.holdout_seal_v1`, `tools.story_ingestion.light_novel_adapter_v0`

@@ -27,7 +27,7 @@ class Error(Exception):
 
 
 def settings(*labels):
-    source = {"GEMINI_MODEL": "model-a", "GEMINI_FREE_MODELS": "model-a,model-b"}
+    source = {"GEMINI_MODEL": "gemini-3.8-flash", "GEMINI_FREE_MODELS": "gemini-3.8-flash,gemini-3.6-flash"}
     for n, label in enumerate(labels, 1):
         source.update({f"GEMINI_API_KEY_{n}": f"test-key-not-real-{n}",
                        f"GEMINI_PROJECT_BILLING_{n}": "FREE_TIER_CONFIRMED",
