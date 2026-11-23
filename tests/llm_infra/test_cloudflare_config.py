@@ -31,11 +31,43 @@ class CloudflareConfigTests(unittest.TestCase):
         for secret in (CF_ACCOUNT, CF_OTHER_ACCOUNT, CF_TOKEN):
             self.assertNotIn(secret, repr(config) + repr(summary))
 
+    def test_unnumbered_pair_uses_slot_one(self):
+        unnumbered = {"CLOUDFLARE_ACCOUNT_ID": CF_ACCOUNT, "CLOUDFLARE_API_TOKEN": CF_TOKEN}
+        second_token = "test-cf-token-not-real-2"
+        extra = {"CLOUDFLARE_ACCOUNT_ID_2": CF_OTHER_ACCOUNT, "CLOUDFLARE_API_TOKEN_2": second_token}
+        for case, additions, extra_slots, duplicates in [
+            ("unnumbered only", {}, [], 0),
+            ("identical numbered slot one", cloudflare_settings(CF_ACCOUNT), [], 1),
+            ("additional numbered slot", extra, [(2, CF_OTHER_ACCOUNT, second_token)], 0),
+        ]:
+            with self.subTest(case=case):
+                config = inspect_cloudflare_settings(additions | unnumbered | {
+                    "CLOUDFLARE_KEYS_FREE_PLAN_CONFIRMED": "false", "CLOUDFLARE_PLAN_1": "WORKERS_FREE_CONFIRMED",
+                    "CLOUDFLARE_PLAN_2": "WORKERS_FREE_CONFIRMED",
+                })
+                expected = [(1, CF_ACCOUNT, CF_TOKEN), *extra_slots]
+                self.assertEqual([(s.slot_id, s.scope, s._account_id, s._api_token) for s in config.slots],
+                                 [(f"cloudflare_slot_{n}", f"cloudflare_account_{n}", account, token)
+                                  for n, account, token in expected])
+                summary = config.public_summary()
+                self.assertEqual(summary["keys_configured"], len(expected) + duplicates)
+                self.assertEqual(summary["duplicates_dropped"], duplicates)
+
     def test_rejects_bad_pairing_and_plan_conflicts_without_echoing_values(self):
         pairs = cloudflare_settings(CF_ACCOUNT, CF_ACCOUNT)
+        unnumbered = {"CLOUDFLARE_ACCOUNT_ID": CF_ACCOUNT, "CLOUDFLARE_API_TOKEN": CF_TOKEN}
         for values, message in [
             ({"CLOUDFLARE_ACCOUNT_ID_1": CF_ACCOUNT}, "slot 1"),
             ({"CLOUDFLARE_API_TOKEN_2": CF_TOKEN}, "slot 2"),
+            ({"CLOUDFLARE_ACCOUNT_ID": CF_ACCOUNT, "CLOUDFLARE_API_TOKEN": " "}, r"slot 1 \(unnumbered\)"),
+            ({"CLOUDFLARE_API_TOKEN": CF_TOKEN} | pairs, r"slot 1 \(unnumbered\)"),
+            (unnumbered | {"CLOUDFLARE_API_TOKEN_1": CF_TOKEN}, "Incomplete Cloudflare credential pair for slot 1$"),
+            (unnumbered | cloudflare_settings(CF_OTHER_ACCOUNT),
+             r"^CLOUDFLARE_\*_1 conflicts with the unnumbered CLOUDFLARE_\* pair$"),
+            (unnumbered | cloudflare_settings(CF_ACCOUNT) | {"CLOUDFLARE_API_TOKEN_1": "test-cf-token-not-real-2"},
+             r"^CLOUDFLARE_\*_1 conflicts with the unnumbered CLOUDFLARE_\* pair$"),
+            (unnumbered | {"CLOUDFLARE_ACCOUNT_ID_01": CF_ACCOUNT, "CLOUDFLARE_API_TOKEN_01": CF_TOKEN},
+             "Duplicate or invalid"),
             (pairs | {"CLOUDFLARE_API_TOKEN_01": CF_TOKEN}, "Duplicate or invalid"),
             (pairs | {"CLOUDFLARE_ACCOUNT_ID_0": CF_ACCOUNT}, "Duplicate or invalid"),
             (pairs | {"CLOUDFLARE_PLAN_2": "WORKERS_PAID"}, "Conflicting"),
@@ -44,12 +76,15 @@ class CloudflareConfigTests(unittest.TestCase):
             (pairs | {"CLOUDFLARE_KEYS_FREE_PLAN_CONFIRMED": "unknown"}, "Expected true or false"),
             (pairs | {"CLOUDFLARE_MODEL": CF_ACCOUNT}, "credential material"),
             (pairs | {"LLM_QUOTA_STATE_PATH": CF_TOKEN}, "credential material"),
+            (unnumbered | {"CLOUDFLARE_MODEL": CF_ACCOUNT}, "credential material"),
+            (unnumbered | {"LLM_QUOTA_STATE_PATH": CF_TOKEN}, "credential material"),
             (pairs | {"CLOUDFLARE_ACCOUNT_ID_" + "1" * 5000: CF_ACCOUNT}, "Invalid Cloudflare credential"),
         ]:
-            with self.subTest(message=message), self.assertRaisesRegex(GeminiConfigError, message) as raised:
-                inspect_cloudflare_settings(values)
-            self.assertNotIn(CF_ACCOUNT, str(raised.exception))
-            self.assertNotIn(CF_TOKEN, str(raised.exception))
+            with self.subTest(message=message):
+                with self.assertRaisesRegex(GeminiConfigError, message) as raised:
+                    inspect_cloudflare_settings(values)
+                for secret in (CF_ACCOUNT, CF_OTHER_ACCOUNT, CF_TOKEN, "test-cf-token-not-real-2"):
+                    self.assertNotIn(secret, str(raised.exception))
 
     def test_only_workers_free_is_eligible(self):
         pairs = cloudflare_settings(CF_ACCOUNT, CF_OTHER_ACCOUNT) | {

@@ -38,15 +38,19 @@ class CloudflareSmokeTests(unittest.TestCase):
         self.ledger.add("cloudflare", self.scope, utc_day(self.clock()), 22, self.clock())
         store = QuotaStateStore(self.state, clock=self.clock)
         store.block("cloudflare", "*", self.scope, 2000, "RPD", self.clock())
+        store.block("cloudflare", "*", f"/accounts/{CF_ACCOUNT}/{CF_TOKEN}", 2000, "RPM", self.clock())
         store.block("openrouter", "*", "openrouter_account", 2000, "RPM", self.clock())
+        unnumbered = {"CLOUDFLARE_ACCOUNT_ID": CF_ACCOUNT, "CLOUDFLARE_API_TOKEN": CF_TOKEN}
         for environ, status in [
             ({}, "WAITING_FOR_USER_CREDENTIALS"),
             (self.settings, "READY_FREE_ONLY"),
+            (unnumbered, "READY_FREE_ONLY"),
             (self.settings | {"CLOUDFLARE_MODEL": "test/paid"}, "BLOCKED_MODEL_NOT_FREE_TIER"),
             (self.settings | {"CLOUDFLARE_PLAN_1": "WORKERS_PAID"}, "BLOCKED_NO_ELIGIBLE_KEY"),
             ({"CLOUDFLARE_API_TOKEN_1": CF_TOKEN}, "CONFIG_ERROR"),
+            ({"CLOUDFLARE_API_TOKEN": CF_TOKEN}, "CONFIG_ERROR"),
         ]:
-            with self.subTest(status=status):
+            with self.subTest(names=sorted(environ), status=status):
                 fake = FakeCloudflare(CloudflareClient)
                 result, report = self.run_smoke([], environ, fake.factory)
                 self.assertEqual((result, report["mode"], report["status"]),
@@ -54,8 +58,11 @@ class CloudflareSmokeTests(unittest.TestCase):
                 self.assertEqual(fake.factory_calls, [])
                 if status == "READY_FREE_ONLY":
                     self.assertEqual(report["model_chain"], list(DEFAULT_MODEL_CHAIN))
-                    self.assertEqual(report["blocked"], [{"model": "*", "scope": self.scope, "reason": "RPD",
-                                                          "until_utc": "1970-01-01T00:33:20Z"}])
+                    self.assertCountEqual(report["blocked"], [
+                        {"model": "*", "scope": self.scope, "reason": "RPD", "until_utc": "1970-01-01T00:33:20Z"},
+                        {"model": "*", "scope": "/accounts/[REDACTED]/[REDACTED]", "reason": "RPM",
+                         "until_utc": "1970-01-01T00:33:20Z"},
+                    ])
                     self.assertEqual(report["neurons_used_today"], {self.scope: 22})
 
     def test_live_sends_one_prompt_and_records_reported_or_estimated_usage(self):

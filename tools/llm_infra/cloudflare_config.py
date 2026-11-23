@@ -12,7 +12,7 @@ from tools.llm_infra.gemini_config import merged_settings, state_path
 from tools.story_extraction.gemini_key_pool_v1 import GeminiConfigError
 
 
-CREDENTIAL_PATTERN = re.compile(r"CLOUDFLARE_(ACCOUNT_ID|API_TOKEN)_([0-9]+)")
+CREDENTIAL_PATTERN = re.compile(r"CLOUDFLARE_(ACCOUNT_ID|API_TOKEN)(?:_([0-9]+))?")
 PLAN_STATUSES = ("WORKERS_FREE_CONFIRMED", "UNVERIFIED", "WORKERS_PAID")
 NOTICE = ("A token cannot show the Workers plan. On Workers Paid, usage beyond 10,000 Neurons per day "
           "is billed. Neuron use is estimated locally from token counts.")
@@ -81,12 +81,16 @@ class CloudflareRoutingConfig:
         }
 
 
-def _numbered_pairs(settings):
+def _credential_pairs(settings):
+    unnumbered = {}
     numbered = {}
     for name, value in settings.items():
         if not (match := CREDENTIAL_PATTERN.fullmatch(name)) or not (value := value.strip()):
             continue
         kind, suffix = match.groups()
+        if suffix is None:
+            unnumbered[kind] = value
+            continue
         try:
             number = int(suffix)
         except ValueError:
@@ -95,6 +99,16 @@ def _numbered_pairs(settings):
         if not number or original_suffix != suffix:
             raise GeminiConfigError("Duplicate or invalid Cloudflare credential slot number")
         parts[kind] = value
+    if unnumbered:
+        if len(unnumbered) != 2:
+            raise GeminiConfigError("Incomplete Cloudflare credential pair for slot 1 (unnumbered)")
+        if 1 in numbered:
+            suffix, parts = numbered[1]
+            if suffix != "1":
+                raise GeminiConfigError("Duplicate or invalid Cloudflare credential slot number")
+            if len(parts) == 2 and parts != unnumbered:
+                raise GeminiConfigError("CLOUDFLARE_*_1 conflicts with the unnumbered CLOUDFLARE_* pair")
+        yield 1, "1", unnumbered["ACCOUNT_ID"], unnumbered["API_TOKEN"]
     for number, (suffix, parts) in sorted(numbered.items()):
         if len(parts) != 2:
             raise GeminiConfigError(f"Incomplete Cloudflare credential pair for slot {number}")
@@ -123,7 +137,7 @@ def inspect_cloudflare_settings(settings, model=None, *, validate_models=True):
     slots = []
     plans = Counter()
     duplicates = 0
-    for number, suffix, account_id, token in _numbered_pairs(settings):
+    for number, suffix, account_id, token in _credential_pairs(settings):
         plan = settings.get(f"CLOUDFLARE_PLAN_{suffix}", "").strip() or default_plan
         if plan not in PLAN_STATUSES:
             raise GeminiConfigError(f"Invalid Cloudflare plan declaration for slot {number}")

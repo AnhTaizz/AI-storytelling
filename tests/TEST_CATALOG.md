@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 11 — test files: 121 — test functions: 1398
+Suites: 11 — test files: 121 — test functions: 1399
 
 ## canonical_story
 
@@ -167,10 +167,11 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.check_config`, 
 - `CheckTests.test_groq_report_status_blocks_and_redaction_leave_gemini_exit_status`
 - `CheckTests.test_openrouter_status_counts_blocks_and_redaction_leave_gemini_exit_status`
 
-### test_cloudflare_config (5)
+### test_cloudflare_config (6)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.cloudflare_config`, `tools.llm_infra.cloudflare_free_models_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `CloudflareConfigTests.test_pairs_use_numeric_priority_and_first_slot_alias_per_account`
+- `CloudflareConfigTests.test_unnumbered_pair_uses_slot_one`
 - `CloudflareConfigTests.test_rejects_bad_pairing_and_plan_conflicts_without_echoing_values`
 - `CloudflareConfigTests.test_only_workers_free_is_eligible`
 - `CloudflareConfigTests.test_narrowing_and_cost_controls_apply`

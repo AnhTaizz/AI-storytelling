@@ -27,17 +27,22 @@ class CheckTests(unittest.TestCase):
             ledger.add("cloudflare", "cloudflare_account_1", utc_day(clock()), 21, clock())
             store.block("cloudflare", "*", "cloudflare_account_1", 2000, "RPD", clock())
             store.block("cloudflare", "*", f"/accounts/{CF_ACCOUNT}/{CF_TOKEN}", 2000, "RPM", clock())
+            numbered = cloudflare_settings(CF_ACCOUNT, CF_OTHER_ACCOUNT)
+            unnumbered = {name.removesuffix("_1"): value for name, value in numbered.items()}
             for gemini, values, status in [
-                ({}, cloudflare_settings(CF_ACCOUNT, CF_OTHER_ACCOUNT), "READY_FREE_ONLY"),
+                ({}, numbered, "READY_FREE_ONLY"),
+                ({}, unnumbered, "READY_FREE_ONLY"),
                 (settings(""), cloudflare_settings(CF_ACCOUNT) | {"CLOUDFLARE_MODEL": "test/paid"},
                  "BLOCKED_MODEL_NOT_FREE_TIER"),
                 (settings(""), cloudflare_settings(CF_ACCOUNT) | {"CLOUDFLARE_PLAN_1": "WORKERS_PAID"},
                  "BLOCKED_NO_ELIGIBLE_KEY"),
                 (settings(""), {"CLOUDFLARE_ACCOUNT_ID_1": CF_ACCOUNT}, "CONFIG_ERROR"),
                 (settings(""), {"CLOUDFLARE_API_TOKEN_1": CF_TOKEN}, "CONFIG_ERROR"),
-                (settings(""), {"CLOUDFLARE_ACCOUNT_ID_1": "", "CLOUDFLARE_API_TOKEN_1": ""}, None),
+                (settings(""), {"CLOUDFLARE_ACCOUNT_ID": CF_ACCOUNT}, "CONFIG_ERROR"),
+                (settings(""), {"CLOUDFLARE_API_TOKEN": CF_TOKEN}, "CONFIG_ERROR"),
+                (settings(""), dict.fromkeys(numbered.keys() | unnumbered.keys(), ""), None),
             ]:
-                with self.subTest(status=status):
+                with self.subTest(names=sorted(values), status=status):
                     capture = StringIO()
                     with redirect_stdout(capture), patch("tools.llm_infra.cloudflare_transport._urllib_http") as http:
                         result = main(["--env-file", str(Path(tmp) / "absent"), "--state", str(path)],
@@ -56,7 +61,11 @@ class CheckTests(unittest.TestCase):
                     report = tree["cloudflare"]
                     self.assertEqual(report["status"], status)
                     self.assertEqual({block["reason"] for block in report["blocked"]}, {"RPD", "RPM"})
+                    if status == "CONFIG_ERROR" and values.keys() & {"CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"}:
+                        self.assertIn("slot 1 (unnumbered)", report["error"])
                     if status == "READY_FREE_ONLY":
+                        self.assertEqual({block["scope"] for block in report["blocked"]},
+                                         {"cloudflare_account_1", "/accounts/[REDACTED]/[REDACTED]"})
                         self.assertEqual(report["neurons_used_today"], {"cloudflare_account_1": 21,
                                                                        "cloudflare_account_2": 0})
                         self.assertEqual((report["keys_configured"], report["key_scopes"]), (2, 2))
