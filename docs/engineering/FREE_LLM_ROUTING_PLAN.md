@@ -41,11 +41,29 @@ HTTP 413 and HTTP 400 or 429 with a “Request too large” message return `REQU
 
 Run `python -m tools.llm_infra.groq_smoke` to inspect settings and active blocks offline. With the owner's `--live` opt-in, the first eligible key sends one synthetic JSON-mode request using `openai/gpt-oss-20b` or an allowlisted `--model`. It has a 32-token output cap, a 20-second timeout, and no retry, fallback, or quota-state update. [Groq Free setup guide](../guides/GROQ_FREE_SETUP.md)
 
+## Phase 3 · OpenRouter
+
+Start with `OPENROUTER_API_KEY_1`. Process settings override dotenv, and the lowest numbered copy of each key wins. All unlabeled keys share the `openrouter_account` scope. Use `OPENROUTER_ACCOUNT_LABEL_<n>` only for a key known to belong to a different account you control. OpenRouter applies free-model limits account-wide and governs capacity globally. The limits are 20 requests per minute and 50 per UTC day, rising to 1,000 per day after the account has bought at least 10 credits. [OpenRouter limits](https://openrouter.ai/docs/api/reference/limits)
+
+The rule reviewed on 2026-11-23 permits lower-case model IDs with a terminal `:free` and the default `openrouter/free` router. Set `OPENROUTER_MODEL` to select a chain and `OPENROUTER_FREE_MODELS` to narrow the rule. The transport rechecks the model and sends a single `model` in each request, which excludes paid model fallback through a `models` array. After reading the response, the transport raises `PAID_USAGE_DETECTED` if the reported cost is positive or the reported model violates the free rule. A payment refusal or detected charge stops the call immediately and leaves quota state untouched. The caller can report these errors to the owner. Requests omit attribution headers. An unset `OPENROUTER_DATA_COLLECTION` leaves privacy selection to the account settings. [Free variant rule](../../tools/llm_infra/openrouter_free_models_v1.py) · [Free models router](https://openrouter.ai/openrouter/free)
+
+The router tries scopes in order of their first key and uses the lowest-numbered enabled key within each scope. An authentication failure disables that slot for the life of the router. A 429 cools down the entire account scope across models. The shared SQLite ledger stores these rows under provider `openrouter` with `*` in the model column. Success clears the unknown streak. The router pauses after two 429s by default and can wait inline once within 60 seconds when every usable scope is blocked.
+
+| Evidence | Earliest next attempt |
+| --- | --- |
+| OpenRouter daily limit (RPD) of 50 or 1,000, or a daily message | Future millisecond-epoch reset, otherwise next 00:00 UTC |
+| OpenRouter minute limit (RPM) of 20, or a per-minute message | Future reset, otherwise Retry-After or 60 seconds |
+| Upstream provider 429 or unknown 429 | Retry-After or 60, 120, 240, 480, then 900 seconds on consecutive failures |
+
+Retry-After can extend a reset-based cooldown, and every cooldown is capped at 26 hours. A 429 with `metadata.provider_code` uses the upstream capacity rule even if it contains quota-like evidence. [OpenRouter rate-limit response format](https://openrouter.ai/docs/api/reference/limits#handling-429-errors)
+
+Run `python -m tools.llm_infra.openrouter_smoke` or `python -m tools.llm_infra.check_config` to inspect settings and active blocks offline. The owner's `--live` smoke opt-in reads public counts from `GET /key` and sends one synthetic JSON-mode chat using the first configured model or a free `--model`. Both calls use a 20-second timeout and the chat has a 512-token output cap, which leaves room for reasoning tokens. Requests send a generic `User-Agent`, because CDN edges can refuse the urllib default; a 403 without an API error body is reported as `EDGE_BLOCKED` and disables no key. The smoke test performs no retries or quota-state updates. Pipeline integration is planned for Phase 5. [OpenRouter Free setup guide](../guides/OPENROUTER_FREE_SETUP.md)
+
 ## Routing phases
 
 | Phase | Work |
 | --- | --- |
 | 2 · Groq | Done. Free plan declarations, a production model allowlist, and organization quota handling. |
-| 3 · OpenRouter | Allow only `:free` models. Disable paid fallback and auto top-up. |
+| 3 · OpenRouter | Done. Free model routing, post-response cost checks, and account-wide cooldowns. |
 | 4 · Cloudflare Workers AI | Use a free-plan token with account-scoped permissions. Budget and track Neurons. |
 | 5 · Unified routing | Route across eligible providers and benchmark script quality under the existing Script Quality Contract, preserving the frozen review criteria. |

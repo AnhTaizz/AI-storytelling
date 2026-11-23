@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 11 — test files: 108 — test functions: 1328
+Suites: 11 — test files: 114 — test functions: 1361
 
 ## canonical_story
 
@@ -159,11 +159,12 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.ci.check`, `tools.ci.conf
 
 ## llm_infra
 
-### test_check_config (2)
-Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.check_config`, `tools.llm_infra.groq_free_models_v1`, `tools.llm_infra.quota_state`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+### test_check_config (3)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.check_config`, `tools.llm_infra.groq_free_models_v1`, `tools.llm_infra.openrouter_router`, `tools.llm_infra.quota_state`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `CheckTests.test_status_and_secret_safe_diagnostics`
 - `CheckTests.test_groq_report_status_blocks_and_redaction_leave_gemini_exit_status`
+- `CheckTests.test_openrouter_status_counts_blocks_and_redaction_leave_gemini_exit_status`
 
 ### test_cost_policy (3)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.cost_policy`, `tools.llm_infra.gemini_config`, `tools.llm_infra.gemini_free_models_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.gemini_key_pool_v1`, `tools.story_ingestion.light_novel_adapter_v0`
@@ -233,6 +234,62 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.groq_transport`
 - `GroqTransportTests.test_success_does_not_echo_key_in_content_or_metadata`
 - `GroqTransportTests.test_network_failures_hide_the_underlying_exception`
 - `GroqTransportTests.test_default_http_converts_urllib_http_error`
+
+### test_openrouter_config (3)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.openrouter_config`, `tools.llm_infra.openrouter_free_models_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.gemini_key_pool_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `OpenRouterConfigTests.test_dedupe_priority_scopes_and_process_overrides`
+- `OpenRouterConfigTests.test_defaults_and_narrowing`
+- `OpenRouterConfigTests.test_invalid_and_unsafe_settings_are_rejected`
+
+### test_openrouter_free_models_v1 (1)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.openrouter_free_models_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `OpenRouterFreeModelsTests.test_reviewed_rule_and_default_chain`
+
+### test_openrouter_quota_policy (3)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.openrouter_quota_policy`, `tools.llm_infra.openrouter_transport`, `tools.llm_infra.quota_policy`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `OpenRouterQuotaPolicyTests.test_openrouter_limits_reset_at_ms_epoch_or_use_the_utc_day`
+- `OpenRouterQuotaPolicyTests.test_upstream_429_ignores_quota_evidence_and_unknown_limits_back_off`
+- `OpenRouterQuotaPolicyTests.test_retry_after_and_reset_delays_are_capped_at_26_hours`
+
+### test_openrouter_router (9)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.openrouter_config`, `tools.llm_infra.openrouter_router`, `tools.llm_infra.openrouter_transport`, `tools.llm_infra.quota_state`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.gemini_key_pool_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `OpenRouterRouterTests.test_group_priority_and_auth_disable_last_for_router_lifetime`
+- `OpenRouterRouterTests.test_429_persists_across_models_and_never_rotates_within_account`
+- `OpenRouterRouterTests.test_hop_cap_pauses_with_earliest_refusal_and_preserves_untried_scope`
+- `OpenRouterRouterTests.test_inline_wait_happens_at_most_once_before_success_or_pause`
+- `OpenRouterRouterTests.test_payment_paid_usage_and_request_errors_stop_without_retry_or_block`
+- `OpenRouterRouterTests.test_transient_failures_back_off_and_use_the_same_slot`
+- `OpenRouterRouterTests.test_success_reports_cost_and_clears_streak_with_redacted_record`
+- `OpenRouterRouterTests.test_default_client_sends_privacy_option_and_surfaces_http_402`
+- `OpenRouterRouterTests.test_invalid_configuration_and_models_stop_before_client`
+
+### test_openrouter_smoke (6)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.openrouter_router`, `tools.llm_infra.openrouter_smoke`, `tools.llm_infra.openrouter_transport`, `tools.llm_infra.quota_state`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `OpenRouterSmokeTests.test_offline_status_summary_and_openrouter_blocks_without_client`
+- `OpenRouterSmokeTests.test_live_calls_key_then_chat_once_with_first_key_and_selected_model`
+- `OpenRouterSmokeTests.test_live_failures_report_public_metadata_without_retry`
+- `OpenRouterSmokeTests.test_live_blocks_invalid_config_and_model_before_any_call`
+- `OpenRouterSmokeTests.test_default_client_uses_twenty_second_timeout_and_configured_privacy`
+- `OpenRouterSmokeTests.test_default_client_reports_invalid_key_without_http`
+
+### test_openrouter_transport (10)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.openrouter_transport`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `OpenRouterTransportTests.test_chat_uses_one_free_model_and_only_expected_headers_and_fields`
+- `OpenRouterTransportTests.test_paid_and_ambiguous_request_models_never_reach_http`
+- `OpenRouterTransportTests.test_detects_paid_cost_or_paid_reported_model`
+- `OpenRouterTransportTests.test_missing_cost_and_free_router_self_report`
+- `OpenRouterTransportTests.test_http_and_embedded_error_codes_have_the_same_kind`
+- `OpenRouterTransportTests.test_malformed_success_is_rejected`
+- `OpenRouterTransportTests.test_key_info_only_returns_public_typed_counts`
+- `OpenRouterTransportTests.test_network_failure_hides_original_exception`
+- `OpenRouterTransportTests.test_default_urllib_adapter_sends_get_and_post_without_redirects`
+- `OpenRouterTransportTests.test_invalid_client_arguments_are_rejected_before_http`
 
 ### test_quota_policy (2)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.quota_policy`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
