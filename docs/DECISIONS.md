@@ -1036,7 +1036,7 @@ LIMITS:
 
 ## DEC-038 — Free-Only OpenRouter Provider (Phase 3)
 
-STATUS: PROPOSED (awaiting Project Owner)
+STATUS: ACCEPTED (Project Owner, 2026-11-23: "ok merge PR #28 đi")
 
 CONTEXT:
 Phase 2 added the OpenAI-compatible Groq adapter. OpenRouter adds free model variants and a free router with account-wide request limits. Phase 3 adds OpenRouter to the shared infrastructure ahead of unified routing.
