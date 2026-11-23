@@ -6,6 +6,8 @@ import time
 from tools.llm_infra.gemini_config import inspect_settings, merged_settings, state_path
 from tools.llm_infra.groq_config import GROQ_KEY_PATTERN, inspect_groq_settings
 from tools.llm_infra.groq_transport import redact_groq_data
+from tools.llm_infra.openrouter_config import OPENROUTER_KEY_PATTERN, inspect_openrouter_settings
+from tools.llm_infra.openrouter_transport import redact_openrouter_data
 from tools.llm_infra.quota_state import QuotaStateError, QuotaStateStore
 from tools.story_extraction.gemini_key_pool_v1 import GeminiConfigError, UNKNOWN_PROJECT_LABEL, _KEY_PATTERN
 from tools.story_extraction.gemini_transport_v1 import _utc_iso
@@ -37,6 +39,24 @@ def _groq_report(settings, state, blocks, clock):
     return report
 
 
+def _openrouter_report(settings, state, blocks, clock):
+    report = {"status": "CONFIG_ERROR", "blocked": []}
+    try:
+        if blocks is None:
+            blocks = QuotaStateStore(state, clock=clock).active_blocks(clock())
+        report["blocked"] = _public_blocks(blocks, "openrouter")
+        config = inspect_openrouter_settings(settings, validate_models=False)
+        report.update(config.public_summary())
+        config.check_eligible()
+        config.check_models(config.model_chain)
+        report["status"] = "READY_FREE_ONLY"
+    except (GeminiConfigError, OSError) as error:
+        report["error"] = str(error) if not isinstance(error, OSError) else "Cannot read OpenRouter configuration"
+        if report["error"].startswith("MODEL_NOT_FREE_TIER:"):
+            report["status"] = "BLOCKED_MODEL_NOT_FREE_TIER"
+    return report
+
+
 def main(argv=None, *, environ=None, clock=time.time):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--env-file", default=".env")
@@ -46,12 +66,16 @@ def main(argv=None, *, environ=None, clock=time.time):
     report = {"billing_verified_by_system": False}
     secrets = []
     groq_secrets = []
+    openrouter_secrets = []
     blocks = None
     try:
         settings = merged_settings(args.env_file, environ)
         secrets = [v.strip() for k, v in settings.items() if _KEY_PATTERN.fullmatch(k) and v.strip()]
         groq_secrets = sorted({v.strip() for k, v in settings.items() if GROQ_KEY_PATTERN.fullmatch(k) and v.strip()},
                               key=len, reverse=True)
+        openrouter_secrets = sorted({value.strip() for name, value in settings.items()
+                                     if OPENROUTER_KEY_PATTERN.fullmatch(name) and value.strip()},
+                                    key=len, reverse=True)
         config = inspect_settings(settings)
         report.update(config.policy.public_summary())
         models = [m.strip() for m in config.model.split(",") if m.strip()]
@@ -84,6 +108,10 @@ def main(argv=None, *, environ=None, clock=time.time):
             status = "BLOCKED_MODEL_NOT_FREE_TIER"
     if groq_secrets:
         report["groq"] = _groq_report(settings, args.state or state_path(settings), blocks, clock)
+    if openrouter_secrets:
+        report["openrouter"] = _openrouter_report(settings, args.state or state_path(settings), blocks, clock)
+        report = redact_openrouter_data(report, openrouter_secrets)
+    if groq_secrets:
         report = redact_groq_data(report, groq_secrets)
     output = json.dumps(report, ensure_ascii=False, indent=2)
     for secret in secrets:

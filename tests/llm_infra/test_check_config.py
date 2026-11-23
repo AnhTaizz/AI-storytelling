@@ -5,9 +5,10 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 
-from fixtures import Clock, GROQ_TEST_KEY, groq_settings, settings
+from fixtures import Clock, GROQ_TEST_KEY, OPENROUTER_MODEL, OPENROUTER_TEST_KEY, groq_settings, openrouter_settings, settings
 from tools.llm_infra.check_config import main
 from tools.llm_infra.groq_free_models_v1 import DEFAULT_MODEL_CHAIN
+from tools.llm_infra.openrouter_router import ACCOUNT_WIDE_MODEL
 from tools.llm_infra.quota_state import QuotaStateStore
 
 
@@ -94,3 +95,44 @@ class CheckTests(unittest.TestCase):
                     elif groq_status == "BLOCKED_MODEL_NOT_FREE_TIER":
                         self.assertEqual(groq["effective_allowlist"], [model])
                         self.assertEqual(groq["ignored_models"], ["preview"])
+
+    def test_openrouter_status_counts_blocks_and_redaction_leave_gemini_exit_status(self):
+        clock = Clock()
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / "state"
+            store = QuotaStateStore(path, clock=clock)
+            store.block("openrouter", ACCOUNT_WIDE_MODEL, "openrouter_account", 2000, "RPM", clock())
+            store.block("openrouter", ACCOUNT_WIDE_MODEL, OPENROUTER_TEST_KEY, 2000, "RPD", clock())
+            store.block("groq", DEFAULT_MODEL_CHAIN[0], "org", 2000, "RPM", clock())
+            for gemini, changes, status in [
+                ({}, {"OPENROUTER_API_KEY_9": OPENROUTER_TEST_KEY, "OPENROUTER_DATA_COLLECTION": "deny"},
+                 "READY_FREE_ONLY"),
+                (settings(""), {"OPENROUTER_MODEL": "test/paid", "OPENROUTER_FREE_MODELS": OPENROUTER_MODEL},
+                 "BLOCKED_MODEL_NOT_FREE_TIER"),
+                (settings(""), {"OPENROUTER_ACCOUNT_LABEL_1": OPENROUTER_TEST_KEY}, "CONFIG_ERROR"),
+                (settings(""), {"OPENROUTER_API_KEY_1": ""}, None),
+            ]:
+                with self.subTest(openrouter_status=status):
+                    capture = StringIO()
+                    with redirect_stdout(capture):
+                        result = main(["--env-file", str(Path(tmp) / "absent"), "--state", str(path)],
+                                      environ=gemini | groq_settings("") | openrouter_settings("") | changes, clock=clock)
+                    output = capture.getvalue()
+                    self.assertNotIn(OPENROUTER_TEST_KEY, output)
+                    self.assertNotIn(GROQ_TEST_KEY, output)
+                    self.assertEqual(result, int(not gemini))
+                    tree = json.loads(output.split("\nBilling:")[0])
+                    self.assertEqual(tree["groq"]["status"], "READY_FREE_ONLY")
+                    if status is None:
+                        self.assertNotIn("openrouter", tree)
+                        continue
+                    report = tree["openrouter"]
+                    self.assertEqual(report["status"], status)
+                    self.assertEqual({block["scope"] for block in report["blocked"]},
+                                     {"openrouter_account", "[REDACTED]"})
+                    if status == "READY_FREE_ONLY":
+                        self.assertEqual((report["keys_configured"], report["keys_eligible"],
+                                          report["duplicates_dropped"], report["key_scopes"]), (2, 1, 1, 1))
+                        self.assertEqual(report["model_chain"], ["openrouter/free"])
+                        self.assertEqual(report["data_collection"], "deny")
+                        self.assertIn(":free", report["free_model_rule"])

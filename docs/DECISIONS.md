@@ -1031,3 +1031,24 @@ LIMITS:
 - An API key cannot show the Groq plan. The Developer plan charges per token.
 - The reviewed model list and limits can go stale. Free limits apply per organization. The 8,000 tokens-per-minute limit includes reasoning tokens and rules out long pipeline prompts.
 - Pipeline integration is deferred until the M9 gate sample ends and is planned for Phase 5.
+
+---
+
+## DEC-038 — Free-Only OpenRouter Provider (Phase 3)
+
+STATUS: PROPOSED (awaiting Project Owner)
+
+CONTEXT:
+Phase 2 added the OpenAI-compatible Groq adapter. OpenRouter adds free model variants and a free router with account-wide request limits. Phase 3 adds OpenRouter to the shared infrastructure ahead of unified routing.
+
+DECISION:
+1. Start with one numbered key and keep the lowest numbered copy of each key. Unlabeled keys share the `openrouter_account` quota scope. Reserve labels for keys known to belong to separate accounts.
+2. Require the shared free-only controls and permit only lower-case model IDs ending in `:free` or `openrouter/free`. Use `openrouter/free` by default, permit local narrowing, and send a single model per request to exclude paid fallback. Stop on payment errors, positive reported cost, or a reported model outside the free rule.
+3. Try accounts in first-key order and keep slot priority within each account. Authentication failures disable only the failing slot. Persist 429 cooldowns for the entire account and distinguish upstream capacity from OpenRouter's daily and minute limits. Pause after two quota refusals per call by default.
+4. Leave data collection to account settings unless the owner explicitly sets `allow` or `deny`. Omit attribution headers. Run smoke checks offline by default. A live check reads public key counts and sends one synthetic chat request with a 32-token output cap and no retry.
+
+LIMITS:
+- Free limits are account-wide and small, at 50 requests per day without a credit purchase. Buying 10 credits raises the daily limit to 1,000. A negative balance can block free models.
+- The cost check detects a charge after a call. The free model rule and the single-model payload are the preventive controls.
+- Free providers' data policies vary.
+- Pipeline integration is planned for Phase 5.
