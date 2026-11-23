@@ -1679,11 +1679,11 @@ The project owner asked for the gate to be prepared and chose the sample and the
 
 ## Free LLM infrastructure, Phase 1 (2026-11-23)
 
-Status: FREE_LLM_PHASE1_IMPLEMENTED_PENDING_REVIEW
+Status: FREE_LLM_PHASE1_ACCEPTED
 The Gemini pipeline requires the owner's free-tier confirmation (one `.env` line for all keys).
 SQLite retains quota blocks per project and model across CLI runs.
 The offline configuration check and setup guide support migration of existing settings.
-DEC-034 awaits owner review.
+DEC-034 accepted by the owner on 2026-11-23.
 
 ## Next Candidate
 

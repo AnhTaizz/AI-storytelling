@@ -978,7 +978,7 @@ LIMITS:
 
 ## DEC-034 — Free-Only Gemini Routing With Project–Model Quota State (Phase 1)
 
-STATUS: PROPOSED (awaiting Project Owner review in the PR)
+STATUS: ACCEPTED (Project Owner, 2026-11-23: "ok merge PR luôn đi")
 
 CONTEXT:
 The FV3 protocol binds the M4 Gemini modules by hash (DEC-030). Their in-memory project cooldown spans models and is lost on restart.
