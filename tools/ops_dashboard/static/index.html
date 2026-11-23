@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Operations Console</title>
+  <link rel="stylesheet" href="/app.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">◈</span><span>AI Operations</span></div>
+    <nav aria-label="Dashboard">
+      <a href="#overview"><span aria-hidden="true">▦</span>Overview</a>
+      <a href="#providers"><span aria-hidden="true">◉</span>Providers</a>
+      <a href="#usage"><span aria-hidden="true">▥</span>Usage</a>
+      <a href="#requests"><span aria-hidden="true">≡</span>Request History</a>
+      <a href="#routing-policy"><span aria-hidden="true">⑂</span>Routing Policies</a>
+      <a href="#pipeline"><span aria-hidden="true">▷</span>Pipeline Monitor</a>
+    </nav>
+  </aside>
+  <div class="workspace">
+    <div class="banner"><span aria-hidden="true">●</span> MOCK DATA — not connected</div>
+    <main id="main" tabindex="-1">
+      <header class="page-header">
+        <div><h1 tabindex="-1" id="page-title">Overview</h1><p id="page-description"></p></div>
+        <p class="snapshot" id="snapshot"></p>
+      </header>
+      <div id="page"></div>
+      <noscript>Enable JavaScript to view dashboard data.</noscript>
+    </main>
+  </div>
+  <template id="chart-template"><svg role="img" viewBox="0 0 320 110"></svg></template>
+</body>
+</html>
