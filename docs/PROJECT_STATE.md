@@ -22,7 +22,7 @@ M7 — Story Brief: ACCEPTED BASELINE (DEC-022, 2026-11-15).
 
 M8 — Narrative Planning: ACCEPTED BASELINE (DEC-023, 2026-11-15).
 
-M9 — Script Generation / Validation: PROTOTYPE EXISTS; M1/M9 Script Quality Gate: NOT YET EVALUATED (DEC-017, DEC-023; see Implementation Status and Current Quality Gate).
+M9 — Script Generation / Validation: PROTOTYPE EXISTS; M1/M9 Script Quality Gate: NOT YET EVALUATED; protocol v0 and review kit ready, sample not generated (DEC-033; see M9 Script Quality Gate below).
 
 M10 — Advanced Retrieval: GATED behind the Script Quality Gate (DEC-009).
 
@@ -185,7 +185,7 @@ Not yet implemented:
 
 M0 Foundation Gate: PASSED
 
-Script Quality Gate: NOT YET EVALUATED
+Script Quality Gate: NOT YET EVALUATED (protocol: `docs/research/m9/M9_SCRIPT_QUALITY_GATE_PROTOCOL_V0.md`, DEC-033)
 
 RUN_0007 executed the first real deterministic full-coverage H6b semantic Critic attempt using Gemini 3.1 Pro High in a fresh Antigravity conversation.
 32 deterministic review units expected.
@@ -1664,3 +1664,20 @@ The owner has yet to choose or authorize any of these candidates.
 - Completeness is now the owner criterion: Recall and Full_Evidence_Success at actual writer delivery depth. Story-aware corpora/indexes/caches and source-language tokenizer selection preserve the Japanese baseline.
 - Depth curve: DEV v1 large Recall/FES @10 68.33/60.00% -> @50 91.67/90.00%; hybrid-large @50 95.00/93.33%. Private large @30 91.11/80.00%, @50 93.33/86.67%; both dense curves reproduce M1, with no tested private depth reaching 100%.
 - Phase 2 remains PROPOSAL (13 open decisions): larger delivery budgets, entity-scoped M4/M5 completeness with partial roster/retrieval safety nets, and event coverage checks. New `M6_CHARACTER_DOSSIER_EVAL_PROPOSAL_V0.md` proposes independent locked gold over chapters 1–5; no gold or implementation authored.
+
+## M9 Script Quality Gate — protocol v0 and review kit (2026-11-23) — Status: M9_GATE_PROTOCOL_READY
+
+The project owner asked for the gate to be prepared and chose the sample and the pass rule (DEC-033). Nothing has been generated or reviewed yet, so the gate is still NOT YET EVALUATED.
+
+- **Protocol:** `docs/research/m9/M9_SCRIPT_QUALITY_GATE_PROTOCOL_V0.md`. Four season episodes, chapters 6–8, 9–11, 12–14 and 15–17, with recap. They use profile `VI_YOUTUBE_CASUAL_V0`, the single model `gemini-3.8-flash` and three revision rounds. The configuration is frozen in `gate_lock.json` before generation, and each episode gets one attempt.
+- **Review kit:** `tools/story_pipeline/gate_review.py`.
+  - `lock` freezes the commit and the hashes.
+  - `form` writes a contract-complete Vietnamese form per episode, with the request record filled in and the critic's findings as candidates to confirm or reject.
+  - `score` computes the gate statuses, the trace verdict and the official verdict (contract sections 15–16).
+  - `summary` applies the pass rule.
+- **Pass rule:** all four reviewed by the owner, no `FAIL`, no `CRITICAL` finding, at least three of four `PASS` or `PASS_WITH_MINOR_EDITS`.
+
+## Next Candidate
+
+1. **Generate the gate sample.** Lock, then run the season on chapters 6–17 (Gemini quota: about 20 calls an episode).
+2. **Owner review** of the four forms, then `gate_review summary` and a counts-only record.

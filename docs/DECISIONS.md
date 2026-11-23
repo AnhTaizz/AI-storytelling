@@ -952,3 +952,24 @@ DECISION:
 
 LIMITS:
 - Collecting an image establishes provenance only, not permission to reuse it in a published video.
+
+---
+
+## DEC-033 — M9 Script Quality Gate Protocol v0
+
+STATUS: ACCEPTED (Project Owner, 2026-11-23: "ok chuẩn bị Script Quality Gate M1/M9 đi"; chose "4 tập, chương 6–17" and "Không tập nào FAIL, ≥75% đạt")
+
+CONTEXT:
+DEC-009 gates production automation behind the Script Quality Gate after M9, and DEC-017 froze the contract that judges one script against one request. No document said which scripts the gate is evaluated on, how they are produced and reviewed, or what result passes. The pipeline prototype was developed on chapters 1–5 of the Japanese story and on short Korean and Chinese texts. The local corpus now holds 327 chapters.
+
+DECISION:
+1. **`docs/research/m9/M9_SCRIPT_QUALITY_GATE_PROTOCOL_V0.md` is the gate protocol.**
+2. **Sample.** Four season episodes of the Japanese story, chapters 6–8, 9–11, 12–14 and 15–17, with recap. They are made with profile `VI_YOUTUBE_CASUAL_V0`, the single model `gemini-3.8-flash` and `--revision-rounds 3`. These chapters were not used in development.
+3. **Freeze and one attempt.** `gate_lock.json` records the commit and the hashes of the profile, the manifest and the chapters before generation. The pipeline does not change during the sample, and no episode is regenerated for a better script.
+4. **Review.** The project owner fills a contract-complete `gate_review_form.md` per script (`tools/story_pipeline/gate_review.py`). Gate statuses and verdicts are computed from the form under contract sections 15–16. An AI review counts only as a trace verdict.
+5. **Pass rule.** The gate passes when all four scripts carry a human review, none is `FAIL`, no `CRITICAL` finding is confirmed, and at least three of the four are `PASS` or `PASS_WITH_MINOR_EDITS`. It fails otherwise. It is `NOT_EVALUATED` while a form is missing or incomplete.
+6. **Record.** Counts and hashes only, in a new file under `benchmarks/m9_script_quality_gate/`. After the review, chapters 6–17 are development data, and a later attempt uses chapters 18–29.
+
+LIMITS:
+- One story, one language, one profile, one reviewer, four scripts. A PASS supports DEC-009's sequencing for this configuration. It does not establish quality on other stories or languages.
+- The coverage gate rests on the reviewer's judgement (contract section 20, item 9).

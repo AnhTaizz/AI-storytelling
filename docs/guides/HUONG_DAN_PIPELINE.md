@@ -72,7 +72,7 @@ passage được dẫn để chắc chắn.
 
 Các bộ kiểm tra vẫn có thể bỏ sót, nên hãy đọc cả đoạn, không chỉ chỗ được tô.
 
-## 5. Chấm kịch bản (cần cho cổng chất lượng M1)
+## 5. Chấm kịch bản nhanh (góp ý cho pipeline)
 
 1. Mở `review.html` bằng trình duyệt (trên điện thoại cũng được).
 2. Đọc từng đoạn, so với cột nguồn bên phải.
@@ -84,7 +84,7 @@ Các bộ kiểm tra vẫn có thể bỏ sót, nên hãy đọc cả đoạn, k
    python -m tools.story_pipeline.review_summary
    ```
 
-Chỉ phiếu của chủ dự án mới được tính. Phiếu agent chấm được tách riêng, chỉ để tham khảo.
+Chỉ phiếu của chủ dự án mới được tính. Phiếu agent chấm được tách riêng, chỉ để tham khảo. Phiếu này chỉ là góp ý nhanh. Script Quality Gate chính thức dùng phiếu ở mục 9.
 
 ### Để pipeline sửa theo góp ý của bạn
 
@@ -168,3 +168,34 @@ bao giờ bị ghi đè.
    - đổi `số từ:` để kể dài hay ngắn hơn;
    - viết sau `ghi chú:` điều người viết cần lưu ý.
 4. Chạy `--resume <thư mục lần chạy>`: plan đã sửa được dùng để viết kịch bản; `report` ghi lại mọi thay đổi và mục bị từ chối. Phiếu đã điền được giữ thành `plan_review_form_reviewed_1.md`.
+
+## 9. Chấm Script Quality Gate (chính thức, M1/M9)
+
+Gate được chấm trên 4 tập của chương 6–17, theo [protocol](../research/m9/M9_SCRIPT_QUALITY_GATE_PROTOCOL_V0.md) (DEC-033). Mỗi tập có một phiếu `gate_review_form.md` trong thư mục của tập.
+
+1. **Tạo phiếu** (agent thường làm sẵn):
+
+   ```
+   python -m tools.story_pipeline.gate_review form .local/story_seasons/<mùa>
+   ```
+
+2. **Đọc** `script_final.md`, đối chiếu nguyên văn trong `review.html`.
+3. **Phần A, lỗi:**
+   - Với mỗi dòng `critic` hoặc `máy`, ghi `có` (lỗi đúng) hoặc `không` (lỗi sai). Sửa Mức độ nếu bạn thấy khác.
+   - Lỗi bạn tự tìm thì ghi vào dòng `người chấm`, gồm trích câu, mức độ, lý do và Xác nhận `có`.
+   - HIGH hoặc CRITICAL nghĩa là gate đó hỏng.
+4. **Phần "Gate đã kiểm tra":** ghi `có` cho từng gate bạn đã đối chiếu với nguồn. Gate chưa ghi `có` thì chưa được đánh giá.
+5. **Phần B, chất lượng kể:** chấm 8 tiêu chí từ 1 đến 5, mỗi điểm kèm một câu trích và lý do. Điểm không có bằng chứng thì không hợp lệ.
+6. **Chi phí sửa:** chọn MINIMAL, MODERATE, MAJOR hoặc REWRITE, rồi trả lời lỗi còn lại có sửa tại chỗ được không.
+7. **Tính kết quả:**
+
+   ```
+   python -m tools.story_pipeline.gate_review score .local/story_seasons/<mùa>
+   python -m tools.story_pipeline.gate_review summary .local/story_seasons/<mùa> --out .local/story_seasons/<mùa>/gate
+   ```
+
+   `score` báo ô nào còn thiếu. Bạn không tự ghi gate hay verdict: lệnh tính theo contract.
+
+**Lưu ý:**
+- Chấm kịch bản đúng như pipeline tạo ra. Chỉ dùng `--apply-review` hoặc sửa tay sau khi đã chấm xong.
+- Gate đạt khi cả 4 phiếu do bạn chấm, không phiếu nào FAIL, không có lỗi CRITICAL, và ít nhất 3/4 phiếu là PASS hoặc PASS_WITH_MINOR_EDITS.
