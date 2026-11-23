@@ -33,3 +33,34 @@ def settings(*labels):
                        f"GEMINI_PROJECT_BILLING_{n}": "FREE_TIER_CONFIRMED",
                        f"GEMINI_PROJECT_LABEL_{n}": label})
     return source
+
+
+GROQ_TEST_KEY = "test-groq-key-not-real-1"
+
+
+def groq_settings(*labels):
+    source = {}
+    for n, label in enumerate(labels, 1):
+        source[f"GROQ_API_KEY_{n}"] = f"test-groq-key-not-real-{n}"
+        if label:
+            source[f"GROQ_ORG_LABEL_{n}"] = label
+    return source
+
+
+class FakeGroq:
+    def __init__(self, *actions):
+        self.actions = list(actions)
+        self.calls = []
+
+    def factory(self, key):
+        def generate(**args):
+            self.calls.append((key, args))
+            if self.actions:
+                action = self.actions.pop(0)
+                if isinstance(action, Exception):
+                    raise action
+                return action
+            return SimpleNamespace(text='{"status":"ok"}', usage={"total_tokens": 14},
+                                   model=args["model"], headers={})
+
+        return SimpleNamespace(generate=generate)

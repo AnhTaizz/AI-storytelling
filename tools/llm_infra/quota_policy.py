@@ -4,7 +4,7 @@ import re
 
 from tools.story_extraction.gemini_errors_v1 import rate_limit_cause, retry_after_seconds
 
-REASONS = ("RPM", "TPM", "RPD", "UNKNOWN_429")
+REASONS = ("RPM", "TPM", "RPD", "UNKNOWN_429", "TPD")
 
 
 @dataclass(frozen=True)

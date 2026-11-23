@@ -1008,3 +1008,23 @@ DECISION:
 
 LIMITS:
 An API key cannot verify project billing. The model list can go stale. Keys from one project may incur up to three refused calls per model request window at the default limit. Google may use free-tier content to improve its products.
+
+---
+
+## DEC-037 — Free-Plan Groq Provider (Phase 2)
+
+STATUS: PROPOSED (awaiting Project Owner)
+
+CONTEXT:
+Phase 1 introduced keys-only setup and persisted cooldowns for Gemini. Groq provides an OpenAI-compatible chat API with limits per organization. Phase 2 adds Groq to the shared infrastructure ahead of unified routing.
+
+DECISION:
+1. Accept numbered Groq keys and retain the lowest numbered copy of each key. Treat unlabeled keys as separate scopes and allow optional labels to group keys from one organization.
+2. Require the shared free-only cost controls. Use the standing Free plan declaration for undeclared keys unless explicitly disabled. Exclude paid or unverified keys and reject conflicting declarations on a shared label.
+3. Maintain a reviewed production text model list and a default model chain. A local override can only narrow the allowlist.
+4. Record cooldowns in SQLite by provider, model, and organization scope. Use Groq message and header evidence to bound cooldowns and cap rate-limit hops per request. Provide offline diagnostics and a standalone smoke command.
+
+LIMITS:
+- An API key cannot show the Groq plan. The Developer plan charges per token.
+- The reviewed model list and limits can go stale. Free limits apply per organization.
+- Pipeline integration is planned for Phase 5. Phase 2 makes no script-quality claim.
