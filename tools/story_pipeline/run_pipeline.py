@@ -896,13 +896,16 @@ def episode_scope(manifest_path: Path | str, start: int, end: int, source_root: 
 
 def make_client(args: argparse.Namespace) -> Optional[LLMClient]:
     """The Gemini client for the CLI, or None (with a message) when keys are missing."""
+    from tools.llm_infra.gemini_config import merged_settings, state_path
     from tools.story_extraction.gemini_key_pool_v1 import GeminiConfigError
     from tools.story_pipeline.llm import GeminiLLMClient
     try:
-        return GeminiLLMClient(args.model, dotenv_path=args.dotenv, temperature=args.temperature)
+        settings = merged_settings(args.dotenv)
+        return GeminiLLMClient(args.model, dotenv_path=args.dotenv, temperature=args.temperature,
+                               quota_state_path=state_path(settings), environ=settings)
     except GeminiConfigError as exc:
-        print(f"config error: {exc}. Copy .env.example to .env and fill GEMINI_API_KEY_1 "
-              f"(and GEMINI_MODEL or --model).", file=sys.stderr)
+        print(f"config error: {exc}. Run python -m tools.llm_infra.check_config "
+              f"and see docs/guides/FREE_LLM_PROVIDER_SETUP.md.", file=sys.stderr)
         return None
 
 

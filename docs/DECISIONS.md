@@ -973,3 +973,21 @@ DECISION:
 LIMITS:
 - One story, one language, one profile, one reviewer, four scripts. A PASS supports DEC-009's sequencing for this configuration. It does not establish quality on other stories or languages.
 - The coverage gate rests on the reviewer's judgement (contract section 20, item 9).
+
+---
+
+## DEC-034 — Free-Only Gemini Routing With Project–Model Quota State (Phase 1)
+
+STATUS: PROPOSED (awaiting Project Owner review in the PR)
+
+CONTEXT:
+The FV3 protocol binds the M4 Gemini modules by hash (DEC-030). Their in-memory project cooldown spans models and is lost on restart.
+
+DECISION:
+1. Add a routing package over the locked loader, pool and SDK adapter. Deduplicate credentials and treat all unlabeled slots as one quota group.
+2. Require billing confirmation and a free-model list before the pipeline calls Gemini. Existing `.env` files need these new settings.
+3. Persist cooldowns by provider, model and project alias. Bound inline waits and reuse the pipeline's quota pause and cached-stage resume.
+
+LIMITS:
+- The owner verifies billing and model availability. An application spending limit cannot prevent provider charges on a billed project.
+- Phase 1 supports Gemini only. The remaining providers and unified quality benchmark are planned.

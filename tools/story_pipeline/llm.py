@@ -42,7 +42,7 @@ class StageFailed(RuntimeError):
 
 # Transport failures after which the next model in the chain is tried. Overload (503) and
 # per-model quota (429) are model-specific; a request the provider rejects is not.
-FALLBACK_CODES = frozenset({"SERVER_FAILURE", "RATE_LIMIT", "TIMEOUT", "NETWORK_FAILURE", "POOL_EXHAUSTED"})
+FALLBACK_CODES = frozenset({"SERVER_FAILURE", "RATE_LIMIT", "TIMEOUT", "NETWORK_FAILURE", "POOL_EXHAUSTED", "QUOTA_EXHAUSTED"})
 
 # Provider errors that allow the pipeline to resume when quota is available again.
 QUOTA_PATTERN = re.compile(r"RESOURCE_EXHAUSTED|quota|rate.?limit|\b429\b", re.IGNORECASE)
@@ -71,15 +71,18 @@ class _ObservedClient:
     """Wraps one SDK client: records every failure's type and status (never its message,
     which may echo request data) and turns network-level failures into retryable ones."""
 
-    def __init__(self, inner: Any, failures: List[Dict[str, Any]]) -> None:
+    def __init__(self, inner: Any, failures: List[Dict[str, Any]], redact: Callable[[str], str]) -> None:
         self._inner = inner
         self._failures = failures
+        self._redact = redact
 
     def generate(self, **kwargs: Any) -> Any:
         try:
             return self._inner.generate(**kwargs)
         except Exception as error:  # noqa: BLE001 - re-raised below
-            self._failures.append({"model": kwargs.get("model"), **_describe(error)})
+            failure = _describe(error)
+            failure["type"] = self._redact(failure["type"])
+            self._failures.append({"model": kwargs.get("model"), **failure})
             module = type(error).__module__.split(".")[0]
             if module in _NETWORK_MODULES or isinstance(error, (TimeoutError, ConnectionError)):
                 raise TransientProviderError(error) from error
@@ -87,7 +90,7 @@ class _ObservedClient:
 
 
 class GeminiLLMClient:
-    """Wraps the existing M4 Gemini transport and key pool (reads `.env` and the environment).
+    """Routes free-only Gemini calls through the M4 key pool (reads `.env` and the environment).
 
     `model` may be a comma-separated chain, e.g. "gemini-3.6-flash,gemini-3.5-flash": each
     call uses the first model and moves to the next only after the transport has exhausted
@@ -100,6 +103,7 @@ class GeminiLLMClient:
         model: Optional[str] = None,
         *,
         dotenv_path: Path | str = Path(".env"),
+        quota_state_path: Optional[Path | str] = None,
         temperature: float = 0.4,
         max_transport_retries: int = 3,
         base_backoff_seconds: float = 5.0,
@@ -108,35 +112,30 @@ class GeminiLLMClient:
         sleep: Callable[[float], None] = time.sleep,
         clock: Callable[[], float] = time.time,
     ) -> None:
-        from tools.story_extraction.gemini_key_pool_v1 import (
-            GeminiConfigError,
-            GeminiKeyPool,
-            load_runtime_config,
-        )
-        from tools.story_extraction.gemini_transport_v1 import (
-            GeminiTransport,
-            official_client_factory,
-        )
+        from tools.llm_infra.gemini_config import load_routing_config
+        from tools.llm_infra.gemini_router import GeminiRouter
+        from tools.llm_infra.quota_state import QuotaStateStore
+        from tools.story_extraction.gemini_key_pool_v1 import GeminiConfigError, GeminiKeyPool
+        from tools.story_extraction.gemini_transport_v1 import GeminiTransportError, official_client_factory
 
-        from tools.story_extraction.gemini_transport_v1 import GeminiTransportError
-
-        config = load_runtime_config(dotenv_path, environ)
+        config = load_routing_config(dotenv_path, environ)
         self.models = [m.strip() for m in (model or config.model or "").split(",") if m.strip()]
         if not self.models:
             raise GeminiConfigError(
                 "No Gemini model: pass --model or set GEMINI_MODEL in .env")
+        pool = GeminiKeyPool(config.credentials, clock=clock)
+        if any(pool.redact(m) != m for m in self.models):
+            raise GeminiConfigError("Model contains credential material")
+        config.policy.check_models(self.models)
         self.model = self.models[0]
         self.temperature = temperature
         self.name = "gemini:" + ",".join(self.models)
         self._transport_error = GeminiTransportError
-        # A 429 cools the whole credential, not just the model, so a fallback model may first
-        # wait out that cooldown; pool and transport share one clock for that reason.
-        pool = GeminiKeyPool(config.credentials, clock=clock)
         factory = client_factory or official_client_factory
         self.attempt_failures: List[Dict[str, Any]] = []
-        self._transport = GeminiTransport(
-            pool,
-            lambda api_key: _ObservedClient(factory(api_key), self.attempt_failures),
+        self._transport = GeminiRouter(
+            pool, QuotaStateStore(quota_state_path, clock=clock),
+            lambda api_key: _ObservedClient(factory(api_key), self.attempt_failures, pool.redact),
             max_transport_retries=max_transport_retries,
             base_backoff_seconds=base_backoff_seconds,
             sleep=sleep,
@@ -159,10 +158,10 @@ class GeminiLLMClient:
                 # After a retry the model was already failing transiently, so whatever its last
                 # error was (live run 4: three 503s, then an unclassified failure), move on.
                 # A request refused on its first attempt is not sent to another model.
-                retried = error.attempts > 1
+                retried = error.attempts > 1 and error.code != "NO_USABLE_CREDENTIAL"
                 if (error.code not in FALLBACK_CODES and not retried) or index == len(self.models) - 1:
                     seen = "; ".join(f"{f['model']}: {f['type']} status={f['status']}" for f in self.attempt_failures)
-                    raise RuntimeError(f"{error} [attempt errors: {seen or 'none recorded'}]") from error
+                    raise RuntimeError(f"{error} [attempt errors: {seen or 'none recorded'}]") from None
                 failed.append({"model": model, "code": error.code, "attempts": error.attempts})
                 continue
             reasons = (record.get("provider_response_metadata") or {}).get("finish_reasons") or []

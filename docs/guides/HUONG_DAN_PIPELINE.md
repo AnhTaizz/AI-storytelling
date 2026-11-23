@@ -7,6 +7,7 @@ cách chỉnh tên nhân vật. Chi tiết kỹ thuật nằm trong
 ## 1. Chuẩn bị
 
 - **Key Gemini:**
+  - Xác nhận dự án và model miễn phí trước khi chạy theo [hướng dẫn cấu hình Gemini](FREE_LLM_PROVIDER_SETUP.md).
   - Chạy trên máy: chép `.env.example` thành `.env` rồi điền `GEMINI_API_KEY_1`, `GEMINI_API_KEY_2`… Không bao giờ commit file `.env`.
   - Chạy trên Claude cloud: key đặt trong cài đặt môi trường (nên dùng mục *Network secrets* thay cho biến môi trường thường).
 - **Cài thư viện:**
