@@ -2,6 +2,7 @@
 import argparse
 from functools import partial
 import json
+import re
 import time
 
 from tools.llm_infra.gemini_config import merged_settings, state_path
@@ -20,27 +21,36 @@ RATE_LIMIT_HEADERS = (
     "x-ratelimit-remaining-tokens", "x-ratelimit-reset-requests", "x-ratelimit-reset-tokens", "retry-after",
 )
 USAGE_FIELDS = ("prompt_tokens", "completion_tokens", "total_tokens")
+# Groq error codes are short identifiers (e.g. json_validate_failed); anything else is dropped.
+ERROR_CODE = re.compile(r"[a-z][a-z0-9_]{0,63}")
 
 
 def _live_request(model, slot, client_factory, clock):
     start = clock()
     try:
+        # Plain text: gpt-oss spends part of the 32 tokens on reasoning, and JSON mode then
+        # rejects the cut-off output (json_validate_failed). The smoke test only checks access.
         response = client_factory(slot._api_key).generate(
-            model=model, system_instruction="Reply with JSON only.", user_content='Return {"ok": true}',
-            generation_config={"temperature": 0, "max_output_tokens": 32, "response_mime_type": "application/json"},
+            model=model, system_instruction="Reply briefly.", user_content="Reply with the word OK.",
+            generation_config={"temperature": 0, "max_output_tokens": 32},
         )
     except GroqHTTPError as error:
         outcome, status, headers, reported, usage = error.kind, error.status, error.headers, None, {}
+        detail = error.body.get("error") if isinstance(error.body, dict) else None
+        code = detail.get("code") if isinstance(detail, dict) else None
+        error_code = code if isinstance(code, str) and ERROR_CODE.fullmatch(code) else None
     else:
         outcome, status, headers, reported, usage = (
             "SUCCESS", response.status, response.headers, response.model, response.usage,
         )
+        error_code = None
     headers = {name.lower(): value for name, value in headers.items()}
     return {
         "outcome": outcome, "http_status": status, "model": {"requested": model, "reported": reported},
         "usage": {name: usage[name] for name in USAGE_FIELDS if type(usage.get(name)) is int},
         "latency_ms": max(0, round((clock() - start) * 1000)),
         "rate_limit": {name: headers[name] for name in RATE_LIMIT_HEADERS if name in headers},
+        "error_code": error_code,
     }
 
 
@@ -53,7 +63,7 @@ def main(argv=None, *, environ=None, client_factory=partial(GroqClient, timeout=
     model = args.model.strip() if args.model is not None else SMOKE_MODEL
     if args.live:
         report = {"mode": "live", "http_status": None, "model": {"requested": None, "reported": None},
-                  "usage": {}, "latency_ms": 0, "rate_limit": {}}
+                  "usage": {}, "latency_ms": 0, "rate_limit": {}, "error_code": None}
         status_field = "outcome"
     else:
         report = {"mode": "offline", "plan_notice": PLAN_NOTICE, "blocked": []}

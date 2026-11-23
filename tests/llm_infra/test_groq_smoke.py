@@ -85,33 +85,34 @@ class GroqSmokeTests(unittest.TestCase):
                     expected = model or "openai/gpt-oss-20b"
                     self.assertEqual(json.loads(capture.getvalue()), {
                         "mode": "live", "http_status": 201, "model": {"requested": expected, "reported": "[REDACTED]"},
-                        "outcome": "SUCCESS", "latency_ms": 0, "usage": usage, "rate_limit": headers,
+                        "outcome": "SUCCESS", "latency_ms": 0, "usage": usage, "rate_limit": headers, "error_code": None,
                     })
                     self.assertEqual(client.factory_calls, [GROQ_TEST_KEY])
                     self.assertEqual(client.calls, [(GROQ_TEST_KEY, {
-                        "model": expected, "system_instruction": "Reply with JSON only.",
-                        "user_content": 'Return {"ok": true}',
-                        "generation_config": {"temperature": 0, "max_output_tokens": 32,
-                                              "response_mime_type": "application/json"},
+                        "model": expected, "system_instruction": "Reply briefly.",
+                        "user_content": "Reply with the word OK.",
+                        "generation_config": {"temperature": 0, "max_output_tokens": 32},
                     })])
                     self.assertFalse(state.exists())
 
     def test_failures_return_only_public_metadata(self):
         with TemporaryDirectory() as tmp:
-            for model, http_status, outcome in [
-                (GROQ_TEST_KEY, None, "CONFIG_ERROR"),
-                ("llama-3.1-8b-instant", None, "BLOCKED_MODEL_NOT_FREE_PLAN"),
-                ("openai/gpt-oss-120b,openai/gpt-oss-20b", None, "BLOCKED_MODEL_NOT_FREE_PLAN"),
-                (None, 400, "REQUEST_FAILURE"),
-                (None, 429, "RATE_LIMIT"),
-                (None, 503, "SERVER_FAILURE"),
+            # Only a short identifier-like Groq error code is shown; anything else is dropped.
+            for model, http_status, outcome, code, shown in [
+                (GROQ_TEST_KEY, None, "CONFIG_ERROR", None, None),
+                ("llama-3.1-8b-instant", None, "BLOCKED_MODEL_NOT_FREE_PLAN", None, None),
+                ("openai/gpt-oss-120b,openai/gpt-oss-20b", None, "BLOCKED_MODEL_NOT_FREE_PLAN", None, None),
+                (None, 400, "REQUEST_FAILURE", "json_validate_failed", "json_validate_failed"),
+                (None, 429, "RATE_LIMIT", "rate_limit_exceeded", "rate_limit_exceeded"),
+                (None, 503, "SERVER_FAILURE", f"sensitive message {GROQ_TEST_KEY}", None),
             ]:
                 with self.subTest(model=model, outcome=outcome):
                     clock = Clock()
                     state = Path(tmp) / "state"
                     client = FakeGroq(GroqHTTPError(kind=outcome, status=http_status,
                                                     headers={"Retry-After": "5", "Authorization": GROQ_TEST_KEY},
-                                                    body={"error": {"message": f"sensitive message {GROQ_TEST_KEY}"}}))
+                                                    body={"error": {"message": f"sensitive message {GROQ_TEST_KEY}",
+                                                                    "code": code}}))
                     capture = StringIO()
                     args = ["--env-file", str(Path(tmp) / "absent"), "--live"] + (["--model", model] if model else [])
                     with redirect_stdout(capture):
@@ -129,7 +130,7 @@ class GroqSmokeTests(unittest.TestCase):
                             "requested": "openai/gpt-oss-20b" if http_status else None, "reported": None,
                         },
                         "outcome": outcome, "latency_ms": 0, "usage": {},
-                        "rate_limit": {"retry-after": "5"} if http_status else {},
+                        "rate_limit": {"retry-after": "5"} if http_status else {}, "error_code": shown,
                     })
 
     def test_default_client_uses_twenty_second_timeout(self):

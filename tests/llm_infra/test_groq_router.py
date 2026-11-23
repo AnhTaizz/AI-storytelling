@@ -132,6 +132,7 @@ class GroqRouterTests(unittest.TestCase):
         for kind, delays in [
             ("SERVER_FAILURE", [0.25, 0.5]), ("TRANSPORT_FAILURE", [0.25, 0.5]),
             ("MODEL_UNAVAILABLE", []), ("REQUEST_FAILURE", []), ("MALFORMED_RESPONSE", []),
+            ("EDGE_BLOCKED", []),
         ]:
             with self.subTest(kind=kind):
                 self.client.calls.clear()
