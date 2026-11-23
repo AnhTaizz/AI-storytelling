@@ -1013,7 +1013,7 @@ An API key cannot verify project billing. The model list can go stale. Keys from
 
 ## DEC-037 — Free-Plan Groq Provider (Phase 2)
 
-STATUS: PROPOSED (awaiting Project Owner)
+STATUS: ACCEPTED (Project Owner, 2026-11-23: "ok merge PR #27 rồi làm Phase 3 bằng codex đi")
 
 CONTEXT:
 Phase 1 introduced keys-only setup and persisted cooldowns for Gemini. Groq provides an OpenAI-compatible chat API with limits per organization. Phase 2 adds Groq to the shared infrastructure ahead of unified routing.
