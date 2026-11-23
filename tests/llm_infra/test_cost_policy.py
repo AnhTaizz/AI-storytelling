@@ -25,16 +25,29 @@ class CostTests(unittest.TestCase):
         self.assertEqual(set(cfg.policy.public_summary()["billing_status_counts"].values()), {1})
         with self.assertRaisesRegex(GeminiConfigError, "model-c, model-d"):
             cfg.policy.check_models(["model-a", "model-c", "model-d"])
-        keys_only = {"GEMINI_API_KEY_1": "test-key-not-real-1", "GEMINI_API_KEY_2": "test-key-not-real-2",
-                     "GEMINI_KEYS_FREE_TIER_CONFIRMED": "true"}
-        for extra, eligible in [({}, ["gemini_slot_1", "gemini_slot_2"]),
-                                ({"GEMINI_PROJECT_BILLING_2": "BILLING_ENABLED"}, ["gemini_slot_1"])]:
-            with self.subTest(extra=extra):
-                one_line = inspect_settings(keys_only | extra)
-                self.assertEqual([c.slot_id for c in one_line.policy.eligible_credentials(one_line.credentials)],
-                                 eligible)
-                one_line.policy.check_models(["any-model"])  # no list: no model limit
-        # Unlabeled slots may be different projects, so their billing answers may differ.
-        unlabeled = inspect_settings(settings("", "") | {"GEMINI_PROJECT_BILLING_2": "UNVERIFIED"})
-        self.assertEqual([c.slot_id for c in unlabeled.policy.eligible_credentials(unlabeled.credentials)],
-                         ["gemini_slot_1"])
+
+    def test_project_attestation_source_and_inheritance(self):
+        for labels, declarations, bulk, expected, source in [
+            (("",), ("",), True, "FREE_TIER_CONFIRMED", "bulk_line"),
+            (("p", "p"), ("", ""), True, "FREE_TIER_CONFIRMED", "bulk_line"),
+            (("p", "p"), ("", "FREE_TIER_CONFIRMED"), False, "FREE_TIER_CONFIRMED", "per_project"),
+            (("p", "p"), ("UNVERIFIED", ""), True, "UNVERIFIED", "per_project"),
+            (("p", "p"), ("", "BILLING_ENABLED"), True, "BILLING_ENABLED", "per_project"),
+            (("p", "p"), ("", ""), False, "UNVERIFIED", "default"),
+        ]:
+            with self.subTest(labels=labels, declarations=declarations, bulk=bulk):
+                env = settings(*labels)
+                env.update({f"GEMINI_PROJECT_BILLING_{i}": v for i, v in enumerate(declarations, 1)})
+                cfg = inspect_settings(env | {"GEMINI_KEYS_FREE_TIER_CONFIRMED": str(bulk)})
+                self.assertEqual(set(cfg.policy.billing.values()), {expected})
+                self.assertEqual(cfg.policy.projects, [{
+                    "project_label": cfg.credentials[0].project_label, "slots": list(range(1, len(labels)+1)),
+                    "billing_status": expected, "source": source}])
+                if expected == "FREE_TIER_CONFIRMED":
+                    self.assertEqual(cfg.policy.eligible_credentials(cfg.credentials), cfg.credentials)
+                else:
+                    with self.assertRaisesRegex(GeminiConfigError, "^NO_FREE_TIER_CONFIRMED_PROJECT"):
+                        cfg.policy.eligible_credentials(cfg.credentials)
+        with self.assertRaisesRegex(GeminiConfigError, "^PER_PROJECT_CONFIRMATION_REQUIRED:") as error:
+            inspect_settings(settings("a", "b") | {"GEMINI_KEYS_FREE_TIER_CONFIRMED": "true"})
+        self.assertNotIn("test-key-not-real", str(error.exception))

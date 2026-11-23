@@ -15,7 +15,7 @@ def main(argv=None, *, environ=None, clock=time.time):
     parser.add_argument("--state")
     args = parser.parse_args(argv)
     status = "CONFIG_ERROR"
-    report = {}
+    report = {"billing_verified_by_system": False, "projects": []}
     secrets = []
     try:
         settings = merged_settings(args.env_file, environ)
@@ -32,23 +32,31 @@ def main(argv=None, *, environ=None, clock=time.time):
         if not config.credentials:
             status = "WAITING_FOR_USER_CREDENTIALS"
         else:
-            config.policy.eligible_credentials(config.credentials)
             models = [m.strip() for m in config.model.split(",") if m.strip()]
+            config.policy.check_models(models)
+            config.policy.eligible_credentials(config.credentials)
             if not models:
                 raise GeminiConfigError("MODEL_NOT_CONFIRMED_FREE: set GEMINI_MODEL")
-            config.policy.check_models(models)
             status = "READY_FREE_ONLY"
     except (GeminiConfigError, QuotaStateError, OSError) as error:
         message = str(error) if not isinstance(error, OSError) else "Cannot read configuration"
         report["error"] = message
         if message.startswith("NO_FREE_TIER_CONFIRMED_PROJECT"):
             status = "BLOCKED_NO_CONFIRMED_FREE_PROJECT"
-        elif message.startswith("MODEL_NOT_CONFIRMED_FREE"):
+        elif message.startswith(("MODEL_NOT_CONFIRMED_FREE:", "MODEL_ALLOWLIST_EMPTY:")):
             status = "BLOCKED_MODEL_NOT_CONFIRMED_FREE"
+        elif message.startswith("PROJECT_LABEL_REQUIRED:"):
+            status = "BLOCKED_PROJECT_LABEL_REQUIRED"
+        elif message.startswith("PER_PROJECT_CONFIRMATION_REQUIRED:"):
+            status = "BLOCKED_PER_PROJECT_CONFIRMATION_REQUIRED"
+    report["application_policy"] = "PASS" if status == "READY_FREE_ONLY" else "BLOCKED"
     output = json.dumps(report, ensure_ascii=False, indent=2)
     for secret in secrets:
         output = output.replace(secret, "[REDACTED]")
     print(output)
+    if status == "READY_FREE_ONLY":
+        print("Billing: owner-attested, not verified by this tool. READY_FREE_ONLY means the "
+              "application policy passes; it is not a guarantee that Google cannot charge.")
     print("Status:", status)
     return int(status != "READY_FREE_ONLY")
 

@@ -991,3 +991,21 @@ DECISION:
 LIMITS:
 - The owner verifies billing and model availability. An application spending limit cannot prevent provider charges on a billed project.
 - Phase 1 supports Gemini only. The remaining providers and unified quality benchmark are planned.
+
+## DEC-035 — Phase 1.1: Fail-Closed Model Allowlist, Required Project Labels, Per-Project Free-Tier Attestation
+
+STATUS: PROPOSED (awaiting Project Owner review in the PR)
+
+CONTEXT:
+The owner's Phase 1.1 security request amends DEC-034 items 1–2, specifically the owner's 2026-11-23 keys-only choice. Quota and billing apply at project scope.
+
+DECISION:
+1. Require a nonempty owner-declared free-model allowlist. Reject the entire selected fallback chain if any model is missing.
+2. Deduplicate keys first. A single credential may omit its label. Multiple credentials require labels for every slot, shared within a project and distinct across projects.
+3. Resolve explicit billing attestations per project. Blank slots inherit, conflicting declarations are errors, and only confirmed projects are eligible. Accept bulk confirmation for exactly one project scope, subject to explicit status. The offline report identifies the source of each status.
+
+MIGRATION:
+A PR #24 configuration with multiple unlabeled keys and the bulk line stops with `PROJECT_LABEL_REQUIRED`. An otherwise valid configuration missing `GEMINI_FREE_MODELS` stops with `MODEL_ALLOWLIST_EMPTY`. Label the keys by project, confirm each eligible project and list the verified models.
+
+LIMITS:
+Attestation records the owner's declaration. Phase 1.1 has no Google account access to verify billing or guarantee zero charges. Multi-key users must do more setup to identify and label each project.

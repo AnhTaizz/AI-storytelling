@@ -118,15 +118,12 @@ class GeminiLLMClient:
         from tools.story_extraction.gemini_key_pool_v1 import GeminiConfigError, GeminiKeyPool
         from tools.story_extraction.gemini_transport_v1 import GeminiTransportError, official_client_factory
 
-        config = load_routing_config(dotenv_path, environ)
-        self.models = [m.strip() for m in (model or config.model or "").split(",") if m.strip()]
+        config = load_routing_config(dotenv_path, environ, model=model)
+        self.models = [m.strip() for m in config.model.split(",") if m.strip()]
         if not self.models:
             raise GeminiConfigError(
                 "No Gemini model: pass --model or set GEMINI_MODEL in .env")
         pool = GeminiKeyPool(config.credentials, clock=clock)
-        if any(pool.redact(m) != m for m in self.models):
-            raise GeminiConfigError("Model contains credential material")
-        config.policy.check_models(self.models)
         self.model = self.models[0]
         self.temperature = temperature
         self.name = "gemini:" + ",".join(self.models)

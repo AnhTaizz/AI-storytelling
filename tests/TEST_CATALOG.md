@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 11 — test files: 103 — test functions: 1297
+Suites: 11 — test files: 103 — test functions: 1299
 
 ## canonical_story
 
@@ -164,16 +164,18 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.check_config`, 
 
 - `CheckTests.test_status_and_secret_safe_diagnostics`
 
-### test_cost_policy (2)
+### test_cost_policy (3)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.cost_policy`, `tools.llm_infra.gemini_config`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.gemini_key_pool_v1`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `CostTests.test_closed_configuration`
 - `CostTests.test_eligible_slots_and_all_missing_models`
+- `CostTests.test_project_attestation_source_and_inheritance`
 
-### test_gemini_config (1)
+### test_gemini_config (2)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.gemini_config`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.gemini_key_pool_v1`, `tools.story_ingestion.light_novel_adapter_v0`
 
-- `ConfigTests.test_merge_then_deduplicate_and_keep_unlabeled_keys_separate`
+- `ConfigTests.test_merge_then_deduplicate_and_allow_one_unlabeled_key`
+- `ConfigTests.test_multiple_credentials_require_project_labels`
 
 ### test_gemini_router (4)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.gemini_config`, `tools.llm_infra.gemini_router`, `tools.llm_infra.quota_state`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.gemini_key_pool_v1`, `tools.story_extraction.gemini_transport_v1`, `tools.story_ingestion.light_novel_adapter_v0`

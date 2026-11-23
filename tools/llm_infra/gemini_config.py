@@ -47,9 +47,13 @@ def inspect_settings(settings):
         seen.add(secret)
     with tempfile.TemporaryDirectory() as directory:
         config = load_runtime_config(Path(directory) / "absent", filtered)
-    # An unlabeled key is its own quota scope, so the owner need not map keys to projects.
-    # Keys that share a project then cost at most one refused call each per window.
     creds = config.credentials
+    missing = [c.slot_id.rsplit("_", 1)[1] for c in creds if c.group_id != c.project_label]
+    if len(creds) > 1 and missing:
+        raise GeminiConfigError("PROJECT_LABEL_REQUIRED: set GEMINI_PROJECT_LABEL_<n> for slots "
+                                + ", ".join(missing) + ". Keys of the same Google Cloud project need the "
+                                "same label, keys of different projects need different labels. "
+                                "The AI Studio API keys page shows the project of each key.")
     policy = CostPolicy.from_settings(settings, creds)
     public_models = set(policy.confirmed_models) | {m.strip() for m in config.model.split(",") if m.strip()}
     if any(secret in value for secret in seen for value in (*public_models, str(state_path(settings)))):
@@ -61,6 +65,11 @@ def inspect_settings(settings):
     return RoutingConfig(creds, config.model, policy, duplicates)
 
 
-def load_routing_config(dotenv_path, environ=None):
-    config = inspect_settings(merged_settings(dotenv_path, environ))
+def load_routing_config(dotenv_path, environ=None, *, model=None):
+    settings = merged_settings(dotenv_path, environ)
+    if model:
+        settings["GEMINI_MODEL"] = model
+    config = inspect_settings(settings)
+    if config.credentials:
+        config.policy.check_models([m.strip() for m in config.model.split(",") if m.strip()])
     return replace(config, credentials=config.policy.eligible_credentials(config.credentials))

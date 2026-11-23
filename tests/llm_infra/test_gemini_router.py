@@ -53,9 +53,8 @@ class RouterTests(unittest.TestCase):
         self.assertEqual(self.generate(self.router("shared","other"))["project_label"], "shared")
 
     def test_pause_with_resume_time_and_one_inline_wait(self):
-        router = self.router("", "")
-        # Unlabeled keys are separate scopes: a 429 on one moves to the other.
-        self.actions = [Error(delay="1.5s"), Error(quota="RequestsPerDay"), Error(quota="RequestsPerDay")]
+        router = self.router("shared", "shared")
+        self.actions = [Error(delay="1.5s"), Error(quota="RequestsPerDay")]
         with self.assertRaises(GeminiQuotaPaused) as paused:
             self.generate(router)
         self.assertEqual((paused.exception.code, paused.exception.resume_after), ("QUOTA_EXHAUSTED", 28800))
@@ -63,9 +62,9 @@ class RouterTests(unittest.TestCase):
         self.assertNotIn("test-key-not-real", str(paused.exception))
         self.assertEqual(self.clock.waits, [1.5])
         with self.assertRaises(GeminiQuotaPaused):
-            self.generate(self.router("", ""))
+            self.generate(self.router("shared", "shared"))
         self.assertEqual([key for key, _ in self.calls],
-                         ["test-key-not-real-1", "test-key-not-real-2", "test-key-not-real-1"])
+                         ["test-key-not-real-1", "test-key-not-real-2"])
 
     def test_auth_disables_only_one_slot_and_exhaustion_is_distinct(self):
         router = self.router("p", "p")

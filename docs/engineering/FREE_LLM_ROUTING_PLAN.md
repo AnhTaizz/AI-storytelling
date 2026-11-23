@@ -2,7 +2,9 @@
 
 ## Phase 1 · Gemini
 
-The pipeline CLI reads settings from dotenv and the process environment, with the environment taking precedence. `gemini_config` keeps the lowest numbered copy of each key, calls the locked M4 loader, and keeps each unlabeled slot as its own quota scope (owner choice: keys are pasted without mapping them to projects; keys that turn out to share a project cost at most one refused call each per window). `cost_policy` requires the owner's billing confirmation, either one line for every key (`GEMINI_KEYS_FREE_TIER_CONFIRMED=true`) or per slot, and an optional free-model allowlist (a project without billing cannot be charged). The owner verifies billing against Google. The offline `check_config` command reports this configuration and active blocks.
+The pipeline CLI reads dotenv and process settings, with the environment taking precedence. After deduplication (lowest slot wins), a single credential may omit its project label. Multiple credentials require a label on every slot. Keys for the same Google Cloud project share a label and a project–model quota scope.
+
+Only projects explicitly attested as free are eligible. A blank slot inherits the status declared for its project. Conflicting declarations block configuration. The bulk confirmation applies only to one project scope and explicit project status takes precedence. Every model in the selected chain must appear in the owner's required `GEMINI_FREE_MODELS` allowlist. Offline `check_config` reports the application policy, per-project attestation sources and active blocks. The owner verifies billing with Google.
 
 `gemini_router` leases slots from the M4 pool. It excludes blocked projects for the requested model, disables a slot after an authentication failure, and bounds transport retries. `quota_policy` reads QuotaFailure and RetryInfo details, then checks legacy cause markers and Retry-After. If multiple retry delays apply, the later one wins.
 

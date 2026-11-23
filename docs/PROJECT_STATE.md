@@ -1685,6 +1685,12 @@ SQLite retains quota blocks per project and model across CLI runs.
 The offline configuration check and setup guide support migration of existing settings.
 DEC-034 accepted by the owner on 2026-11-23.
 
+## Free LLM infrastructure, Phase 1.1 (2026-11-23)
+
+Status: FREE_LLM_PHASE1_1_PENDING_REVIEW
+
+The pipeline requires a free-model allowlist, project labels for multiple credentials and owner attestation per project. The offline check reports the attestation source. DEC-035 awaits owner review.
+
 ## Next Candidate
 
 1. **Generate the gate sample.** Lock, then run the season on chapters 6–17 (Gemini quota: about 20 calls an episode).

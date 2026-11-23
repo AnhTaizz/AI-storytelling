@@ -1428,12 +1428,13 @@ class GeminiClientTests(unittest.TestCase):
                 ({}, None), ({"GEMINI_PROJECT_BILLING_1": "UNVERIFIED"}, "NO_FREE_TIER_CONFIRMED_PROJECT"),
                 ({"GEMINI_PROJECT_BILLING_1": "BILLING_ENABLED"}, "NO_FREE_TIER_CONFIRMED_PROJECT"),
                 ({"GEMINI_FREE_MODELS": "other"}, "MODEL_NOT_CONFIRMED_FREE"),
-                # Keys only: one confirmation line, no billing line per key, no model list.
+                ({"GEMINI_MODEL": "chosen,missing"}, "MODEL_NOT_CONFIRMED_FREE:"),
                 ({"GEMINI_PROJECT_BILLING_1": "", "GEMINI_FREE_MODELS": "",
-                  "GEMINI_KEYS_FREE_TIER_CONFIRMED": "true"}, None),
+                  "GEMINI_KEYS_FREE_TIER_CONFIRMED": "true"}, "MODEL_ALLOWLIST_EMPTY:"),
                 ({"LLM_ALLOW_PAID": "true"}, "Phase 1"), ({"MAX_PAID_SPEND_USD": "5"}, "Phase 1")]:
                 with self.subTest(overrides=overrides), patch.dict("os.environ", overrides, clear=True), \
-                        patch("tools.story_extraction.gemini_transport_v1.official_client_factory") as sdk:
+                        patch("tools.story_extraction.gemini_transport_v1.official_client_factory",
+                              side_effect=AssertionError("Live SDK disabled in tests")) as sdk:
                     output = StringIO()
                     with redirect_stderr(output):
                         client = make_client(args)
@@ -1471,7 +1472,7 @@ class GeminiClientTests(unittest.TestCase):
         sdk = FakeSDK()
         client = GeminiLLMClient("fake-model", dotenv_path=REPO / "does-not-exist.env",
                                  client_factory=lambda key: sdk,
-                                 environ={"GEMINI_API_KEY_1": "test-key-not-real",
+                                 environ={"GEMINI_API_KEY_1": "test-key-not-real-1",
                                           "GEMINI_PROJECT_BILLING_1": "FREE_TIER_CONFIRMED",
                                           "GEMINI_FREE_MODELS": "fake-model"})
         record = client.complete(system="s", user="u", request_id="t:1")
@@ -1529,7 +1530,7 @@ class GeminiClientTests(unittest.TestCase):
             return GeminiLLMClient("busy-model, spare-model", dotenv_path=REPO / "does-not-exist.env",
                                    client_factory=lambda key: sdk, max_transport_retries=1,
                                    sleep=sleep, clock=lambda: now[0],
-                                   environ={"GEMINI_API_KEY_1": "test-key-not-real",
+                                   environ={"GEMINI_API_KEY_1": "test-key-not-real-1",
                                             "GEMINI_PROJECT_BILLING_1": "FREE_TIER_CONFIRMED",
                                             "GEMINI_FREE_MODELS": "busy-model,spare-model"})
 
