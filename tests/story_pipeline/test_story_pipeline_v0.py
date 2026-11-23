@@ -1410,6 +1410,42 @@ class EndToEndTests(unittest.TestCase):
 
 
 class GeminiClientTests(unittest.TestCase):
+    def test_cli_configuration_blocks_paid_use_before_sdk_construction(self):
+        from contextlib import redirect_stderr
+        from io import StringIO
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        from tools.story_pipeline.run_pipeline import make_client
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "settings"
+            state = Path(tmp) / "quota"
+            path.write_text("GEMINI_API_KEY_1=test-key-not-real-1\nGEMINI_MODEL=chosen\n"
+                            "GEMINI_FREE_MODELS=chosen\nGEMINI_PROJECT_BILLING_1=FREE_TIER_CONFIRMED\n"
+                            f"LLM_QUOTA_STATE_PATH={state}\n", encoding="utf-8")
+            args = SimpleNamespace(model=None, dotenv=path, temperature=0.4)
+            for overrides, expected in [
+                ({}, None), ({"GEMINI_PROJECT_BILLING_1": "UNVERIFIED"}, "NO_FREE_TIER_CONFIRMED_PROJECT"),
+                ({"GEMINI_PROJECT_BILLING_1": "BILLING_ENABLED"}, "NO_FREE_TIER_CONFIRMED_PROJECT"),
+                ({"GEMINI_FREE_MODELS": "other"}, "MODEL_NOT_CONFIRMED_FREE"),
+                # Keys only: one confirmation line, no billing line per key, no model list.
+                ({"GEMINI_PROJECT_BILLING_1": "", "GEMINI_FREE_MODELS": "",
+                  "GEMINI_KEYS_FREE_TIER_CONFIRMED": "true"}, None),
+                ({"LLM_ALLOW_PAID": "true"}, "Phase 1"), ({"MAX_PAID_SPEND_USD": "5"}, "Phase 1")]:
+                with self.subTest(overrides=overrides), patch.dict("os.environ", overrides, clear=True), \
+                        patch("tools.story_extraction.gemini_transport_v1.official_client_factory") as sdk:
+                    output = StringIO()
+                    with redirect_stderr(output):
+                        client = make_client(args)
+                    sdk.assert_not_called()
+                    if expected:
+                        self.assertIsNone(client)
+                        self.assertIn(expected, output.getvalue())
+                        self.assertIn("tools.llm_infra.check_config", output.getvalue())
+                        self.assertNotIn("test-key-not-real", output.getvalue())
+                    else:
+                        self.assertEqual(client.name, "gemini:chosen")
+
     def test_uses_existing_transport_with_fake_sdk(self):
         class FakeResponse:
             text = '{"n": 1}'
@@ -1435,7 +1471,9 @@ class GeminiClientTests(unittest.TestCase):
         sdk = FakeSDK()
         client = GeminiLLMClient("fake-model", dotenv_path=REPO / "does-not-exist.env",
                                  client_factory=lambda key: sdk,
-                                 environ={"GEMINI_API_KEY_1": "test-key-not-real"})
+                                 environ={"GEMINI_API_KEY_1": "test-key-not-real",
+                                          "GEMINI_PROJECT_BILLING_1": "FREE_TIER_CONFIRMED",
+                                          "GEMINI_FREE_MODELS": "fake-model"})
         record = client.complete(system="s", user="u", request_id="t:1")
         self.assertEqual(record["raw_content"], '{"n": 1}')
         self.assertEqual(sdk.kwargs["model"], "fake-model")
@@ -1491,7 +1529,9 @@ class GeminiClientTests(unittest.TestCase):
             return GeminiLLMClient("busy-model, spare-model", dotenv_path=REPO / "does-not-exist.env",
                                    client_factory=lambda key: sdk, max_transport_retries=1,
                                    sleep=sleep, clock=lambda: now[0],
-                                   environ={"GEMINI_API_KEY_1": "test-key-not-real"})
+                                   environ={"GEMINI_API_KEY_1": "test-key-not-real",
+                                            "GEMINI_PROJECT_BILLING_1": "FREE_TIER_CONFIRMED",
+                                            "GEMINI_FREE_MODELS": "busy-model,spare-model"})
 
         cases = [
             ("overloaded first model falls back", {"busy-model": 503}, "ok",

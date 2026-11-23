@@ -13,7 +13,7 @@ from test_story_pipeline_v0 import FakeModel, test_profile  # noqa: E402  (share
 
 from tools.story_memory.memory_v0 import StoryMemory  # noqa: E402
 from tools.story_pipeline import run_story  # noqa: E402
-from tools.story_pipeline.llm import ScriptedLLMClient  # noqa: E402
+from tools.story_pipeline.llm import GeminiLLMClient, ScriptedLLMClient  # noqa: E402
 from tools.story_pipeline.run_pipeline import DEFAULT_MANIFEST  # noqa: E402
 
 
@@ -60,6 +60,40 @@ class PlanTests(unittest.TestCase):
 
 
 class SeasonTests(unittest.TestCase):
+    def test_daily_quota_pauses_plan_and_resume_reuses_brief(self):
+        class DailyLimit(Exception):
+            code = 429
+            details = {"details": [{"@type": "google.rpc.QuotaFailure",
+                                    "violations": [{"quotaId": "RequestsPerDay"}]}]}
+
+        class ExhaustedSDK:
+            def generate(self, **kwargs):
+                raise DailyLimit("test-key-not-real-1")
+
+        settings = {"GEMINI_API_KEY_1": "test-key-not-real-1", "GEMINI_FREE_MODELS": "model-a",
+                    "GEMINI_PROJECT_BILLING_1": "FREE_TIER_CONFIRMED"}
+        gemini = GeminiLLMClient("model-a", dotenv_path=self.season_dir / "absent", environ=settings,
+                                 clock=lambda: 1000, sleep=self.fail, client_factory=lambda key: ExhaustedSDK())
+        responder = FakeModel()
+
+        def exhaust_at_plan(stage, system, user):
+            if stage == "plan":
+                return gemini.complete(system=system, user=user, request_id="plan")["raw_content"]
+            return responder(stage, system, user)
+
+        args = (DEFAULT_MANIFEST, [(1, 1)], test_profile(), self.season_dir)
+        options = {"source_check": False}
+        paused = run_story.run_season(ScriptedLLMClient(exhaust_at_plan), *args, memory=None, options=options)
+        self.assertEqual(paused["status"], "PAUSED_QUOTA")
+        self.assertIn("QUOTA_EXHAUSTED", str(paused))
+        self.assertNotIn("test-key-not-real", str(paused) + str(gemini.attempt_failures))
+        resumed = ScriptedLLMClient(responder)
+        result = run_story.run_season(resumed, *args, memory=None, options=options)
+        self.assertEqual(result["status"], "COMPLETED")
+        stages = [call["stage"] for call in resumed.calls]
+        self.assertEqual(stages[0], "plan")
+        self.assertNotIn("brief", stages)
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)

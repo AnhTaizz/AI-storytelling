@@ -1677,6 +1677,14 @@ The project owner asked for the gate to be prepared and chose the sample and the
   - `summary` applies the pass rule.
 - **Pass rule:** all four reviewed by the owner, no `FAIL`, no `CRITICAL` finding, at least three of four `PASS` or `PASS_WITH_MINOR_EDITS`.
 
+## Free LLM infrastructure, Phase 1 (2026-11-23)
+
+Status: FREE_LLM_PHASE1_ACCEPTED
+The Gemini pipeline requires the owner's free-tier confirmation (one `.env` line for all keys).
+SQLite retains quota blocks per project and model across CLI runs.
+The offline configuration check and setup guide support migration of existing settings.
+DEC-034 accepted by the owner on 2026-11-23.
+
 ## Next Candidate
 
 1. **Generate the gate sample.** Lock, then run the season on chapters 6–17 (Gemini quota: about 20 calls an episode).

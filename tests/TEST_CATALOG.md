@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 10 — test files: 97 — test functions: 1284
+Suites: 11 — test files: 103 — test functions: 1297
 
 ## canonical_story
 
@@ -156,6 +156,43 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.ci.check`, `tools.ci.conf
 - `GuardTests.test_coverage_keys_match_git_paths_on_windows`
 - `GuardTests.test_git_diff_helpers_and_cli`
 - `GuardTests.test_protected_pattern_file_covers_frozen_layers`
+
+## llm_infra
+
+### test_check_config (1)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.check_config`, `tools.llm_infra.quota_state`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `CheckTests.test_status_and_secret_safe_diagnostics`
+
+### test_cost_policy (2)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.cost_policy`, `tools.llm_infra.gemini_config`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.gemini_key_pool_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `CostTests.test_closed_configuration`
+- `CostTests.test_eligible_slots_and_all_missing_models`
+
+### test_gemini_config (1)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.gemini_config`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.gemini_key_pool_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `ConfigTests.test_merge_then_deduplicate_and_keep_unlabeled_keys_separate`
+
+### test_gemini_router (4)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.gemini_config`, `tools.llm_infra.gemini_router`, `tools.llm_infra.quota_state`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.gemini_key_pool_v1`, `tools.story_extraction.gemini_transport_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `RouterTests.test_project_model_rotation_restart_and_expiry`
+- `RouterTests.test_pause_with_resume_time_and_one_inline_wait`
+- `RouterTests.test_auth_disables_only_one_slot_and_exhaustion_is_distinct`
+- `RouterTests.test_transport_retry_limit_and_call_cap`
+
+### test_quota_policy (2)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.quota_policy`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `DecisionTests.test_quota_windows_and_evidence`
+- `DecisionTests.test_body_sources_and_legacy_markers`
+
+### test_quota_state (1)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.quota_state`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `StoreTests.test_lifecycle_and_validation`
 
 ## media_ingest
 
@@ -1583,10 +1620,11 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `ReviewSummaryTests.test_forms_are_parsed_and_owner_and_agent_kept_apart`
 - `ReviewSummaryTests.test_quoted_errors_are_read_from_the_form`
 
-### test_run_story (8)
+### test_run_story (9)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.llm`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.run_story`
 
 - `PlanTests.test_episodes_cover_the_range_in_order`
+- `SeasonTests.test_daily_quota_pauses_plan_and_resume_reuses_brief`
 - `SeasonTests.test_episodes_run_in_order_with_earlier_chapters_as_background`
 - `SeasonTests.test_rerun_skips_completed_episodes_and_resumes_the_rest`
 - `SeasonTests.test_apply_review_resumes_completed_episodes_with_unapplied_errors`
@@ -1595,8 +1633,8 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `SeasonTests.test_source_check_quota_saves_the_draft_and_resumes_before_next_episode`
 - `CliTests.test_bad_episode_plan_is_rejected_before_any_call`
 
-### test_story_pipeline_v0 (50)
-Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.episode_brief`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
+### test_story_pipeline_v0 (51)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.check_config`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.episode_brief`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
 
 - `test_profile`
 - `SourceTests.test_parse_range`
@@ -1646,6 +1684,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `EndToEndTests.test_plan_may_call_back_to_recap_but_must_cover_episode`
 - `EndToEndTests.test_stage_failure_is_recorded`
 - `EndToEndTests.test_gate_report_severity`
+- `GeminiClientTests.test_cli_configuration_blocks_paid_use_before_sdk_construction`
 - `GeminiClientTests.test_uses_existing_transport_with_fake_sdk`
 - `GeminiClientTests.test_model_fallback_chain`
 
