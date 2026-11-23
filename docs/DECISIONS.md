@@ -1058,7 +1058,7 @@ LIMITS:
 
 ## DEC-039 — Free-Plan Cloudflare Workers AI Provider (Phase 4)
 
-STATUS: PROPOSED (awaiting Project Owner)
+STATUS: ACCEPTED (Project Owner, 2026-11-24: "merge PR #30 rồi chạy cloudflare_smoke --live")
 
 CONTEXT:
 Phase 3 added account-wide cooldowns for OpenRouter. Cloudflare Workers AI provides an OpenAI-compatible endpoint and measures its daily free allocation in Neurons. Workers Paid bills usage above that allocation.
