@@ -7,6 +7,9 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 
 BASE_URL = "https://api.groq.com/openai/v1"
+# Groq's edge (Cloudflare) answers the default "Python-urllib" agent with 403 error 1010
+# before the API sees the key, so every request names a generic client.
+USER_AGENT = "llm-infra-client/1.0"
 
 
 def redact_groq_data(value, secrets):
@@ -72,6 +75,9 @@ def _error_kind(status, body):
         return "REQUEST_TOO_LARGE"
     if status == 429:
         return "RATE_LIMIT"
+    if status == 403 and not error:
+        # A 403 without the API's JSON error comes from the edge, not from the key.
+        return "EDGE_BLOCKED"
     if status in (401, 403):
         return "AUTH_FAILURE"
     if status in (498, 500, 502, 503, 504):
@@ -103,7 +109,8 @@ class GroqClient:
         if generation_config.get("response_mime_type") == "application/json":
             payload["response_format"] = {"type": "json_object"}
         body = json.dumps(payload).encode("utf-8")
-        headers = {"Authorization": f"Bearer {self._api_key}", "Content-Type": "application/json"}
+        headers = {"Authorization": f"Bearer {self._api_key}", "Content-Type": "application/json",
+                   "User-Agent": USER_AGENT}
         try:
             status, headers, body = self._http(f"{BASE_URL}/chat/completions", headers, body, self._timeout)
         except (OSError, HTTPException):

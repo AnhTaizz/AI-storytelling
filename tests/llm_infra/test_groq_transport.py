@@ -32,7 +32,8 @@ class GroqTransportTests(unittest.TestCase):
                 url, headers, body, timeout = calls[-1]
                 self.assertEqual(url, "https://api.groq.com/openai/v1/chat/completions")
                 self.assertEqual(headers, {"Authorization": f"Bearer {GROQ_TEST_KEY}",
-                                           "Content-Type": "application/json"})
+                                           "Content-Type": "application/json",
+                                           "User-Agent": "llm-infra-client/1.0"})
                 self.assertEqual(timeout, 12)
                 self.assertEqual(body, {"model": "test-model", "messages": [
                     {"role": "system", "content": "system"}, {"role": "user", "content": "user"},
@@ -73,6 +74,7 @@ class GroqTransportTests(unittest.TestCase):
     def test_unparseable_body_and_missing_content(self):
         for status, payload, kind in [
             (503, b"<html>unavailable</html>", "SERVER_FAILURE"),
+            (403, b"error code: 1010", "EDGE_BLOCKED"),
             (200, b"\xff", "MALFORMED_RESPONSE"), (200, b"null", "MALFORMED_RESPONSE"),
             (200, b'{"choices":[]}', "MALFORMED_RESPONSE"),
             (200, b'{"choices":[{"message":{"content":null}}]}', "MALFORMED_RESPONSE"),
