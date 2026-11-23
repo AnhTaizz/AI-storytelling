@@ -18,6 +18,17 @@ def _flag(settings, name, default):
     return value == "true"
 
 
+def require_free_only(settings, phase):
+    free = _flag(settings, "LLM_FREE_ONLY", "true")
+    paid = _flag(settings, "LLM_ALLOW_PAID", "false")
+    try:
+        spend = Decimal(settings.get("MAX_PAID_SPEND_USD", "0"))
+    except InvalidOperation:
+        raise GeminiConfigError("Invalid MAX_PAID_SPEND_USD") from None
+    if not spend.is_finite() or not spend.is_zero() or not free or paid:
+        raise GeminiConfigError(f"Paid use is not supported in {phase}")
+
+
 @dataclass(frozen=True)
 class CostPolicy:
     billing: dict
@@ -27,14 +38,7 @@ class CostPolicy:
 
     @classmethod
     def from_settings(cls, settings, credentials):
-        free = _flag(settings, "LLM_FREE_ONLY", "true")
-        paid = _flag(settings, "LLM_ALLOW_PAID", "false")
-        try:
-            spend = Decimal(settings.get("MAX_PAID_SPEND_USD", "0"))
-        except InvalidOperation:
-            raise GeminiConfigError("Invalid MAX_PAID_SPEND_USD") from None
-        if not spend.is_finite() or not spend.is_zero() or not free or paid:
-            raise GeminiConfigError("Paid use is not supported in Phase 1")
+        require_free_only(settings, "Phase 1")
         confirmation = settings.get("GEMINI_KEYS_FREE_TIER_CONFIRMED", "").strip()
         confirmed = not confirmation or _flag(settings, "GEMINI_KEYS_FREE_TIER_CONFIRMED", "true")
         default = "FREE_TIER_CONFIRMED" if confirmed else "UNVERIFIED"

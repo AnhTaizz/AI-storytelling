@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 11 — test files: 103 — test functions: 1300
+Suites: 11 — test files: 108 — test functions: 1328
 
 ## canonical_story
 
@@ -159,10 +159,11 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.ci.check`, `tools.ci.conf
 
 ## llm_infra
 
-### test_check_config (1)
-Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.check_config`, `tools.llm_infra.quota_state`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+### test_check_config (2)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.check_config`, `tools.llm_infra.groq_free_models_v1`, `tools.llm_infra.quota_state`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `CheckTests.test_status_and_secret_safe_diagnostics`
+- `CheckTests.test_groq_report_status_blocks_and_redaction_leave_gemini_exit_status`
 
 ### test_cost_policy (3)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.cost_policy`, `tools.llm_infra.gemini_config`, `tools.llm_infra.gemini_free_models_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.gemini_key_pool_v1`, `tools.story_ingestion.light_novel_adapter_v0`
@@ -185,6 +186,53 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.gemini_config`,
 - `RouterTests.test_transport_retry_limit_and_call_cap`
 - `RouterTests.test_round_robin_unlabeled_keys`
 - `RouterTests.test_rate_limit_hop_cap_leaves_untried_keys_available`
+
+### test_groq_config (5)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.groq_config`, `tools.llm_infra.groq_free_models_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.gemini_key_pool_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `GroqConfigTests.test_process_overrides_and_lowest_duplicate_wins`
+- `GroqConfigTests.test_default_scope_and_explicit_organization_labels`
+- `GroqConfigTests.test_reviewed_models_and_narrowing`
+- `GroqConfigTests.test_default_declaration_and_explicit_exclusions`
+- `GroqConfigTests.test_unsafe_or_ambiguous_configuration_fails_safely`
+
+### test_groq_quota_policy (3)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.groq_quota_policy`, `tools.llm_infra.groq_transport`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `GroqQuotaPolicyTests.test_duration_formats_and_garbage`
+- `GroqQuotaPolicyTests.test_message_takes_precedence_then_headers`
+- `GroqQuotaPolicyTests.test_largest_matching_delay_and_fallbacks`
+
+### test_groq_router (9)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.groq_config`, `tools.llm_infra.groq_free_models_v1`, `tools.llm_infra.groq_router`, `tools.llm_infra.groq_transport`, `tools.llm_infra.quota_state`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.gemini_key_pool_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `GroqRouterTests.test_rate_limit_hops_by_scope_and_persists_per_model`
+- `GroqRouterTests.test_hop_cap_uses_earliest_refusal_and_leaves_untried_slots_available`
+- `GroqRouterTests.test_all_blocked_waits_once_then_pauses_or_succeeds`
+- `GroqRouterTests.test_auth_disables_one_slot_until_router_restart`
+- `GroqRouterTests.test_rate_limit_on_default_org_never_rotates_keys`
+- `GroqRouterTests.test_bounded_transport_retries_and_immediate_request_failures`
+- `GroqRouterTests.test_oversized_request_does_not_retry_or_block_scope`
+- `GroqRouterTests.test_success_clears_unknown_streak_and_proactively_blocks_daily_requests`
+- `GroqRouterTests.test_priority_and_record_redaction`
+
+### test_groq_smoke (4)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.groq_free_models_v1`, `tools.llm_infra.groq_smoke`, `tools.llm_infra.groq_transport`, `tools.llm_infra.quota_state`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `GroqSmokeTests.test_offline_statuses_summary_and_first_model_blocks_without_a_client`
+- `GroqSmokeTests.test_one_json_mode_request_and_small_secret_safe_output`
+- `GroqSmokeTests.test_failures_return_only_public_metadata`
+- `GroqSmokeTests.test_default_client_uses_twenty_second_timeout`
+
+### test_groq_transport (6)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.groq_transport`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `GroqTransportTests.test_http_and_generation_parameters`
+- `GroqTransportTests.test_error_status_and_error_code_mapping`
+- `GroqTransportTests.test_unparseable_body_and_missing_content`
+- `GroqTransportTests.test_success_does_not_echo_key_in_content_or_metadata`
+- `GroqTransportTests.test_network_failures_hide_the_underlying_exception`
+- `GroqTransportTests.test_default_http_converts_urllib_http_error`
 
 ### test_quota_policy (2)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.quota_policy`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
