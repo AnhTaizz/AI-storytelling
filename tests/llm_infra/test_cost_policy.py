@@ -25,6 +25,15 @@ class CostTests(unittest.TestCase):
         self.assertEqual(set(cfg.policy.public_summary()["billing_status_counts"].values()), {1})
         with self.assertRaisesRegex(GeminiConfigError, "model-c, model-d"):
             cfg.policy.check_models(["model-a", "model-c", "model-d"])
+        keys_only = {"GEMINI_API_KEY_1": "test-key-not-real-1", "GEMINI_API_KEY_2": "test-key-not-real-2",
+                     "GEMINI_KEYS_FREE_TIER_CONFIRMED": "true"}
+        for extra, eligible in [({}, ["gemini_slot_1", "gemini_slot_2"]),
+                                ({"GEMINI_PROJECT_BILLING_2": "BILLING_ENABLED"}, ["gemini_slot_1"])]:
+            with self.subTest(extra=extra):
+                one_line = inspect_settings(keys_only | extra)
+                self.assertEqual([c.slot_id for c in one_line.policy.eligible_credentials(one_line.credentials)],
+                                 eligible)
+                one_line.policy.check_models(["any-model"])  # no list: no model limit
         # Unlabeled slots may be different projects, so their billing answers may differ.
         unlabeled = inspect_settings(settings("", "") | {"GEMINI_PROJECT_BILLING_2": "UNVERIFIED"})
         self.assertEqual([c.slot_id for c in unlabeled.policy.eligible_credentials(unlabeled.credentials)],

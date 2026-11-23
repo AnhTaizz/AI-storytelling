@@ -32,11 +32,14 @@ class CostPolicy:
             raise GeminiConfigError("Invalid MAX_PAID_SPEND_USD") from None
         if not spend.is_finite() or not spend.is_zero() or not free or paid:
             raise GeminiConfigError("Paid use is not supported in Phase 1")
+        # One owner line confirms every key; a per-slot value still overrides it.
+        default = "FREE_TIER_CONFIRMED" if _flag(settings, "GEMINI_KEYS_FREE_TIER_CONFIRMED", "false") \
+            else "UNVERIFIED"
         groups = {}
         billing = {}
         for slot in credentials:
             number = slot.slot_id.rsplit("_", 1)[1]
-            status = settings.get("GEMINI_PROJECT_BILLING_" + number, "").strip() or "UNVERIFIED"
+            status = settings.get("GEMINI_PROJECT_BILLING_" + number, "").strip() or default
             if status not in STATUSES:
                 raise GeminiConfigError("Invalid GEMINI_PROJECT_BILLING_" + number)
             # Unlabeled slots share a quota group but may be different projects.
@@ -50,11 +53,14 @@ class CostPolicy:
     def eligible_credentials(self, credentials):
         eligible = tuple(c for c in credentials if self.billing[c.slot_id] == "FREE_TIER_CONFIRMED")
         if not eligible:
-            raise GeminiConfigError("NO_FREE_TIER_CONFIRMED_PROJECT: set GEMINI_API_KEY_<n> and "
-                                    "GEMINI_PROJECT_BILLING_<n>=FREE_TIER_CONFIRMED in .env")
+            raise GeminiConfigError("NO_FREE_TIER_CONFIRMED_PROJECT: after checking that the keys' projects "
+                                    "have no billing, set GEMINI_KEYS_FREE_TIER_CONFIRMED=true in .env")
         return eligible
 
     def check_models(self, models):
+        # A project without billing cannot be charged, so the list is an optional extra limit.
+        if not self.confirmed_models:
+            return
         missing = sorted(set(models) - self.confirmed_models)
         if missing:
             raise GeminiConfigError("MODEL_NOT_CONFIRMED_FREE: set GEMINI_FREE_MODELS for " + ", ".join(missing))

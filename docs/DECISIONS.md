@@ -984,8 +984,8 @@ CONTEXT:
 The FV3 protocol binds the M4 Gemini modules by hash (DEC-030). Their in-memory project cooldown spans models and is lost on restart.
 
 DECISION:
-1. Add a routing package over the locked loader, pool and SDK adapter. Deduplicate credentials and treat all unlabeled slots as one quota group.
-2. Require billing confirmation and a free-model list before the pipeline calls Gemini. Existing `.env` files need these new settings.
+1. Add a routing package over the locked loader, pool and SDK adapter. Deduplicate credentials. An unlabeled key is its own quota scope (Project Owner, 2026-11-23: "Tôi k muốn mất công phải chỉnh proj, chỉ cho key free là dùng được"; "gemini key tôi chỉ dùng duy nhất tier free thôi"); labels stay optional for keys known to share a project.
+2. Require the owner's billing confirmation before the pipeline calls Gemini: one line `GEMINI_KEYS_FREE_TIER_CONFIRMED=true` for every key, or `GEMINI_PROJECT_BILLING_<n>` per key. `GEMINI_FREE_MODELS` is an optional extra limit. Existing `.env` files need the confirmation line.
 3. Persist cooldowns by provider, model and project alias. Bound inline waits and reuse the pipeline's quota pause and cached-stage resume.
 
 LIMITS:

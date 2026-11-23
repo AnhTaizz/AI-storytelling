@@ -35,7 +35,7 @@ def main(argv=None, *, environ=None, clock=time.time):
             config.policy.eligible_credentials(config.credentials)
             models = [m.strip() for m in config.model.split(",") if m.strip()]
             if not models:
-                raise GeminiConfigError("MODEL_NOT_CONFIRMED_FREE: set GEMINI_MODEL and GEMINI_FREE_MODELS")
+                raise GeminiConfigError("MODEL_NOT_CONFIRMED_FREE: set GEMINI_MODEL")
             config.policy.check_models(models)
             status = "READY_FREE_ONLY"
     except (GeminiConfigError, QuotaStateError, OSError) as error:

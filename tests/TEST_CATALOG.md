@@ -173,7 +173,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.cost_policy`, `
 ### test_gemini_config (1)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.gemini_config`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.gemini_key_pool_v1`, `tools.story_ingestion.light_novel_adapter_v0`
 
-- `ConfigTests.test_merge_then_deduplicate_and_group_unknown_projects`
+- `ConfigTests.test_merge_then_deduplicate_and_keep_unlabeled_keys_separate`
 
 ### test_gemini_router (4)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.gemini_config`, `tools.llm_infra.gemini_router`, `tools.llm_infra.quota_state`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.gemini_key_pool_v1`, `tools.story_extraction.gemini_transport_v1`, `tools.story_ingestion.light_novel_adapter_v0`

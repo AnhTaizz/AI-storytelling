@@ -18,9 +18,11 @@ class CheckTests(unittest.TestCase):
                 ({}, "WAITING_FOR_USER_CREDENTIALS"),
                 (settings("") | {"GEMINI_PROJECT_BILLING_1":""}, "BLOCKED_NO_CONFIRMED_FREE_PROJECT"),
                 (settings("") | {"GEMINI_PROJECT_BILLING_1":"BILLING_ENABLED"}, "BLOCKED_NO_CONFIRMED_FREE_PROJECT"),
-                (settings("") | {"GEMINI_FREE_MODELS":""}, "BLOCKED_MODEL_NOT_CONFIRMED_FREE"),
+                (settings("") | {"GEMINI_FREE_MODELS":"model-b"}, "BLOCKED_MODEL_NOT_CONFIRMED_FREE"),
                 (settings("") | {"LLM_ALLOW_PAID":"true"}, "CONFIG_ERROR"),
-                (settings("alias"), "READY_FREE_ONLY")]:
+                (settings("alias"), "READY_FREE_ONLY"),
+                ({"GEMINI_API_KEY_1": "test-key-not-real-1", "GEMINI_MODEL": "m",
+                  "GEMINI_KEYS_FREE_TIER_CONFIRMED": "true"}, "READY_FREE_ONLY")]:
                 with self.subTest(status=status):
                     if status == "READY_FREE_ONLY":
                         QuotaStateStore(path, clock=clock).block("gemini","m","alias",2000,"RPM",clock())

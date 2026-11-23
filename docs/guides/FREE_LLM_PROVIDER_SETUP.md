@@ -9,22 +9,21 @@
 
 ## Điền cấu hình và kiểm tra ngoại tuyến
 
-Chép `.env.example` thành `.env`. Điền khóa vào `GEMINI_API_KEY_1`, đặt bí danh cục bộ ở `GEMINI_PROJECT_LABEL_1` và đặt `GEMINI_PROJECT_BILLING_1=FREE_TIER_CONFIRMED` sau khi xác nhận. Với nhiều khóa, tăng số thứ tự. Cùng dự án phải cùng nhãn và cùng trạng thái billing. Mọi khóa không nhãn dùng chung một nhóm quota (ứng dụng không giả định chúng thuộc các dự án độc lập), nên hãy đặt nhãn để dùng quota của từng dự án. Khóa trùng nhau chỉ được dùng một lần. Với dự án đã bật thanh toán, ghi `BILLING_ENABLED`: ứng dụng sẽ không dùng khóa đó.
-
-Ví dụ (giá trị giả, không phải khóa thật):
+Chép `.env.example` thành `.env`, dán từng khóa vào `GEMINI_API_KEY_1`, `GEMINI_API_KEY_2`… và thêm một dòng xác nhận cho tất cả khóa:
 
 ```
-GEMINI_API_KEY_1=<khóa-dự-án-A>
-GEMINI_PROJECT_LABEL_1=du-an-a
-GEMINI_PROJECT_BILLING_1=FREE_TIER_CONFIRMED
-GEMINI_API_KEY_2=<khóa-dự-án-B>
-GEMINI_PROJECT_LABEL_2=du-an-b
-GEMINI_PROJECT_BILLING_2=FREE_TIER_CONFIRMED
+GEMINI_API_KEY_1=<khóa-1>
+GEMINI_API_KEY_2=<khóa-2>
 GEMINI_MODEL=<model-chính>,<model-dự-phòng>
-GEMINI_FREE_MODELS=<model-chính>,<model-dự-phòng>
+GEMINI_KEYS_FREE_TIER_CONFIRMED=true
 ```
 
-Điền danh sách model đã xác nhận, cách nhau bằng dấu phẩy, vào `GEMINI_FREE_MODELS`. Đặt `GEMINI_MODEL` theo thứ tự muốn thử. Mọi model trong chuỗi đều cần có trong danh sách miễn phí. Giữ `LLM_FREE_ONLY=true`, `LLM_ALLOW_PAID=false`, `MAX_PAID_SPEND_USD=0`.
+Chỉ đặt `true` khi mọi project của các khóa này chưa bật billing. Không cần ghi project hay label: mỗi khóa được xem là một nguồn quota riêng. Khóa nào bị 429 thì riêng khóa đó chờ, các khóa khác vẫn chạy. Nếu hai khóa thật ra cùng project thì tốn thêm tối đa một lần gọi bị từ chối cho mỗi khóa, vẫn miễn phí. Khóa trùng nhau chỉ dùng một lần. Giữ `LLM_FREE_ONLY=true`, `LLM_ALLOW_PAID=false`, `MAX_PAID_SPEND_USD=0`.
+
+Tùy chọn, không bắt buộc:
+- `GEMINI_PROJECT_LABEL_<n>`: ghi cùng nhãn cho các khóa cùng project để chúng chờ chung, tránh lần gọi thừa.
+- `GEMINI_PROJECT_BILLING_<n>=BILLING_ENABLED`: đánh dấu một khóa thuộc project đã bật billing; ứng dụng sẽ không dùng khóa đó.
+- `GEMINI_FREE_MODELS`: giới hạn thêm các model được phép dùng.
 
 Chạy `python -m tools.llm_infra.check_config`. Lệnh chỉ đọc cấu hình và xem các nhóm đang chờ quota, không gửi yêu cầu Gemini. Khi thấy `READY_FREE_ONLY`, cấu hình đáp ứng chính sách của ứng dụng. Nếu đang chờ quota, xem thời điểm UTC của đúng dự án và model.
 

@@ -1427,7 +1427,10 @@ class GeminiClientTests(unittest.TestCase):
             for overrides, expected in [
                 ({}, None), ({"GEMINI_PROJECT_BILLING_1": "UNVERIFIED"}, "NO_FREE_TIER_CONFIRMED_PROJECT"),
                 ({"GEMINI_PROJECT_BILLING_1": "BILLING_ENABLED"}, "NO_FREE_TIER_CONFIRMED_PROJECT"),
-                ({"GEMINI_FREE_MODELS": ""}, "MODEL_NOT_CONFIRMED_FREE"),
+                ({"GEMINI_FREE_MODELS": "other"}, "MODEL_NOT_CONFIRMED_FREE"),
+                # Keys only: one confirmation line, no billing line per key, no model list.
+                ({"GEMINI_PROJECT_BILLING_1": "", "GEMINI_FREE_MODELS": "",
+                  "GEMINI_KEYS_FREE_TIER_CONFIRMED": "true"}, None),
                 ({"LLM_ALLOW_PAID": "true"}, "Phase 1"), ({"MAX_PAID_SPEND_USD": "5"}, "Phase 1")]:
                 with self.subTest(overrides=overrides), patch.dict("os.environ", overrides, clear=True), \
                         patch("tools.story_extraction.gemini_transport_v1.official_client_factory") as sdk:

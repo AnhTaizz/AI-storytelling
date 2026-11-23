@@ -54,7 +54,8 @@ class RouterTests(unittest.TestCase):
 
     def test_pause_with_resume_time_and_one_inline_wait(self):
         router = self.router("", "")
-        self.actions = [Error(delay="1.5s"), Error(quota="RequestsPerDay")]
+        # Unlabeled keys are separate scopes: a 429 on one moves to the other.
+        self.actions = [Error(delay="1.5s"), Error(quota="RequestsPerDay"), Error(quota="RequestsPerDay")]
         with self.assertRaises(GeminiQuotaPaused) as paused:
             self.generate(router)
         self.assertEqual((paused.exception.code, paused.exception.resume_after), ("QUOTA_EXHAUSTED", 28800))
@@ -63,7 +64,8 @@ class RouterTests(unittest.TestCase):
         self.assertEqual(self.clock.waits, [1.5])
         with self.assertRaises(GeminiQuotaPaused):
             self.generate(self.router("", ""))
-        self.assertEqual(len(self.calls), 2)
+        self.assertEqual([key for key, _ in self.calls],
+                         ["test-key-not-real-1", "test-key-not-real-2", "test-key-not-real-1"])
 
     def test_auth_disables_only_one_slot_and_exhaustion_is_distinct(self):
         router = self.router("p", "p")

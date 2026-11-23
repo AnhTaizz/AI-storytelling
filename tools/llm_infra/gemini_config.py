@@ -7,7 +7,7 @@ import tempfile
 from tools.llm_infra.cost_policy import CostPolicy
 from tools.llm_infra.quota_state import validate_scope
 from tools.story_extraction.gemini_key_pool_v1 import (
-    CredentialConfig, GeminiConfigError, UNKNOWN_PROJECT_LABEL, _KEY_PATTERN, _parse_dotenv,
+    CredentialConfig, GeminiConfigError, _KEY_PATTERN, _parse_dotenv,
     load_runtime_config,
 )
 
@@ -47,8 +47,9 @@ def inspect_settings(settings):
         seen.add(secret)
     with tempfile.TemporaryDirectory() as directory:
         config = load_runtime_config(Path(directory) / "absent", filtered)
-    creds = tuple(replace(c, group_id=UNKNOWN_PROJECT_LABEL) if c.project_label == UNKNOWN_PROJECT_LABEL
-                  else c for c in config.credentials)
+    # An unlabeled key is its own quota scope, so the owner need not map keys to projects.
+    # Keys that share a project then cost at most one refused call each per window.
+    creds = config.credentials
     policy = CostPolicy.from_settings(settings, creds)
     public_models = set(policy.confirmed_models) | {m.strip() for m in config.model.split(",") if m.strip()}
     if any(secret in value for secret in seen for value in (*public_models, str(state_path(settings)))):
