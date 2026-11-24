@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 11 — test files: 127 — test functions: 1423
+Suites: 12 — test files: 132 — test functions: 1440
 
 ## canonical_story
 
@@ -473,6 +473,45 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.media_ingest.ingest_local
 - `CliTests.test_incompatible_manifest_fails_without_modification`
 - `CliTests.test_protected_tree_is_pruned_without_listing_it`
 - `CliTests.test_no_network_modules_in_tool_source`
+
+## ops_dashboard
+
+### test___main__ (2)
+Covers: `tools.canonical_story.conformance_v0`, `tools.ops_dashboard.__main__`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `CommandLineTests.test_cli_prints_bound_port_and_stops_on_interrupt`
+- `CommandLineTests.test_cli_rejects_invalid_bind_arguments`
+
+### test_contract (1)
+Covers: `tools.canonical_story.conformance_v0`, `tools.ops_dashboard.contract`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `ContractTests.test_phase_five_columns_and_vocabulary`
+
+### test_data_source (3)
+Covers: `tools.canonical_story.conformance_v0`, `tools.ops_dashboard.contract`, `tools.ops_dashboard.data_source`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `DataSourceTests.test_same_seed_and_clock_reproduce_snapshot`
+- `DataSourceTests.test_rows_match_phase_five_shape_and_provenance`
+- `DataSourceTests.test_mock_includes_quota_and_review_scenarios`
+
+### test_server (7)
+Covers: `tools.canonical_story.conformance_v0`, `tools.ops_dashboard.contract`, `tools.ops_dashboard.data_source`, `tools.ops_dashboard.server`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `ServerTests.test_every_endpoint_returns_mock_json_with_security_headers`
+- `ServerTests.test_methods_and_invalid_query_parameters`
+- `ServerTests.test_unknown_and_traversal_paths_are_rejected`
+- `ServerTests.test_start_rejects_non_loopback_host`
+- `ServerTests.test_static_assets_are_served_and_offline`
+- `ServerTests.test_both_locales_cover_mock_outcomes_and_errors`
+- `ServerTests.test_provider_palette_is_fixed_in_automatic_and_explicit_themes`
+
+### test_view_models (4)
+Covers: `tools.canonical_story.conformance_v0`, `tools.ops_dashboard.contract`, `tools.ops_dashboard.view_models`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `ViewModelTests.test_aggregation_preserves_provenance_and_outcomes`
+- `ViewModelTests.test_overview_uses_utc_day_and_latest_incidents`
+- `ViewModelTests.test_usage_range_bucket_boundaries_and_unknown_tokens`
+- `ViewModelTests.test_request_limit_applies_after_filter_and_sort`
 
 ## script_quality
 

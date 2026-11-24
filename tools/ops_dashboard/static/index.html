@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="vi" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>AI Operations</title>
+  <link rel="stylesheet" href="/app.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main" data-string="skip"></a>
+  <aside class="sidebar">
+    <div class="sidebar-head">
+      <div class="brand"><span aria-hidden="true">◈</span> <span data-string="brand">AI Operations</span></div>
+      <button id="menu" type="button" aria-expanded="false" aria-controls="navigation">
+        <span aria-hidden="true">☰</span> <span data-string="menu"></span>
+      </button>
+    </div>
+    <nav id="navigation">
+      <a href="#overview"><span aria-hidden="true">▦</span><span data-string="overview"></span></a>
+      <a href="#providers"><span aria-hidden="true">◉</span><span data-string="providers"></span></a>
+      <a href="#usage"><span aria-hidden="true">▥</span><span data-string="usage"></span></a>
+      <a href="#requests"><span aria-hidden="true">≡</span><span data-string="requests"></span></a>
+      <a href="#routing-policy"><span aria-hidden="true">⑂</span><span data-string="routing-policy"></span></a>
+      <a href="#pipeline"><span aria-hidden="true">▷</span><span data-string="pipeline"></span></a>
+    </nav>
+  </aside>
+  <div class="workspace">
+    <div class="banner">
+      <strong lang="vi" id="mock-banner" data-string="banner">DỮ LIỆU MẪU — chưa kết nối hệ thống thật</strong>
+      <span lang="en" id="mock-label" data-string="mockEnglish">MOCK DATA — not connected</span>
+    </div>
+    <main id="main" tabindex="-1">
+      <header class="page-header">
+        <div class="page-heading">
+          <h1 tabindex="-1" id="page-title"></h1>
+          <p class="snapshot" id="snapshot"></p>
+        </div>
+        <div class="preferences">
+          <label class="field" for="language"><span data-string="language"></span>
+            <select id="language" aria-label="Ngôn ngữ">
+              <option value="vi" lang="vi" data-string="vietnamese"></option>
+              <option value="en" lang="en" data-string="english"></option>
+            </select>
+          </label>
+          <label class="field" for="theme"><span data-string="theme"></span>
+            <select id="theme" aria-label="Giao diện">
+              <option value="auto" data-string="auto"></option>
+              <option value="light" data-string="light"></option>
+              <option value="dark" data-string="dark"></option>
+            </select>
+          </label>
+        </div>
+      </header>
+      <div id="page"></div>
+    </main>
+  </div>
+  <template id="chart-template"><svg aria-hidden="true" focusable="false"></svg></template>
+</body>
+</html>
