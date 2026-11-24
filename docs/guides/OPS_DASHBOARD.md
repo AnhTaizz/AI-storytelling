@@ -51,17 +51,22 @@ nguồn số liệu, đơn vị quota và thời gian chờ.
 
 | Nguồn | Mặc định | Tùy chọn |
 | --- | --- | --- |
+| Cấu hình nhà cung cấp | `.env` ở thư mục gốc của repository | `--dotenv PATH` |
 | Telemetry Phase 5 | `.local/llm_telemetry.sqlite3` hoặc `LLM_TELEMETRY_PATH` | `--telemetry PATH` |
 | Cooldown và sổ Neuron Cloudflare | `.local/llm_quota_state.sqlite3` hoặc `LLM_QUOTA_STATE_PATH` | `--quota-state PATH` |
 | Manifest và metadata các lần gọi | `.local/story_pipeline_runs` | `--runs-dir PATH` |
 | Mùa và manifest của từng tập | `.local/story_seasons` | `--seasons-dir PATH` |
 | Quy tắc định tuyến | `configs/llm_routing/policy_v1.yaml` | `--policy PATH` |
 
-Tham số dòng lệnh ưu tiên hơn biến môi trường. Khi khởi động, terminal in tên
-tệp hoặc thư mục của từng nguồn và trạng thái tìm thấy. Danh sách model và hạn
-mức lấy từ mã nguồn của dự án, kèm tài liệu và ngày kiểm tra. Thông tin cấu hình
-nhà cung cấp lấy từ biến môi trường của tiến trình và chỉ hiện các số đếm.
-Dashboard không đọc `.env`.
+Biến môi trường của tiến trình ghi đè cấu hình trong `.env`. Nếu thiếu tệp,
+dashboard chỉ dùng biến môi trường. Đường dẫn telemetry và quota lần lượt ưu
+tiên tham số dòng lệnh, biến môi trường, giá trị trong `.env`, rồi đường dẫn
+mặc định. Khi khởi động, terminal báo trạng thái tìm thấy nguồn dữ liệu và chỉ
+hiển thị tên tệp hoặc thư mục cho các đường dẫn mặc định hoặc chọn qua dòng lệnh.
+Danh sách model và hạn mức lấy từ mã nguồn của dự án, kèm tài liệu và ngày kiểm tra.
+Dashboard chỉ hiển thị số đếm từ cấu hình nhà cung cấp. Nếu hôm nay chưa có lượt
+gọi nào và không có lỗi hay chờ quota, trang **Tổng quan** hiển thị số nhà cung cấp
+đã cấu hình.
 
 SQLite mở ở chế độ chỉ đọc. Nếu tệp lưu theo WAL, chọn bản sao SQLite dùng
 rollback journal. Nếu thiếu telemetry, chạy pipeline một lần rồi quay lại

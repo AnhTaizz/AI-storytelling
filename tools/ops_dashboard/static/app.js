@@ -27,6 +27,7 @@ const STRINGS = {
     systemGood: "Hệ thống ổn", systemWait: "Hệ thống đang chờ quota",
     systemIssue: "Hệ thống có sự cố", systemCritical: "Hệ thống cần kiểm tra",
     systemCounts: "{status}: {healthy}/{total} nhà cung cấp hoạt động{waiting}{issues}.",
+    systemIdle: "{configured}/{total} nhà cung cấp đã cấu hình · chưa có lượt gọi nào hôm nay",
     waitingClause: ", {count} đang chờ quota ({providers})", issueClause: ", {count} cần kiểm tra",
     requestsToday: "Yêu cầu hôm nay", utcDay: "Tính từ đầu ngày UTC, gồm cả lượt bỏ qua",
     successRate: "Tỉ lệ thành công", sentOnly: "Tính trên các lượt đã gửi",
@@ -107,6 +108,7 @@ const STRINGS = {
     systemGood: "System operational", systemWait: "System waiting for quota",
     systemIssue: "System degraded", systemCritical: "System needs attention",
     systemCounts: "{status}: {healthy}/{total} providers operational{waiting}{issues}.",
+    systemIdle: "{configured}/{total} providers configured · no calls today",
     waitingClause: ", {count} waiting for quota ({providers})", issueClause: ", {count} need attention",
     requestsToday: "Requests today", utcDay: "Since the start of the UTC day, including skips",
     successRate: "Success rate", sentOnly: "For requests actually sent",
@@ -364,13 +366,13 @@ function activeCooldown(provider, asOf) {
   return provider.cooldown_until && Date.parse(provider.cooldown_until) > Date.parse(asOf);
 }
 
-function overviewStatus(providers, asOf) {
+function overviewStatus(providers, asOf, hasCallsToday) {
   const cooling = providers.filter(provider => activeCooldown(provider, asOf));
   const healthy = providers.filter(provider => provider.status === "Healthy" && !activeCooldown(provider, asOf)).length;
-  const issues = providers.length - healthy - cooling.length;
+  const issues = providers.filter(provider => provider.status === "Degraded" && !activeCooldown(provider, asOf)).length;
   let label = "systemGood";
   let tone = "good";
-  if (!healthy && (!providers.length || issues)) {
+  if (!healthy && issues) {
     [label, tone] = ["systemCritical", "critical"];
   } else if (issues) {
     [label, tone] = ["systemIssue", "serious"];
@@ -382,7 +384,10 @@ function overviewStatus(providers, asOf) {
     count: textNumber(cooling.length),
     providers: cooling.map(provider => provider.name + ", " + relativeTime(provider.cooldown_until)).join(" · "),
   }) : "";
-  const sentence = t("systemCounts", {
+  const configured = providers.filter(provider => provider.configuration?.status === "configured").length;
+  const sentence = !hasCallsToday && !issues && !cooling.length ? t("systemIdle", {
+    configured: textNumber(configured), total: textNumber(providers.length),
+  }) : t("systemCounts", {
     status: t(label), healthy: textNumber(healthy), total: textNumber(providers.length), waiting,
     issues: issues ? t("issueClause", {count: textNumber(issues)}) : "",
   });
@@ -490,7 +495,7 @@ function overview(data, providerData, history) {
     durationNode(today.latency[key], "durationMillisecond", live ? today.sources.latency : undefined));
   return [
     ...sourceNotices(data),
-    overviewStatus(providerData.providers, data.generated_at),
+    overviewStatus(providerData.providers, data.generated_at, today.success_rate !== null),
     element("div", {class: "cards metrics"}, ...metrics.map(([label, value, note]) =>
       element("article", {class: "panel metric"},
         element("div", {class: "with-help"}, element("h2", {}, t(label)),

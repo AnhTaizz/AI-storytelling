@@ -38,7 +38,10 @@ class LiveSourceTests(unittest.TestCase):
         settings = {"GROQ_API_KEY_1": SECRETS[1], "CLOUDFLARE_ACCOUNT_ID": SECRETS[4],
                     "CLOUDFLARE_API_TOKEN": SECRETS[5], "CLOUDFLARE_PLAN_STATUS": "WORKERS_FREE_CONFIRMED",
                     "GEMINI_API_KEY_1": SECRETS[0], "GEMINI_PROJECT_LABEL_1": "project-one"}
-        self.source = LiveDataSource(self.paths, lambda: self.now, environ=settings)
+        self.source = LiveDataSource(self.paths, lambda: self.now, environ=settings, dotenv_path=root / ".env")
+        self.server = None
+
+    def start_server(self):
         self.server = make_server(port=0, source=self.source)
         thread = Thread(target=self.server.serve_forever, kwargs={"poll_interval": 0.01}, daemon=True)
         thread.start()
@@ -46,7 +49,9 @@ class LiveSourceTests(unittest.TestCase):
         self.addCleanup(thread.join)
         self.addCleanup(self.server.shutdown)
 
-    def get(self, endpoint, status=200):
+    def get(self, endpoint, status=200, *, secrets=()):
+        if self.server is None:
+            self.start_server()
         conn = HTTPConnection("127.0.0.1", self.server.server_port, timeout=5)
         try:
             conn.request("GET", "/api/" + endpoint)
@@ -56,7 +61,7 @@ class LiveSourceTests(unittest.TestCase):
                 raw = response.read().decode("utf-8")
         finally:
             conn.close()
-        for secret in SECRETS:
+        for secret in (*SECRETS, *secrets):
             self.assertNotIn(secret, raw)
             self.assertNotIn(json.dumps(secret)[1:-1], raw)
         self.assertNotIn("private", raw)
@@ -183,6 +188,39 @@ class LiveSourceTests(unittest.TestCase):
             with self.subTest(endpoint=endpoint):
                 self.assertEqual(self.get(endpoint)["source_states"][source]["code"], code)
         self.assertFalse(any(path.exists() for path in vars(self.paths).values()))
+
+    def test_dotenv_configures_all_idle_providers_and_scrubs_telemetry(self):
+        settings = {
+            "GEMINI_API_KEY_1": "fixtureGeminiKey",
+            "GROQ_API_KEY_1": "fixtureGroqKey",
+            "OPENROUTER_API_KEY_1": "fixtureOpenRouterKey",
+            "CLOUDFLARE_ACCOUNT_ID": "fixtureCloudflareAccount",
+            "CLOUDFLARE_API_TOKEN": "fixtureCloudflareToken",
+        }
+        dotenv = self.paths.telemetry.parent / ".env"
+        dotenv.write_text("".join(f"{name}={value}\n" for name, value in settings.items()), encoding="utf-8")
+        with patch.dict(os.environ, {}, clear=True):
+            self.source = LiveDataSource(self.paths, lambda: self.now, dotenv_path=dotenv)
+        secrets = tuple(settings.values())
+        self.assertIsNone(self.get("overview", secrets=secrets)["today"]["success_rate"])
+        for provider in self.get("providers", secrets=secrets)["providers"]:
+            with self.subTest(provider=provider["slug"]):
+                self.assertEqual(provider["status"], "Unobserved")
+                self.assertEqual(provider["configuration"], {
+                    "keys_configured": 1, "keys_eligible": 1, "key_scopes": 1,
+                    "source": "reported", "status": "configured",
+                })
+
+        self.write_telemetry([
+            dict(stage="script", provider="gemini", outcome="FAILED", error_code=secret,
+                 request_id=secret, model_requested=secret, skip_reasons=[secret])
+            for secret in secrets
+        ])
+        for endpoint in (*ENDPOINTS, "requests?limit=501"):
+            with self.subTest(endpoint=endpoint):
+                data = self.get(endpoint, status=400 if endpoint.endswith("501") else 200, secrets=secrets)
+                if endpoint == "requests":
+                    self.assertEqual(data["matching"], len(secrets))
 
     def test_schema_mismatch_and_refresh(self):
         self.write_telemetry([dict(stage="script", outcome="SUCCESS")])
