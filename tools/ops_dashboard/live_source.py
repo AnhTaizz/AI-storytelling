@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 import sqlite3
 
-from tools.llm_infra.gemini_config import DEFAULT_STATE
+from tools.llm_infra.gemini_config import DEFAULT_STATE, merged_settings
 from tools.llm_infra.routing_policy import DEFAULT_POLICY, load_policy
 from tools.llm_infra.telemetry import DEFAULT_TELEMETRY
 
@@ -22,6 +22,8 @@ from .telemetry_reader import AGGREGATE_LIMIT, read_history, read_requests
 
 
 _LOCAL = DEFAULT_TELEMETRY.parent
+DEFAULT_DOTENV = _LOCAL.parent / ".env"
+_PATH_SETTINGS = {"telemetry": "LLM_TELEMETRY_PATH", "quota_state": "LLM_QUOTA_STATE_PATH"}
 MESSAGES = {
     "telemetry_missing": "Chưa có dữ liệu telemetry — chạy pipeline một lần "
                          "(`python -m tools.story_pipeline.run_pipeline --chapters 1`) rồi quay lại.",
@@ -48,21 +50,27 @@ class LivePaths:
     def from_environment(cls, overrides, environ=None):
         env = os.environ if environ is None else environ
         defaults = cls()
-        env_names = {"telemetry": "LLM_TELEMETRY_PATH", "quota_state": "LLM_QUOTA_STATE_PATH"}
+        configured = {name: env.get(key) for name, key in _PATH_SETTINGS.items()}
         return cls(**{
-            name: Path(overrides.get(name) or (env.get(env_names[name]) if name in env_names else None) or value)
+            name: Path(overrides.get(name) or configured.get(name) or value)
             for name, value in vars(defaults).items()
         })
 
-    def describe(self, secrets=()):
-        for name, path in vars(self).items():
+    def describe(self, secrets=(), *, dotenv_path=None, private_paths=()):
+        sources = dict(vars(self))
+        if dotenv_path is not None:
+            sources["dotenv"] = dotenv_path
+        for name, path in sources.items():
             try:
                 found = path.is_dir() if name.endswith("_dir") else path.is_file()
             except OSError:
                 found = False
-            public_name = scrub(path.name, secrets) if path.name.isprintable() else None
-            public_name = public_name or "—"
-            yield f"{name} · {public_name} · {'đã tìm thấy' if found else 'chưa tìm thấy'}"
+            status = "đã tìm thấy" if found else "chưa tìm thấy"
+            if name in private_paths:
+                yield f"{name} · {status}"
+            else:
+                public_name = scrub(path.name, secrets) if path.name.isprintable() else None
+                yield f"{name} · {public_name or '—'} · {status}"
 
 
 def _now():
@@ -73,12 +81,19 @@ class LiveDataSource:
     data_mode = "live"
     estimated_cost_usd = None
 
-    def __init__(self, paths, clock=_now, *, environ=None):
-        self.paths = paths
+    def __init__(self, paths=None, clock=_now, *, environ=None, dotenv_path=DEFAULT_DOTENV, overrides=None):
+        settings = merged_settings(dotenv_path, environ)
+        overrides = overrides or {}
+        self.paths = paths if paths is not None else LivePaths.from_environment(overrides, settings)
+        self._private_paths = {name for name, key in _PATH_SETTINGS.items()
+                               if paths is None and not overrides.get(name) and settings.get(key)}
+        self._dotenv_path = Path(dotenv_path)
         self.clock = clock
-        settings = dict(os.environ if environ is None else environ)
         self.secrets = configured_secrets(settings)
         self.config = configuration_counts(settings)
+
+    def describe_sources(self):
+        return self.paths.describe(self.secrets, dotenv_path=self._dotenv_path, private_paths=self._private_paths)
 
     @property
     def now(self):
