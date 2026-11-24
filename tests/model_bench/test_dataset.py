@@ -1,5 +1,6 @@
 import ast
 from collections import Counter
+import json
 from pathlib import Path
 import re
 import shutil
@@ -8,7 +9,7 @@ import unittest
 
 import yaml
 
-from tools.model_bench.dataset import DATA, DIFFICULTIES, GROUPS, ROOT, load_dataset
+from tools.model_bench.dataset import DATA, DIFFICULTIES, GROUPS, ROOT, case_sha256, gold_statuses, load_dataset
 
 
 class DatasetTests(unittest.TestCase):
@@ -39,6 +40,24 @@ class DatasetTests(unittest.TestCase):
                 stream.write(b"\n")
             with self.assertRaisesRegex(ValueError, "file hash mismatch"):
                 load_dataset(path)
+
+    def test_gold_review_requires_unchanged_case_and_dataset(self):
+        dataset_hash, cases = load_dataset()
+        case = cases[0]
+        case_id = case["id"]
+        draft = "draft_needs_owner_review"
+        with TemporaryDirectory() as temp:
+            path = Path(temp) / "GOLD_REVIEW.json"
+            self.assertEqual(gold_statuses(dataset_hash, [case], path)[case_id], draft)
+            for status in ("approved", "needs_change", "rejected"):
+                with self.subTest(status=status):
+                    review = {"dataset_sha256": dataset_hash, "cases": {case_id: {
+                        "status": status, "reviewer": "Owner", "date": "2026-11-24", "case_sha256": case_sha256(case)}}}
+                    path.write_text(json.dumps(review), encoding="utf-8")
+                    self.assertEqual(gold_statuses(dataset_hash, [case], path)[case_id], status)
+                    edited = case | {"expected_behaviour": "đã sửa"}
+                    self.assertEqual(gold_statuses(dataset_hash, [edited], path)[case_id], draft)
+                    self.assertEqual(gold_statuses("stale", [case], path)[case_id], draft)
 
     def test_taxonomy_covers_pipeline_stage_calls_and_cli(self):
         code = ROOT / "tools" / "story_pipeline"

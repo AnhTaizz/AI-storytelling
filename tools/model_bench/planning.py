@@ -1,5 +1,4 @@
 """Build a reproducible, offline request and quota plan."""
-from collections import defaultdict
 from math import ceil
 
 from tools.llm_infra.model_capabilities_v1 import UNKNOWN_CONTEXT_TOKENS
@@ -13,9 +12,23 @@ PROMPT_VERSION = "model_bench_dev_v1"
 SYSTEM = ('Answer the task using only the supplied passage. Return one JSON object with exactly '
           'one key "answer". Put the requested value inside that key, including arrays or strings. '
           'For a writing task, put the full text in a JSON string.')
-REPEATS = 3
+REPEATS = 1
 TEMPERATURE = 0.0
 DEFAULT_MAX_OUTPUT = 512
+SCREENING_CASES = (
+    "event_extraction-01", "disambiguation-04", "causal_relation-07", "event_ordering-04",
+    "hallucination_detection-07", "spoiler_detection-01", "narrative_plan-02",
+    "vietnamese_script-03", "script_correction-07", "structured_output-01",
+)
+SCREENING_REQUEST_CAP = 40
+SCREENING_MODELS = (
+    ("gemini", "gemini-3.5-flash-lite", "Utility · Flash-Lite candidate"),
+    ("gemini", "gemini-3.8-flash", "Quality-critical · Flash candidate on the M9 provider"),
+    ("groq", "openai/gpt-oss-20b", "Utility · same model family across Groq and OpenRouter"),
+    ("groq", "openai/gpt-oss-120b", "Quality-critical · second GPT-OSS size on Groq"),
+    ("openrouter", "openai/gpt-oss-20b:free", "Utility · pinned free variant, availability unverified"),
+    ("cloudflare", "@cf/qwen/qwen3-30b-a3b-fp8", "Quality-critical · different family and Neuron quota"),
+)
 
 
 def display(value):
@@ -68,32 +81,42 @@ def quota_text(model):
                      for key, value in model["limits"].items())
 
 
-def plan_markdown(model, case_plans, fingerprint):
-    groups = defaultdict(list)
-    for item in case_plans:
-        groups[item["group"]].append(item)
-    provider_model = f"{model['provider']} / {model['model_id']}"
-    limits = model["limits"]
-    lines = ["## Owner approval table", "",
-             f"Plan SHA-256: `{fingerprint}`",
-             f"Quota scope: {model['quota_scope']}. {REPEATS} independent repeats.",
-             f"Request estimates assume one dispatch per case per repeat. The adapter can make up to "
-             f"{MAX_TRANSPORT_CALLS} dispatches per case including retries.",
-             "Tokens include input estimates and output reserves. Days are lower bounds from known daily "
-             "quotas for each row. Rows share quota and require an owner-confirmed schedule.", "",
-             "| Model | Group | Cases per repeat | Requests | Est. input + reserved output | Quota limit | Days ≥ |",
-             "| --- | --- | ---: | ---: | ---: | --- | ---: |"]
-    for group, items in groups.items():
-        requests = len(items) * REPEATS
-        input_tokens = sum(item["input"] for item in items) * REPEATS
-        output_tokens = sum(item["reserved_output"] for item in items) * REPEATS
-        loads = {"rpd": requests, "free_requests_per_day": requests, "tpd": input_tokens + output_tokens,
-                 "neurons_per_day": sum(item["neurons"] or 0 for item in items) * REPEATS}
-        days = max((ceil(load / limits[key]) for key, load in loads.items() if limits[key] is not None),
-                   default=None)
-        lines.append(f"| {provider_model} | {group} | {len(items)} | {requests} | "
-                     f"{input_tokens} + {output_tokens} | {quota_text(model)} | {display(days)} |")
-    flagged = [f"{item['case_id']}: {', '.join(item['flags'])}" for item in case_plans if item["flags"]]
-    if flagged:
-        lines.extend(["", "Flagged cases", "", *[f"- {item}" for item in flagged]])
+def _window_floor(limits, loads):
+    return display(max((ceil(load / limits[key]) for key, load in loads.items() if limits[key] is not None),
+                       default=None))
+
+
+def plan_markdown(plans):
+    """Render one common case selection with per-model caps and configuration hashes."""
+    case_ids = ", ".join(f"`{item['case_id']}`" for item in plans[0][1])
+    lines = ["## Owner approval table", "", f"Cases in execution order: {case_ids}", "",
+             f"One run per model. Reserve {MAX_TRANSPORT_CALLS} requests before every case. "
+             "The run can stop early when the remaining cap cannot cover that reserve.",
+             "Token estimates use input plus reserved output. At the cap, use the largest case estimate "
+             "for every request as a conservative planning figure. Quota windows are lower bounds from "
+             "known limits only. Allow for shared quota, retry bursts and actual provider counters.",
+             "Schedule Gemini after M9 finishes. Stability repeats follow screening.", "",
+             "| Provider / model | Screening tier and reason | Cases × runs | Base requests | Request cap | "
+             "Est. input + output (base) | Est. tokens at cap | Quota scope and limits | Min / days ≥ |",
+             "| --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- |"]
+    details = []
+    for model, items, fingerprint, cap, reason in plans:
+        name = f"{model['provider']} / {model['model_id']}"
+        inputs = sum(item["input"] for item in items)
+        outputs = sum(item["reserved_output"] for item in items)
+        cap_tokens = cap * max(item["input"] + item["reserved_output"] for item in items)
+        neurons = cap * max((item["neurons"] or 0 for item in items))
+        limits = model["limits"]
+        minutes = _window_floor(limits, {"rpm": cap, "tpm": cap_tokens})
+        days = _window_floor(limits, {"free_requests_per_day": cap, "rpd": cap, "tpd": cap_tokens,
+                                      "neurons_per_day": neurons})
+        lines.append(f"| {name} | {reason} | {len(items)} × {REPEATS} | {len(items)} | {cap} | "
+                     f"{inputs} + {outputs} | {cap_tokens} | {model['quota_scope']}. {quota_text(model)} | "
+                     f"{minutes} / {days} |")
+        details.append(f"- {name} plan SHA-256 `{fingerprint}`")
+        if model["provider"] == "cloudflare":
+            details.append(f"- {name} estimated Neurons at cap {neurons}")
+        details.extend(f"- {name}, {item['case_id']} exceeds {', '.join(item['flags'])}"
+                       for item in items if item["flags"])
+    lines.extend(["", *details])
     return "\n".join(lines) + "\n"

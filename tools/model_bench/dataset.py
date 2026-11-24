@@ -1,4 +1,5 @@
 """Read the synthetic DEV cases and verify their content-addressed manifest."""
+from datetime import date
 import hashlib
 import json
 from pathlib import Path
@@ -13,6 +14,7 @@ GROUPS = ("event_extraction", "disambiguation", "causal_relation", "event_orderi
           "hallucination_detection", "spoiler_detection", "narrative_plan", "vietnamese_script",
           "script_correction", "structured_output")
 DIFFICULTIES = ("easy", "medium", "hard")
+DRAFT_GOLD_STATUS = "draft_needs_owner_review"
 
 
 def digest(value):
@@ -23,12 +25,45 @@ def canonical_json(value):
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False)
 
 
+def case_sha256(case):
+    return digest(canonical_json(case).encode("utf-8"))
+
+
+def gold_statuses(dataset_hash, cases, path=DATA / "GOLD_REVIEW.json"):
+    """Resolve only decisions bound to this exact dataset and case content."""
+    draft = DRAFT_GOLD_STATUS
+    try:
+        review = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return dict.fromkeys((case["id"] for case in cases), draft)
+    if not isinstance(review, dict) or not isinstance(review.get("cases"), dict):
+        raise ValueError("Invalid gold review document")
+    if review["dataset_sha256"] != dataset_hash:
+        return dict.fromkeys((case["id"] for case in cases), draft)
+    statuses = {}
+    for case in cases:
+        case_id = case["id"]
+        decision = review["cases"].get(case_id, {})
+        statuses[case_id] = draft
+        if not isinstance(decision, dict):
+            raise ValueError("Invalid gold review decision")
+        if decision.get("case_sha256") != case_sha256(case):
+            continue
+        status, reviewer, reviewed_on = (decision.get(key) for key in ("status", "reviewer", "date"))
+        if (status not in ("approved", "needs_change", "rejected")
+                or not isinstance(reviewer, str) or not reviewer.strip()
+                or not isinstance(reviewed_on, str) or date.fromisoformat(reviewed_on).isoformat() != reviewed_on):
+            raise ValueError("Invalid gold review decision")
+        statuses[case_id] = status
+    return statuses
+
+
 def validate_case(case, group):
     case_id = case["id"]
     method = case["scoring_method"]
     passage = case["input"]["passage"]
     if (case["group"] != group or case["difficulty"] not in DIFFICULTIES or method not in METHODS
-            or case["gold_status"] != "draft_needs_owner_review" or case["source"] != "synthetic"
+            or case["gold_status"] != DRAFT_GOLD_STATUS or case["source"] != "synthetic"
             or not case["input"]["instruction"] or not case["expected_behaviour"]):
         raise ValueError(f"{case_id}: invalid case metadata")
     spans = case["evidence_spans"]

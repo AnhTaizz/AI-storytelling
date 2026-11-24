@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 13 — test files: 145 — test functions: 1480
+Suites: 13 — test files: 148 — test functions: 1488
 
 ## canonical_story
 
@@ -476,12 +476,24 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.media_ingest.ingest_local
 
 ## model_bench
 
-### test_dataset (3)
+### test_approval (2)
+Covers: `tools.canonical_story.conformance_v0`, `tools.model_bench.approval`, `tools.model_bench.planning`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `ApprovalTests.test_content_binding_expiry_and_selection`
+- `ApprovalTests.test_ledger_binds_rehashed_plan_and_keeps_unsettled_reservation`
+
+### test_dataset (4)
 Covers: `tools.canonical_story.conformance_v0`, `tools.model_bench.dataset`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `DatasetTests.test_manifest_and_synthetic_evidence`
 - `DatasetTests.test_changed_file_rejected`
+- `DatasetTests.test_gold_review_requires_unchanged_case_and_dataset`
 - `DatasetTests.test_taxonomy_covers_pipeline_stage_calls_and_cli`
+
+### test_m9 (1)
+Covers: `tools.canonical_story.conformance_v0`, `tools.model_bench.approval`, `tools.model_bench.m9`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `M9Tests.test_m9_lock_and_recent_season_file`
 
 ### test_planning (3)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.model_capabilities_v1`, `tools.llm_infra.pipeline_clients`, `tools.llm_infra.token_estimate`, `tools.model_bench.dataset`, `tools.model_bench.planning`, `tools.model_bench.registry`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
@@ -502,14 +514,22 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.model_bench.reporting`, `
 
 - `ReportingTests.test_unknown_efficiency_is_not_zero_and_true_zero_is_preserved`
 
-### test_run (5)
-Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.pipeline_clients`, `tools.model_bench.dataset`, `tools.model_bench.planning`, `tools.model_bench.registry`, `tools.model_bench.run`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+### test_review_sheet (1)
+Covers: `tools.canonical_story.conformance_v0`, `tools.model_bench.dataset`, `tools.model_bench.review_sheet`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `ReviewSheetTests.test_standalone_html_includes_all_case_hashes_and_review_controls`
+
+### test_run (8)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.pipeline_clients`, `tools.model_bench.approval`, `tools.model_bench.dataset`, `tools.model_bench.planning`, `tools.model_bench.registry`, `tools.model_bench.run`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `RunnerTests.test_default_dry_run_math_and_markdown`
 - `RunnerTests.test_offline_end_to_end_and_completed_resume`
 - `RunnerTests.test_resume_after_interruption_restores_checkpoint_order`
 - `RunnerTests.test_pinned_client_and_safe_errors`
-- `RunnerTests.test_live_refuses_before_any_dispatch_and_approval_is_bound`
+- `RunnerTests.test_screening_plan_matches_individual_run_configuration`
+- `RunnerTests.test_live_refuses_before_any_dispatch_without_approval`
+- `RunnerTests.test_live_budget_counts_retries_and_refuses_reuse_or_resume`
+- `RunnerTests.test_live_gold_selection_and_draft_labels`
 
 ### test_scoring (2)
 Covers: `tools.canonical_story.conformance_v0`, `tools.model_bench.scoring`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`

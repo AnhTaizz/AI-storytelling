@@ -1,5 +1,6 @@
 """Deterministic scores on [0, 1] and an unscored human review row."""
 import json
+from collections import Counter
 
 from jsonschema import Draft202012Validator
 
@@ -47,4 +48,10 @@ def score(case, prediction):
         value = float(Draft202012Validator(gold["schema"]).is_valid(prediction))
     else:
         raise ValueError("Unknown scoring method")
-    return {"score": value, "review": None}
+    result = {"score": value, "review": None}
+    if method in {"set_f1", "order_kendall"}:
+        counts = Counter(map(_canonical, prediction)) if isinstance(prediction, list) else {}
+        result["duplicate_predictions"] = [
+            {"item": json.loads(item), "count": count} for item, count in counts.items() if count > 1
+        ]
+    return result

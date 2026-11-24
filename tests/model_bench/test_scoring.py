@@ -22,8 +22,12 @@ class ScoringTests(unittest.TestCase):
             ("json_schema", {"schema": {"type": "integer"}}, True, 0),
         ):
             with self.subTest(method=method, gold=gold, answer=answer):
-                self.assertEqual(score({"scoring_method": method, "gold": gold}, answer),
-                                 {"score": expected, "review": None})
+                result = score({"scoring_method": method, "gold": gold}, answer)
+                expected_result = {"score": expected, "review": None}
+                if method in {"set_f1", "order_kendall"}:
+                    duplicates = [{"item": "A", "count": 2}] if isinstance(answer, list) and answer.count("A") == 2 else []
+                    expected_result["duplicate_predictions"] = duplicates
+                self.assertEqual(result, expected_result)
 
     def test_human_row_remains_unscored(self):
         case = {"id": "review-1", "scoring_method": "rubric_human", "gold": None, "rubric": ["grounding"]}

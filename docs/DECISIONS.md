@@ -1114,6 +1114,10 @@ DEV gold remains draft pending owner review. Deterministic cases use evidence-ba
 scores, and reviewers apply a human rubric to narrative plans and Vietnamese scripts.
 
 The DEV set is independent of the M9 gate sample and M4 holdouts. Phase 7B requires
-owner review of the gold, a fingerprinted quota plan, a single pinned provider and model,
-and explicit clearance of any overlapping M9 quota. See
-[the Phase 7B approval template](engineering/MODEL_BENCH_7B_PLAN.md).
+gold decisions bound to the dataset and case hashes, plus an expiring, content-hashed
+owner plan. Every invocation pins a provider and model. Per-model caps include every
+transport attempt and use a durable approval ledger shared across runs and resumes.
+Gemini checks M9 season activity before dispatch, with an explicit owner attestation
+recorded for overrides. A self-contained review sheet exports the gold decisions.
+Phase 7B starts with one screening run per model on ten shared DEV cases. See
+[the Phase 7B screening plan](engineering/MODEL_BENCH_7B_PLAN.md).
