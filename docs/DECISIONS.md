@@ -1102,3 +1102,18 @@ DECISION:
 LIMITS: 6A numbers are synthetic. Mobile layout was checked by test and an iframe probe; the owner reviewed the desktop UI.
 
 2026-11-24 — Phase 6B implemented (PR #33) and accepted by the Project Owner ("oke rồi đấy merge đi"). The dashboard defaults to local, read-only data and retains the Phase 6A mock mode.
+
+## DEC-042 — Model Benchmark Framework (Phase 7A)
+
+STATUS: PROPOSED (awaiting Project Owner review in the PR)
+
+Phase 7A introduces an offline-first free-model registry, stage taxonomy, synthetic DEV
+cases and a reproducible benchmark runner. The registry derives capabilities and coded
+quotas from the maintained provider snapshots and retains provenance for unknown fields.
+DEV gold remains draft pending owner review. Deterministic cases use evidence-based
+scores, and reviewers apply a human rubric to narrative plans and Vietnamese scripts.
+
+The DEV set is independent of the M9 gate sample and M4 holdouts. Phase 7B requires
+owner review of the gold, a fingerprinted quota plan, a single pinned provider and model,
+and explicit clearance of any overlapping M9 quota. See
+[the Phase 7B approval template](engineering/MODEL_BENCH_7B_PLAN.md).

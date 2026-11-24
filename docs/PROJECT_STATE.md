@@ -1713,3 +1713,12 @@ The dashboard connects Phase 5 telemetry and quota SQLite, the routing policy, o
 provider summaries, and pipeline and season metadata through read-only sources. The
 live interface preserves numeric provenance and limits locked M9 seasons to their status.
 Phase 6A mock data remains available with `--mock`. See [DEC-041](DECISIONS.md#dec-041--ai-operations-dashboard-foundation-phase-6a).
+
+## Model Benchmark Framework, Phase 7A (2026-11-24) — MODEL_BENCH_7A_PENDING_REVIEW
+
+Phase 7A adds an offline registry, task taxonomy, synthetic DEV dataset and runner.
+The default invocation prints a quota and token estimate. The fake runner exercises
+checkpointing, deterministic scoring and human-review exports. The draft gold and
+rubrics await owner review. Phase 7B measurements require an owner-approved plan.
+See [DEC-042](DECISIONS.md#dec-042--model-benchmark-framework-phase-7a) and the
+[Vietnamese guide](guides/MODEL_BENCH.md).

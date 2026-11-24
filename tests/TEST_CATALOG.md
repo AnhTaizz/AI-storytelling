@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 12 — test files: 139 — test functions: 1463
+Suites: 13 — test files: 145 — test functions: 1480
 
 ## canonical_story
 
@@ -473,6 +473,49 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.media_ingest.ingest_local
 - `CliTests.test_incompatible_manifest_fails_without_modification`
 - `CliTests.test_protected_tree_is_pruned_without_listing_it`
 - `CliTests.test_no_network_modules_in_tool_source`
+
+## model_bench
+
+### test_dataset (3)
+Covers: `tools.canonical_story.conformance_v0`, `tools.model_bench.dataset`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `DatasetTests.test_manifest_and_synthetic_evidence`
+- `DatasetTests.test_changed_file_rejected`
+- `DatasetTests.test_taxonomy_covers_pipeline_stage_calls_and_cli`
+
+### test_planning (3)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.model_capabilities_v1`, `tools.llm_infra.pipeline_clients`, `tools.llm_infra.token_estimate`, `tools.model_bench.dataset`, `tools.model_bench.planning`, `tools.model_bench.registry`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `PlanningTests.test_estimates_include_provider_prompt_and_output_reserve`
+- `PlanningTests.test_known_limits_and_unknown_adapter_context`
+- `PlanningTests.test_plan_fingerprint_and_daily_floor`
+
+### test_registry (3)
+Covers: `tools.canonical_story.conformance_v0`, `tools.model_bench.registry`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `RegistryTests.test_snapshot_matches_code_and_preserves_unknowns`
+- `RegistryTests.test_registry_refuses_drift_and_malformed_values`
+- `RegistryTests.test_openrouter_named_variant_and_invalid_models`
+
+### test_reporting (1)
+Covers: `tools.canonical_story.conformance_v0`, `tools.model_bench.reporting`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `ReportingTests.test_unknown_efficiency_is_not_zero_and_true_zero_is_preserved`
+
+### test_run (5)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.pipeline_clients`, `tools.model_bench.dataset`, `tools.model_bench.planning`, `tools.model_bench.registry`, `tools.model_bench.run`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `RunnerTests.test_default_dry_run_math_and_markdown`
+- `RunnerTests.test_offline_end_to_end_and_completed_resume`
+- `RunnerTests.test_resume_after_interruption_restores_checkpoint_order`
+- `RunnerTests.test_pinned_client_and_safe_errors`
+- `RunnerTests.test_live_refuses_before_any_dispatch_and_approval_is_bound`
+
+### test_scoring (2)
+Covers: `tools.canonical_story.conformance_v0`, `tools.model_bench.scoring`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `ScoringTests.test_deterministic_scores`
+- `ScoringTests.test_human_row_remains_unscored`
 
 ## ops_dashboard
 
