@@ -67,6 +67,7 @@ const STRINGS = {
     brief: "Tóm tắt", brief_check: "Kiểm tra tóm tắt", plan: "Lập dàn ý", script: "Viết kịch bản",
     critic: "Đánh giá", source_check: "Đối chiếu nguồn", revise: "Chỉnh sửa", patch: "Sửa bổ sung",
     progress: "Tiến độ các bước", done: "Đã xong", current: "Đang dừng ở bước này", pending: "Chưa tới",
+    viewResult: "Xem kết quả", stageResult: "Xem kết quả bước {stage}",
     resumeAfter: "Có thể tiếp tục sau {time} ({remaining})",
     callLog: "Cộng từ nhật ký lượt gọi", partialCallLog: "Cộng từ một phần nhật ký lượt gọi",
     latestInvocation: "Chỉ tính lần chạy gần nhất", reviewReasons: "Số lý do cần duyệt",
@@ -148,6 +149,7 @@ const STRINGS = {
     brief: "Brief", brief_check: "Check brief", plan: "Plan", script: "Script",
     critic: "Review", source_check: "Check sources", revise: "Revise", patch: "Patch",
     progress: "Stage progress", done: "Done", current: "Stopped at this stage", pending: "Pending",
+    viewResult: "View result", stageResult: "Open the {stage} result",
     resumeAfter: "Can resume after {time} ({remaining})",
     callLog: "Totals from the call log", partialCallLog: "Totals from a partial call log",
     latestInvocation: "Latest invocation only", reviewReasons: "Review reasons",
@@ -802,11 +804,17 @@ function pipeline(data) {
         const stageInfo = run.stages?.[stage];
         const state = run.completed.includes(stage) ? "done" : run.current === stage ? "current" : "pending";
         const mark = {done: "✓", current: "◉", pending: "○"}[state];
+        const result = run.result_ref && run.result_stages?.includes(stage)
+          ? element("a", {class: "stage-result", href: `/results/${run.result_ref}/${stage}`,
+                           target: "_blank", rel: "noopener noreferrer", "aria-label": t("stageResult", {stage: t(stage)})},
+                    t("viewResult"))
+          : null;
         return element("li", {class: state, "aria-label": t(stage) + " · " + t(state),
           ...(state === "current" ? {"aria-current": "step"} : {})},
         element("span", {"aria-hidden": "true"}, mark), technical(stage),
         ...(stageInfo ? [element("small", {class: "muted"}, t(stageInfo.status) + " · ",
-          durationNode(stageInfo.seconds, "durationSecond", stageInfo.source))] : []));
+          durationNode(stageInfo.seconds, "durationSecond", stageInfo.source))] : []),
+        ...(result ? [result] : []));
       }))] : []),
       ...(run.totals_scope ? [element("p", {class: "muted"}, t(run.totals_scope))] : []),
       ...(live ? [element("dl", {class: "detail-list"},

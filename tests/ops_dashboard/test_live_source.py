@@ -189,6 +189,75 @@ class LiveSourceTests(unittest.TestCase):
                 self.assertEqual(self.get(endpoint)["source_states"][source]["code"], code)
         self.assertFalse(any(path.exists() for path in vars(self.paths).values()))
 
+    def test_pipeline_links_open_only_the_saved_results_of_unlocked_runs(self):
+        run = self.paths.runs_dir / "standalone"
+        season = self.paths.seasons_dir / "season-a"
+        episode = season / "standalone"
+        self.write_json(season / "season.json", {"status": "COMPLETED", "episodes": [{"dir": episode.name}]})
+        formats = {
+            "brief": ("story_brief.json", "story_brief.html", "text/html"),
+            "plan": ("plan.json", "plan_review.html", "text/html"),
+            "script": ("script_v1.json", "script_v1.md", "text/plain"),
+            "critic": ("critic_v1.json", "review.html", "text/html"),
+            "revise": ("script_v2.json", "script_final.md", "text/plain"),
+        }
+        for directory in (run, episode):
+            self.write_json(directory / "run_manifest.json", {"status": "COMPLETED"})
+            stages = formats.items() if directory == run else [("brief", formats["brief"])]
+            for stage, (marker, filename, _) in stages:
+                (directory / marker).touch()
+                (directory / filename).write_text(f"Saved {stage} output in {directory.parent.name}", encoding="utf-8")
+        secret = SECRETS[5]
+        (run / "story_brief.html").write_text(f"Saved brief output in runs {secret}", encoding="utf-8")
+        (episode / "review.html").write_text("No critic checkpoint", encoding="utf-8")
+        (run / "calls.jsonl").write_text('{"raw_content": "raw call output"}\n', encoding="utf-8")
+
+        metadata = self.get("pipeline")
+        self.assertNotIn("Saved brief output", json.dumps(metadata))
+        ordinary = next(row for row in metadata["runs"] if row.get("id") == run.name and "season_id" not in row)
+        nested = next(row for row in metadata["runs"] if row.get("season_id") == season.name)
+        self.assertEqual(ordinary["result_stages"], list(formats))
+        self.assertEqual(nested["result_stages"], ["brief"])
+        self.assertNotEqual(ordinary["result_ref"], nested["result_ref"])
+
+        def fetch(ref, stage, *, status=200, headers=None, content_type=None):
+            with closing(HTTPConnection("127.0.0.1", self.server.server_port, timeout=5)) as conn:
+                conn.request("GET", f"/results/{ref}/{stage}", headers=headers or {})
+                with conn.getresponse() as response:
+                    self.assertEqual(response.status, status)
+                    if status == 200:
+                        self.assertEqual(response.headers.get_content_type(), content_type)
+                        self.assertIn("sandbox;", response.headers["Content-Security-Policy"])
+                        self.assertIn("default-src 'none'", response.headers["Content-Security-Policy"])
+                        self.assertEqual(response.headers["Cross-Origin-Resource-Policy"], "same-origin")
+                        self.assertEqual(response.headers["Referrer-Policy"], "no-referrer")
+                        self.assertEqual(response.headers["Cache-Control"], "no-store")
+                    return response.read().decode("utf-8")
+
+        ref = ordinary["result_ref"]
+        for stage, (_, _, content_type) in formats.items():
+            with self.subTest(stage=stage):
+                body = fetch(ref, stage, content_type=content_type, headers={"Sec-Fetch-Site": "same-origin"})
+                self.assertIn(f"Saved {stage} output in runs", body)
+                self.assertNotIn(secret, body)
+        parent_ref = nested["result_ref"]
+        self.assertIn("Saved brief output in season-a", fetch(parent_ref, "brief", content_type="text/html"))
+        for reference, stage, headers in (
+            (ref, "manifest", {}), (parent_ref, "critic", {}), ("0" * 64, "brief", {}),
+            (ref, "brief", {"Host": "remote.example"}), (ref, "brief", {"Sec-Fetch-Site": "cross-site"}),
+        ):
+            with self.subTest(stage=stage, headers=headers):
+                self.assertNotIn("Saved", fetch(reference, stage, status=404, headers=headers))
+
+        (season / "gate_lock.json").touch()
+        fetch(parent_ref, "brief", status=404)
+        self.assertNotIn(parent_ref, json.dumps(self.get("pipeline")))
+        (run / "plan_review.html").unlink()
+        fetch(ref, "plan", status=404)
+        with patch("tools.ops_dashboard.run_reader._RESULT_LIMIT", 5):
+            fetch(ref, "brief", status=404)
+
+
     def test_dotenv_configures_all_idle_providers_and_scrubs_telemetry(self):
         settings = {
             "GEMINI_API_KEY_1": "fixtureGeminiKey",

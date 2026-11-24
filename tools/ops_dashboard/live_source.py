@@ -16,7 +16,7 @@ from .data_source import utc_stamp
 from .privacy import configured_secrets, label, scrub
 from .provider_reader import configuration_counts, provider_summaries
 from .quota_reader import read_quota
-from .run_reader import read_runs
+from .run_reader import read_result, read_runs
 from .sqlite_reader import SourceUnavailable
 from .telemetry_reader import AGGREGATE_LIMIT, read_history, read_requests
 
@@ -117,6 +117,16 @@ class LiveDataSource:
     @property
     def runs(self):
         return self.for_request().runs
+
+    def stage_result(self, ref, stage):
+        result = read_result(self.paths.runs_dir, self.paths.seasons_dir, ref, stage)
+        if result is None:
+            return None
+        content_type, body = result
+        for secret in sorted(self.secrets, key=len, reverse=True):
+            encoded = secret.encode("utf-8")
+            body = body.replace(encoded, b"*" * len(encoded))
+        return content_type, body
 
 
 class _LiveSnapshot:

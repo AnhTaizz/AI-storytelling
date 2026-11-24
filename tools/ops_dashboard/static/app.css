@@ -331,6 +331,7 @@ tbody tr:last-child td { border-bottom: 0; }
 }
 .stages li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .25rem .35rem; border-top: 3px solid var(--line); padding: .35rem .15rem; color: var(--muted); font-size: .83rem; }
 .stages li small { grid-column: 2; }
+.stage-result { grid-column: 2; justify-self: start; color: var(--accent); text-underline-offset: .16em; }
 .stages .done { border-color: var(--status-good); color: var(--accent); }
 .stages .current { border-color: var(--status-warning); color: var(--ink); font-weight: 750; }
 

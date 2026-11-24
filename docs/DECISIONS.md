@@ -1102,3 +1102,5 @@ DECISION:
 LIMITS: 6A numbers are synthetic. Mobile layout was checked by test and an iframe probe; the owner reviewed the desktop UI.
 
 2026-11-24 — Phase 6B implemented (PR #33) and accepted by the Project Owner ("oke rồi đấy merge đi"). The dashboard defaults to local, read-only data and retains the Phase 6A mock mode.
+
+2026-11-24 — The Project Owner approved one-click views of saved pipeline results over localhost. Ordinary runs and season episodes can open the generated brief, plan, first script, review and final script from the Pipeline page. The JSON API carries only result availability and opaque references. Result pages are read-only and gate-locked runs remain limited to status.

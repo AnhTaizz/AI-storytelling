@@ -1,8 +1,10 @@
-"""Read allowlisted run metadata without following links or opening artifacts."""
+"""Read run metadata and the allowlisted results of unlocked episodes."""
 
 from datetime import datetime, timezone
+from hashlib import sha256
 from heapq import nlargest
 import json
+import os
 import re
 
 from tools.llm_infra.routing_policy import PROVIDERS
@@ -17,6 +19,7 @@ RUN_LIMIT = 50
 _JSON_LIMIT = 4 * 1024 * 1024
 _CALL_LOG_LIMIT = 8 * 1024 * 1024
 _CALL_LINE_LIMIT = 10_000
+_RESULT_LIMIT = 16 * 1024 * 1024
 _LOCK_LABEL = "đợt chạy đã khóa (M9)"
 _STATUSES = (
     "RUNNING", "COMPLETED", "FAILED", "PAUSED_QUOTA", "NEEDS_REVIEW", "NOT_RUN",
@@ -24,6 +27,8 @@ _STATUSES = (
 )
 _STAGE_OUTPUTS = {"brief": "story_brief.json", "plan": "plan.json", "script": "script_v1.json",
                   "critic": "critic_v1.json"}
+_RESULT_FILES = {"brief": "story_brief.html", "plan": "plan_review.html", "script": "script_v1.md",
+                 "critic": "review.html", "revise": "script_final.md"}
 _HINTS = {
     "PAUSED_QUOTA": "Khi hết thời gian chờ, chạy lại với cùng thư mục đầu ra để tiếp tục.",
     "NEEDS_REVIEW": "Kiểm tra các bước được đánh dấu trước khi tiếp tục.",
@@ -137,6 +142,20 @@ def _completed_stages(directory):
     return completed
 
 
+def _result_ref(manifest):
+    return sha256(os.fsencode(manifest.absolute())).hexdigest()
+
+
+def _result_path(directory, stage):
+    path = directory / _RESULT_FILES[stage]
+    try:
+        if _local(path, directory) and path.is_file() and 0 < path.stat().st_size <= _RESULT_LIMIT:
+            return path
+    except OSError:
+        pass
+    return None
+
+
 def _error(manifest):
     value = manifest.get("error_code")
     if isinstance(value, str) and re.fullmatch(r"[A-Z][A-Z0-9_]{1,63}", value):
@@ -192,6 +211,7 @@ def _run(path, manifest, updated):
     if status == "NEEDS_REVIEW":
         values["review_reasons_count"] = len(reasons) if isinstance(reasons, list) else 0
     source_check_incomplete = manifest.get("source_check_failed") or manifest.get("source_check_quota_exhausted")
+    results = [stage for stage in completed if _result_path(path.parent, stage) is not None]
     return {
         "id": label(path.parent.name, basename=True), "status": status, "completed": completed,
         "current": current, "stages": stages, "provider": provider, "model": model, "error_code": _error(manifest),
@@ -200,6 +220,7 @@ def _run(path, manifest, updated):
         "started_at": _timestamp(manifest.get("started_utc")), "updated_at": updated,
         "resume_at": _timestamp(manifest.get("resume_at")), "hint": _HINTS.get(status), **values,
         "sources": {key: "reported" if value is not None else "unknown" for key, value in values.items()},
+        **({"result_ref": _result_ref(path), "result_stages": results} if results else {}),
     }
 
 
@@ -245,37 +266,42 @@ def _season(path, manifest, updated):
     }
 
 
-def read_runs(runs_dir, seasons_dir):
-    def candidates():
-        for mtime, path in nlargest(RUN_LIMIT, _candidates(seasons_dir, "season.json"), key=lambda item: item[0]):
-            manifest = _manifest(path)
-            if _locked(path.parent):
-                yield mtime, path, {"label": _LOCK_LABEL, "status": _status(manifest.get("status"))}, None
-                continue
-            if not manifest:
-                continue
-            updated = utc_stamp(datetime.fromtimestamp(mtime, timezone.utc))
-            yield mtime, path, _season(path, manifest, updated), None
-            episode_rows = manifest.get("episodes")
-            if isinstance(episode_rows, list):
-                seen = set()
-                for row in episode_rows:
-                    if name := label(_mapping(row).get("dir"), basename=True):
-                        if name in seen:
-                            continue
-                        seen.add(name)
-                        directory = path.parent / name
-                        episode = directory / "run_manifest.json"
-                        if (_local(directory, path.parent) and not _locked(directory)
-                                and (episode_mtime := _mtime(episode)) is not None):
-                            yield episode_mtime, episode, None, label(path.parent.name, basename=True)
-        for mtime, path in _candidates(runs_dir, "run_manifest.json"):
-            if not _locked(path.parent):
-                yield mtime, path, None, None
+def _run_candidates(runs_dir, seasons_dir):
+    for mtime, path in nlargest(RUN_LIMIT, _candidates(seasons_dir, "season.json"), key=lambda item: item[0]):
+        manifest = _manifest(path)
+        if _locked(path.parent):
+            yield mtime, path, {"label": _LOCK_LABEL, "status": _status(manifest.get("status"))}, None
+            continue
+        if not manifest:
+            continue
+        updated = utc_stamp(datetime.fromtimestamp(mtime, timezone.utc))
+        yield mtime, path, _season(path, manifest, updated), None
+        episode_rows = manifest.get("episodes")
+        if isinstance(episode_rows, list):
+            seen = set()
+            for row in episode_rows:
+                if name := label(_mapping(row).get("dir"), basename=True):
+                    if name in seen:
+                        continue
+                    seen.add(name)
+                    directory = path.parent / name
+                    episode = directory / "run_manifest.json"
+                    if (_local(directory, path.parent) and not _locked(directory)
+                            and (episode_mtime := _mtime(episode)) is not None):
+                        yield episode_mtime, episode, None, label(path.parent.name, basename=True)
+    for mtime, path in _candidates(runs_dir, "run_manifest.json"):
+        if not _locked(path.parent):
+            yield mtime, path, None, None
 
+
+def _recent_entries(runs_dir, seasons_dir):
+    return nlargest(RUN_LIMIT, _run_candidates(runs_dir, seasons_dir), key=lambda item: item[0])
+
+
+def read_runs(runs_dir, seasons_dir):
     runs = []
     seen = set()
-    for mtime, path, ready, season_id in nlargest(RUN_LIMIT, candidates(), key=lambda item: item[0]):
+    for mtime, path, ready, season_id in _recent_entries(runs_dir, seasons_dir):
         if path in seen:
             continue
         seen.add(path)
@@ -293,3 +319,27 @@ def read_runs(runs_dir, seasons_dir):
             run["season_id"] = season_id
         runs.append(run)
     return runs
+
+
+def read_result(runs_dir, seasons_dir, ref, stage):
+    if stage not in _RESULT_FILES:
+        return None
+    for _, manifest, ready, _ in _recent_entries(runs_dir, seasons_dir):
+        if ready is not None or _result_ref(manifest) != ref:
+            continue
+        directory = manifest.parent
+        if _locked(directory) or not _manifest(manifest) or stage not in _completed_stages(directory):
+            return None
+        path = _result_path(directory, stage)
+        if path is None:
+            return None
+        try:
+            with path.open("rb") as handle:
+                body = handle.read(_RESULT_LIMIT + 1)
+        except OSError:
+            return None
+        if 0 < len(body) <= _RESULT_LIMIT and not _locked(directory):
+            content_type = "text/html" if path.suffix == ".html" else "text/plain"
+            return f"{content_type}; charset=utf-8", body
+        return None
+    return None

@@ -4,6 +4,7 @@ import json
 from functools import partial
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+import re
 import socket
 from urllib.parse import parse_qs
 
@@ -14,6 +15,10 @@ from .privacy import scrub
 
 
 LOOPBACK_HOSTS = ("127.0.0.1", "localhost", "::1")
+_HTTP_HOSTS = ("127.0.0.1", "localhost", "[::1]")
+_RESULT_ROUTE = re.compile(r"/results/([0-9a-f]{64})/([a-z]+)")
+_RESULT_CSP = ("sandbox; default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; "
+               "form-action 'none'; frame-ancestors 'none'")
 STATIC_DIR = Path(__file__).with_name("static")
 STATIC_ROUTES = {
     "/": ("index.html", "text/html; charset=utf-8"),
@@ -63,13 +68,16 @@ class DashboardHandler(BaseHTTPRequestHandler):
         self.source = source
         super().__init__(*args, **kwargs)
 
-    def _send(self, status, content_type, body, *, allow=None):
+    def _send(self, status, content_type, body, *, allow=None, result=False):
         self.send_response(status)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Content-Security-Policy", "default-src 'self'")
+        self.send_header("Content-Security-Policy", _RESULT_CSP if result else "default-src 'self'")
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Cache-Control", "no-store")
+        if result:
+            self.send_header("Cross-Origin-Resource-Policy", "same-origin")
+            self.send_header("Referrer-Policy", "no-referrer")
         if allow:
             self.send_header("Allow", allow)
         self.end_headers()
@@ -98,8 +106,24 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 return
             source = self.source.for_request() if hasattr(self.source, "for_request") else self.source
             self._json(200, API_ROUTES[path](source, **arguments), source=source)
+        elif not query and (match := _RESULT_ROUTE.fullmatch(path)) is not None:
+            self._stage_result(*match.groups())
         else:
             self._json(404, {"error": "Path not found."})
+
+    def _stage_result(self, ref, stage):
+        port = self.server.server_port
+        accepted_hosts = {f"{host}:{port}" for host in _HTTP_HOSTS}
+        if port == 80:
+            accepted_hosts.update(_HTTP_HOSTS)
+        hosts = self.headers.get_all("Host", ())
+        site = self.headers.get("Sec-Fetch-Site")
+        reader = getattr(self.source, "stage_result", None)
+        if (reader is not None and len(hosts) == 1 and hosts[0].lower() in accepted_hosts
+                and site in (None, "same-origin", "none") and (result := reader(ref, stage)) is not None):
+            self._send(200, *result, result=True)
+        else:
+            self._json(404, {"error": "Result not found."})
 
     def __getattr__(self, name):
         if name.startswith("do_"):

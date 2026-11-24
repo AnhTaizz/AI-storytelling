@@ -32,6 +32,12 @@ Dashboard mặc định dùng tiếng Việt và giao diện theo hệ điều h
 **Ngôn ngữ** và **Giao diện** ở đầu trang để đổi lựa chọn. Trên màn hình nhỏ,
 nút **Menu** mở danh sách trang.
 
+Trong **Tiến độ quy trình**, bấm **Xem kết quả** dưới bước đã có tệp để mở tab
+mới trên localhost. **Tóm tắt** cho xem nhân vật, quan hệ, sự kiện và trích dẫn
+nguồn. **Lập dàn ý** cho xem từng đoạn dự kiến kể và bằng chứng từ brief. Các
+bước viết, đánh giá và chỉnh sửa mở bản đầu, trang chấm chỉ đọc và bản cuối.
+Mỗi tệp xem được tối đa 16 MiB.
+
 Ở chế độ thật, các trang **Tổng quan**, **Nhà cung cấp** và **Tiến độ quy trình**
 tự cập nhật sau mỗi 30 giây khi tab đang hiển thị. Nút **Làm mới** cập nhật ngay.
 Mốc **Cập nhật lúc** là giờ dashboard lấy dữ liệu.
