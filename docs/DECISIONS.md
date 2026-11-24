@@ -1079,10 +1079,24 @@ LIMITS:
 
 ---
 
-## DEC-040 ? Unified Free LLM Router (Phase 5)
+## DEC-040 — Unified Free LLM Router (Phase 5)
 
 STATUS: ACCEPTED (Project Owner, 2026-11-24: "làm những cái này" — approving "#31 · Phase 5 — Có thể duyệt merge")
 
 Keep Gemini as the default story pipeline route. Opt-in named providers and AUTO reuse the free-only routers, quota stores, and cost checks from DEC-034 and DEC-036 through DEC-039. AUTO uses an owner-editable policy and preflights requests against known limits or a conservative fallback for unknown contexts. Candidate order reflects owner preference. The default quality-critical tier stays on Gemini.
 
 Record the selected provider and AUTO policy hash for resume. Log metadata-only telemetry for unlocked runs. Preserve the legacy Gemini path under DEC-033's gate lock. The owner decides when Phase 5 can merge around the locked sample.
+
+## DEC-041 — AI Operations Dashboard Foundation (Phase 6A)
+
+STATUS: ACCEPTED (Project Owner, 2026-11-24: "Oke rồi đấy, sang Phase 6B" after reviewing the PR #32 UI)
+
+CONTEXT: The owner asked for a local operations dashboard for the free LLM providers (Phase 6), split into a mock-data foundation (6A) and a live, read-only integration (6B) after Phase 5 (DEC-040) merged. The owner then asked for a friendlier UI.
+
+DECISION:
+1. Adopt a loopback-only dashboard (`python -m tools.ops_dashboard`, 127.0.0.1) with a read-only source interface and read-only GET endpoints. Standard library server, plain HTML/CSS/JS, no CDN, no new dependency.
+2. Phase 6A ships with clearly bannered mock data. The Phase 5 telemetry schema (`docs/engineering/LLM_TELEMETRY_SCHEMA.md`) is the compatibility boundary; field names live only in `tools/ops_dashboard/contract.py`.
+3. Phase 6B replaces the mock source with read-only readers of telemetry, quota state, the routing policy and run manifests. Provider calls, quota changes and run triggers stay outside dashboard scope.
+4. The UI is Vietnamese by default (EN toggle), uses plain-language error labels with codes kept, local times, fixed provider colours validated for colour-vision deficiency, and distinguishes reported, estimated and unknown values.
+
+LIMITS: 6A numbers are synthetic. Mobile layout was checked by test and an iframe probe; the owner reviewed the desktop UI.
