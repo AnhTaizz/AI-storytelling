@@ -38,13 +38,14 @@ class StoryMemory:
             return None
         try:
             record = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
             return None
-        if (record.get("format") != MEMORY_FORMAT or record.get("chapter_order") != order
+        if (not isinstance(record, dict) or record.get("format") != MEMORY_FORMAT or record.get("chapter_order") != order
                 or record.get("source_version") != source_version
                 or record.get("brief_fingerprint") != brief_fingerprint):
             return None
-        return record["brief"]
+        brief = record.get("brief")
+        return brief if isinstance(brief, dict) else None
 
     def put_brief(self, order: int, source_version: str, brief_fingerprint: str,
                   brief: Dict[str, Any], producer: str) -> Path:

@@ -65,13 +65,6 @@ def episode_dir(season_dir: Path, index: int, chapters: Tuple[int, int]) -> Path
     return season_dir / (f"ep{index:02d}_ch{start}" if start == end else f"ep{index:02d}_ch{start}-{end}")
 
 
-def _read_manifest(path: Path) -> Optional[Dict[str, Any]]:
-    try:
-        return json.loads((path / "run_manifest.json").read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return None
-
-
 def _episode_row(index: int, chapters: Tuple[int, int], path: Path, manifest: Optional[Dict[str, Any]],
                  season_dir: Path, skipped: bool = False) -> Dict[str, Any]:
     row: Dict[str, Any] = {"episode": index, "chapters": list(chapters),
@@ -156,10 +149,12 @@ def run_season(client: LLMClient, manifest_path: Path | str, ranges: Sequence[Tu
     options = options or {}
     for index, chapters in enumerate(ranges, start=1):
         path = episode_dir(season_dir, index, chapters)
-        previous = _read_manifest(path)
+        previous = run_pipeline.read_run_manifest(path)
         scope, background = run_pipeline.episode_scope(manifest_path, chapters[0], chapters[1], source_root,
                                                        recap=True)
         story_id = scope.story_id
+        if previous is not None and not options.get("locked"):
+            run_pipeline.check_resume_source(previous, scope, background)
         review = options.get("owner_review")
         if previous and previous.get("status") == "COMPLETED" and not (
                 review and run_pipeline.pending_owner_errors(path, review)):
@@ -198,8 +193,8 @@ def run_season(client: LLMClient, manifest_path: Path | str, ranges: Sequence[Tu
     else:
         if any(r["status"] == "FAILED" for r in rows):
             status = "COMPLETED_WITH_FAILURES"
-    rows += [_episode_row(i, c, episode_dir(season_dir, i, c), _read_manifest(episode_dir(season_dir, i, c)),
-                          season_dir)
+    rows += [_episode_row(i, c, episode_dir(season_dir, i, c),
+                          run_pipeline.read_run_manifest(episode_dir(season_dir, i, c)), season_dir)
              for i, c in enumerate(ranges, start=1) if i > len(rows)]
     return _write_season(season_dir, story_id, ranges, rows, totals, status, stop_reason)
 
@@ -251,10 +246,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     scope, _ = run_pipeline.episode_scope(args.manifest, first, first, args.source_root)
     destination = args.season_dir or args.resume
     season_dir = Path(destination) if destination else DEFAULT_SEASON_ROOT / scope.story_id
-    previous = [_read_manifest(episode_dir(season_dir, index, chapters))
-                for index, chapters in enumerate(ranges, start=1)]
-    existing = [manifest for manifest in previous if manifest is not None]
     try:
+        previous = [run_pipeline.read_run_manifest(episode_dir(season_dir, index, chapters))
+                    for index, chapters in enumerate(ranges, start=1)]
+        existing = [manifest for manifest in previous if manifest is not None]
         run_pipeline.prepare_routing(args, season_dir, existing[0] if existing else None)
         for manifest in existing[1:]:
             run_pipeline.check_routing_identity(args, manifest.get("invocation") or {})
@@ -273,9 +268,13 @@ def main(argv: Optional[List[str]] = None) -> int:
         options["locked"] = True
     else:
         options["invocation"] = run_pipeline.invocation_of(args)
-    season = run_season(client, args.manifest, ranges, profile, season_dir, memory=memory,
-                        source_root=args.source_root, facts=facts, stop_on_failure=not args.keep_going,
-                        options=options, progress=lambda m: print(m, flush=True))
+    try:
+        season = run_season(client, args.manifest, ranges, profile, season_dir, memory=memory,
+                            source_root=args.source_root, facts=facts, stop_on_failure=not args.keep_going,
+                            options=options, progress=lambda m: print(m, flush=True))
+    except ValueError as exc:
+        print(f"run error: {exc}", file=sys.stderr)
+        return 2
     print(f"season: {season['status']}  calls: {season['totals']['calls']}  index: {season_dir / 'season.md'}")
     if season.get("stop_reason"):
         print(f"stopped: {season['stop_reason']}")

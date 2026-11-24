@@ -1,5 +1,6 @@
 """Tests for tools/story_pipeline/run_story.py (running a story episode by episode)."""
 from contextlib import redirect_stderr, redirect_stdout
+from dataclasses import replace
 from io import StringIO
 import json
 import sys
@@ -135,6 +136,27 @@ class SeasonTests(unittest.TestCase):
         self.assertEqual([(c["start"], c["resume"]) for c in stub.calls], [(2, True), (4, False)])
         self.assertTrue(season["episodes"][0]["skipped_as_completed"])
         self.assertEqual(season["status"], "COMPLETED")
+
+    def test_rerun_refuses_to_skip_a_completed_episode_after_its_source_changes(self):
+        ranges = [(1, 1)]
+        args = (DEFAULT_MANIFEST, ranges, test_profile(), self.season_dir)
+        first = run_story.run_season(ScriptedLLMClient(FakeModel()), *args, memory=None)
+        self.assertEqual(first["episodes"][0]["status"], "COMPLETED")
+        season_file = self.season_dir / "season.json"
+        original = season_file.read_bytes()
+        scope, background = run_story.run_pipeline.episode_scope(DEFAULT_MANIFEST, 1, 1)
+        updated = replace(scope, chapters=(replace(scope.chapters[0], version="updated-source"),))
+        client = ScriptedLLMClient(FakeModel())
+        with patch.object(run_story.run_pipeline, "episode_scope", return_value=(updated, background)):
+            with self.assertRaisesRegex(ValueError, "source changed"):
+                run_story.run_season(client, *args, memory=None)
+            with patch.object(run_story.run_pipeline, "make_client", return_value=client), \
+                    redirect_stdout(StringIO()), redirect_stderr(StringIO()) as errors:
+                self.assertEqual(run_story.main(["--chapters", "1", "--season-dir", str(self.season_dir),
+                                                 "--no-memory"]), 2)
+            self.assertIn("source changed", errors.getvalue())
+        self.assertEqual(client.calls, [])
+        self.assertEqual(season_file.read_bytes(), original)
 
     def test_apply_review_resumes_completed_episodes_with_unapplied_errors(self):
         self.season(StubRun({}))
