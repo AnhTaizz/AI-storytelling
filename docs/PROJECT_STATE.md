@@ -1699,7 +1699,7 @@ The router pauses after three 429s per model request by default. DEC-036 accepte
 
 ## Unified Free LLM Router, Phase 5 (2026-11-24)
 
-Status: UNIFIED_ROUTER_PENDING_REVIEW
+Status: UNIFIED_ROUTER_ACCEPTED
 
 The story pipeline adds opt-in Groq, OpenRouter, Cloudflare and policy-based AUTO routing over the existing free-only providers. The default remains Gemini. The proposed decision is DEC-040.
 

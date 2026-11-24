@@ -1081,7 +1081,7 @@ LIMITS:
 
 ## DEC-040 ? Unified Free LLM Router (Phase 5)
 
-STATUS: PROPOSED (awaiting Project Owner review in the PR)
+STATUS: ACCEPTED (Project Owner, 2026-11-24: "làm những cái này" — approving "#31 · Phase 5 — Có thể duyệt merge")
 
 Keep Gemini as the default story pipeline route. Opt-in named providers and AUTO reuse the free-only routers, quota stores, and cost checks from DEC-034 and DEC-036 through DEC-039. AUTO uses an owner-editable policy and preflights requests against known limits or a conservative fallback for unknown contexts. Candidate order reflects owner preference. The default quality-critical tier stays on Gemini.
 
