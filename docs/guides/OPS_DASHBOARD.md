@@ -1,7 +1,6 @@
 # Bảng điều khiển AI Operations
 
-Chế độ mặc định đọc dữ liệu cục bộ và hiển thị **DỮ LIỆU THẬT — chỉ đọc**
-cùng mốc dữ liệu gần nhất. Dùng `--mock` để xem ảnh chụp dữ liệu giả lập của
+Chế độ mặc định đọc dữ liệu cục bộ. Dùng `--mock` để xem ảnh chụp dữ liệu giả lập của
 Phase 6A với dòng **DỮ LIỆU MẪU — chưa kết nối hệ thống thật**.
 Dashboard chạy ngoại tuyến, chỉ phục vụ trên máy đang chạy lệnh và chỉ cho phép đọc.
 

@@ -9,7 +9,7 @@ const STRINGS = {
     overview: "Tổng quan", providers: "Nhà cung cấp", usage: "Mức sử dụng",
     requests: "Lịch sử yêu cầu", "routing-policy": "Quy tắc chọn model", pipeline: "Tiến độ quy trình",
     snapshot: "Cập nhật lúc {time}", loading: "Đang tải…", loadError: "Không tải được dữ liệu.",
-    refresh: "Làm mới", dataTime: "Dữ liệu gần nhất {time}", noDataTime: "Chưa có mốc dữ liệu",
+    refresh: "Làm mới",
     static: "Theo tài liệu nhà cung cấp, kiểm tra ngày {date}", notConfigured: "Chưa cấu hình",
     unobserved: "Chưa có lượt gửi", configuredKeys: "Key đã cấu hình", eligibleKeys: "Key đủ điều kiện",
     scopeCount: "Số phạm vi quota", quotaLimit: "Hạn mức", quotaUsed: "Đã dùng", quotaRemaining: "Còn lại",
@@ -90,7 +90,7 @@ const STRINGS = {
     overview: "Overview", providers: "Providers", usage: "Usage",
     requests: "Request history", "routing-policy": "Routing policies", pipeline: "Pipeline monitor",
     snapshot: "Updated {time}", loading: "Loading…", loadError: "Could not load dashboard data.",
-    refresh: "Refresh", dataTime: "Latest data {time}", noDataTime: "No data timestamp",
+    refresh: "Refresh",
     static: "Provider documentation, checked on {date}", notConfigured: "Not configured",
     unobserved: "No observed calls", configuredKeys: "Configured keys", eligibleKeys: "Eligible keys",
     scopeCount: "Quota scopes", quotaLimit: "Limit", quotaUsed: "Used", quotaRemaining: "Remaining",
@@ -836,12 +836,6 @@ let loading = false;
 function showMode(data, key) {
   const live = data.data_mode === "live";
   document.querySelector("#mock-banner").hidden = live;
-  document.querySelector("#mock-label").hidden = live;
-  document.querySelector("#live-banner").hidden = !live;
-  const dataTime = document.querySelector("#data-time");
-  dataTime.hidden = !live;
-  dataTime.replaceChildren(...(data.last_data_at
-    ? timedSentence("dataTime", data.last_data_at) : [t("noDataTime")]));
   refreshable = live && refreshPages.has(key);
   refresh.hidden = !refreshable;
 }
