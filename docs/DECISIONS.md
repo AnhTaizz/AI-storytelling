@@ -1101,4 +1101,4 @@ DECISION:
 
 LIMITS: 6A numbers are synthetic. Mobile layout was checked by test and an iframe probe; the owner reviewed the desktop UI.
 
-2026-11-24 — Phase 6B implemented, PR pending owner review. The dashboard defaults to local, read-only data and retains the Phase 6A mock mode.
+2026-11-24 — Phase 6B implemented (PR #33) and accepted by the Project Owner ("oke rồi đấy merge đi"). The dashboard defaults to local, read-only data and retains the Phase 6A mock mode.

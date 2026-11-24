@@ -1707,7 +1707,7 @@ M9 sample `m9_gate_v0` is bound to the single model `gemini-3.8-flash` and commi
 
 ## AI Operations Dashboard, Phase 6B (2026-11-24)
 
-Status: OPS_DASHBOARD_LIVE_PENDING_REVIEW
+Status: OPS_DASHBOARD_LIVE_ACCEPTED
 
 The dashboard connects Phase 5 telemetry and quota SQLite, the routing policy, offline
 provider summaries, and pipeline and season metadata through read-only sources. The
