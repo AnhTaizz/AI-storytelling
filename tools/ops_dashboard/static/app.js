@@ -8,7 +8,18 @@ const STRINGS = {
     vietnamese: "Tiếng Việt", english: "English",
     overview: "Tổng quan", providers: "Nhà cung cấp", usage: "Mức sử dụng",
     requests: "Lịch sử yêu cầu", "routing-policy": "Quy tắc chọn model", pipeline: "Tiến độ quy trình",
-    snapshot: "Cập nhật {time}", loading: "Đang tải…", loadError: "Không tải được dữ liệu.",
+    snapshot: "Cập nhật lúc {time}", loading: "Đang tải…", loadError: "Không tải được dữ liệu.",
+    refresh: "Làm mới", dataTime: "Dữ liệu gần nhất {time}", noDataTime: "Chưa có mốc dữ liệu",
+    static: "Theo tài liệu nhà cung cấp, kiểm tra ngày {date}", notConfigured: "Chưa cấu hình",
+    unobserved: "Chưa có lượt gửi", configuredKeys: "Key đã cấu hình", eligibleKeys: "Key đủ điều kiện",
+    scopeCount: "Số phạm vi quota", quotaLimit: "Hạn mức", quotaUsed: "Đã dùng", quotaRemaining: "Còn lại",
+    quotaCounters: "Bộ đếm quota đã báo", contextTokens: "Token ngữ cảnh", requestTokens: "Token mỗi yêu cầu",
+    previous: "Trang trước", next: "Trang sau", policyHashLive: "SHA-256 của tệp quy tắc",
+    calls: "Lần gọi", seconds: "Giây", tokens: "Token", started: "Bắt đầu", updated: "Cập nhật",
+    noLiveIncidents: "Chưa ghi nhận sự cố gần đây.", skipReasons: "Lý do bỏ qua",
+    RUNNING: "Đang chạy", UNKNOWN: "Không rõ", NOT_RUN: "Chưa chạy",
+    STOPPED_AFTER_BRIEF: "Dừng sau bước tóm tắt", STOPPED_AFTER_PLAN: "Dừng sau bước lập dàn ý",
+    STOPPED_AFTER_SCRIPT: "Dừng sau bước viết kịch bản", COMPLETED_WITH_FAILURES: "Hoàn thành có lỗi",
     todayTime: "{time} hôm nay", yesterdayTime: "hôm qua {time}", time: "Giờ địa phương",
     timeBucket: "Bắt đầu khoảng thời gian", remainingTime: "còn {duration}", elapsed: "đã hết thời gian chờ",
     healthy: "Hoạt động", cooldown: "Chờ quota", degraded: "Gặp sự cố", critical: "Cần kiểm tra",
@@ -55,6 +66,9 @@ const STRINGS = {
     critic: "Đánh giá", source_check: "Đối chiếu nguồn", revise: "Chỉnh sửa", patch: "Sửa bổ sung",
     progress: "Tiến độ các bước", done: "Đã xong", current: "Đang dừng ở bước này", pending: "Chưa tới",
     resumeAfter: "Có thể tiếp tục sau {time} ({remaining})",
+    callLog: "Cộng từ nhật ký lượt gọi", partialCallLog: "Cộng từ một phần nhật ký lượt gọi",
+    latestInvocation: "Chỉ tính lần chạy gần nhất", reviewReasons: "Số lý do cần duyệt",
+    sourceCheckIncomplete: "Đối chiếu nguồn chưa xong một phần",
     pausedHint: "Khi hết thời gian chờ, dùng lại thư mục đầu ra cũ để giữ các bước đã xong.",
     reviewHint: "Kiểm tra bản chỉnh sửa được đánh dấu trước khi tiếp tục.",
     completeHint: "Cả năm bước đã hoàn thành.", failedHint: "Xem lỗi lập dàn ý trong manifest của lượt chạy.",
@@ -74,6 +88,17 @@ const STRINGS = {
     overview: "Overview", providers: "Providers", usage: "Usage",
     requests: "Request history", "routing-policy": "Routing policies", pipeline: "Pipeline monitor",
     snapshot: "Updated {time}", loading: "Loading…", loadError: "Could not load dashboard data.",
+    refresh: "Refresh", dataTime: "Latest data {time}", noDataTime: "No data timestamp",
+    static: "Provider documentation, checked on {date}", notConfigured: "Not configured",
+    unobserved: "No observed calls", configuredKeys: "Configured keys", eligibleKeys: "Eligible keys",
+    scopeCount: "Quota scopes", quotaLimit: "Limit", quotaUsed: "Used", quotaRemaining: "Remaining",
+    quotaCounters: "Reported quota counters", contextTokens: "Context tokens", requestTokens: "Tokens per request",
+    previous: "Previous page", next: "Next page", policyHashLive: "Policy file SHA-256",
+    calls: "Calls", seconds: "Seconds", tokens: "Tokens", started: "Started", updated: "Updated",
+    noLiveIncidents: "No recent incidents recorded.", skipReasons: "Skip reasons",
+    RUNNING: "Running", UNKNOWN: "Unknown", NOT_RUN: "Not run",
+    STOPPED_AFTER_BRIEF: "Stopped after brief", STOPPED_AFTER_PLAN: "Stopped after plan",
+    STOPPED_AFTER_SCRIPT: "Stopped after script", COMPLETED_WITH_FAILURES: "Completed with failures",
     todayTime: "{time} today", yesterdayTime: "yesterday at {time}", time: "Local time",
     timeBucket: "Time bucket starts", remainingTime: "{duration} left", elapsed: "wait time ended",
     healthy: "Operational", cooldown: "Waiting for quota", degraded: "Degraded", critical: "Needs attention",
@@ -120,6 +145,9 @@ const STRINGS = {
     critic: "Review", source_check: "Check sources", revise: "Revise", patch: "Patch",
     progress: "Stage progress", done: "Done", current: "Stopped at this stage", pending: "Pending",
     resumeAfter: "Can resume after {time} ({remaining})",
+    callLog: "Totals from the call log", partialCallLog: "Totals from a partial call log",
+    latestInvocation: "Latest invocation only", reviewReasons: "Review reasons",
+    sourceCheckIncomplete: "Source cross-check is partly incomplete",
     pausedHint: "After the wait, reuse the same output directory to keep completed stages.",
     reviewHint: "Review the flagged revision before continuing.",
     completeHint: "All five stages finished.", failedHint: "Inspect the plan failure in the run manifest.",
@@ -136,6 +164,8 @@ const STRINGS = {
 const page = document.querySelector("#page");
 const heading = document.querySelector("#page-title");
 const snapshot = document.querySelector("#snapshot");
+const refresh = document.querySelector("#refresh");
+const refreshPages = new Set(["overview", "providers", "pipeline"]);
 const nav = document.querySelector("#navigation");
 const links = [...nav.querySelectorAll("a")];
 const menu = document.querySelector("#menu");
@@ -145,6 +175,7 @@ const sources = ["reported", "estimated", "unknown"];
 const icons = {good: "✓", warning: "◷", serious: "!", critical: "×"};
 const providerStates = {
   Healthy: ["healthy", "good"], Cooldown: ["cooldown", "warning"], Degraded: ["degraded", "serious"],
+  NotConfigured: ["notConfigured", "warning"], Unobserved: ["unobserved", "warning"],
 };
 const outcomeStates = {
   SUCCESS: "good", FAILED: "critical", SKIPPED: "warning",
@@ -199,27 +230,44 @@ function textNumber(value) {
   return value == null ? "—" : new Intl.NumberFormat(language).format(value);
 }
 
-function timeLabel(value) {
+function sourcedNumber(value, source, date) {
+  const provenance = value == null ? "unknown" : source;
+  const description = t(provenance ?? "unknown", {date});
+  return value == null ? description : textNumber(value) + " · " + description;
+}
+
+function sourceNotices(data) {
+  return Object.values(data.source_states ?? {}).map(state => notice(state.message));
+}
+
+function telemetryUnavailable(data) {
+  const code = data.source_states?.telemetry?.code;
+  return code && code !== "telemetry_capped";
+}
+
+function timeLabel(value, seconds) {
   const date = new Date(value);
   const now = new Date();
   const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
-  const time = new Intl.DateTimeFormat(language, {hour: "2-digit", minute: "2-digit", hourCycle: "h23"});
+  const clock = {hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+    ...(seconds ? {second: "2-digit"} : {})};
+  const time = new Intl.DateTimeFormat(language, clock);
   if (date.toDateString() === now.toDateString()) return t("todayTime", {time: time.format(date)});
   if (date.toDateString() === yesterday.toDateString()) return t("yesterdayTime", {time: time.format(date)});
   return new Intl.DateTimeFormat(language, {
-    year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+    year: "numeric", month: "short", day: "numeric", ...clock,
   }).format(date);
 }
 
-function timeNode(value) {
+function timeNode(value, seconds = false) {
   if (!value) return "—";
   const utc = new Date(value).toISOString();
-  return element("time", {datetime: utc, title: utc}, timeLabel(value));
+  return element("time", {datetime: utc, title: utc}, timeLabel(value, seconds));
 }
 
 function timedSentence(key, value, values = {}) {
   const [before, after] = t(key, {...values, time: "\u0000"}).split("\u0000");
-  return [before, timeNode(value), after];
+  return [before, timeNode(value, key === "snapshot"), after];
 }
 
 function relativeTime(value) {
@@ -314,6 +362,15 @@ function quotaMeter(quota) {
   const label = quotaLabels[quota.label] ?? quota.label;
   const unit = t(quotaUnits[quota.unit] ?? quota.unit);
   const hint = quota.unit === "Neurons" ? "neuronHelp" : label === "tpm" || label === "rpd" || label === "utcRpd" ? "rateHelp" : null;
+  if (quota.sources) {
+    const metrics = [
+      ["quotaLimit", "limit"], ["quotaUsed", "used"], ["quotaRemaining", "remaining"],
+    ].filter(([, key]) => key === "remaining" || quota[key] != null);
+    return element("div", {class: "quota"},
+      element("strong", {}, t(label)), ...(hint ? [help(label, hint)] : []),
+      ...metrics.map(([title, key]) => element("p", {class: "muted"},
+        t(title) + " · " + sourcedNumber(quota[key], quota.sources[key], quota.verified_on))));
+  }
   const known = quota.used != null && quota.limit > 0;
   const used = t("usedLimit", {used: textNumber(quota.used), limit: textNumber(quota.limit), unit});
   return element("div", {class: "quota"},
@@ -329,7 +386,14 @@ function providerCard(provider, compact) {
   const until = provider.cooldown_until;
   const wait = until ? element("span", {}, timeNode(until), " · " + relativeTime(until)) : "—";
   const headingTag = compact ? "h3" : "h2";
-  const limits = compact ? provider.limits.filter(quota => quotaLabels[quota.label] !== "tpm") : provider.limits;
+  const limits = compact && !provider.configuration
+    ? provider.limits.filter(quota => quotaLabels[quota.label] !== "tpm") : provider.limits;
+  const configuration = provider.configuration;
+  const modelDetails = provider.model_details?.map(model => element("li", {},
+    element("code", {}, model.model), element("small", {class: "muted"},
+      " · " + t(model.source, {date: model.verified_on})),
+    ...[["contextTokens", "context_tokens"], ["requestTokens", "max_request_tokens"]].map(([key, field]) =>
+      element("div", {}, t(key) + " · " + sourcedNumber(model[field], model.sources[field], model.verified_on)))));
   return element("article", {class: "panel provider-card", "data-provider": provider.slug},
     element("div", {class: "card-head"}, element(headingTag, {}, provider.name), status(label, tone)),
     ...limits.map(quotaMeter),
@@ -337,9 +401,23 @@ function providerCard(provider, compact) {
       detail("cooldownUntil", wait, "cooldownHelp"),
       ...(compact ? [] : [
         detail("scope", technical(provider.scope), "scopeHelp"),
-        detail("model", element("ul", {class: "model-list"}, ...provider.models.map(model =>
-          element("li", {}, element("code", {}, model))))),
+        detail("model", element("ul", {class: "model-list"}, ...(modelDetails ?? provider.models.map(model =>
+          element("li", {}, element("code", {}, model)))))),
         detail("lastError", technical(provider.last_error)),
+        ...(configuration ? [
+          ...(configuration.status === "not_configured" && provider.status !== "NotConfigured"
+            ? [element("div", {class: "muted"}, t("notConfigured"))] : []),
+          ...[["configuredKeys", "keys_configured"], ["eligibleKeys", "keys_eligible"],
+            ["scopeCount", "key_scopes"]].map(([title, key]) =>
+            detail(title, sourcedNumber(configuration[key], configuration.source))),
+          detail("quotaCounters", provider.quota_counters.length ? element("ul", {class: "model-list"},
+            ...provider.quota_counters.map(counter => element("li", {},
+              [counter.name, counter.model, t(counter.scope ?? "unknown"),
+                sourcedNumber(counter.value, counter.source)].filter(Boolean).join(" · "),
+              " · ", timeNode(counter.timestamp)))) : t("unknown")),
+          ...provider.blocks.map(block => detail("cooldownUntil", element("div", {},
+            [block.model, block.scope_ref, block.reason].filter(Boolean).join(" · "), " · ", timeNode(block.until_utc)))),
+        ] : []),
       ]))]));
 }
 
@@ -350,7 +428,18 @@ function overview(data, providerData, history) {
     style: "percent", maximumFractionDigits: 1,
   }).format(today.success_rate);
   const cost = data.estimated_cost_usd;
-  const metrics = [
+  const live = data.data_mode === "live";
+  const dailyCost = ["reported", "estimated"].flatMap(source => today.cost_by_source[source] == null
+    ? [] : ["$" + sourcedNumber(today.cost_by_source[source], source)]).join(" · ");
+  const metrics = live ? [
+    ["requestsToday", telemetryUnavailable(data) ? t("unknown") :
+      sourcedNumber(today.requests, today.sources.requests), t("utcDay")],
+    ["successRate", success, t(today.sources.success_rate)],
+    ["tokensUsed", tokens.reported || tokens.estimated ? textNumber(tokens.reported) + " " + t("reported") + " · " +
+      textNumber(tokens.estimated) + " " + t("estimated") : t("unknown"), ""],
+    ["cost", dailyCost || t("unknown"), ""],
+    ["waiting", sourcedNumber(data.active_cooldowns, data.sources.active_cooldowns), ""],
+  ] : [
     ["requestsToday", textNumber(today.requests), t("utcDay")],
     ["successRate", success, t("sentOnly")],
     ["tokensUsed", textNumber(tokens.reported + tokens.estimated), t("estimatedCount", {count: textNumber(tokens.estimated)})],
@@ -363,10 +452,14 @@ function overview(data, providerData, history) {
     technical(row[fields.outcome], outcomeStates[row[fields.outcome]]), technical(row[fields.error]),
   ]);
   const mix = Object.entries(today.stage_provider_mix).sort(([a], [b]) => a.localeCompare(b))
-    .map(([stage, counts]) => [technical(stage), ...data.providers.map(provider => textNumber(counts[provider.slug] ?? 0))]);
+    .map(([stage, counts]) => [technical(stage), ...data.providers.map(provider => live
+      ? sourcedNumber(counts[provider.slug] ?? 0, today.sources.stage_provider_mix)
+      : textNumber(counts[provider.slug] ?? 0))]);
   const latency = ["p50", "p95"].map(key => key + " " +
-    (today.latency[key] == null ? "—" : textNumber(today.latency[key]) + " ms"));
+    (today.latency[key] == null ? "—" : textNumber(today.latency[key]) + " ms" +
+      (live ? " · " + t(today.sources.latency) : "")));
   return [
+    ...sourceNotices(data),
     overviewStatus(providerData.providers, data.generated_at),
     element("div", {class: "cards metrics"}, ...metrics.map(([label, value, note]) =>
       element("article", {class: "panel metric"},
@@ -375,18 +468,22 @@ function overview(data, providerData, history) {
         element("strong", {}, value), ...(note ? [element("small", {}, note)] : [])))),
     section("providerHealth", element("div", {class: "cards health"},
       ...providerData.providers.map(provider => providerCard(provider, true)))),
-    overviewChart(history),
+    ...(telemetryUnavailable(history) ? [] : [overviewChart(history)]),
     section("incidents", incidents.length
       ? table(["time", "provider", "stage", "outcome", "error"].map(key => t(key)), incidents, t("incidents"))
-      : notice("noIncidents")),
+      : notice(live ? "noLiveIncidents" : "noIncidents")),
     section("stageRequests", element("p", {class: "notice"}, t("latency") + " · " + latency.join(" · ")),
       mix.length ? table([t("stage"), ...data.providers.map(provider => provider.name)], mix, t("stageRequests"), 1)
         : notice("noRecords")),
+    ...(live && Object.keys(today.skip_reason_counts).length ? [section("skipReasons",
+      element("ul", {class: "model-list"}, ...Object.entries(today.skip_reason_counts).map(([reason, count]) =>
+        element("li", {}, reason + " · " + sourcedNumber(count, today.sources.skip_reason_counts)))))] : []),
   ];
 }
 
 function providers(data) {
-  return [element("div", {class: "cards"}, ...data.providers.map(provider => providerCard(provider, false)))];
+  return [...sourceNotices(data), element("div", {class: "cards"},
+    ...data.providers.map(provider => providerCard(provider, false)))];
 }
 
 function displayProvider(slug) {
@@ -550,7 +647,7 @@ function usage(data, current) {
 }
 
 function drawUsage(data, region) {
-  region.replaceChildren(...["tokens", "requests"].map(metric => {
+  region.replaceChildren(...sourceNotices(data), ...(telemetryUnavailable(data) ? [] : ["tokens", "requests"].map(metric => {
     const title = metric === "tokens" ? "tokensChart" : "requestsChart";
     const max = chartMax(Math.max(...data.buckets.flatMap(bucket =>
       data.providers.map(({slug}) => sum(bucket.providers[slug][metric])))));
@@ -571,29 +668,46 @@ function drawUsage(data, region) {
         legend(sources.map(source => [t(source), slug, source]), [help("tokenSources", "tokenHelp")]),
         chart({label: name + " · " + t(title), buckets, max, tableHeaders, rows}));
     })));
-  }));
+  })));
 }
 
-function drawRequests(data, region) {
+function drawRequests(data, region, changePage) {
   const {fields} = data;
   const rows = data.requests.map(row => [
     timeNode(row[fields.timestamp]), element("code", {}, row[fields.request]),
     displayProvider(row[fields.provider]), technical(row[fields.stage]),
     technical(row[fields.outcome], outcomeStates[row[fields.outcome]]),
-    row[fields.latency] == null ? "—" : textNumber(row[fields.latency]) + " ms",
+    row[fields.latency] == null ? "—" : textNumber(row[fields.latency]) + " ms" +
+      (row.sources ? " · " + t(row.sources.latency_ms) : ""),
     element("div", {}, element("strong", {}, t(row[fields.tokenSource])),
       element("div", {}, textNumber(row[fields.input]) + " / " + textNumber(row[fields.output])),
       ...(row[fields.reasoning] == null ? [] : [element("small", {}, t("reasoning", {
         count: textNumber(row[fields.reasoning]),
       }))])),
     technical(row[fields.error]),
+    ...(data.data_mode === "live" ? [
+      element("code", {}, row[fields.model] ?? "—"),
+      sourcedNumber(row[fields.reportedCost] ?? row[fields.estimatedCost], row[fields.costSource]),
+      JSON.parse(row[fields.skipReasons] ?? "[]").join(" · ") || "—",
+    ] : []),
   ]);
-  region.replaceChildren(element("p", {class: "notice", role: "status"}, rows.length
+  const pages = element("div", {class: "controls"});
+  if (data.offset > 0 || data.next_offset != null) {
+    for (const [title, offset] of [["previous", data.offset > 0 ? Math.max(0, data.offset - data.limit) : null],
+      ["next", data.next_offset]]) {
+      const button = element("button", {type: "button"}, t(title));
+      button.disabled = offset == null;
+      button.addEventListener("click", () => changePage(offset));
+      pages.append(button);
+    }
+  }
+  region.replaceChildren(...sourceNotices(data), element("p", {class: "notice", role: "status"}, rows.length
     ? t("matching", {shown: textNumber(rows.length), total: textNumber(data.matching)}) : t("noMatches")),
   ...(rows.length ? [table(
     [t("time"), t("request"), t("provider"), t("stage"), t("outcome"), t("latency"),
-      element("span", {class: "with-help"}, t("inOut"), help("tokenSources", "tokenHelp")), t("error")],
-    rows, t("requests"))] : []));
+      element("span", {class: "with-help"}, t("inOut"), help("tokenSources", "tokenHelp")), t("error"),
+      ...(data.data_mode === "live" ? [t("model"), t("cost") + " (USD)", t("skipReasons")] : [])],
+    rows, t("requests"))] : []), ...(pages.childElementCount ? [pages] : []));
 }
 
 function requests(data, current) {
@@ -606,72 +720,112 @@ function requests(data, current) {
     select.value = filters.get(key) ?? "";
     controls.append(element("label", {class: "field"}, t(key), select));
   }
-  controls.addEventListener("change", async ({target}) => {
+  async function changePage(offset) {
     const selected = ++revision;
-    if (target.value) filters.set(target.name, target.value);
-    else filters.delete(target.name);
+    filters.set("offset", offset);
     region.replaceChildren(notice("loading", {role: "status"}));
     try {
       const updated = await getData("requests?" + filters);
-      if (current === navigation && selected === revision) drawRequests(updated, region);
+      if (current === navigation && selected === revision) drawRequests(updated, region, changePage);
     } catch {
       if (current === navigation && selected === revision) problem(region);
     }
+  }
+  controls.addEventListener("change", ({target}) => {
+    if (target.value) filters.set(target.name, target.value);
+    else filters.delete(target.name);
+    changePage(0);
   });
-  drawRequests(data, region);
+  drawRequests(data, region, changePage);
   return [controls, region];
 }
 
 function routingPolicy(data) {
-  const rows = Object.entries(data.stages).map(([stage, name]) => {
+  if (data.version == null) return sourceNotices(data);
+  const rows = Object.entries(data.stages).filter(([, name]) => Object.hasOwn(data.tiers, name)).map(([stage, name]) => {
     const tier = data.tiers[name];
     const candidates = element("ol", {class: "model-list"},
-      ...tier.candidates.map(candidate => element("li", {}, element("code", {}, candidate))));
+      ...tier.candidates.filter(Boolean).map(candidate => element("li", {}, element("code", {}, candidate))));
     return [technical(stage), technical(name), candidates, t(tier.cross_provider_fallback ? "enabled" : "disabled"),
-      textNumber(tier.max_output_tokens)];
+      tier.source ? sourcedNumber(tier.max_output_tokens, tier.source) : textNumber(tier.max_output_tokens)];
   });
   return [
     element("div", {class: "panel"}, element("h2", {}, t("policyVersion", {version: data.version})),
-      notice("policyHash"), element("code", {}, data.sha256)),
+      notice(data.data_mode === "live" ? "policyHashLive" : "policyHash"), element("code", {}, data.sha256)),
     section("stageAssignments", table(["stage", "tier", "candidates", "fallback", "reserve"].map(key => t(key)),
       rows, t("stageAssignments"), 4)),
   ];
 }
 
 function pipeline(data) {
-  return [element("div", {class: "run-list"}, ...data.runs.map(run =>
-    element("article", {class: "panel"},
-      element("div", {class: "card-head"}, element("h2", {class: "mono"}, run.id),
-        technical(run.status, outcomeStates[run.status])),
-      element("ol", {class: "stages", "aria-label": t("progress")}, ...data.stages.map(stage => {
+  return [...sourceNotices(data), element("div", {class: "run-list"}, ...data.runs.map(run => {
+    const header = element("div", {class: "card-head"}, element("h2", {class: "mono"}, run.label ?? run.id ?? "—"),
+      technical(run.status, outcomeStates[run.status]));
+    if (run.label) return element("article", {class: "panel"}, header);
+    const live = data.data_mode === "live";
+    return element("article", {class: "panel"}, header,
+      ...(run.completed ? [element("ol", {class: "stages", "aria-label": t("progress")}, ...data.stages.map(stage => {
+        const stageInfo = run.stages?.[stage];
         const state = run.completed.includes(stage) ? "done" : run.current === stage ? "current" : "pending";
         const mark = {done: "✓", current: "◉", pending: "○"}[state];
         return element("li", {class: state, "aria-label": t(stage) + " · " + t(state),
           ...(state === "current" ? {"aria-current": "step"} : {})},
-        element("span", {"aria-hidden": "true"}, mark), technical(stage));
-      })),
-      element("p", {class: "muted"}, runHints[run.status] ? t(runHints[run.status]) : run.hint),
+        element("span", {"aria-hidden": "true"}, mark), technical(stage),
+        ...(stageInfo ? [element("small", {class: "muted"}, t(stageInfo.status) + " · " +
+          sourcedNumber(stageInfo.seconds, stageInfo.source))] : []));
+      }))] : []),
+      ...(run.totals_scope ? [element("p", {class: "muted"}, t(run.totals_scope))] : []),
+      ...(live ? [element("dl", {class: "detail-list"},
+        ...["calls", "tokens", "seconds"].map(key => detail(key, sourcedNumber(run[key], run.sources[key]))),
+        ...(run.review_reasons_count == null ? [] : [detail("reviewReasons",
+          sourcedNumber(run.review_reasons_count, run.sources.review_reasons_count))]),
+        ...(run.model || run.provider ? [detail("model", [run.provider, run.model].filter(Boolean).join(" · "))] : []),
+        ...(run.error_code ? [detail("error", technical(run.error_code))] : []),
+        ...(run.started_at ? [detail("started", timeNode(run.started_at))] : []),
+        detail("updated", timeNode(run.updated_at)))] : []),
+      ...(run.note ? [notice("sourceCheckIncomplete")] : []),
+      ...(!live || ["PAUSED_QUOTA", "NEEDS_REVIEW"].includes(run.status) ?
+        [element("p", {class: "muted"}, runHints[run.status] ? t(runHints[run.status]) : run.hint ?? "")] : []),
       ...(run.resume_at ? [element("p", {class: "notice"},
-        ...timedSentence("resumeAfter", run.resume_at, {remaining: relativeTime(run.resume_at)}))] : []))))];
+        ...timedSentence("resumeAfter", run.resume_at, {remaining: relativeTime(run.resume_at)}))] : []));
+  }))];
 }
 
 const routes = {
   overview, providers, usage, requests, "routing-policy": routingPolicy, pipeline,
 };
 
-async function route(moveFocus = false) {
+let refreshable = false;
+let loading = false;
+
+function showMode(data, key) {
+  const live = data.data_mode === "live";
+  document.querySelector("#mock-banner").hidden = live;
+  document.querySelector("#mock-label").hidden = live;
+  document.querySelector("#live-banner").hidden = !live;
+  const dataTime = document.querySelector("#data-time");
+  dataTime.hidden = !live;
+  dataTime.replaceChildren(...(data.last_data_at
+    ? timedSentence("dataTime", data.last_data_at) : [t("noDataTime")]));
+  refreshable = live && refreshPages.has(key);
+  refresh.hidden = !refreshable;
+}
+
+async function route(moveFocus = false, updating = false) {
   const hash = location.hash.slice(1);
   const key = Object.hasOwn(routes, hash) ? hash : "overview";
   const current = ++navigation;
+  loading = true;
+  refresh.disabled = true;
   heading.textContent = t(key);
   document.title = t(key) + " | " + t("brand");
-  snapshot.textContent = "";
+  if (!updating) snapshot.textContent = "";
   for (const link of links) {
     if (link.hash === "#" + key) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");
   }
   if (moveFocus) heading.focus();
-  page.replaceChildren(notice("loading", {role: "status"}));
+  if (!updating) page.replaceChildren(notice("loading", {role: "status"}));
   try {
     const path = key === "usage" ? "usage?range=" + (usageRange ?? "24h")
       : key === "requests" ? "requests?" + filters : key;
@@ -680,11 +834,17 @@ async function route(moveFocus = false) {
       : [getData(path)]);
     if (current !== navigation) return;
     if (key === "usage") usageRange = data.range;
+    showMode(data, key);
     snapshot.replaceChildren(...timedSentence("snapshot", data.generated_at));
     const content = key === "overview" ? overview(data, providerData, history) : routes[key](data, current);
     page.replaceChildren(...content);
   } catch {
     if (current === navigation) problem(page);
+  } finally {
+    if (current === navigation) {
+      loading = false;
+      refresh.disabled = false;
+    }
   }
 }
 
@@ -722,6 +882,10 @@ window.addEventListener("hashchange", () => {
   setMenu(false);
   route(true);
 });
+refresh.addEventListener("click", () => route(false, true));
+setInterval(() => {
+  if (refreshable && !document.hidden && !loading) route(false, true);
+}, 30_000);
 
 themeSelect.value = readPreference("theme", ["auto", "light", "dark"]);
 document.documentElement.dataset.theme = themeSelect.value;

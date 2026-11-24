@@ -1100,3 +1100,5 @@ DECISION:
 4. The UI is Vietnamese by default (EN toggle), uses plain-language error labels with codes kept, local times, fixed provider colours validated for colour-vision deficiency, and distinguishes reported, estimated and unknown values.
 
 LIMITS: 6A numbers are synthetic. Mobile layout was checked by test and an iframe probe; the owner reviewed the desktop UI.
+
+2026-11-24 — Phase 6B implemented, PR pending owner review. The dashboard defaults to local, read-only data and retains the Phase 6A mock mode.
