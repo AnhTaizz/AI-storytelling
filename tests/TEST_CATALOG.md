@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 12 — test files: 132 — test functions: 1438
+Suites: 12 — test files: 132 — test functions: 1440
 
 ## canonical_story
 
@@ -494,14 +494,16 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.ops_dashboard.contract`, 
 - `DataSourceTests.test_rows_match_phase_five_shape_and_provenance`
 - `DataSourceTests.test_mock_includes_quota_and_review_scenarios`
 
-### test_server (5)
-Covers: `tools.canonical_story.conformance_v0`, `tools.ops_dashboard.server`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+### test_server (7)
+Covers: `tools.canonical_story.conformance_v0`, `tools.ops_dashboard.contract`, `tools.ops_dashboard.data_source`, `tools.ops_dashboard.server`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `ServerTests.test_every_endpoint_returns_mock_json_with_security_headers`
 - `ServerTests.test_methods_and_invalid_query_parameters`
 - `ServerTests.test_unknown_and_traversal_paths_are_rejected`
 - `ServerTests.test_start_rejects_non_loopback_host`
 - `ServerTests.test_static_assets_are_served_and_offline`
+- `ServerTests.test_both_locales_cover_mock_outcomes_and_errors`
+- `ServerTests.test_provider_palette_is_fixed_in_automatic_and_explicit_themes`
 
 ### test_view_models (4)
 Covers: `tools.canonical_story.conformance_v0`, `tools.ops_dashboard.contract`, `tools.ops_dashboard.view_models`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`

@@ -7,6 +7,8 @@ import unittest
 from urllib.error import HTTPError
 from urllib.request import build_opener, ProxyHandler, Request
 
+from tools.ops_dashboard.contract import FIELDS
+from tools.ops_dashboard.data_source import MockDataSource
 from tools.ops_dashboard.server import STATIC_DIR, make_server
 
 
@@ -23,10 +25,14 @@ class Anchors(HTMLParser):
     def __init__(self):
         super().__init__()
         self.hrefs = set()
+        self.controls = {}
 
     def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
         if tag == "a":
-            self.hrefs.add(dict(attrs).get("href"))
+            self.hrefs.add(attrs.get("href"))
+        if tag in ("button", "select") and "id" in attrs:
+            self.controls[attrs["id"]] = attrs
 
 
 class ServerTests(unittest.TestCase):
@@ -114,6 +120,12 @@ class ServerTests(unittest.TestCase):
         self.assertTrue({"#overview", "#providers", "#usage", "#requests", "#routing-policy",
                          "#pipeline"} <= anchors.hrefs)
         self.assertIn("MOCK DATA — not connected", html)
+        self.assertIn("DỮ LIỆU MẪU — chưa kết nối hệ thống thật", html)
+        for control in ("language", "theme"):
+            with self.subTest(control=control):
+                self.assertTrue(anchors.controls[control]["aria-label"].strip())
+        self.assertEqual(anchors.controls["menu"]["aria-expanded"], "false")
+        self.assertEqual(anchors.controls["menu"]["aria-controls"], "navigation")
         fetch_calls = []
         for path in sorted(STATIC_DIR.iterdir()):
             with self.subTest(path=path.name):
@@ -127,3 +139,41 @@ class ServerTests(unittest.TestCase):
         self.assertTrue(fetch_calls)
         for expression in fetch_calls:
             self.assertRegex(expression, r"^[\"']/api/")
+
+    def test_both_locales_cover_mock_outcomes_and_errors(self):
+        script = (STATIC_DIR / "app.js").read_text(encoding="utf-8")
+        strings = {}
+        for locale in ("vi", "en"):
+            match = re.search(rf"^  {locale}: \{{\n(.*?)^  \}},", script, re.M | re.S)
+            self.assertIsNotNone(match, locale)
+            pairs = re.findall(r'(\w+|"[\w-]+"):\s*"([^"\n]+)"', match[1])
+            strings[locale] = {key.strip('"'): label for key, label in pairs}
+            self.assertEqual(len(pairs), len(strings[locale]), locale)
+        self.assertEqual(strings["vi"].keys(), strings["en"].keys())
+
+        source = MockDataSource()
+        codes = {row[FIELDS[key]] for row in source.requests for key in ("outcome", "error")} - {None}
+        codes.update(run["status"] for run in source.runs)
+        codes.update(provider["last_error"] for provider in source.providers if provider["last_error"])
+        codes.update(("RATE_LIMIT", "AUTH_FAILURE", "SERVER_FAILURE"))
+        for code in sorted(codes):
+            with self.subTest(code=code):
+                self.assertIn(code, strings["vi"])
+                self.assertNotEqual(strings["vi"][code], code)
+
+    def test_provider_palette_is_fixed_in_automatic_and_explicit_themes(self):
+        css = (STATIC_DIR / "app.css").read_text(encoding="utf-8")
+        light, auto_dark, forced_dark = (
+            re.search(selector + r"\s*\{([^}]+)\}", css)[1] for selector in
+            (r"^:root", r':root:not\(\[data-theme="light"\]\)', r':root\[data-theme="dark"\]')
+        )
+        palette = {
+            "gemini": ("#2a78d6", "#3987e5"),
+            "groq": ("#eb6834", "#d95926"),
+            "openrouter": ("#1baf7a", "#199e70"),
+            "cloudflare": ("#eda100", "#c98500"),
+        }
+        for provider, (light_color, dark_color) in palette.items():
+            with self.subTest(provider=provider):
+                for block, expected in ((light, light_color), (auto_dark, dark_color), (forced_dark, dark_color)):
+                    self.assertRegex(block, rf"--provider-{provider}:\s*{expected};")
