@@ -12,8 +12,9 @@ The protocol turns those verdicts into one gate result.
   The commit and the prompt fingerprints are recorded in the lock (section 3).
 - **Request:** Narrative Profile `VI_YOUTUBE_CASUAL_V0` (Vietnamese, 900–1,100 words an episode,
   no spoilers beyond the episode), with the recap of earlier chapters on.
-- **Model:** the single model `gemini-3.8-flash`, with no fallback chain, so that every script
-  comes from the same model. Each call's model is recorded in `calls.jsonl`.
+- **Model:** the single model `gemini-3.6-flash` (DEC-043; originally `gemini-3.8-flash`), with no
+  fallback chain, so that every script comes from the same model. Each call's model is recorded in
+  `calls.jsonl`.
 - **Settings:** the guide's season settings, `--revision-rounds 3`, with every other option at its
   default.
 
@@ -107,3 +108,13 @@ Script text, source text and quotes stay under `.local/`. The result is recorded
 - **Reviewer.** One reviewer, so inter-reviewer agreement is not measured.
 - **Coverage.** The coverage gate depends on the reviewer's judgement, because the contract has no
   procedure for listing necessary items (contract section 20).
+
+## 9. Amendments
+
+- **2026-11-24, DEC-043 — model `gemini-3.8-flash` → `gemini-3.6-flash`.** The first lock
+  (2026-11-23, commit `840b6a4`) never produced an episode: `gemini-3.8-flash` returned 503 or 429
+  for more than a day and episode 1 stopped at its first stages. That attempt is discarded whole,
+  including its stage cache and story memory, and kept under `.local/` as
+  `m9_gate_v0_aborted_3_8flash`. The sample was re-locked before any new generation with the same
+  commit, profile, manifest, chapters, settings and command, changing only the model. No script was
+  generated, so chapters 6–17 had not been seen by any reviewer and stay the sample.

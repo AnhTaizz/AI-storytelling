@@ -22,7 +22,7 @@ M7 — Story Brief: ACCEPTED BASELINE (DEC-022, 2026-11-15).
 
 M8 — Narrative Planning: ACCEPTED BASELINE (DEC-023, 2026-11-15).
 
-M9 — Script Generation / Validation: PROTOTYPE EXISTS; M1/M9 Script Quality Gate: NOT YET EVALUATED; protocol v0 and review kit ready, sample not generated (DEC-033; see M9 Script Quality Gate below).
+M9 — Script Generation / Validation: PROTOTYPE EXISTS; M1/M9 Script Quality Gate: NOT YET EVALUATED; protocol v0 and review kit ready; sample re-locked on `gemini-3.6-flash` and generating (DEC-033, DEC-043; see M9 Script Quality Gate below).
 
 M10 — Advanced Retrieval: GATED behind the Script Quality Gate (DEC-009).
 
@@ -1669,7 +1669,7 @@ The owner has yet to choose or authorize any of these candidates.
 
 The project owner asked for the gate to be prepared and chose the sample and the pass rule (DEC-033). Nothing has been generated or reviewed yet, so the gate is still NOT YET EVALUATED.
 
-- **Protocol:** `docs/research/m9/M9_SCRIPT_QUALITY_GATE_PROTOCOL_V0.md`. Four season episodes, chapters 6–8, 9–11, 12–14 and 15–17, with recap. They use profile `VI_YOUTUBE_CASUAL_V0`, the single model `gemini-3.8-flash` and three revision rounds. The configuration is frozen in `gate_lock.json` before generation, and each episode gets one attempt.
+- **Protocol:** `docs/research/m9/M9_SCRIPT_QUALITY_GATE_PROTOCOL_V0.md`. Four season episodes, chapters 6–8, 9–11, 12–14 and 15–17, with recap. They use profile `VI_YOUTUBE_CASUAL_V0`, the single model `gemini-3.6-flash` (re-locked by DEC-043 after `gemini-3.8-flash` stayed overloaded) and three revision rounds. The configuration is frozen in `gate_lock.json` before generation, and each episode gets one attempt.
 - **Review kit:** `tools/story_pipeline/gate_review.py`.
   - `lock` freezes the commit and the hashes.
   - `form` writes a contract-complete Vietnamese form per episode, with the request record filled in and the critic's findings as candidates to confirm or reject.
