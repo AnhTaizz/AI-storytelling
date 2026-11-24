@@ -151,6 +151,16 @@ class ServerTests(unittest.TestCase):
             self.assertEqual(len(pairs), len(strings[locale]), locale)
         self.assertEqual(strings["vi"].keys(), strings["en"].keys())
 
+        self.assertIn("function formatDuration(", script)
+        for locale, labels in (
+            ("vi", ("ms", "giây", "phút", "giờ", "ngày", "Thời gian chạy")),
+            ("en", ("ms", "s", "min", "h", "d", "Run time")),
+        ):
+            for key, label in zip(("durationMillisecond", "durationSecond", "durationMinute",
+                                   "durationHour", "durationDay", "runTime"), labels):
+                with self.subTest(locale=locale, key=key):
+                    self.assertEqual(strings[locale].get(key), label)
+
         source = MockDataSource()
         codes = {row[FIELDS[key]] for row in source.requests for key in ("outcome", "error")} - {None}
         codes.update(run["status"] for run in source.runs)

@@ -318,6 +318,7 @@ td:has(.status) { min-width: 8rem; }
 tbody tr:last-child td { border-bottom: 0; }
 .numeric { text-align: end; }
 .notice { margin: .45rem 0; color: var(--muted); font-size: .85rem; }
+.duration:focus-visible::after { content: " (" attr(title) ")"; }
 .problem { padding: .75rem; border: 2px solid var(--status-critical); border-radius: .4rem; }
 .run-list { display: grid; gap: .75rem; }
 .stages {

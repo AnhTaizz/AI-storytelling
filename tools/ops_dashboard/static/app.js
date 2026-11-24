@@ -15,7 +15,8 @@ const STRINGS = {
     scopeCount: "Số phạm vi quota", quotaLimit: "Hạn mức", quotaUsed: "Đã dùng", quotaRemaining: "Còn lại",
     quotaCounters: "Bộ đếm quota đã báo", contextTokens: "Token ngữ cảnh", requestTokens: "Token mỗi yêu cầu",
     previous: "Trang trước", next: "Trang sau", policyHashLive: "SHA-256 của tệp quy tắc",
-    calls: "Lần gọi", seconds: "Giây", tokens: "Token", started: "Bắt đầu", updated: "Cập nhật",
+    calls: "Lần gọi", runTime: "Thời gian chạy", tokens: "Token", started: "Bắt đầu", updated: "Cập nhật",
+    durationMillisecond: "ms", durationSecond: "giây", durationMinute: "phút", durationHour: "giờ", durationDay: "ngày",
     noLiveIncidents: "Chưa ghi nhận sự cố gần đây.", skipReasons: "Lý do bỏ qua",
     RUNNING: "Đang chạy", UNKNOWN: "Không rõ", NOT_RUN: "Chưa chạy",
     STOPPED_AFTER_BRIEF: "Dừng sau bước tóm tắt", STOPPED_AFTER_PLAN: "Dừng sau bước lập dàn ý",
@@ -94,7 +95,8 @@ const STRINGS = {
     scopeCount: "Quota scopes", quotaLimit: "Limit", quotaUsed: "Used", quotaRemaining: "Remaining",
     quotaCounters: "Reported quota counters", contextTokens: "Context tokens", requestTokens: "Tokens per request",
     previous: "Previous page", next: "Next page", policyHashLive: "Policy file SHA-256",
-    calls: "Calls", seconds: "Seconds", tokens: "Tokens", started: "Started", updated: "Updated",
+    calls: "Calls", runTime: "Run time", tokens: "Tokens", started: "Started", updated: "Updated",
+    durationMillisecond: "ms", durationSecond: "s", durationMinute: "min", durationHour: "h", durationDay: "d",
     noLiveIncidents: "No recent incidents recorded.", skipReasons: "Skip reasons",
     RUNNING: "Running", UNKNOWN: "Unknown", NOT_RUN: "Not run",
     STOPPED_AFTER_BRIEF: "Stopped after brief", STOPPED_AFTER_PLAN: "Stopped after plan",
@@ -226,8 +228,37 @@ function element(tag, attributes = {}, ...children) {
   return node;
 }
 
-function textNumber(value) {
-  return value == null ? "—" : new Intl.NumberFormat(language).format(value);
+function textNumber(value, options) {
+  return value == null ? "—" : new Intl.NumberFormat(language, options).format(value);
+}
+
+function formatDuration(seconds) {
+  const unit = (value, key, digits = 0) =>
+    textNumber(value, {minimumFractionDigits: digits, maximumFractionDigits: digits}) + " " + t(key);
+
+  if (seconds < 1) return unit(seconds * 1000, "durationMillisecond");
+  const wholeSeconds = Math.round(seconds);
+  if (wholeSeconds < 60) return unit(seconds, "durationSecond", seconds < 9.95 ? 1 : 0);
+
+  const minutes = Math.floor(wholeSeconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  if (days) {
+    return unit(days, "durationDay") + (hours % 24 ? " " + unit(hours % 24, "durationHour") : "");
+  }
+  if (hours) {
+    return unit(hours, "durationHour") + (minutes % 60 ? " " + unit(minutes % 60, "durationMinute") : "");
+  }
+  return unit(minutes, "durationMinute") +
+    (minutes < 10 && wholeSeconds % 60 ? " " + unit(wholeSeconds % 60, "durationSecond") : "");
+}
+
+function durationNode(value, rawUnit, source) {
+  if (value == null) return source === undefined ? "—" : t("unknown");
+  const title = textNumber(value, {maximumSignificantDigits: 21}) + " " + t(rawUnit);
+  return element("span", {class: "duration", tabindex: "0", title},
+    formatDuration(rawUnit === "durationMillisecond" ? value / 1000 : value),
+    source == null ? "" : " · " + t(source));
 }
 
 function sourcedNumber(value, source, date) {
@@ -455,9 +486,8 @@ function overview(data, providerData, history) {
     .map(([stage, counts]) => [technical(stage), ...data.providers.map(provider => live
       ? sourcedNumber(counts[provider.slug] ?? 0, today.sources.stage_provider_mix)
       : textNumber(counts[provider.slug] ?? 0))]);
-  const latency = ["p50", "p95"].map(key => key + " " +
-    (today.latency[key] == null ? "—" : textNumber(today.latency[key]) + " ms" +
-      (live ? " · " + t(today.sources.latency) : "")));
+  const [p50, p95] = ["p50", "p95"].map(key =>
+    durationNode(today.latency[key], "durationMillisecond", live ? today.sources.latency : undefined));
   return [
     ...sourceNotices(data),
     overviewStatus(providerData.providers, data.generated_at),
@@ -472,7 +502,7 @@ function overview(data, providerData, history) {
     section("incidents", incidents.length
       ? table(["time", "provider", "stage", "outcome", "error"].map(key => t(key)), incidents, t("incidents"))
       : notice(live ? "noLiveIncidents" : "noIncidents")),
-    section("stageRequests", element("p", {class: "notice"}, t("latency") + " · " + latency.join(" · ")),
+    section("stageRequests", element("p", {class: "notice"}, t("latency") + " · p50 ", p50, " · p95 ", p95),
       mix.length ? table([t("stage"), ...data.providers.map(provider => provider.name)], mix, t("stageRequests"), 1)
         : notice("noRecords")),
     ...(live && Object.keys(today.skip_reason_counts).length ? [section("skipReasons",
@@ -677,8 +707,7 @@ function drawRequests(data, region, changePage) {
     timeNode(row[fields.timestamp]), element("code", {}, row[fields.request]),
     displayProvider(row[fields.provider]), technical(row[fields.stage]),
     technical(row[fields.outcome], outcomeStates[row[fields.outcome]]),
-    row[fields.latency] == null ? "—" : textNumber(row[fields.latency]) + " ms" +
-      (row.sources ? " · " + t(row.sources.latency_ms) : ""),
+    durationNode(row[fields.latency], "durationMillisecond", row.sources?.[fields.latency]),
     element("div", {}, element("strong", {}, t(row[fields.tokenSource])),
       element("div", {}, textNumber(row[fields.input]) + " / " + textNumber(row[fields.output])),
       ...(row[fields.reasoning] == null ? [] : [element("small", {}, t("reasoning", {
@@ -771,12 +800,13 @@ function pipeline(data) {
         return element("li", {class: state, "aria-label": t(stage) + " · " + t(state),
           ...(state === "current" ? {"aria-current": "step"} : {})},
         element("span", {"aria-hidden": "true"}, mark), technical(stage),
-        ...(stageInfo ? [element("small", {class: "muted"}, t(stageInfo.status) + " · " +
-          sourcedNumber(stageInfo.seconds, stageInfo.source))] : []));
+        ...(stageInfo ? [element("small", {class: "muted"}, t(stageInfo.status) + " · ",
+          durationNode(stageInfo.seconds, "durationSecond", stageInfo.source))] : []));
       }))] : []),
       ...(run.totals_scope ? [element("p", {class: "muted"}, t(run.totals_scope))] : []),
       ...(live ? [element("dl", {class: "detail-list"},
-        ...["calls", "tokens", "seconds"].map(key => detail(key, sourcedNumber(run[key], run.sources[key]))),
+        ...["calls", "tokens"].map(key => detail(key, sourcedNumber(run[key], run.sources[key]))),
+        detail("runTime", durationNode(run.seconds, "durationSecond", run.sources.seconds)),
         ...(run.review_reasons_count == null ? [] : [detail("reviewReasons",
           sourcedNumber(run.review_reasons_count, run.sources.review_reasons_count))]),
         ...(run.model || run.provider ? [detail("model", [run.provider, run.model].filter(Boolean).join(" · "))] : []),
