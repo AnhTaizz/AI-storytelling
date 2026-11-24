@@ -153,13 +153,14 @@ def run_season(client: LLMClient, manifest_path: Path | str, ranges: Sequence[Tu
     rows: List[Dict[str, Any]] = []
     status, stop_reason, story_id = "COMPLETED", None, None
     totals = {"calls": 0, "tokens": 0, "seconds": 0.0}
+    options = options or {}
     for index, chapters in enumerate(ranges, start=1):
         path = episode_dir(season_dir, index, chapters)
         previous = _read_manifest(path)
         scope, background = run_pipeline.episode_scope(manifest_path, chapters[0], chapters[1], source_root,
                                                        recap=True)
         story_id = scope.story_id
-        review = (options or {}).get("owner_review")
+        review = options.get("owner_review")
         if previous and previous.get("status") == "COMPLETED" and not (
                 review and run_pipeline.pending_owner_errors(path, review)):
             progress(f"episode {index} (chapters {chapters[0]}-{chapters[1]}): already completed")
@@ -167,9 +168,15 @@ def run_season(client: LLMClient, manifest_path: Path | str, ranges: Sequence[Tu
             continue
         progress(f"episode {index} (chapters {chapters[0]}-{chapters[1]})")
         started = time.time()
+        episode_options = options
+        if invocation := options.get("invocation"):
+            # An episode can also be resumed through run_pipeline. Save its actual
+            # spoiler scope and recap setting instead of the season-wide arguments.
+            episode_invocation = invocation | {"chapters": f"{chapters[0]}-{chapters[1]}", "recap": True}
+            episode_options = options | {"invocation": episode_invocation}
         manifest = run(client, scope, profile, path, facts=facts, resume=previous is not None,
                        background=background, memory=memory,
-                       progress=lambda message, i=index: progress(f"  ep{i}: {message}"), **(options or {}))
+                       progress=lambda message, i=index: progress(f"  ep{i}: {message}"), **episode_options)
         row = _episode_row(index, chapters, path, manifest, season_dir)
         rows.append(row)
         totals["calls"] += row.get("calls", 0)
@@ -242,7 +249,18 @@ def main(argv: Optional[List[str]] = None) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     scope, _ = run_pipeline.episode_scope(args.manifest, first, first, args.source_root)
-    season_dir = Path(args.season_dir) if args.season_dir else DEFAULT_SEASON_ROOT / scope.story_id
+    destination = args.season_dir or args.resume
+    season_dir = Path(destination) if destination else DEFAULT_SEASON_ROOT / scope.story_id
+    previous = [_read_manifest(episode_dir(season_dir, index, chapters))
+                for index, chapters in enumerate(ranges, start=1)]
+    existing = [manifest for manifest in previous if manifest is not None]
+    try:
+        run_pipeline.prepare_routing(args, season_dir, existing[0] if existing else None)
+        for manifest in existing[1:]:
+            run_pipeline.check_routing_identity(args, manifest.get("invocation") or {})
+    except ValueError as exc:
+        print(f"config error: {exc}", file=sys.stderr)
+        return 2
     client = run_pipeline.make_client(args)
     if client is None:
         return 2
@@ -250,9 +268,14 @@ def main(argv: Optional[List[str]] = None) -> int:
     profile = load_profile(args.profile).with_length(args.min_words, args.max_words)
     facts = StoryFacts.load(args.facts) if args.facts else None
     print(f"season dir: {season_dir}  episodes: {', '.join(f'{a}-{b}' for a, b in ranges)}", flush=True)
+    options = run_pipeline.run_options(args)
+    if args.locked:
+        options["locked"] = True
+    else:
+        options["invocation"] = run_pipeline.invocation_of(args)
     season = run_season(client, args.manifest, ranges, profile, season_dir, memory=memory,
                         source_root=args.source_root, facts=facts, stop_on_failure=not args.keep_going,
-                        options=run_pipeline.run_options(args), progress=lambda m: print(m, flush=True))
+                        options=options, progress=lambda m: print(m, flush=True))
     print(f"season: {season['status']}  calls: {season['totals']['calls']}  index: {season_dir / 'season.md'}")
     if season.get("stop_reason"):
         print(f"stopped: {season['stop_reason']}")

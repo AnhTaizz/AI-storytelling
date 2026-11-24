@@ -83,6 +83,10 @@ The router hops to another account after a quota refusal, pauses after two such 
 
 Run `python -m tools.llm_infra.cloudflare_smoke` or `python -m tools.llm_infra.check_config` to inspect settings, usage estimates and cooldowns offline. With `--live`, the smoke command sends one synthetic chat request through the first eligible slot if its account is available. It uses a 20-second timeout and up to 512 output tokens, performs no retries, reports whether the response parses as JSON, and records the estimated usage. Pipeline integration is planned for Phase 5. [Workers Free setup guide](../guides/CLOUDFLARE_FREE_SETUP.md)
 
+## Phase 5 ? Unified story pipeline routing
+
+The pipeline and season commands default to the existing Gemini chain. Named providers and AUTO are opt-in and reuse the free-only routers. AUTO filters by configuration, free model rules, estimated request size, JSON output support and quota state. The owner's order expresses preference. The default policy stays with Gemini for the quality-critical stages, including script patches. The policy hash is recorded on disk and checked on resume. SQLite telemetry records call metadata for unlocked runs. Locked M9 runs retain the legacy Gemini behavior. [Routing guide](../guides/LLM_ROUTING_GUIDE.md) ? [Telemetry schema](LLM_TELEMETRY_SCHEMA.md)
+
 ## Routing phases
 
 | Phase | Work |

@@ -1,0 +1,20 @@
+version: 1
+stages:
+  brief: quality_critical
+  brief_check: quality_critical
+  plan: quality_critical
+  script: quality_critical
+  critic: quality_critical
+  source_check: quality_critical
+  revise: quality_critical
+  patch: quality_critical
+  default: utility
+tiers:
+  quality_critical:
+    candidates: ["gemini:*"]
+    cross_provider_fallback: false
+    max_output_tokens: 8192
+  utility:
+    candidates: ["groq:*", "cloudflare:*", "openrouter:*", "gemini:*"]
+    cross_provider_fallback: true
+    max_output_tokens: 4096
