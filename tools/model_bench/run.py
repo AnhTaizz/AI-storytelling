@@ -19,7 +19,7 @@ from tools.model_bench.approval import LiveRefusal, approval_budget, load_approv
 from tools.model_bench.dataset import DRAFT_GOLD_STATUS, GROUPS, ROOT, canonical_json, gold_statuses, load_dataset
 from tools.model_bench.m9 import check_m9
 from tools.model_bench.planning import (DEFAULT_MAX_OUTPUT, MAX_TRANSPORT_CALLS, PROMPT_VERSION,
-                                        SCREENING_CASES, SCREENING_MODELS, SCREENING_REQUEST_CAP, SYSTEM, TEMPERATURE,
+                                        SCREENING_CASES, SCREENING_REQUEST_CAP, SCREENING_WAVES, SYSTEM, TEMPERATURE,
                                         approval_sha256, display, make_plan, plan_markdown,
                                         quota_text, user_prompt)
 from tools.model_bench.registry import PROVIDERS, select_model
@@ -281,7 +281,7 @@ def _arguments(argv):
     mode.add_argument("--live", action="store_const", const="live", dest="mode")
     parser.set_defaults(mode="dry-run")
     parser.add_argument("--approved-plan", type=Path)
-    parser.add_argument("--gold-review", type=Path)
+    parser.add_argument("--gold-review", type=Path, help="path to an owner-confirmed GOLD_REVIEW.json")
     parser.add_argument("--include-drafts", action="store_true")
     parser.add_argument("--seasons-dir", type=Path, default=SEASONS)
     parser.add_argument("--m9-clear-attested-by-owner", action="store_true")
@@ -325,12 +325,15 @@ def main(argv=None):
         commit = _commit()
         if args.screening:
             cases = _select_cases(cases, (), SCREENING_CASES, None)
-            plans = []
-            for provider, model_id, reason in SCREENING_MODELS:
-                model = select_model(provider, model_id)
-                metadata, case_plans = _configuration(model, dataset_hash, cases, args, commit)
-                plans.append((model, case_plans, metadata["plan_sha256"], SCREENING_REQUEST_CAP, reason))
-            print(plan_markdown(plans), end="")
+            print(f"Revision at generation: `{display(commit)}`")
+            print("\n**Pending on `main` after merge.** Regenerate the dry-run plan and per-model fingerprints.\n")
+            for wave, candidates in SCREENING_WAVES:
+                plans = []
+                for provider, model_id, reason in candidates:
+                    model = select_model(provider, model_id)
+                    metadata, case_plans = _configuration(model, dataset_hash, cases, args, commit)
+                    plans.append((model, case_plans, metadata["plan_sha256"], SCREENING_REQUEST_CAP, reason))
+                print(plan_markdown(plans, wave=wave))
             return 0
         model = select_model(args.provider, args.model)
         cases = _select_cases(cases, args.group, args.case, args.limit)
@@ -375,7 +378,7 @@ def main(argv=None):
             clearance()
             if metadata["git_commit"] is None:
                 raise ValueError("Live requires a known git revision")
-            if args.model == "openrouter/free" or any(item["flags"] for item in case_plans):
+            if any(item["flags"] for item in case_plans):
                 raise ValueError("Live requires a named, pinned model and a plan without flagged cases")
             settings = dict(os.environ)
             secrets = configured_secrets(settings)

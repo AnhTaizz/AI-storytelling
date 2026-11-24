@@ -13,7 +13,9 @@ from tools.llm_infra.model_capabilities_v1 import model_capability
 REGISTRY_PATH = Path(__file__).with_name("model_registry_v1.yaml")
 PROVIDERS = ("gemini", "groq", "openrouter", "cloudflare")
 FREE_LISTS = dict(zip(PROVIDERS, (gemini.FREE_TIER_TEXT_MODELS, groq.FREE_TIER_TEXT_MODELS,
-                                openrouter.DEFAULT_MODEL_CHAIN, cloudflare.NEURON_PRICES)))
+                                tuple(model for model in openrouter.DEFAULT_MODEL_CHAIN if model.endswith(":free")),
+                                cloudflare.NEURON_PRICES)))
+UNAVAILABLE_OPENROUTER_MODELS = {"openai/gpt-oss-20b:free": "not in catalog 2026-11-24"}
 QUOTA_SCOPES = dict(zip(PROVIDERS, ("project_model", "organization_model", "account", "account_neurons")))
 LIMITS = ("rpm", "tpm", "rpd", "tpd", "neurons_per_day", "free_requests_per_day")
 _STATUS = {"enum": ["verified", "estimated", "unknown"]}
@@ -28,15 +30,6 @@ def _object(properties, optional=()):
             "required": [name for name in properties if name not in optional]}
 
 
-_FILE_SCHEMA = _object({
-    "version": {"const": 1},
-    "models": {"type": "array", "minItems": 1, "uniqueItems": True,
-               "items": _object(_KEYS | {"benchmark_results": {"type": "string"}}, ("benchmark_results",))},
-    "documented_limits": _object({
-        "openrouter": _object({"rpm": _COUNT, "free_requests_per_day": _COUNT}),
-        "cloudflare": _object({"rpm": _COUNT}),
-    }),
-})
 _FIELDS = _KEYS | {
     "context_tokens": _COUNT, "max_output_tokens": _COUNT,
     "limits": _object(dict.fromkeys(LIMITS, _COUNT)),
@@ -46,12 +39,30 @@ _FIELDS = _KEYS | {
     "source_url": {"type": "string", "format": "uri"},
     "verified_on": {"type": "string", "format": "date"},
 }
+_CATALOG_FIELDS = {
+    **{key: _FIELDS[key] for key in ("context_tokens", "json_mode", "structured_output", "reasoning",
+                                     "source_url", "verified_on")},
+    "pricing": _object(dict.fromkeys(("prompt", "completion"), {"const": 0})),
+    "note": {"type": "string"},
+}
+_FILE_SCHEMA = _object({
+    "version": {"const": 1},
+    "models": {"type": "array", "minItems": 1, "uniqueItems": True,
+               "items": _object(_KEYS | {"benchmark_results": {"type": "string"},
+                                         "catalog": _object(_CATALOG_FIELDS)}, ("benchmark_results", "catalog"))},
+    "documented_limits": _object({
+        "openrouter": _object({"rpm": _COUNT, "free_requests_per_day": _COUNT}),
+        "cloudflare": _object({"rpm": _COUNT}),
+    }),
+})
+_OPTIONAL_FIELDS = ("pricing", "note", "benchmark_results")
 REGISTRY_SCHEMA = _object(_FIELDS | {
     "status": _object(dict.fromkeys((*[key for key in _FIELDS if key != "limits"],
-                                    *[f"limits.{key}" for key in LIMITS], "benchmark_results"), _STATUS),
-                      ("benchmark_results",)),
+                                    *[f"limits.{key}" for key in LIMITS], *_OPTIONAL_FIELDS), _STATUS),
+                      _OPTIONAL_FIELDS),
     "benchmark_results": {"type": "string"},
-}, ("benchmark_results",))
+    **{key: _CATALOG_FIELDS[key] for key in ("pricing", "note")},
+}, _OPTIONAL_FIELDS)
 
 
 def _resolve(identity, documented):
@@ -71,10 +82,9 @@ def _resolve(identity, documented):
         "structured_output": None, "reasoning": reasoning, "free_tier_eligible": True,
         "source_url": cap.source, "verified_on": cap.verified_on,
     }
-    values = {key: entry[key] for key in _FIELDS if key != "limits"}
+    entry.update(entry.pop("catalog", {}))
+    values = {key: value for key, value in entry.items() if key != "limits"}
     values.update({f"limits.{key}": value for key, value in limits.items()})
-    if "benchmark_results" in entry:
-        values["benchmark_results"] = entry["benchmark_results"]
     estimates = {f"limits.{key}" for key in documented.get(provider, {})}
     entry["status"] = {key: ("unknown" if value is None else "estimated" if key in estimates else "verified")
                        for key, value in values.items()}
@@ -87,7 +97,10 @@ def _snapshot(path):
     Draft202012Validator(_FILE_SCHEMA).validate(source)
     rows = {(row["provider"], row["model_id"]): row for row in source["models"]}
     expected = {(provider, model) for provider, models in FREE_LISTS.items() for model in models}
-    if rows.keys() != expected or len(rows) != len(source["models"]):
+    catalog = {key for key, row in rows.items() if "catalog" in row
+               and key[0] == "openrouter" and key[1].endswith(":free")
+               and openrouter.is_free_model(key[1]) and key[1] not in UNAVAILABLE_OPENROUTER_MODELS}
+    if rows.keys() != expected | catalog or len(rows) != len(source["models"]):
         raise ValueError("Model registry identities drifted from the provider free lists")
     return rows, source["documented_limits"]
 
@@ -98,11 +111,13 @@ def load_registry(path=REGISTRY_PATH):
 
 
 def select_model(provider, model, path=REGISTRY_PATH):
+    if provider == "openrouter" and model in UNAVAILABLE_OPENROUTER_MODELS:
+        raise ValueError(f"{model} is unavailable ({UNAVAILABLE_OPENROUTER_MODELS[model]})")
     rows, documented = _snapshot(path)
     if (provider, model) in rows:
         return _resolve(rows[provider, model], documented)
     # OpenRouter maintains an eligibility rule rather than a finite variant catalog.
     if (provider == "openrouter" and len(model) <= 128
-            and openrouter.is_free_model(model) and "/" in model):
+            and model.endswith(":free") and openrouter.is_free_model(model) and "/" in model):
         return _resolve({"provider": provider, "model_id": model}, documented)
     raise ValueError("Select a model from the free registry or a named OpenRouter :free variant")

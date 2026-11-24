@@ -30,8 +30,10 @@ def case_sha256(case):
 
 
 def gold_statuses(dataset_hash, cases, path=DATA / "GOLD_REVIEW.json"):
-    """Resolve only decisions bound to this exact dataset and case content."""
+    """Resolve confirmed decisions bound to this exact dataset and case content."""
     draft = DRAFT_GOLD_STATUS
+    if path.name != "GOLD_REVIEW.json":
+        return dict.fromkeys((case["id"] for case in cases), draft)
     try:
         review = json.loads(path.read_text(encoding="utf-8"))
     except FileNotFoundError:
@@ -54,7 +56,8 @@ def gold_statuses(dataset_hash, cases, path=DATA / "GOLD_REVIEW.json"):
                 or not isinstance(reviewer, str) or not reviewer.strip()
                 or not isinstance(reviewed_on, str) or date.fromisoformat(reviewed_on).isoformat() != reviewed_on):
             raise ValueError("Invalid gold review decision")
-        statuses[case_id] = status
+        if not reviewer.startswith("proposed:"):
+            statuses[case_id] = status
     return statuses
 
 

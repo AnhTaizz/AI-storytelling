@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 13 — test files: 148 — test functions: 1488
+Suites: 13 — test files: 148 — test functions: 1492
 
 ## canonical_story
 
@@ -482,12 +482,13 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.model_bench.approval`, `t
 - `ApprovalTests.test_content_binding_expiry_and_selection`
 - `ApprovalTests.test_ledger_binds_rehashed_plan_and_keeps_unsettled_reservation`
 
-### test_dataset (4)
-Covers: `tools.canonical_story.conformance_v0`, `tools.model_bench.dataset`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+### test_dataset (5)
+Covers: `tools.canonical_story.conformance_v0`, `tools.model_bench.dataset`, `tools.model_bench.planning`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `DatasetTests.test_manifest_and_synthetic_evidence`
 - `DatasetTests.test_changed_file_rejected`
 - `DatasetTests.test_gold_review_requires_unchanged_case_and_dataset`
+- `DatasetTests.test_screening_proposal_requires_owner_confirmation`
 - `DatasetTests.test_taxonomy_covers_pipeline_stage_calls_and_cli`
 
 ### test_m9 (1)
@@ -502,10 +503,11 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.model_capabilit
 - `PlanningTests.test_known_limits_and_unknown_adapter_context`
 - `PlanningTests.test_plan_fingerprint_and_daily_floor`
 
-### test_registry (3)
+### test_registry (4)
 Covers: `tools.canonical_story.conformance_v0`, `tools.model_bench.registry`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `RegistryTests.test_snapshot_matches_code_and_preserves_unknowns`
+- `RegistryTests.test_openrouter_catalog_snapshot_and_quota_status`
 - `RegistryTests.test_registry_refuses_drift_and_malformed_values`
 - `RegistryTests.test_openrouter_named_variant_and_invalid_models`
 
@@ -519,7 +521,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.model_bench.dataset`, `to
 
 - `ReviewSheetTests.test_standalone_html_includes_all_case_hashes_and_review_controls`
 
-### test_run (8)
+### test_run (10)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.pipeline_clients`, `tools.model_bench.approval`, `tools.model_bench.dataset`, `tools.model_bench.planning`, `tools.model_bench.registry`, `tools.model_bench.run`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `RunnerTests.test_default_dry_run_math_and_markdown`
@@ -527,7 +529,9 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.pipeline_client
 - `RunnerTests.test_resume_after_interruption_restores_checkpoint_order`
 - `RunnerTests.test_pinned_client_and_safe_errors`
 - `RunnerTests.test_screening_plan_matches_individual_run_configuration`
+- `RunnerTests.test_refuses_unpinned_openrouter_plan`
 - `RunnerTests.test_live_refuses_before_any_dispatch_without_approval`
+- `RunnerTests.test_live_refuses_proposed_gold_before_dispatch`
 - `RunnerTests.test_live_budget_counts_retries_and_refuses_reuse_or_resume`
 - `RunnerTests.test_live_gold_selection_and_draft_labels`
 

@@ -10,6 +10,7 @@ import unittest
 import yaml
 
 from tools.model_bench.dataset import DATA, DIFFICULTIES, GROUPS, ROOT, case_sha256, gold_statuses, load_dataset
+from tools.model_bench.planning import SCREENING_CASES
 
 
 class DatasetTests(unittest.TestCase):
@@ -58,6 +59,32 @@ class DatasetTests(unittest.TestCase):
                     edited = case | {"expected_behaviour": "đã sửa"}
                     self.assertEqual(gold_statuses(dataset_hash, [edited], path)[case_id], draft)
                     self.assertEqual(gold_statuses("stale", [case], path)[case_id], draft)
+
+    def test_screening_proposal_requires_owner_confirmation(self):
+        dataset_hash, cases = load_dataset()
+        proposal = DATA / "GOLD_REVIEW.proposed.json"
+        review = json.loads(proposal.read_bytes())
+        self.assertEqual(review["dataset_sha256"], dataset_hash)
+        self.assertEqual(set(review["cases"]), set(SCREENING_CASES))
+        for case in cases:
+            if case["id"] in SCREENING_CASES:
+                with self.subTest(case=case["id"]):
+                    self.assertEqual(review["cases"][case["id"]], {
+                        "status": "approved", "case_sha256": case_sha256(case), "date": "2026-11-24",
+                        "reviewer": "proposed: ChatGPT content review relayed by the Project Owner "
+                                    "— pending owner confirmation",
+                    })
+        with TemporaryDirectory() as temp:
+            path = Path(temp) / "GOLD_REVIEW.json"
+            expected = dict.fromkeys((case["id"] for case in cases), "draft_needs_owner_review")
+            self.assertEqual(gold_statuses(dataset_hash, cases, path), expected)
+            self.assertEqual(gold_statuses(dataset_hash, cases, proposal), expected)
+            shutil.copyfile(proposal, path)
+            self.assertEqual(gold_statuses(dataset_hash, cases, path), expected)
+            for decision in review["cases"].values():
+                decision["reviewer"] = "Owner"
+            path.write_text(json.dumps(review), encoding="utf-8")
+            self.assertEqual(gold_statuses(dataset_hash, cases, path), expected | dict.fromkeys(SCREENING_CASES, "approved"))
 
     def test_taxonomy_covers_pipeline_stage_calls_and_cli(self):
         code = ROOT / "tools" / "story_pipeline"

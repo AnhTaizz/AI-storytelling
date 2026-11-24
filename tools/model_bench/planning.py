@@ -21,13 +21,17 @@ SCREENING_CASES = (
     "vietnamese_script-03", "script_correction-07", "structured_output-01",
 )
 SCREENING_REQUEST_CAP = 40
-SCREENING_MODELS = (
-    ("gemini", "gemini-3.5-flash-lite", "Utility · Flash-Lite candidate"),
-    ("gemini", "gemini-3.8-flash", "Quality-critical · Flash candidate on the M9 provider"),
-    ("groq", "openai/gpt-oss-20b", "Utility · same model family across Groq and OpenRouter"),
-    ("groq", "openai/gpt-oss-120b", "Quality-critical · second GPT-OSS size on Groq"),
-    ("openrouter", "openai/gpt-oss-20b:free", "Utility · pinned free variant, availability unverified"),
-    ("cloudflare", "@cf/qwen/qwen3-30b-a3b-fp8", "Quality-critical · different family and Neuron quota"),
+SCREENING_WAVES = (
+    ("Wave 1", (
+        ("groq", "openai/gpt-oss-20b", "Utility · smaller GPT-OSS candidate"),
+        ("groq", "openai/gpt-oss-120b", "Quality-critical · larger GPT-OSS candidate"),
+        ("cloudflare", "@cf/qwen/qwen3-30b-a3b-fp8", "Quality-critical · Qwen candidate with Neuron quota"),
+        ("openrouter", "google/gemma-4-31b-it:free", "Utility · named Gemma free variant"),
+    )),
+    ("Wave 2 — after M9 finishes and the owner confirms Gemini quota", (
+        ("gemini", "gemini-3.5-flash-lite", "Utility · Flash-Lite candidate"),
+        ("gemini", "gemini-3.6-flash", "Quality-critical · Flash candidate on the M9 provider"),
+    )),
 )
 
 
@@ -86,37 +90,59 @@ def _window_floor(limits, loads):
                        default=None))
 
 
-def plan_markdown(plans):
+def plan_markdown(plans, *, wave=None):
     """Render one common case selection with per-model caps and configuration hashes."""
     case_ids = ", ".join(f"`{item['case_id']}`" for item in plans[0][1])
-    lines = ["## Owner approval table", "", f"Cases in execution order: {case_ids}", "",
+    lines = [f"## {wave or 'Owner approval table'}", "", f"Cases in execution order: {case_ids}", "",
              f"One run per model. Reserve {MAX_TRANSPORT_CALLS} requests before every case. "
              "The run can stop early when the remaining cap cannot cover that reserve.",
              "Token estimates use input plus reserved output. At the cap, use the largest case estimate "
              "for every request as a conservative planning figure. Quota windows are lower bounds from "
-             "known limits only. Allow for shared quota, retry bursts and actual provider counters.",
-             "Schedule Gemini after M9 finishes. Stability repeats follow screening.", "",
-             "| Provider / model | Screening tier and reason | Cases × runs | Base requests | Request cap | "
-             "Est. input + output (base) | Est. tokens at cap | Quota scope and limits | Min / days ≥ |",
-             "| --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- |"]
+             "known limits only. Allow for shared quota, retry bursts and actual provider counters."]
+    if wave:
+        lines.extend(["", "**Shared-quota check.** No other pipeline may use the same provider during this wave. "
+                      "M9 uses Gemini only."])
+    lines.extend(["", "| Provider / model | Screening tier and reason | Cases × runs | Base requests | Request cap | "
+                  "Est. input + output (base) | Est. input + output (at cap) | Quota scope and limits | Min / days ≥ |",
+                  "| --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- |"])
     details = []
+    total_cases = total_requests = total_inputs = total_outputs = total_cap_inputs = total_cap_outputs = 0
     for model, items, fingerprint, cap, reason in plans:
         name = f"{model['provider']} / {model['model_id']}"
         inputs = sum(item["input"] for item in items)
         outputs = sum(item["reserved_output"] for item in items)
-        cap_tokens = cap * max(item["input"] + item["reserved_output"] for item in items)
+        cap_inputs = cap * max(item["input"] for item in items)
+        cap_outputs = cap * max(item["reserved_output"] for item in items)
+        cap_tokens = cap_inputs + cap_outputs
         neurons = cap * max((item["neurons"] or 0 for item in items))
         limits = model["limits"]
         minutes = _window_floor(limits, {"rpm": cap, "tpm": cap_tokens})
         days = _window_floor(limits, {"free_requests_per_day": cap, "rpd": cap, "tpd": cap_tokens,
                                       "neurons_per_day": neurons})
         lines.append(f"| {name} | {reason} | {len(items)} × {REPEATS} | {len(items)} | {cap} | "
-                     f"{inputs} + {outputs} | {cap_tokens} | {model['quota_scope']}. {quota_text(model)} | "
+                     f"{inputs} + {outputs} | {cap_inputs} + {cap_outputs} | {model['quota_scope']}. "
+                     f"{quota_text(model)} | "
                      f"{minutes} / {days} |")
+        total_cases += len(items)
+        total_requests += cap
+        total_inputs += inputs
+        total_outputs += outputs
+        total_cap_inputs += cap_inputs
+        total_cap_outputs += cap_outputs
         details.append(f"- {name} plan SHA-256 `{fingerprint}`")
+        if wave:
+            unverified = ", ".join(f"{key} [{status}]" for key, status in model["status"].items()
+                                   if status != "verified")
+            details.append(f"- {name} unverified fields: {unverified or 'none'}. Confirm current quota and usage.")
+            if model.get("note"):
+                details.append(f"- {name}: {model['note']}.")
         if model["provider"] == "cloudflare":
             details.append(f"- {name} estimated Neurons at cap {neurons}")
         details.extend(f"- {name}, {item['case_id']} exceeds {', '.join(item['flags'])}"
                        for item in items if item["flags"])
+    if wave:
+        lines.append(f"| **Wave total** |  | {total_cases} | {total_cases} | {total_requests} | "
+                     f"{total_inputs} + {total_outputs} | {total_cap_inputs} + {total_cap_outputs} | "
+                     "Per-model caps and quota scopes apply |  |")
     lines.extend(["", *details])
     return "\n".join(lines) + "\n"

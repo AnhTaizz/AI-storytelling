@@ -50,7 +50,8 @@ def load_approval(path, metadata):
             key = item["provider"], item["model"]
             cap = item["request_cap"]
             if (set(item) != {"provider", "model", "request_cap", "plan_sha256"}
-                    or key in models or not all(isinstance(part, str) and part for part in key)
+                    or key == ("openrouter", "openrouter/free") or key in models
+                    or not all(isinstance(part, str) and part for part in key)
                     or type(cap) is not int or cap <= 0
                     or not re.fullmatch(r"[0-9a-f]{64}", item["plan_sha256"])):
                 raise ValueError

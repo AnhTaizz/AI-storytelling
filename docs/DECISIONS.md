@@ -1119,5 +1119,8 @@ owner plan. Every invocation pins a provider and model. Per-model caps include e
 transport attempt and use a durable approval ledger shared across runs and resumes.
 Gemini checks M9 season activity before dispatch, with an explicit owner attestation
 recorded for overrides. A self-contained review sheet exports the gold decisions.
-Phase 7B starts with one screening run per model on ten shared DEV cases. See
+Phase 7B starts with one screening run per model on ten shared DEV cases, capped at
+40 requests per model. Wave 1 covers Groq, Cloudflare and a named OpenRouter free
+variant. Wave 2 covers Gemini after M9 finishes and the owner confirms quota.
+The ten proposed gold decisions require owner confirmation in `GOLD_REVIEW.json`. See
 [the Phase 7B screening plan](engineering/MODEL_BENCH_7B_PLAN.md).

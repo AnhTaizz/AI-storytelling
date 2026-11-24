@@ -9,8 +9,8 @@ from unittest.mock import Mock, patch
 
 from tools.llm_infra.pipeline_clients import ProviderFailure
 from tools.model_bench.approval import approval_budget, content_sha256
-from tools.model_bench.dataset import case_sha256, load_dataset
-from tools.model_bench.planning import MAX_TRANSPORT_CALLS, SCREENING_CASES, SCREENING_MODELS, make_plan
+from tools.model_bench.dataset import DATA, case_sha256, load_dataset
+from tools.model_bench.planning import MAX_TRANSPORT_CALLS, SCREENING_CASES, make_plan
 from tools.model_bench.registry import select_model
 from tools.model_bench.run import FakeClient, _run_case, execute, main
 
@@ -125,12 +125,35 @@ class RunnerTests(unittest.TestCase):
             self.assertEqual(main(["--screening", "--dry-run", "--plan-md"]), 0)
         table = output.getvalue()
         self.assertEqual(table.count("| 10 × 1 | 10 | 40 |"), 6)
-        for provider, model, _ in SCREENING_MODELS:
-            with self.subTest(model=model), redirect_stdout(io.StringIO()) as output:
-                selection = [arg for case_id in SCREENING_CASES for arg in ("--case", case_id)]
-                main(["--provider", provider, "--model", model, "--plan-md", *selection])
-                fingerprint = output.getvalue().split("plan SHA-256 ")[1].splitlines()[0]
-                self.assertIn(f"{provider} / {model} plan SHA-256 {fingerprint}", table)
+        self.assertIn("Pending on `main` after merge", table)
+        self.assertEqual(table.count("Shared-quota check."), 2)
+        self.assertIn("Wave 2 — after M9 finishes and the owner confirms Gemini quota", table)
+        wave1, wave2 = table.split("## Wave 2")
+        for wave, expected_total, candidates in (
+            (wave1, "| **Wave total** |  | 40 | 40 | 160 | 6438 + 20480 | 34520 + 81920 |", (
+                ("groq", "openai/gpt-oss-20b"), ("groq", "openai/gpt-oss-120b"),
+                ("cloudflare", "@cf/qwen/qwen3-30b-a3b-fp8"), ("openrouter", "google/gemma-4-31b-it:free"),
+            )),
+            (wave2, "| **Wave total** |  | 20 | 20 | 80 | 3164 + 10240 | 17040 + 40960 |", (
+                ("gemini", "gemini-3.5-flash-lite"), ("gemini", "gemini-3.6-flash"),
+            )),
+        ):
+            self.assertIn(expected_total, wave)
+            self.assertEqual(wave.count("unverified fields:"), len(candidates))
+            self.assertEqual([line.split(" | ")[0][2:] for line in wave.splitlines() if "| 10 × 1 |" in line],
+                             [f"{provider} / {model}" for provider, model in candidates])
+            for provider, model in candidates:
+                with self.subTest(model=model), redirect_stdout(io.StringIO()) as output:
+                    selection = [arg for case_id in SCREENING_CASES for arg in ("--case", case_id)]
+                    main(["--provider", provider, "--model", model, "--plan-md", *selection])
+                    fingerprint = output.getvalue().split("plan SHA-256 ")[1].splitlines()[0]
+                    self.assertIn(f"{provider} / {model} plan SHA-256 {fingerprint}", wave)
+
+    def test_refuses_unpinned_openrouter_plan(self):
+        with self.assertRaises(SystemExit) as error, redirect_stderr(io.StringIO()) as message:
+            main(["--provider", "openrouter", "--model", "openrouter/free", "--dry-run", "--plan-md"])
+        self.assertEqual(error.exception.code, 2)
+        self.assertIn("named OpenRouter :free variant", message.getvalue())
 
     def test_live_refuses_before_any_dispatch_without_approval(self):
         with patch("tools.model_bench.run.build_adapter") as adapter:
@@ -138,6 +161,15 @@ class RunnerTests(unittest.TestCase):
                 main(self.CLI + ["--live"])
             self.assertEqual(error.exception.code, 2)
             self.assertIn("--approved-plan", message.getvalue())
+            adapter.assert_not_called()
+
+    def test_live_refuses_proposed_gold_before_dispatch(self):
+        with patch("tools.model_bench.run.build_adapter") as adapter:
+            with self.assertRaises(SystemExit) as error, redirect_stderr(io.StringIO()) as message:
+                main(self.CLI + ["--case", SCREENING_CASES[0], "--live", "--approved-plan", "unused.json",
+                                 "--gold-review", str(DATA / "GOLD_REVIEW.proposed.json")])
+            self.assertEqual(error.exception.code, 2)
+            self.assertIn("Không có ca nào đủ điều kiện", message.getvalue())
             adapter.assert_not_called()
 
     def test_live_budget_counts_retries_and_refuses_reuse_or_resume(self):
@@ -182,7 +214,7 @@ class RunnerTests(unittest.TestCase):
         with TemporaryDirectory() as temp:
             root = Path(temp)
             plan = root / "approval.json"
-            gold = root / "review.json"
+            gold = root / "GOLD_REVIEW.json"
             for include_drafts in (False, True):
                 with self.subTest(include_drafts=include_drafts):
                     provider, model = ("gemini", "gemini-3.5-flash-lite") if include_drafts else ("groq", self.CLI[-1])

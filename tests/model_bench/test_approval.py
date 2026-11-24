@@ -27,6 +27,9 @@ class ApprovalTests(unittest.TestCase):
                 ({"expires_on": "2000-01-01"}, self.META, True, "hết hạn"),
                 ({"dataset_sha256": "old"}, self.META, True, "không khớp"),
                 ({"case_ids": ["other"]}, self.META, True, "không khớp"),
+                ({"models": self.DOC["models"] + [
+                    self.DOC["models"][0] | {"provider": "openrouter", "model": "openrouter/free"},
+                ]}, self.META, True, "không khớp"),
                 ({}, self.META | {"plan_sha256": "b" * 64}, False, "không khớp"),
             ):
                 with self.subTest(update=update, metadata=metadata):
