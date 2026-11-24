@@ -1,1 +1,1 @@
-"""Local, mock-only operations dashboard."""
+"""Local, read-only operations dashboard."""

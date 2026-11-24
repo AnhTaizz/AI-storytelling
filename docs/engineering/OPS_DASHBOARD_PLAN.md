@@ -35,32 +35,37 @@ Phase 5 leaves estimated costs null and reports a cost only when the provider
 supplies one. Provider quotas are independent synthetic snapshots based on the
 [repository's free routing plan](FREE_LLM_ROUTING_PLAN.md).
 
-## Phase 6B
+## Phase 6B — implemented, pending owner review
 
-Implement a read-only `DataSource` adapter over owner-selected paths:
+The dashboard CLI defaults to live mode. `--mock` keeps the Phase 6A snapshot.
+The read-only adapter uses these sources and bounds:
 
-1. Open telemetry SQLite using a resolved local `file:...?mode=ro` URI and
-   `sqlite3.connect(..., uri=True)`. Check `PRAGMA user_version`, select only the
-   Phase 5 columns, and use bounded, parameterized queries over the timestamp index.
-   Preserve `reported`, `estimated`, `unknown` and null values through the API.
-2. Open quota-state SQLite separately with `mode=ro`. Read public counters,
-   scope categories, active cooldowns and the Cloudflare Neuron ledger. Calculate
-   expiry in the adapter. Avoid quota-router helpers that create, migrate or purge
-   the store. Keep provider counters and local ledger estimates labeled by source.
-3. Read pipeline and season manifests from explicitly configured run roots.
-   Allowlist run IDs, stages, statuses and resume times. Derive hints from fixed
-   templates. Exclude prompts, generated artifacts, arbitrary paths and raw errors.
-4. Read and validate the configured routing policy to display stage assignments
-   and its file digest. Keep the dashboard independent of clients that resolve
-   credentials or make provider calls. Show the connected read-only data mode
-   clearly in the banner.
+1. **Telemetry SQLite v1** uses indexed UTC windows with parameterized queries.
+   Overview and usage aggregate up to 10,000 recent candidates per window. History
+   covers seven days with at most 500 rows per page, using timestamp and row ID
+   order. Provider counters are timestamped observations from the recent window.
+2. **Quota SQLite** supplies up to 500 active blocks and UTC-day Cloudflare Neuron
+   estimates. Scope references are opaque and local to the snapshot. Both SQLite
+   connections use `mode=ro` and `PRAGMA query_only=ON`. A missing file, unsupported
+   schema, busy store or WAL file produces a source-specific message.
+3. **Pipeline and season metadata** supply at most 50 entries by manifest mtime,
+   alongside allowlisted call-log timings for ordinary runs. Reads cap each manifest
+   at 4 MiB and each call log at 8 MiB. A gate-locked season supplies only its status
+   and the fixed lock label. Its episode manifests and artifacts are excluded.
+4. **Routing policy** reuses the Phase 5 validator and SHA-256 of the file bytes.
+   **Static model capabilities and limits** include the original snapshot source and
+   verification date. **Configuration counts** reuse offline environment settings
+   inspectors. The dashboard does not read dotenv or dispatch calls.
+5. **API and UI** preserve reported, estimated, unknown and static provenance. An
+   allowlist and final secret/path scrubber protect all API responses. Overview,
+   Providers and Pipeline refresh every 30 seconds while the tab is visible and
+   support a manual refresh.
 
 ## Risks
 
-- SQLite stores can be busy, absent or on an unsupported schema. Keep read
-  transactions short and return a clear unavailable state. For a live WAL
-  database, require readable, existing sidecars or an owner-provided snapshot so
-  read-only dashboard startup does not create sidecar files.
+- SQLite stores can be busy, absent or on an unsupported schema. Read transactions
+  stay short and report unavailability. Use an owner-provided rollback-journal
+  snapshot for WAL data to avoid SQLite sidecar changes.
 - Candidate IDs may recur across resumes and candidate records can outnumber
   logical calls. Preserve Phase 5 row semantics when charting and filtering.
 - Limits apply on different clocks and scopes. Keep quota resets, usage

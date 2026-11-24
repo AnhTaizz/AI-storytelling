@@ -1704,3 +1704,12 @@ Status: UNIFIED_ROUTER_ACCEPTED
 The story pipeline adds opt-in Groq, OpenRouter, Cloudflare and policy-based AUTO routing over the existing free-only providers. The default remains Gemini. The proposed decision is DEC-040.
 
 M9 sample `m9_gate_v0` is bound to the single model `gemini-3.8-flash` and commit `840b6a4`. Protocol v0 section 3 freezes the pipeline between episodes. The locked sample must continue under its pinned setup. Phase 5 goes through owner review before any merge decision.
+
+## AI Operations Dashboard, Phase 6B (2026-11-24)
+
+Status: OPS_DASHBOARD_LIVE_ACCEPTED
+
+The dashboard connects Phase 5 telemetry and quota SQLite, the routing policy, offline
+provider summaries, and pipeline and season metadata through read-only sources. The
+live interface preserves numeric provenance and limits locked M9 seasons to their status.
+Phase 6A mock data remains available with `--mock`. See [DEC-041](DECISIONS.md#dec-041--ai-operations-dashboard-foundation-phase-6a).

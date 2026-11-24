@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 12 — test files: 132 — test functions: 1440
+Suites: 12 — test files: 139 — test functions: 1459
 
 ## canonical_story
 
@@ -476,10 +476,11 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.media_ingest.ingest_local
 
 ## ops_dashboard
 
-### test___main__ (2)
+### test___main__ (3)
 Covers: `tools.canonical_story.conformance_v0`, `tools.ops_dashboard.__main__`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `CommandLineTests.test_cli_prints_bound_port_and_stops_on_interrupt`
+- `CommandLineTests.test_cli_defaults_to_live_and_reports_only_basenames`
 - `CommandLineTests.test_cli_rejects_invalid_bind_arguments`
 
 ### test_contract (1)
@@ -494,6 +495,41 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.ops_dashboard.contract`, 
 - `DataSourceTests.test_rows_match_phase_five_shape_and_provenance`
 - `DataSourceTests.test_mock_includes_quota_and_review_scenarios`
 
+### test_live_source (6)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.neuron_ledger`, `tools.llm_infra.quota_state`, `tools.llm_infra.telemetry`, `tools.ops_dashboard.live_source`, `tools.ops_dashboard.server`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `LiveSourceTests.test_live_endpoints_aggregate_and_scrub_real_writer_metadata`
+- `LiveSourceTests.test_missing_sources_are_explained_without_creating_files`
+- `LiveSourceTests.test_schema_mismatch_and_refresh`
+- `LiveSourceTests.test_many_reads_preserve_bytes_times_and_directory_entries`
+- `LiveSourceTests.test_history_caps_and_paginates_with_same_timestamp`
+- `LiveSourceTests.test_path_precedence`
+
+### test_privacy (2)
+Covers: `tools.canonical_story.conformance_v0`, `tools.ops_dashboard.privacy`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `PrivacyTests.test_scrubs_values_dynamic_keys_and_encoded_paths`
+- `PrivacyTests.test_identifiers_and_documentation_retain_their_public_shape`
+
+### test_provider_reader (1)
+Covers: `tools.canonical_story.conformance_v0`, `tools.ops_dashboard.provider_reader`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `ProviderReaderTests.test_offline_counts_share_gemini_scopes_and_hide_invalid_config`
+
+### test_quota_reader (1)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.neuron_ledger`, `tools.ops_dashboard.quota_reader`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `QuotaReaderTests.test_ledger_without_quota_table_provides_today_only`
+
+### test_run_reader (5)
+Covers: `tools.canonical_story.conformance_v0`, `tools.ops_dashboard.run_reader`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `RunReaderTests.test_scan_reads_newest_fifty_manifests_and_ignores_corrupt_input`
+- `RunReaderTests.test_review_run_uses_outputs_and_totals_across_invocations`
+- `RunReaderTests.test_episode_status_and_latest_invocation_fallback`
+- `RunReaderTests.test_call_log_falls_back_to_manifest_per_total`
+- `RunReaderTests.test_call_log_line_cap_marks_totals_partial`
+
 ### test_server (7)
 Covers: `tools.canonical_story.conformance_v0`, `tools.ops_dashboard.contract`, `tools.ops_dashboard.data_source`, `tools.ops_dashboard.server`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
@@ -504,6 +540,17 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.ops_dashboard.contract`, 
 - `ServerTests.test_static_assets_are_served_and_offline`
 - `ServerTests.test_both_locales_cover_mock_outcomes_and_errors`
 - `ServerTests.test_provider_palette_is_fixed_in_automatic_and_explicit_themes`
+
+### test_sqlite_reader (2)
+Covers: `tools.canonical_story.conformance_v0`, `tools.ops_dashboard.sqlite_reader`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `SQLiteReaderTests.test_connection_is_read_only_even_if_query_only_is_disabled`
+- `SQLiteReaderTests.test_wal_file_is_left_untouched_even_when_sidecars_are_absent`
+
+### test_telemetry_reader (1)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.telemetry`, `tools.ops_dashboard.telemetry_reader`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `TelemetryReaderTests.test_preserves_nulls_and_filters_by_time_and_metadata`
 
 ### test_view_models (4)
 Covers: `tools.canonical_story.conformance_v0`, `tools.ops_dashboard.contract`, `tools.ops_dashboard.view_models`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`

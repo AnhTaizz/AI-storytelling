@@ -1,0 +1,295 @@
+"""Read allowlisted run metadata without following links or opening artifacts."""
+
+from datetime import datetime, timezone
+from heapq import nlargest
+import json
+import re
+
+from tools.llm_infra.routing_policy import PROVIDERS
+from tools.story_pipeline.llm import QUOTA_PATTERN
+
+from .contract import PIPELINE_STAGES
+from .data_source import utc_stamp
+from .privacy import label, number
+
+
+RUN_LIMIT = 50
+_JSON_LIMIT = 4 * 1024 * 1024
+_CALL_LOG_LIMIT = 8 * 1024 * 1024
+_CALL_LINE_LIMIT = 10_000
+_LOCK_LABEL = "đợt chạy đã khóa (M9)"
+_STATUSES = (
+    "RUNNING", "COMPLETED", "FAILED", "PAUSED_QUOTA", "NEEDS_REVIEW", "NOT_RUN",
+    "COMPLETED_WITH_FAILURES", "STOPPED_AFTER_BRIEF", "STOPPED_AFTER_PLAN", "STOPPED_AFTER_SCRIPT",
+)
+_STAGE_OUTPUTS = {"brief": "story_brief.json", "plan": "plan.json", "script": "script_v1.json",
+                  "critic": "critic_v1.json"}
+_HINTS = {
+    "PAUSED_QUOTA": "Khi hết thời gian chờ, chạy lại với cùng thư mục đầu ra để tiếp tục.",
+    "NEEDS_REVIEW": "Kiểm tra các bước được đánh dấu trước khi tiếp tục.",
+}
+
+
+def _mapping(value):
+    return value if isinstance(value, dict) else {}
+
+
+def _object(content):
+    try:
+        value = json.loads(content.decode("utf-8"))
+        return value if isinstance(value, dict) else None
+    except (UnicodeError, ValueError, RecursionError):
+        return None
+
+
+def _local(path, parent):
+    try:
+        return path.resolve() == parent.resolve() / path.name and not path.is_symlink()
+    except (OSError, RuntimeError):
+        return False
+
+
+def _manifest(path):
+    try:
+        if _local(path, path.parent) and path.is_file():
+            with path.open("rb") as handle:
+                content = handle.read(_JSON_LIMIT + 1)
+            if len(content) <= _JSON_LIMIT:
+                return _object(content) or {}
+    except OSError:
+        pass
+    return {}
+
+
+def _timestamp(value):
+    if isinstance(value, str):
+        try:
+            parsed = datetime.fromisoformat(value)
+            if parsed.utcoffset() is not None:
+                return utc_stamp(parsed)
+        except (ValueError, OverflowError):
+            pass
+    return None
+
+
+def _status(value):
+    return value if value in _STATUSES else "UNKNOWN"
+
+
+def _call_metadata(directory):
+    path = directory / "calls.jsonl"
+    stage_seconds = {}
+    totals = {"calls": 0, "seconds": None, "tokens": None}
+    provider, model = None, None
+    brief_valid = False
+    scope = "callLog"
+    try:
+        if not _local(path, directory) or not path.is_file():
+            return {}, stage_seconds, provider, model, scope, brief_valid
+        with path.open("rb") as handle:
+            remaining = _CALL_LOG_LIMIT
+            for _ in range(_CALL_LINE_LIMIT):
+                line = handle.readline(remaining + 1)
+                if not line:
+                    break
+                if len(line) > remaining:
+                    scope = "partialCallLog"
+                    break
+                remaining -= len(line)
+                call = _object(line)
+                if call is None:
+                    scope = "partialCallLog"
+                    continue
+                totals["calls"] += 1
+                if call.get("provider") in PROVIDERS:
+                    provider = call["provider"]
+                    model = label(call.get("model"))
+                usage = _mapping(call.get("usage"))
+                tokens = number(usage.get("total_token_count"))
+                if tokens is None:
+                    tokens = number(usage.get("total_tokens"))
+                if tokens is not None:
+                    totals["tokens"] = (totals["tokens"] or 0) + tokens
+                seconds = number(call.get("seconds"))
+                stage = call.get("stage")
+                if stage == "brief":
+                    brief_valid = call.get("valid") is True
+                if seconds is not None:
+                    totals["seconds"] = (totals["seconds"] or 0) + seconds
+                    if stage in PIPELINE_STAGES:
+                        stage_seconds[stage] = stage_seconds.get(stage, 0) + seconds
+            else:
+                if handle.read(1):
+                    scope = "partialCallLog"
+    except OSError:
+        return {}, {}, None, None, scope, False
+    if totals["seconds"] is not None:
+        totals["seconds"] = round(totals["seconds"], 3)
+    return totals, stage_seconds, provider, model, scope, brief_valid
+
+
+def _completed_stages(directory):
+    completed = [stage for stage, name in _STAGE_OUTPUTS.items() if _mtime(directory / name) is not None]
+    # The script-only stop also renders script_final.md, before the critic has run.
+    if (_mtime(directory / "script_v2.json") is not None
+            or ("critic" in completed and _mtime(directory / "script_final.md") is not None)):
+        completed.append("revise")
+    return completed
+
+
+def _error(manifest):
+    value = manifest.get("error_code")
+    if isinstance(value, str) and re.fullmatch(r"[A-Z][A-Z0-9_]{1,63}", value):
+        return label(value)
+    error = manifest.get("error")
+    if isinstance(error, str):
+        for code in ("QUOTA_EXHAUSTED", "NO_ELIGIBLE_PROVIDER", "AUTH_FAILURE", "SERVER_FAILURE",
+                     "REQUEST_TOO_LARGE", "RATE_LIMIT", "EDGE_BLOCKED"):
+            if re.search(rf"\b{code}\b", error):
+                return code
+    return None
+
+
+def _run(path, manifest, updated):
+    log_totals, stage_seconds, provider, model, log_scope, brief_valid = _call_metadata(path.parent)
+    status = _status(manifest.get("status"))
+    error = manifest.get("error")
+    if status == "FAILED" and isinstance(error, str) and QUOTA_PATTERN.search(error):
+        status = "PAUSED_QUOTA"
+    completed = _completed_stages(path.parent)
+    # A scoped run can validate individual chapter briefs before writing the episode brief.
+    # For minimal manifests, a validated brief call can stand in for the missing artifact.
+    if status == "PAUSED_QUOTA" and "scope" not in manifest and brief_valid and "brief" not in completed:
+        completed.insert(0, "brief")
+    stages = {}
+    for stage in completed:
+        seconds = stage_seconds.get(stage)
+        stages[stage] = {"status": "COMPLETED", "seconds": round(seconds, 3) if seconds is not None else None,
+                         "source": "reported" if seconds is not None else "unknown"}
+    current = None
+    if status in ("RUNNING", "FAILED", "PAUSED_QUOTA"):
+        current = next((stage for stage in PIPELINE_STAGES if stage not in completed), None)
+    client = manifest.get("client")
+    if provider is None and isinstance(client, str):
+        slug, _, configured = client.partition(":")
+        if slug in PROVIDERS:
+            provider, model = slug, label(configured.split(",")[0])
+        elif client.startswith("gemini-"):
+            provider, model = "gemini", label(client.split(",")[0])
+    usage_total = _mapping(_mapping(manifest.get("usage")).get("total"))
+    manifest_totals = {"calls": number(manifest.get("model_calls")), "seconds": number(manifest.get("seconds")),
+                       # The writer substitutes zeros for missing token counts.
+                       "tokens": number(usage_total.get("total")) or None}
+    values, total_scopes = {}, {}
+    for key, fallback in manifest_totals.items():
+        logged = log_totals.get(key)
+        values[key] = logged if logged is not None else fallback
+        if values[key] is not None:
+            total_scopes[key] = log_scope if logged is not None else "latestInvocation"
+    scopes = set(total_scopes.values())
+    totals_scope = next(iter(scopes)) if len(scopes) == 1 else None
+    reasons = manifest.get("review_reasons")
+    if status == "NEEDS_REVIEW":
+        values["review_reasons_count"] = len(reasons) if isinstance(reasons, list) else 0
+    source_check_incomplete = manifest.get("source_check_failed") or manifest.get("source_check_quota_exhausted")
+    return {
+        "id": label(path.parent.name, basename=True), "status": status, "completed": completed,
+        "current": current, "stages": stages, "provider": provider, "model": model, "error_code": _error(manifest),
+        "note": "Đối chiếu nguồn chưa xong một phần" if source_check_incomplete else None,
+        "totals_scope": totals_scope, "total_scopes": total_scopes,
+        "started_at": _timestamp(manifest.get("started_utc")), "updated_at": updated,
+        "resume_at": _timestamp(manifest.get("resume_at")), "hint": _HINTS.get(status), **values,
+        "sources": {key: "reported" if value is not None else "unknown" for key, value in values.items()},
+    }
+
+
+def _candidates(root, filename):
+    try:
+        for directory in root.iterdir():
+            path = directory / filename
+            if not _local(directory, root) or not directory.is_dir():
+                continue
+            mtime = _mtime(path)
+            if mtime is None and filename == "season.json" and _locked(directory):
+                mtime = directory.stat().st_mtime
+            if mtime is not None:
+                yield mtime, path
+    except OSError:
+        return
+
+
+def _mtime(path):
+    try:
+        if _local(path, path.parent) and path.is_file():
+            return path.stat().st_mtime
+    except OSError:
+        pass
+    return None
+
+
+def _locked(directory):
+    markers = (path / "gate_lock.json" for path in (directory, directory.parent))
+    return any(marker.is_symlink() or marker.exists() for marker in markers)
+
+
+def _season(path, manifest, updated):
+    totals = _mapping(manifest.get("totals"))
+    values = {key: number(totals.get(key)) for key in ("calls", "tokens", "seconds")}
+    if not values["tokens"]:
+        values["tokens"] = None
+    status = _status(manifest.get("status"))
+    return {
+        "id": label(path.parent.name, basename=True), "status": status, "hint": _HINTS.get(status),
+        "kind": "season", "updated_at": updated, **values,
+        "sources": {key: "reported" if value is not None else "unknown" for key, value in values.items()},
+    }
+
+
+def read_runs(runs_dir, seasons_dir):
+    def candidates():
+        for mtime, path in nlargest(RUN_LIMIT, _candidates(seasons_dir, "season.json"), key=lambda item: item[0]):
+            manifest = _manifest(path)
+            if _locked(path.parent):
+                yield mtime, path, {"label": _LOCK_LABEL, "status": _status(manifest.get("status"))}, None
+                continue
+            if not manifest:
+                continue
+            updated = utc_stamp(datetime.fromtimestamp(mtime, timezone.utc))
+            yield mtime, path, _season(path, manifest, updated), None
+            episode_rows = manifest.get("episodes")
+            if isinstance(episode_rows, list):
+                seen = set()
+                for row in episode_rows:
+                    if name := label(_mapping(row).get("dir"), basename=True):
+                        if name in seen:
+                            continue
+                        seen.add(name)
+                        directory = path.parent / name
+                        episode = directory / "run_manifest.json"
+                        if (_local(directory, path.parent) and not _locked(directory)
+                                and (episode_mtime := _mtime(episode)) is not None):
+                            yield episode_mtime, episode, None, label(path.parent.name, basename=True)
+        for mtime, path in _candidates(runs_dir, "run_manifest.json"):
+            if not _locked(path.parent):
+                yield mtime, path, None, None
+
+    runs = []
+    seen = set()
+    for mtime, path, ready, season_id in nlargest(RUN_LIMIT, candidates(), key=lambda item: item[0]):
+        if path in seen:
+            continue
+        seen.add(path)
+        if ready is not None:
+            runs.append(ready)
+            continue
+        if _locked(path.parent):
+            continue
+        manifest = _manifest(path)
+        if not manifest:
+            continue
+        updated = utc_stamp(datetime.fromtimestamp(mtime, timezone.utc))
+        run = _run(path, manifest, updated)
+        if season_id is not None:
+            run["season_id"] = season_id
+        runs.append(run)
+    return runs

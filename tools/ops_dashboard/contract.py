@@ -31,5 +31,9 @@ FIELDS = MappingProxyType({
 })
 TELEMETRY_COLUMNS = tuple(FIELDS.values())
 VALUE_SOURCES = ("reported", "estimated", "unknown")
+DISPLAY_SOURCES = (*VALUE_SOURCES, "static")
 OUTCOMES = ("SUCCESS", "FAILED", "SKIPPED")
 PIPELINE_STAGES = ("brief", "plan", "script", "critic", "revise")
+HISTORY_LIMIT = 500
+HISTORY_MAX_OFFSET = 1_000_000
+LIVE_WINDOW_DAYS = 7

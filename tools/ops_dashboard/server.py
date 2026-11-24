@@ -8,7 +8,9 @@ import socket
 from urllib.parse import parse_qs
 
 from . import view_models
+from .contract import HISTORY_LIMIT, HISTORY_MAX_OFFSET
 from .data_source import DataSource, MockDataSource, utc_stamp
+from .privacy import scrub
 
 
 LOOPBACK_HOSTS = ("127.0.0.1", "localhost", "::1")
@@ -29,11 +31,11 @@ API_ROUTES = {
 }
 
 
-def _query_arguments(path, query):
+def _query_arguments(path, query, data_mode="mock"):
     values = parse_qs(query, keep_blank_values=True, max_num_fields=8)
     allowed = {
         "/api/usage": {"range"},
-        "/api/requests": {"limit", "provider", "stage", "outcome"},
+        "/api/requests": {"limit", "offset", "provider", "stage", "outcome"},
     }.get(path, set())
     if values.keys() - allowed or any(len(items) != 1 for items in values.values()):
         raise ValueError("Invalid query parameters.")
@@ -44,13 +46,15 @@ def _query_arguments(path, query):
             raise ValueError("Choose a range of 24h or 7d.")
         return {"range_name": range_name}
     if path == "/api/requests":
-        raw_limit = params.pop("limit", "50")
-        if not (raw_limit.isascii() and raw_limit.isdecimal() and len(raw_limit) <= 3):
-            raise ValueError("Choose a request limit from 1 to 200.")
-        limit = int(raw_limit)
-        if not 1 <= limit <= 200:
-            raise ValueError("Choose a request limit from 1 to 200.")
-        return {"limit": limit, **{key: value for key, value in params.items() if value}}
+        maximum = HISTORY_LIMIT if data_mode == "live" else 200
+        numbers = {}
+        for key, default, low, high in (("limit", "50", 1, maximum), ("offset", "0", 0, HISTORY_MAX_OFFSET)):
+            raw = params.pop(key, default)
+            if not (raw.isascii() and raw.isdecimal() and len(raw) <= len(str(high))
+                    and low <= int(raw) <= high):
+                raise ValueError(f"Choose a request {key} from {low} to {high}.")
+            numbers[key] = int(raw)
+        return {**numbers, **{key: value for key, value in params.items() if value}}
     return {}
 
 
@@ -72,9 +76,12 @@ class DashboardHandler(BaseHTTPRequestHandler):
         if self.command != "HEAD":
             self.wfile.write(body)
 
-    def _json(self, status, payload, *, allow=None):
-        body = json.dumps({**payload, "data_mode": self.source.data_mode,
-                           "generated_at": utc_stamp(self.source.now)}).encode("utf-8")
+    def _json(self, status, payload, *, allow=None, source=None):
+        source = self.source if source is None else source
+        metadata = source.metadata() if hasattr(source, "metadata") else {}
+        body = json.dumps(scrub({**payload, **metadata, "data_mode": source.data_mode,
+                                 "generated_at": utc_stamp(source.now)}, getattr(source, "secrets", ())),
+                          ensure_ascii=False, allow_nan=False).encode("utf-8")
         self._send(status, "application/json; charset=utf-8", body, allow=allow)
 
     def do_GET(self):
@@ -85,11 +92,12 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self._send(200, content_type, (STATIC_DIR / filename).read_bytes())
         elif path in API_ROUTES:
             try:
-                arguments = _query_arguments(path, query)
+                arguments = _query_arguments(path, query, self.source.data_mode)
             except ValueError as error:
                 self._json(400, {"error": str(error)})
                 return
-            self._json(200, API_ROUTES[path](self.source, **arguments))
+            source = self.source.for_request() if hasattr(self.source, "for_request") else self.source
+            self._json(200, API_ROUTES[path](source, **arguments), source=source)
         else:
             self._json(404, {"error": "Path not found."})
 

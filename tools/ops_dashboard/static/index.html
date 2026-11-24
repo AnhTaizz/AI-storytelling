@@ -28,16 +28,19 @@
   </aside>
   <div class="workspace">
     <div class="banner">
-      <strong lang="vi" id="mock-banner" data-string="banner">DỮ LIỆU MẪU — chưa kết nối hệ thống thật</strong>
-      <span lang="en" id="mock-label" data-string="mockEnglish">MOCK DATA — not connected</span>
+      <strong lang="vi" id="mock-banner" data-string="banner" hidden>DỮ LIỆU MẪU — chưa kết nối hệ thống thật</strong>
+      <span lang="en" id="mock-label" data-string="mockEnglish" hidden>MOCK DATA — not connected</span>
+      <strong lang="vi" id="live-banner" hidden>DỮ LIỆU THẬT — chỉ đọc</strong>
+      <span id="data-time" hidden></span>
     </div>
     <main id="main" tabindex="-1">
       <header class="page-header">
         <div class="page-heading">
           <h1 tabindex="-1" id="page-title"></h1>
-          <p class="snapshot" id="snapshot"></p>
+          <p class="snapshot" id="snapshot" aria-live="polite"></p>
         </div>
         <div class="preferences">
+          <button id="refresh" type="button" data-string="refresh" hidden></button>
           <label class="field" for="language"><span data-string="language"></span>
             <select id="language" aria-label="Ngôn ngữ">
               <option value="vi" lang="vi" data-string="vietnamese"></option>
