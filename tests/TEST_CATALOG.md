@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 12 — test files: 139 — test functions: 1459
+Suites: 12 — test files: 139 — test functions: 1463
 
 ## canonical_story
 
@@ -476,11 +476,14 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.media_ingest.ingest_local
 
 ## ops_dashboard
 
-### test___main__ (3)
+### test___main__ (6)
 Covers: `tools.canonical_story.conformance_v0`, `tools.ops_dashboard.__main__`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `CommandLineTests.test_cli_prints_bound_port_and_stops_on_interrupt`
 - `CommandLineTests.test_cli_defaults_to_live_and_reports_only_basenames`
+- `CommandLineTests.test_cli_dotenv_and_path_precedence`
+- `CommandLineTests.test_cli_missing_dotenv_uses_environment_without_creating_file`
+- `CommandLineTests.test_cli_startup_error_hides_settings`
 - `CommandLineTests.test_cli_rejects_invalid_bind_arguments`
 
 ### test_contract (1)
@@ -495,11 +498,12 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.ops_dashboard.contract`, 
 - `DataSourceTests.test_rows_match_phase_five_shape_and_provenance`
 - `DataSourceTests.test_mock_includes_quota_and_review_scenarios`
 
-### test_live_source (6)
+### test_live_source (7)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.neuron_ledger`, `tools.llm_infra.quota_state`, `tools.llm_infra.telemetry`, `tools.ops_dashboard.live_source`, `tools.ops_dashboard.server`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `LiveSourceTests.test_live_endpoints_aggregate_and_scrub_real_writer_metadata`
 - `LiveSourceTests.test_missing_sources_are_explained_without_creating_files`
+- `LiveSourceTests.test_dotenv_configures_all_idle_providers_and_scrubs_telemetry`
 - `LiveSourceTests.test_schema_mismatch_and_refresh`
 - `LiveSourceTests.test_many_reads_preserve_bytes_times_and_directory_entries`
 - `LiveSourceTests.test_history_caps_and_paginates_with_same_timestamp`
