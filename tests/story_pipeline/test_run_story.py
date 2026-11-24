@@ -1,4 +1,6 @@
 """Tests for tools/story_pipeline/run_story.py (running a story episode by episode)."""
+from contextlib import redirect_stderr, redirect_stdout
+from io import StringIO
 import json
 import sys
 import tempfile
@@ -12,6 +14,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from test_story_pipeline_v0 import FakeModel, test_profile  # noqa: E402  (shared fixtures)
 
+from tools.llm_infra import pipeline_clients  # noqa: E402
+from tools.llm_infra.openrouter_router import OpenRouterQuotaPaused  # noqa: E402
+from tools.llm_infra.quota_state import QuotaStateStore  # noqa: E402
 from tools.story_memory.memory_v0 import StoryMemory  # noqa: E402
 from tools.story_pipeline import run_story  # noqa: E402
 from tools.story_pipeline.llm import GeminiLLMClient, ScriptedLLMClient  # noqa: E402
@@ -224,6 +229,105 @@ class SeasonTests(unittest.TestCase):
 
 
 class CliTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.season_dir = Path(self.tmp.name) / "season"
+
+    def test_auto_quota_resumes_the_season_with_saved_policy_and_checkpoints(self):
+        now = [1000.0]
+
+        def clock():
+            return now[0]
+
+        store = QuotaStateStore(None, clock=clock)
+        model = FakeModel()
+        attempted = []
+
+        def generate(system, user, requested, config, request_id):
+            stage = request_id.split(":", 1)[0]
+            attempted.append(stage)
+            if stage == "plan" and clock() == 1000:
+                store.block("openrouter", "*", "openrouter_account", 2000, "RPD", clock())
+                raise OpenRouterQuotaPaused(1, 2000)
+            return {"raw_content": model(stage, system, user), "model_requested": requested}
+
+        def build(provider, settings, unused_store, **kwargs):
+            adapter = real_builder(provider, settings, store, clock=clock, client_factory=self.fail, **kwargs)
+            adapter.router.generate = generate
+            return adapter
+
+        real_builder = pipeline_clients.build_adapter
+        policy = Path(self.tmp.name) / "policy.yaml"
+        policy.write_text(
+            "version: 1\nstages: {default: test}\ntiers:\n"
+            "  test: {candidates: ['openrouter:*'], cross_provider_fallback: true, max_output_tokens: 4096}\n",
+            encoding="utf-8",
+        )
+        settings = {"LLM_TELEMETRY_PATH": ":memory:", "LLM_QUOTA_STATE_PATH": ":memory:",
+                    "OPENROUTER_API_KEY_1": "fake-openrouter-key"}
+        cli = ["--season-dir", str(self.season_dir), "--dotenv", str(Path(self.tmp.name) / "absent"),
+               "--no-memory", "--min-words", "20", "--max-words", "200", "--no-source-check", "--no-brief-check"]
+
+        def read(name, root=self.season_dir):
+            return json.loads((root / name).read_text(encoding="utf-8"))
+
+        ep_dir = self.season_dir / "ep01_ch1"
+        with patch.dict("os.environ", settings, clear=True), patch.object(pipeline_clients, "build_adapter", build), \
+                redirect_stdout(StringIO()), redirect_stderr(StringIO()):
+            self.assertEqual(run_story.main([*cli, "--provider", "auto", "--routing-policy", str(policy)]), 0)
+            self.assertEqual(read("season.json")["status"], "PAUSED_QUOTA")
+            invocation = read("run_manifest.json", ep_dir)["invocation"]
+            self.assertEqual(invocation["provider"], "auto")
+            self.assertEqual(invocation["routing_policy_path"], str(policy))
+            self.assertEqual((invocation["chapters"], invocation["recap"]), ("1-1", True))
+            self.assertEqual(attempted, ["brief", "plan"])
+            checkpoint = (ep_dir / "briefs" / "chapter_001.json").read_bytes()
+
+            self.assertEqual(run_story.main([*cli, "--provider", "gemini"]), 2)
+            old_policy = policy.read_text(encoding="utf-8")
+            policy.write_text(old_policy + "# edited at resume\n", encoding="utf-8")
+            self.assertEqual(run_story.main(cli), 2)
+            self.assertEqual(attempted, ["brief", "plan"])
+            policy.write_text(old_policy, encoding="utf-8")
+
+            self.assertEqual(run_story.main(cli), 0)
+            self.assertEqual(read("season.json")["status"], "PAUSED_QUOTA")
+            self.assertEqual(attempted, ["brief", "plan"])
+            now[0] = 2001
+            self.assertEqual(run_story.main(cli), 0)
+            self.assertEqual(read("season.json")["status"], "COMPLETED")
+            self.assertEqual(read("run_manifest.json", ep_dir)["invocation"], invocation)
+            self.assertEqual((ep_dir / "briefs" / "chapter_001.json").read_bytes(), checkpoint)
+            self.assertEqual(attempted.count("brief"), 1)
+            rows = [json.loads(line) for line in (ep_dir / "calls.jsonl").read_text(encoding="utf-8").splitlines()]
+            self.assertEqual({row["provider"] for row in rows}, {"openrouter"})
+
+    def test_locked_season_refuses_new_providers_and_keeps_legacy_gemini(self):
+        self.season_dir.mkdir()
+        (self.season_dir / "gate_lock.json").write_text("{}", encoding="utf-8")
+        cli = ["--season-dir", str(self.season_dir), "--dotenv", str(Path(self.tmp.name) / "absent"),
+               "--no-memory", "--no-brief-check", "--stop-after", "brief", "--model", "gemini-3.8-flash"]
+        gemini = ScriptedLLMClient(FakeModel(), name="gemini:gemini-3.8-flash")
+        original = gemini.complete
+        gemini.complete = lambda **kwargs: original(**kwargs) | {"provider": "Google Gemini API"}
+        errors = StringIO()
+        with patch.dict("os.environ", {}, clear=True), redirect_stdout(StringIO()), redirect_stderr(errors), \
+                patch("tools.story_pipeline.llm.GeminiLLMClient", return_value=gemini) as factory:
+            for provider in ("auto", "groq", "openrouter", "cloudflare"):
+                with self.subTest(provider=provider):
+                    self.assertEqual(run_story.main([*cli, "--provider", provider]), 2)
+                    self.assertIn("Locked story runs require --provider gemini", errors.getvalue())
+            factory.assert_not_called()
+            self.assertEqual(run_story.main(cli), 0)
+            factory.assert_called_once()
+        episode = self.season_dir / "ep01_ch1"
+        manifest = json.loads((episode / "run_manifest.json").read_text(encoding="utf-8"))
+        self.assertIsNone(manifest["invocation"])
+        rows = [json.loads(line) for line in (episode / "calls.jsonl").read_text(encoding="utf-8").splitlines()]
+        self.assertTrue(rows)
+        self.assertTrue(all("provider" not in row for row in rows))
+
     def test_bad_episode_plan_is_rejected_before_any_call(self):
         self.assertEqual(run_story.main(["--chapters", "1-5", "--episodes", "1,3-5"]), 2)
 

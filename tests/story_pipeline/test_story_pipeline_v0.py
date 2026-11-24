@@ -1326,8 +1326,10 @@ class EndToEndTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp, \
                 mock.patch("tools.story_pipeline.llm.GeminiLLMClient", client), \
+                mock.patch.dict("os.environ", {"LLM_TELEMETRY_PATH": ":memory:"}, clear=True), \
                 mock.patch("sys.stdout", new_callable=io.StringIO) as out:
-            code = run_pipeline.main(["--chapters", "2", "--recap", "--memory", str(Path(tmp) / "mem"),
+            dotenv = ["--dotenv", str(Path(tmp) / "absent")]
+            code = run_pipeline.main([*dotenv, "--chapters", "2", "--recap", "--memory", str(Path(tmp) / "mem"),
                                       "--out", str(Path(tmp) / "run"), "--min-words", "20", "--max-words", "200",
                                       "--source-check-chunk", "1"])
             self.assertEqual(code, 0, out.getvalue())
@@ -1337,6 +1339,10 @@ class EndToEndTests(unittest.TestCase):
             self.assertTrue((Path(tmp) / "run" / "memory_recap.json").is_file())
             self.assertTrue(any((Path(tmp) / "mem").rglob("chapter_002.json")))
             self.assertEqual(manifest["invocation"]["source_check_chunk"], 1)
+            rows = [json.loads(line) for line in (manifest_path.parent / "calls.jsonl").read_text(
+                encoding="utf-8").splitlines()]
+            self.assertTrue(rows)
+            self.assertEqual({row["provider"] for row in rows}, {"gemini"})
             self.assertFalse(run_pipeline.run_options(run_pipeline.build_parser().parse_args(["--no-callbacks"]))["callbacks"])
 
             # `--resume <dir>` alone takes the run's own options, so every saved stage is reused;
@@ -1347,7 +1353,7 @@ class EndToEndTests(unittest.TestCase):
                         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
                         del manifest["invocation"]
                         manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
-                    code = run_pipeline.main(["--resume", str(Path(tmp) / "run"), "--memory", str(Path(tmp) / "mem")])
+                    code = run_pipeline.main([*dotenv, "--resume", str(Path(tmp) / "run"), "--memory", str(Path(tmp) / "mem")])
                     self.assertEqual((code, clients[-1].calls), (0, []), out.getvalue())
                     self.assertIn("resume: using the run's own chapters, recap", out.getvalue())
             # An option given again wins over the recorded one.
@@ -1356,6 +1362,70 @@ class EndToEndTests(unittest.TestCase):
             self.assertEqual(args.chapters, "3")
             self.assertNotIn("chapters", restored)
             self.assertEqual(run_pipeline.restore_invocation(args, set(), Path(tmp) / "missing"), [])
+
+    def test_provider_error_preserves_checkpoints_and_reported_usage(self):
+        scope = load_scope(DEFAULT_MANIFEST, (1, 1))
+        model = FakeModel()
+
+        def respond(stage, system, user):
+            if stage == "plan":
+                raise RuntimeError("EDGE_BLOCKED")
+            return model(stage, system, user)
+
+        client = ScriptedLLMClient(respond)
+        complete = client.complete
+
+        def complete_with_usage(**kwargs):
+            return complete(**kwargs) | {
+                "provider": "groq",
+                "usage_metadata": {"prompt_tokens": 7, "completion_tokens": 8, "total_tokens": 15,
+                                   "completion_tokens_details": {"reasoning_tokens": 2}},
+            }
+
+        client.complete = complete_with_usage
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            failed = run(client, scope, test_profile(), root, check_briefs=False)
+            self.assertEqual(failed["status"], "FAILED")
+            self.assertIn("EDGE_BLOCKED", failed["error"])
+            self.assertEqual(failed["usage"]["total"],
+                             {"calls": 1, "prompt": 7, "output": 8, "total": 15, "thoughts": 2})
+            checkpoint = root / "briefs" / "chapter_001.json"
+            saved = checkpoint.read_bytes()
+            retry = ScriptedLLMClient(FakeModel())
+            resumed = run(retry, scope, test_profile(), root, check_briefs=False, resume=True, stop_after="plan")
+            self.assertEqual(resumed["status"], "STOPPED_AFTER_PLAN")
+            self.assertEqual([call["stage"] for call in retry.calls], ["plan"])
+            self.assertEqual(checkpoint.read_bytes(), saved)
+
+    def test_cli_refuses_provider_and_policy_changes_on_resume(self):
+        with tempfile.TemporaryDirectory() as directory, mock.patch.dict("os.environ", {}, clear=True):
+            root = Path(directory)
+            default_policy = run_pipeline.DEFAULT_POLICY.read_text(encoding="utf-8")
+            routing_policy = root / "policy.yaml"
+            routing_policy.write_text(default_policy, encoding="utf-8")
+            args = run_pipeline.build_parser().parse_args(["--provider", "auto", "--routing-policy", str(routing_policy)])
+            run_pipeline.prepare_routing(args)
+            manifest = {"invocation": run_pipeline.invocation_of(args)}
+            (root / "run_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+
+            resume = ["--resume", str(root)]
+            resumed = run_pipeline.build_parser().parse_args(resume)
+            run_pipeline.restore_invocation(resumed, {"resume"}, root)
+            self.assertEqual(run_pipeline.invocation_of(resumed), manifest["invocation"])
+            with mock.patch.object(run_pipeline, "make_client") as make_client, \
+                    mock.patch("sys.stderr", new_callable=io.StringIO) as errors:
+                for flags, variable, expected in [
+                    (["--provider", "groq"], {}, "different LLM provider"),
+                    ([], {"LLM_PROVIDER": "cloudflare"}, "different LLM provider"),
+                    ([], {"LLM_ROUTING_LOCKED": "1"}, "Locked story runs require"),
+                    ([], {}, "different routing policy SHA-256"),
+                ]:
+                    with self.subTest(flags=flags, variable=variable), mock.patch.dict("os.environ", variable):
+                        routing_policy.write_text(default_policy + "# owner edit\n", encoding="utf-8")
+                        self.assertEqual(run_pipeline.main([*resume, *flags]), 2)
+                        self.assertIn(expected, errors.getvalue())
+                make_client.assert_not_called()
 
     def test_plan_may_call_back_to_recap_but_must_cover_episode(self):
         profile = test_profile()

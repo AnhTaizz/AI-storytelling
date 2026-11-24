@@ -1696,3 +1696,11 @@ The router pauses after three 429s per model request by default. DEC-036 accepte
 
 1. **Generate the gate sample.** Lock, then run the season on chapters 6–17 (Gemini quota: about 20 calls an episode).
 2. **Owner review** of the four forms, then `gate_review summary` and a counts-only record.
+
+## Unified Free LLM Router, Phase 5 (2026-11-24)
+
+Status: UNIFIED_ROUTER_ACCEPTED
+
+The story pipeline adds opt-in Groq, OpenRouter, Cloudflare and policy-based AUTO routing over the existing free-only providers. The default remains Gemini. The proposed decision is DEC-040.
+
+M9 sample `m9_gate_v0` is bound to the single model `gemini-3.8-flash` and commit `840b6a4`. Protocol v0 section 3 freezes the pipeline between episodes. The locked sample must continue under its pinned setup. Phase 5 goes through owner review before any merge decision.

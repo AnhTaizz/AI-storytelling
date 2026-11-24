@@ -18,6 +18,25 @@ from tools.llm_infra.quota_state import QuotaStateStore
 
 
 class CheckTests(unittest.TestCase):
+    def test_routing_report_filters_free_models_and_active_blocks(self):
+        clock = Clock()
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / "state"
+            store = QuotaStateStore(path, clock=clock)
+            store.block("groq", DEFAULT_MODEL_CHAIN[0], "org", 2000, "TPM", clock())
+            capture = StringIO()
+            config = settings("") | groq_settings("") | openrouter_settings("") | {"OPENROUTER_MODEL": "test/paid"}
+            with redirect_stdout(capture):
+                code = main(["--env-file", str(Path(tmp) / "absent"), "--state", str(path)],
+                            environ=config, clock=clock)
+            self.assertEqual(code, 0)
+            routing = json.loads(capture.getvalue().split("\nBilling:")[0])["routing"]
+            self.assertRegex(routing["policy_sha256"], r"^[a-f0-9]{64}$")
+            self.assertTrue(routing["policy_path"].endswith("policy_v1.yaml"))
+            self.assertEqual(routing["providers"]["openrouter"], {"configured": True, "eligible": False})
+            self.assertEqual(routing["tiers"]["quality_critical"], ["gemini:gemini-3.8-flash"])
+            self.assertEqual(routing["tiers"]["utility"], [f"groq:{DEFAULT_MODEL_CHAIN[1]}", "gemini:gemini-3.8-flash"])
+
     def test_cloudflare_reports_daily_neurons_and_blocks_without_controlling_exit_status(self):
         clock = Clock()
         with TemporaryDirectory() as tmp:
