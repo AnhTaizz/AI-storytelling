@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 12 — test files: 140 — test functions: 1468
+Suites: 12 — test files: 140 — test functions: 1469
 
 ## canonical_story
 
@@ -737,9 +737,10 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_benchmark.bm25_lexi
 - `TestBM25LexicalV1.test_global_diagnostic_future_retrieval`
 - `TestBM25LexicalV1.test_determinism_failure_gate`
 
-### test_brief_repair_v2 (5)
+### test_brief_repair_v2 (6)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_benchmark.brief_repair_v2`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
+- `RepairExperimentTests.test_held_back_gold_and_full_repair_preflight`
 - `RepairExperimentTests.test_matched_offline_arms_and_full_validation`
 - `RepairExperimentTests.test_bad_patch_cannot_escape_scope_or_replace_usable_prior`
 - `RepairExperimentTests.test_revalidates_evidence_and_preserves_original_candidate`

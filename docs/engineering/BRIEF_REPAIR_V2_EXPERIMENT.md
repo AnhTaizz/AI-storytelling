@@ -21,13 +21,28 @@ Freeze the candidate commit, validators, model identifier, provider, prompt temp
 
 Use two model repair opportunities per arm at most. Compare the arms on identical source and initial error strata, including clean controls, structure-only, semantic, combined and soft-only cases. Record the best admissible checkpoint, rejected edits, final selection and all remaining findings. C0 should preserve the original selection behavior as a comparator. Blind review should include unchanged and rolled-back outputs.
 
+## Held-back DEV set
+
+The [eight synthetic cases](../../data/dev/brief_repair_v2/held_back.json) use separate fictional Japanese scenes. They cover a clean control, wrapped text, hearsay, wrong citation, unknown participant, a combined structure and certainty fault, a soft-only compound fact, and missing core events. Each case has source and gold, with explicit edits used to build the shared initial Brief. Run `python -m tools.story_benchmark.brief_repair_v2 --held-back-preflight` to print the dataset, gold, source and initial Brief hashes and the serialized C0 estimates. Offline tests check that all golds satisfy the original validator and that the intended initial error strata are present. The held-back set is for the owner-reviewed comparison. The workshop fixture remains the development example.
+
 ## Proposed pilot budget and approval
 
-Propose one free-tier Groq GPT-OSS 20B model for all four arms, subject to owner confirmation of eligibility and available quota. Schedule separately from Wave 1. For an initial eight held-back cases with fixed starting Briefs, one pass has a maximum of 64 repair dispatches (8 × 4 × 2). Use no transport retries in this pilot and stop on quota or ambiguous dispatch. Fix a common supported output cap after a context-size dry run. Present the actual source and gold hashes, input/output budget, provider scope, date and expiry to the owner before live execution. Log incomplete pairs separately. A scripted fixture response can verify mechanics only.
+Select one model after reviewing Wave 1 for factual accuracy, certainty, JSON reliability and output completeness. Then confirm that the pinned route has enough context, per-minute tokens, free account quota, and output capacity for full C0. Compare the four arms on that model with the same temperature, profile, source, starting Brief, and unchanged validators. C2 is the first candidate for review. Any default change requires the paired live result and owner decision.
+
+The offline preflight exercises both full-repair slots using the fixed initial Brief as a scripted echo. Its largest estimated input is 4,145 tokens including the optional JSON instruction. Propose a 4,500-token input-estimate guard and a 3,072-token completion reserve per dispatch, including reasoning where the provider counts it as completion. Together these use 7,572 planned tokens against the published 8,000 TPM for either Groq candidate. This establishes room by the repo's UTF-8 estimator. Confirm the tokenizer, wrapper overhead, remaining quota and full JSON output headroom on whichever route is actually selected. Check every rendered request, especially C0 after a long model response. Mark the arm budget-stopped if the next request exceeds an approved bound. Preserve the complete source and validator.
+
+| Pilot bound | Proposed allocation |
+| --- | ---: |
+| Model dispatches including failures, 8 cases × 4 arms × up to 2 | 64 |
+| Estimated input budget at cap | 288,000 |
+| Reserved output at cap | 196,608 |
+| Automatic transport retries | 0 |
+
+Schedule separately from Wave 1. Count any probe against this pilot budget and prefer using the first planned case. Stop on quota or ambiguous dispatch and report incomplete pairs. Approve the selected model, per-case hashes, scope, budget, schedule and expiry before dispatch. Both time and token values from fixtures are planning estimates or local measurements. [Groq rate limits](https://console.groq.com/docs/rate-limits)
 
 ## Readout
 
 - Report numerator and denominator for final hard-invalid or missing Briefs per attempted case, initially invalid Briefs recovered per initially invalid case, and rejected or rolled-back proposals per proposed edit. Separate soft warnings from hard failures. Show clean controls that regressed.
-- Have a reviewer score each final factual claim against the source, including actor, polarity and epistemic certainty. Report supported claims over reviewed claims and separately count omitted required claims. Count each required gold fact with a valid supporting passage and exact quote once for evidence coverage. Predefine handling of empty outputs and missing measurements.
+- Have a blinded reviewer count supported facts over reviewed claims, and separately count claims with correct epistemic certainty over reviewed claims. Record actor, polarity and certainty mismatches and omitted required facts. Count each required gold fact with a valid supporting passage and exact quote once for evidence coverage. Score atomicity as single-claim facts over reviewed facts, retaining any validator warnings separately. Missing Briefs count as hard invalid, with zero required evidence recovered and no claim accuracy denominator.
 - Record per-case provider-reported input, visible output, reasoning and total tokens; indicate whether reasoning is included in output. Record model latency and end-to-end wall time separately, including failed or discarded edits. Preserve missing usage as unknown. Show per-arm totals, per-case paired deltas and the number of fully observed pairs.
 - Shortlist an arm only if the owner reviews semantic disagreements and sees no new unsupported claim, missing required evidence or hard-error regression on the paired pilot. Report possible trade-offs in atomicity and downstream retrieval. A small pilot supports a larger DEV comparison, not a quality verdict.

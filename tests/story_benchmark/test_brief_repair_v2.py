@@ -6,6 +6,23 @@ from tools.story_benchmark import brief_repair_v2 as experiment
 
 
 class RepairExperimentTests(unittest.TestCase):
+    def test_held_back_gold_and_full_repair_preflight(self):
+        cases = list(experiment.held_back_cases())
+        self.assertEqual(len({case["name"] for case in cases}), 8)
+        initial_strata = []
+        for case in cases:
+            with self.subTest(case=case["name"]):
+                chapter = case["chapter"]
+                self.assertEqual(experiment.validate(case["reference"], chapter), ([], []))
+                hard, soft = experiment.validate(case["initial"], chapter)
+                initial_strata.append("hard" if hard else "soft" if soft else "clean")
+        self.assertCountEqual(initial_strata, ["clean", "soft"] + ["hard"] * 6)
+        report = experiment.preflight()
+        estimates = [count for row in report["cases"] for count in row["c0_echo_input_estimates"]]
+        self.assertEqual(len(estimates), 14)
+        self.assertLessEqual(max(estimates), report["input_estimate_limit"])
+        self.assertLessEqual(report["input_estimate_limit"] + report["output_reserve"], 8_000)
+
     def test_matched_offline_arms_and_full_validation(self):
         rows = experiment.demo()
         for row in rows:

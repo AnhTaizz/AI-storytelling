@@ -1,16 +1,24 @@
 """Isolated, offline-first chapter Brief repair experiment over synthetic DEV inputs."""
+import argparse
 import copy
+import hashlib
 import json
 import re
 import time
 from pathlib import Path
 
+from tools.llm_infra.pipeline_clients import JSON_PROMPT
 from tools.llm_infra.telemetry import usage_counts
+from tools.llm_infra.token_estimate import estimate_input_tokens
 from tools.story_pipeline import llm, stages
 from tools.story_pipeline.profile import load_profile
 from tools.story_pipeline.source import Chapter, Passage
 
 FIXTURE = Path(__file__).resolve().parents[2] / "data/dev/brief_repair_v2/workshop.json"
+HELD_BACK = FIXTURE.with_name("held_back.json")
+PILOT_INPUT_ESTIMATE_LIMIT = 4_500
+PILOT_OUTPUT_RESERVE = 3_072
+PILOT_DISPATCH_CAP = 64
 CASES = ("clean", "structure", "uncertainty", "combined", "atomicity")
 ARMS = ("C0", "C1", "C2", "C3")
 SCHEMA = stages.load_schema("story_brief_v0")
@@ -30,6 +38,34 @@ def fixture(kind):
     chapter = Chapter(1, "dev-workshop", "Xưởng mộc", tuple(
         Passage(f"1.{n}", text) for n, text in enumerate(data["source"], 1)))
     return {**data, "name": kind, "chapter": chapter, "initial": initial}
+
+
+def held_back_cases():
+    rows = json.loads(HELD_BACK.read_text(encoding="utf-8"))
+    template = json.loads(FIXTURE.read_text(encoding="utf-8"))["reference"]
+    for row in rows:
+        source = row["source"]
+        name, romanized = row["actor"]
+        chapter = Chapter(1, row["name"], row["title"], tuple(
+            Passage(f"1.{index}", text) for index, text in enumerate(source, 1)))
+        reference = copy.deepcopy(template)
+        reference["chapter_summary"] = row["events"][0]["text"]
+        reference["ending_state"] = row["events"][-1]["text"]
+        reference["unknowns"] = [row["unknown"]]
+        character = reference["characters"][0]
+        character.update(name=name, romanized_name=romanized)
+        character["facts"] = [
+            {"text": text, "evidence": ["1.1"], "quote": source[0], "epistemic": "EXPLICIT"}
+            for text in row.get("facts", [reference["chapter_summary"]])
+        ]
+        for index, (event, source_event) in enumerate(zip(reference["events"], row["events"], strict=True)):
+            event.update(summary=source_event["text"], epistemic=source_event["epistemic"],
+                         evidence=[f"1.{index + 1}"], quote=source[index])
+        initial = copy.deepcopy(reference)
+        for field, value in zip(row["edits"], row.get("values", []), strict=True):
+            path = [int(part) if part.isdigit() else part for part in field.split("/")[1:]]
+            value_at(initial, path[:-1])[path[-1]] = value
+        yield {"name": row["name"], "chapter": chapter, "reference": reference, "initial": initial}
 
 
 def validate(obj, chapter):
@@ -118,7 +154,7 @@ def compare(case, arm, respond):
     chapter = case["chapter"]
     obj = copy.deepcopy(case["initial"])
     system = stages.brief_system_prompt(load_profile(), "ja", f"{chapter.order}.12", SCHEMA)
-    base = stages.render("brief_user", story_id="dev-workshop", chapter_order=chapter.order,
+    base = stages.render("brief_user", story_id=chapter.document_id, chapter_order=chapter.order,
                          chapter_title=chapter.title, known_characters=stages.known_characters_text([]),
                          facts_block="", chapter_text=chapter.render())
     hard, soft = validate(obj, chapter)
@@ -184,7 +220,11 @@ def compare(case, arm, respond):
         except (ValueError, TypeError) as error:
             proposed, problems, warnings = None, [str(error)], []
         requests.append({"mode": "targeted" if paths else "full", "paths": [key_for(p) for p in paths],
-                         "input_chars": len(prompt) + len(instruction), "seconds": latency,
+                         "input_chars": len(prompt) + len(instruction),
+                         "input_token_estimate": estimate_input_tokens(instruction, prompt),
+                         "input_token_estimate_with_json_instruction": estimate_input_tokens(
+                             instruction, prompt, JSON_PROMPT),
+                         "seconds": latency,
                          "usage": reported_tokens(rec), "hard": problems, "soft": warnings})
         if proposed is not None and not problems and (
                 best is None or len(warnings) < best_score or arm == "C0"):
@@ -261,7 +301,35 @@ def demo():
     return rows
 
 
+def preflight():
+    rows = []
+    for case in held_back_cases():
+        # Echo the flawed initial Brief, exercising both full-repair opportunities offline.
+        _, trace = compare(case, "C0", lambda _: {
+            "raw_content": json.dumps(case["initial"], ensure_ascii=False),
+        })
+        estimates = [request["input_token_estimate_with_json_instruction"]
+                     for request in trace["requests"]]
+        hashes = {}
+        for key, value in (("source", case["chapter"].render()), ("gold", case["reference"]),
+                           ("initial", case["initial"])):
+            canonical = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+            hashes[key] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+        rows.append({"case": case["name"], "hashes": hashes, "c0_echo_input_estimates": estimates})
+    return {"dataset_sha256": hashlib.sha256(HELD_BACK.read_bytes()).hexdigest(),
+            "cases": rows, "input_estimate_limit": PILOT_INPUT_ESTIMATE_LIMIT,
+            "output_reserve": PILOT_OUTPUT_RESERVE, "dispatch_cap": PILOT_DISPATCH_CAP,
+            "aggregate_input_estimate_ceiling": PILOT_INPUT_ESTIMATE_LIMIT * PILOT_DISPATCH_CAP,
+            "aggregate_output_reserve": PILOT_OUTPUT_RESERVE * PILOT_DISPATCH_CAP}
+
+
 if __name__ == "__main__":
-    results = demo()
-    print(json.dumps({"mode": "offline_scripted", "summary": summarize(results), "cases": results},
-                     ensure_ascii=False, indent=2))
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--held-back-preflight", action="store_true",
+                        help="Measure serialized full-repair work on the fixed DEV pilot cases")
+    if parser.parse_args().held_back_preflight:
+        report = preflight()
+    else:
+        results = demo()
+        report = {"mode": "offline_scripted", "summary": summarize(results), "cases": results}
+    print(json.dumps(report, ensure_ascii=False, indent=2))
