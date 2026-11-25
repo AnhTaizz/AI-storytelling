@@ -25,7 +25,7 @@ SCREENING_WAVES = (
     ("Wave 1", (
         ("groq", "openai/gpt-oss-20b", "Utility · smaller GPT-OSS candidate"),
         ("groq", "openai/gpt-oss-120b", "Quality-critical · larger GPT-OSS candidate"),
-        ("cloudflare", "@cf/qwen/qwen3-30b-a3b-fp8", "Quality-critical · Qwen candidate with Neuron quota"),
+        ("cloudflare", "@cf/zai-org/glm-4.7-flash", "Quality-critical · GLM candidate with Neuron quota"),
         ("openrouter", "google/gemma-4-31b-it:free", "Utility · named Gemma free variant"),
     )),
     ("Wave 2 — after M9 finishes and the owner confirms Gemini quota", (

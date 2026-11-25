@@ -132,7 +132,7 @@ class RunnerTests(unittest.TestCase):
         for wave, expected_total, candidates in (
             (wave1, "| **Wave total** |  | 40 | 40 | 160 | 6510 + 20480 | 34520 + 81920 |", (
                 ("groq", "openai/gpt-oss-20b"), ("groq", "openai/gpt-oss-120b"),
-                ("cloudflare", "@cf/qwen/qwen3-30b-a3b-fp8"), ("openrouter", "google/gemma-4-31b-it:free"),
+                ("cloudflare", "@cf/zai-org/glm-4.7-flash"), ("openrouter", "google/gemma-4-31b-it:free"),
             )),
             (wave2, "| **Wave total** |  | 20 | 20 | 80 | 3200 + 10240 | 17040 + 40960 |", (
                 ("gemini", "gemini-3.5-flash-lite"), ("gemini", "gemini-3.6-flash"),
