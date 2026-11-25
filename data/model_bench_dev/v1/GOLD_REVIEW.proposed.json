@@ -1,9 +1,9 @@
 {
-  "dataset_sha256": "49fef1d2b62f9dda3973194049b1e0ba4b805909103c660f3b59a53914ffc321",
+  "dataset_sha256": "1f1caedf1c616119eb5db0b41efe7eaa69e6d4359ca1f0dc923f81a59605b1f1",
   "cases": {
     "event_extraction-01": {
       "status": "approved",
-      "case_sha256": "8d8c9be3d3e0930133afddd3ba4c19ed3d941afb54f5f65aff09b25f9a38e145",
+      "case_sha256": "6eccb67652cac304d92e86f4d5b96cf7474cac2bea7385833a49196969ff0085",
       "reviewer": "proposed: ChatGPT content review relayed by the Project Owner — pending owner confirmation",
       "date": "2026-11-24"
     },
