@@ -133,4 +133,6 @@ class OpenRouterRouter:
                 self._sleep(self._backoff * 2 ** retries)
                 retries += 1
             else:
-                raise OpenRouterTransportError(redact_openrouter_data(kind, self._config._secrets), len(attempts))
+                raise OpenRouterTransportError(
+                    redact_openrouter_data(kind, self._config._secrets), len(attempts)
+                ) from failure
