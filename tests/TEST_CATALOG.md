@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 13 — test files: 149 — test functions: 1498
+Suites: 13 — test files: 149 — test functions: 1499
 
 ## canonical_story
 
@@ -521,13 +521,14 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.model_bench.dataset`, `to
 
 - `ReviewSheetTests.test_standalone_html_includes_all_case_hashes_and_review_controls`
 
-### test_run (10)
-Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.pipeline_clients`, `tools.model_bench.approval`, `tools.model_bench.dataset`, `tools.model_bench.planning`, `tools.model_bench.registry`, `tools.model_bench.run`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+### test_run (11)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.cloudflare_transport`, `tools.llm_infra.openrouter_transport`, `tools.llm_infra.pipeline_clients`, `tools.llm_infra.quota_state`, `tools.model_bench.approval`, `tools.model_bench.dataset`, `tools.model_bench.planning`, `tools.model_bench.registry`, `tools.model_bench.run`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `RunnerTests.test_default_dry_run_math_and_markdown`
 - `RunnerTests.test_offline_end_to_end_and_completed_resume`
 - `RunnerTests.test_resume_after_interruption_restores_checkpoint_order`
 - `RunnerTests.test_pinned_client_and_safe_errors`
+- `RunnerTests.test_live_failure_checkpoint_keeps_only_safe_provider_diagnostics`
 - `RunnerTests.test_screening_plan_matches_individual_run_configuration`
 - `RunnerTests.test_refuses_unpinned_openrouter_plan`
 - `RunnerTests.test_live_refuses_before_any_dispatch_without_approval`

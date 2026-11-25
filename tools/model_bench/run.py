@@ -115,7 +115,12 @@ def _run_case(client, model, max_output, case, *, live=False, secrets=()):
             response = client.complete(system=SYSTEM, user=user_prompt(case), model=model,
                                        request_id=case["id"], max_output_tokens=max_output)
     except ProviderFailure as error:
-        row.update(_attempt_metrics(error.metadata or {}, error, secrets=secrets))
+        metadata = error.metadata or {}
+        row.update(_attempt_metrics(metadata, error, secrets=secrets))
+        if live and (diagnostics := metadata.get("provider_diagnostics")):
+            serialized = canonical_json(diagnostics)
+            if not any(secret in serialized for secret in secrets):
+                row["provider_diagnostics"] = diagnostics
         row["error"] = "provider_failure"
         row["latency_ms"] = round((time.monotonic() - started) * 1000)
         return row

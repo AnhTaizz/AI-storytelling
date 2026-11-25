@@ -1,5 +1,6 @@
 from contextlib import redirect_stderr, redirect_stdout
 from datetime import date
+from functools import partial
 import io
 import json
 from pathlib import Path
@@ -7,7 +8,10 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import Mock, patch
 
-from tools.llm_infra.pipeline_clients import ProviderFailure
+from tools.llm_infra.cloudflare_transport import CloudflareClient
+from tools.llm_infra.openrouter_transport import OpenRouterClient
+from tools.llm_infra.pipeline_clients import ProviderFailure, build_adapter
+from tools.llm_infra.quota_state import QuotaStateStore
 from tools.model_bench.approval import approval_budget, content_sha256
 from tools.model_bench.dataset import DATA, case_sha256, load_dataset
 from tools.model_bench.planning import MAX_TRANSPORT_CALLS, SCREENING_CASES, make_plan
@@ -115,6 +119,56 @@ class RunnerTests(unittest.TestCase):
                 self.assertEqual(row["error"], "provider_failure")
                 self.assertEqual(row["requests"], requests)
                 self.assertNotIn(secret, json.dumps(row))
+
+    def test_live_failure_checkpoint_keeps_only_safe_provider_diagnostics(self):
+        case = next(case for case in self.cases if case["id"] == SCREENING_CASES[0])
+        secret = "fixture-secret-credential"
+        glm = "@cf/zai-org/glm-4.7-flash"
+        gemma = "google/gemma-4-31b-it:free"
+        reasoning_only = {
+            "choices": [{"message": {"content": None, "reasoning_content": secret}, "finish_reason": "length"}],
+            "usage": {"prompt_tokens": 170, "completion_tokens": 512,
+                      "completion_tokens_details": {"reasoning_tokens": 512}},
+        }
+        for provider, model, status, body, expected_code, expected_diagnostics in (
+            ("cloudflare", glm, 200, {"success": True, "result": reasoning_only}, "MALFORMED_RESPONSE",
+             {"http_status": 200, "response_shape": "result_choices", "content_state": "null",
+              "finish_reason": "length", "input_tokens": 170, "output_tokens": 512, "reasoning_tokens": 512}),
+            ("cloudflare", glm, 200,
+             {"choices": [{"message": {"parts": [{"content": secret}]}, "finish_reason": secret}]},
+             "MALFORMED_RESPONSE", {"http_status": 200, "response_shape": "choices", "content_state": "missing"}),
+            ("openrouter", gemma, 400,
+             {"error": {"code": 400, "param": "response_format", "message": secret}},
+             "REQUEST_FAILURE", {"http_status": 400, "response_shape": "error",
+                                 "provider_error_code": 400, "error_parameter": "response_format"}),
+            ("openrouter", gemma, 200, {"error": {"code": 400, "param": secret, "message": secret}},
+             "REQUEST_FAILURE", {"http_status": 200, "response_shape": "error", "provider_error_code": 400}),
+            ("openrouter", gemma, 502, b"not a JSON object", "SERVER_FAILURE",
+             {"http_status": 502, "response_shape": "empty_or_nonobject"}),
+        ):
+            with self.subTest(provider=provider, status=status, code=expected_code):
+                raw = body if isinstance(body, bytes) else json.dumps(body).encode()
+                http = Mock(return_value=(status, {"x-private-header": secret}, raw))
+                if provider == "cloudflare":
+                    settings = {"CLOUDFLARE_ACCOUNT_ID": "fixture-account", "CLOUDFLARE_API_TOKEN": secret}
+                    transport = CloudflareClient
+                else:
+                    settings = {"OPENROUTER_API_KEY_1": secret}
+                    transport = OpenRouterClient
+                adapter = build_adapter(provider, settings, QuotaStateStore(None), model=model,
+                                        temperature=0, client_factory=partial(transport, http=http))
+                adapter.router._retries = 0
+                row = _run_case(adapter, model, 512, case, live=True, secrets=(secret,))
+                self.assertEqual((row["error"], row["error_codes"], row["requests"]),
+                                 ("provider_failure", [expected_code], 1))
+                self.assertEqual(row["provider_diagnostics"], expected_diagnostics)
+                self.assertNotIn(secret, json.dumps(row))
+                http.assert_called_once()
+                payload = json.loads(http.call_args.args[2])
+                self.assertEqual((payload["model"], payload["temperature"], payload["max_tokens"]),
+                                 (model, 0, 512))
+                self.assertEqual(payload.get("response_format"),
+                                 None if provider == "cloudflare" else {"type": "json_object"})
 
     def test_screening_plan_matches_individual_run_configuration(self):
         cases = {case["id"]: case for case in self.cases}
