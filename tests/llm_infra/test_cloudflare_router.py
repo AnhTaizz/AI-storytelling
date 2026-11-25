@@ -7,7 +7,7 @@ from fixtures import (
     CF_ACCOUNT, CF_MODEL, CF_OTHER_ACCOUNT, CF_TOKEN, Clock, FakeCloudflare, cloudflare_body, cloudflare_settings,
 )
 from tools.llm_infra.cloudflare_config import GeminiConfigError, inspect_cloudflare_settings
-from tools.llm_infra.cloudflare_free_models_v1 import DEFAULT_MODEL_CHAIN
+from tools.llm_infra.cloudflare_free_models_v1 import ACTIVE_MODEL_CHAIN
 from tools.llm_infra.cloudflare_router import CloudflareQuotaPaused, CloudflareRouter, CloudflareTransportError
 from tools.llm_infra.cloudflare_transport import CloudflareClient
 from tools.llm_infra.neuron_ledger import NeuronLedger, utc_day
@@ -46,7 +46,7 @@ class CloudflareRouterTests(unittest.TestCase):
                          ("Cloudflare Workers AI", "CLOUDFLARE_ROUTER_V1", "account_neurons"))
         self.store.block("cloudflare", "*", self.other_scope, 1100, "RPM", self.clock())
         with self.assertRaises(CloudflareQuotaPaused) as raised:
-            self.generate(router, DEFAULT_MODEL_CHAIN[1])
+            self.generate(router, ACTIVE_MODEL_CHAIN[1])
         self.assertEqual((raised.exception.attempts, raised.exception.resume_after), (0, 1100))
         self.assertEqual(self.fake.factory_calls, [(CF_OTHER_ACCOUNT, "test-cf-token-not-real-3")])
         self.assertEqual(self.store.blocked_until("cloudflare", "*", self.first_scope, self.clock()), 86400)

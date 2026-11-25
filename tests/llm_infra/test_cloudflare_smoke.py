@@ -7,7 +7,7 @@ import unittest
 from unittest.mock import patch
 
 from fixtures import CF_ACCOUNT, CF_MODEL, CF_TOKEN, Clock, FakeCloudflare, cloudflare_body, cloudflare_settings
-from tools.llm_infra.cloudflare_free_models_v1 import DEFAULT_MODEL_CHAIN
+from tools.llm_infra.cloudflare_free_models_v1 import ACTIVE_MODEL_CHAIN
 from tools.llm_infra.cloudflare_smoke import main
 from tools.llm_infra.cloudflare_transport import CloudflareClient
 from tools.llm_infra.neuron_ledger import NeuronLedger, utc_day
@@ -57,7 +57,7 @@ class CloudflareSmokeTests(unittest.TestCase):
                                  (int(status != "READY_FREE_ONLY"), "offline", status))
                 self.assertEqual(fake.factory_calls, [])
                 if status == "READY_FREE_ONLY":
-                    self.assertEqual(report["model_chain"], list(DEFAULT_MODEL_CHAIN))
+                    self.assertEqual(report["model_chain"], list(ACTIVE_MODEL_CHAIN))
                     self.assertCountEqual(report["blocked"], [
                         {"model": "*", "scope": self.scope, "reason": "RPD", "until_utc": "1970-01-01T00:33:20Z"},
                         {"model": "*", "scope": "/accounts/[REDACTED]/[REDACTED]", "reason": "RPM",
@@ -68,7 +68,7 @@ class CloudflareSmokeTests(unittest.TestCase):
     def test_live_sends_one_prompt_and_records_reported_or_estimated_usage(self):
         for args, expected_model, body, expected in [
             ([], CF_MODEL, cloudflare_body(), (30, 10, 2, True)),
-            (["--model", DEFAULT_MODEL_CHAIN[1]], DEFAULT_MODEL_CHAIN[1],
+            (["--model", ACTIVE_MODEL_CHAIN[1]], ACTIVE_MODEL_CHAIN[1],
              {"result": {"response": f"/accounts/{CF_ACCOUNT}/{CF_TOKEN}"}}, (None, None, 1, False)),
         ]:
             with self.subTest(model=expected_model):
@@ -113,7 +113,7 @@ class CloudflareSmokeTests(unittest.TestCase):
             ({}, [], "CONFIG_ERROR"),
             (self.settings | {"CLOUDFLARE_PLAN_1": "WORKERS_PAID"}, [], "CONFIG_ERROR"),
             (self.settings, ["--model", "test/paid"], "BLOCKED_MODEL_NOT_FREE_TIER"),
-            (self.settings, ["--model", ",".join(DEFAULT_MODEL_CHAIN)], "BLOCKED_MODEL_NOT_FREE_TIER"),
+            (self.settings, ["--model", ",".join(ACTIVE_MODEL_CHAIN)], "BLOCKED_MODEL_NOT_FREE_TIER"),
         ]:
             with self.subTest(args=args, status=status):
                 fake = FakeCloudflare(CloudflareClient)

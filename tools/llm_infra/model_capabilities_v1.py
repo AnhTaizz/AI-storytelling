@@ -36,7 +36,7 @@ CAPABILITIES = {
     **{("groq", model): _snapshot(groq, "native", reasoning=True, max_request_tokens=groq.FREE_PLAN_TPM)
        for model in groq.FREE_TIER_TEXT_MODELS},
     **{("cloudflare", model): _snapshot(cloudflare, "prompt", reasoning=True if "gpt-oss" in model else None)
-       for model in cloudflare.NEURON_PRICES},
+       for model in cloudflare.ACTIVE_NEURON_PRICES},
     **{("openrouter", model): OPENROUTER_FREE_VARIANT for model in openrouter.DEFAULT_MODEL_CHAIN},
 }
 

@@ -33,7 +33,7 @@ MODELS = {
     "gemini": ("gemini-3.8-flash", "gemini-3.6-flash"),
     "groq": ("openai/gpt-oss-120b", "openai/gpt-oss-20b"),
     "openrouter": ("openrouter/free",),
-    "cloudflare": ("@cf/openai/gpt-oss-120b", "@cf/qwen/qwen3-30b-a3b-fp8"),
+    "cloudflare": ("@cf/openai/gpt-oss-120b", "@cf/zai-org/glm-4.7-flash"),
 }
 SCOPES = dict(zip(MODELS, ("project", "org", "account", "account")))
 PROVIDER_NAMES = dict(zip(MODELS, ("Gemini", "Groq", "OpenRouter", "Cloudflare")))
