@@ -1,0 +1,106 @@
+[
+  {
+    "name": "lighthouse_clean",
+    "title": "Bản đồ hải đăng",
+    "actor": ["ユキ", "Yuki"],
+    "source": ["ユキは机に海図を広げた。", "ユキは赤い印を地図に付けた。"],
+    "events": [
+      {"text": "Yuki trải hải đồ trên bàn.", "epistemic": "EXPLICIT"},
+      {"text": "Yuki đánh dấu đỏ lên bản đồ.", "epistemic": "EXPLICIT"}
+    ],
+    "unknown": "Chưa rõ ý nghĩa của dấu đỏ.",
+    "edits": []
+  },
+  {
+    "name": "bakery_wrapped_text",
+    "title": "Lò bánh",
+    "actor": ["ハル", "Haru"],
+    "source": ["ハルは生地を丸めた。", "ハルは焼き型に油を塗った。"],
+    "events": [
+      {"text": "Haru vo tròn khối bột.", "epistemic": "EXPLICIT"},
+      {"text": "Haru phết dầu lên khuôn nướng.", "epistemic": "EXPLICIT"}
+    ],
+    "unknown": "Chưa rõ khi nào bánh được nướng.",
+    "edits": ["/unknowns/0"],
+    "values": [{"text": "Chưa rõ khi nào bánh được nướng."}]
+  },
+  {
+    "name": "market_hearsay",
+    "title": "Hòm ở chợ",
+    "actor": ["レイ", "Rei"],
+    "source": ["レイは市場の門を開けた。", "レイは青い箱を受け取ったらしい。"],
+    "events": [
+      {"text": "Rei mở cổng chợ.", "epistemic": "EXPLICIT"},
+      {"text": "Nghe nói Rei đã nhận một chiếc hòm xanh.", "epistemic": "REPORTED"}
+    ],
+    "unknown": "Chưa rõ trong hòm có gì.",
+    "edits": ["/events/1/epistemic", "/events/1/summary"],
+    "values": ["EXPLICIT", "Rei đã nhận một chiếc hòm xanh."]
+  },
+  {
+    "name": "clock_quote",
+    "title": "Giá đồng hồ",
+    "actor": ["ナオ", "Nao"],
+    "source": ["ナオは時計のねじを外した。", "ナオはケースを布で拭いた。"],
+    "events": [
+      {"text": "Nao tháo vít của đồng hồ.", "epistemic": "EXPLICIT"},
+      {"text": "Nao lau vỏ bằng vải.", "epistemic": "EXPLICIT"}
+    ],
+    "unknown": "Chưa rõ đồng hồ có chạy lại được hay không.",
+    "edits": ["/events/1/evidence"],
+    "values": [["1.1"]]
+  },
+  {
+    "name": "nursery_participant",
+    "title": "Vườn ươm",
+    "actor": ["ミオ", "Mio"],
+    "source": ["ミオは鉢を窓辺に置いた。", "ミオは種に水をやった。"],
+    "events": [
+      {"text": "Mio đặt chậu cạnh cửa sổ.", "epistemic": "EXPLICIT"},
+      {"text": "Mio tưới nước cho hạt giống.", "epistemic": "EXPLICIT"}
+    ],
+    "unknown": "Chưa rõ hạt sẽ nảy mầm vào ngày nào.",
+    "edits": ["/events/1/participants"],
+    "values": [["CH2"]]
+  },
+  {
+    "name": "theatre_combined",
+    "title": "Hậu trường",
+    "actor": ["ソラ", "Sora"],
+    "source": ["ソラは舞台の幕を閉めた。", "ソラは予備の照明を注文したらしい。"],
+    "events": [
+      {"text": "Sora kéo màn sân khấu lại.", "epistemic": "EXPLICIT"},
+      {"text": "Nghe nói Sora đã đặt mua đèn dự phòng.", "epistemic": "REPORTED"}
+    ],
+    "unknown": "Chưa rõ khi nào đèn sẽ tới.",
+    "edits": ["/unknowns/0", "/events/1/epistemic", "/events/1/summary"],
+    "values": [{"text": "Chưa rõ khi nào đèn sẽ tới."}, "EXPLICIT", "Sora đã đặt mua đèn dự phòng."]
+  },
+  {
+    "name": "pottery_atomicity",
+    "title": "Lò gốm",
+    "actor": ["カナ", "Kana"],
+    "source": ["カナは鉢を作り、底に印を押し、棚に置いた。", "カナは窯の扉を閉めた。"],
+    "events": [
+      {"text": "Kana làm một chiếc chậu.", "epistemic": "EXPLICIT"},
+      {"text": "Kana đóng cửa lò.", "epistemic": "EXPLICIT"}
+    ],
+    "facts": ["Kana làm chậu.", "Kana đóng dấu dưới đáy chậu.", "Kana đặt chậu lên kệ."],
+    "unknown": "Chưa rõ nhiệt độ của lò.",
+    "edits": ["/characters/0/facts"],
+    "values": [[{"text": "Kana làm chậu, và đóng dấu dưới đáy, và đặt chậu lên kệ.", "evidence": ["1.1"], "quote": "カナは鉢を作り、底に印を押し、棚に置いた。", "epistemic": "EXPLICIT"}]]
+  },
+  {
+    "name": "river_missing_core",
+    "title": "Trạm ven sông",
+    "actor": ["エミ", "Emi"],
+    "source": ["エミは水位計の目盛りを読んだ。", "エミは測定時刻を帳面に書いた。"],
+    "events": [
+      {"text": "Emi đọc vạch trên thước đo mực nước.", "epistemic": "EXPLICIT"},
+      {"text": "Emi ghi giờ đo vào sổ.", "epistemic": "EXPLICIT"}
+    ],
+    "unknown": "Chưa rõ số đo là bao nhiêu.",
+    "edits": ["/events"],
+    "values": [[]]
+  }
+]
