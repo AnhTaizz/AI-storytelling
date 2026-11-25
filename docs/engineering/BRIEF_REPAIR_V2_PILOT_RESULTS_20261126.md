@@ -68,4 +68,8 @@ Each comparison with C0 had all eight case pairs observed, including the zero-ca
 | C2 | 46.91% | 5/8 | 56.78% |
 | C3 | 56.29% | 6/8 | 52.96% |
 
-The filtered pairs passed hard validation, source support, certainty, evidence and atomicity checks and retained the relevant uncertainty notes. Their case mixes differ across arms. C0 recovered all six hard-invalid starts and split the pottery fact. Each alternative had a missed repair and retained the compound fact. Candidate selection awaits owner review. M9 r2 stayed paused, and the run used only the pinned Groq Free route.
+The filtered pairs passed hard validation, source support, certainty, evidence and atomicity checks and retained the relevant uncertainty notes. Their case mixes differ across arms. C0 recovered all six hard-invalid starts and split the pottery fact. Each alternative had a missed repair and retained the compound fact. M9 r2 stayed paused, and the run used only the pinned Groq Free route.
+
+## Owner decision · 26 November 2026
+
+The owner retained C0 as the production comparator and withheld adoption of C1, C2 and C3 because they recovered fewer hard-invalid Briefs and covered fewer required facts. The independent blinded semantic review remains pending. Groq GPT-OSS 120B stays the preferred Phase 7C experimental model. The owner requested a separate C0/C4 plan for deterministic normalization followed by full C0 repair on remaining findings, and a separately approved Source Check S0/S1 cache measurement.

@@ -1738,4 +1738,7 @@ The approved GPT-OSS 120B pilot completed all 32 case–arm runs on Groq Free.
 The pilot used 33 repair calls and one earlier capacity probe. C0 recovered 6/6
 hard-invalid starts. C1 recovered 4/6, and C2 and C3 each recovered 5/6. All
 three targeted arms retained one compound fact. Blinded owner review is pending.
-M9 r2 stays paused. [Pilot results](engineering/BRIEF_REPAIR_V2_PILOT_RESULTS_20261126.md).
+The owner retained C0 for production based on recovery and evidence coverage.
+GPT-OSS 120B remains the preferred Phase 7C experimental model. C4 and Source Check
+S0/S1 are pending separate live approvals. M9 r2 stays paused.
+[Pilot results](engineering/BRIEF_REPAIR_V2_PILOT_RESULTS_20261126.md).
