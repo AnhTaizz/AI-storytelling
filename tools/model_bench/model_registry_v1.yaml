@@ -1,0 +1,33 @@
+# registry.py resolves repository snapshots and the catalog facts recorded here.
+version: 1
+models:
+  - {provider: gemini, model_id: gemini-3.8-flash}
+  - {provider: gemini, model_id: gemini-3.6-flash}
+  - {provider: gemini, model_id: gemini-3.5-flash-lite}
+  - {provider: gemini, model_id: gemini-4-hydrogen}
+  - {provider: groq, model_id: openai/gpt-oss-120b}
+  - {provider: groq, model_id: openai/gpt-oss-20b}
+  - provider: openrouter
+    model_id: "google/gemma-4-31b-it:free"
+    catalog:
+      context_tokens: 262144
+      pricing: {prompt: 0, completion: 0}
+      json_mode: native
+      structured_output: false
+      reasoning: true
+      source_url: https://openrouter.ai/api/v1/models
+      verified_on: "2026-11-24"
+      note: "catalog snapshot; free variants can disappear — re-check before each live run"
+  - {provider: cloudflare, model_id: '@cf/openai/gpt-oss-120b'}
+  - {provider: cloudflare, model_id: '@cf/openai/gpt-oss-20b'}
+  - {provider: cloudflare, model_id: '@cf/meta/llama-3.3-70b-instruct-fp8-fast'}
+  - {provider: cloudflare, model_id: '@cf/qwen/qwen3-30b-a3b-fp8'}
+  - {provider: cloudflare, model_id: '@cf/google/gemma-4-26b-a4b-it'}
+  - {provider: cloudflare, model_id: '@cf/zai-org/glm-4.7-flash'}
+  - {provider: cloudflare, model_id: '@cf/mistralai/mistral-small-3.1-24b-instruct'}
+  - {provider: cloudflare, model_id: '@cf/meta/llama-3.1-8b-instruct-fp8'}
+# Planning baselines from docs/engineering/FREE_LLM_ROUTING_PLAN.md (no code constant).
+# Account-specific limits and current usage still need owner confirmation.
+documented_limits:
+  openrouter: {rpm: 20, free_requests_per_day: 50}
+  cloudflare: {rpm: 300}

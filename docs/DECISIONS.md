@@ -1102,3 +1102,25 @@ DECISION:
 LIMITS: 6A numbers are synthetic. Mobile layout was checked by test and an iframe probe; the owner reviewed the desktop UI.
 
 2026-11-24 — Phase 6B implemented (PR #33) and accepted by the Project Owner ("oke rồi đấy merge đi"). The dashboard defaults to local, read-only data and retains the Phase 6A mock mode.
+
+## DEC-042 — Model Benchmark Framework (Phase 7A)
+
+STATUS: PROPOSED (awaiting Project Owner review in the PR)
+
+Phase 7A introduces an offline-first free-model registry, stage taxonomy, synthetic DEV
+cases and a reproducible benchmark runner. The registry derives capabilities and coded
+quotas from the maintained provider snapshots and retains provenance for unknown fields.
+DEV gold remains draft pending owner review. Deterministic cases use evidence-based
+scores, and reviewers apply a human rubric to narrative plans and Vietnamese scripts.
+
+The DEV set is independent of the M9 gate sample and M4 holdouts. Phase 7B requires
+gold decisions bound to the dataset and case hashes, plus an expiring, content-hashed
+owner plan. Every invocation pins a provider and model. Per-model caps include every
+transport attempt and use a durable approval ledger shared across runs and resumes.
+Gemini checks M9 season activity before dispatch, with an explicit owner attestation
+recorded for overrides. A self-contained review sheet exports the gold decisions.
+Phase 7B starts with one screening run per model on ten shared DEV cases, capped at
+40 requests per model. Wave 1 covers Groq, Cloudflare and a named OpenRouter free
+variant. Wave 2 covers Gemini after M9 finishes and the owner confirms quota.
+The ten proposed gold decisions require owner confirmation in `GOLD_REVIEW.json`. See
+[the Phase 7B screening plan](engineering/MODEL_BENCH_7B_PLAN.md).
