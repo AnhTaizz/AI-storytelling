@@ -1731,3 +1731,11 @@ The full Brief probe passed hard validation and retained two soft warnings.
 The two writing scores are pending owner review. The paired C0–C3 pilot awaits
 owner approval with 63 of 64 dispatches available. M9 r2 stays paused.
 [Calibration and probe results](engineering/PHASE_7_GROQ_120B_CALIBRATION_RESULTS.md).
+
+## Brief Repair V2 · paired DEV pilot (2026-11-26)
+
+The approved GPT-OSS 120B pilot completed all 32 case–arm runs on Groq Free.
+The pilot used 33 repair calls and one earlier capacity probe. C0 recovered 6/6
+hard-invalid starts. C1 recovered 4/6, and C2 and C3 each recovered 5/6. All
+three targeted arms retained one compound fact. Blinded owner review is pending.
+M9 r2 stays paused. [Pilot results](engineering/BRIEF_REPAIR_V2_PILOT_RESULTS_20261126.md).
