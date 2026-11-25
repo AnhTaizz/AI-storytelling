@@ -1124,3 +1124,15 @@ Phase 7B starts with one screening run per model on ten shared DEV cases, capped
 variant. Wave 2 covers Gemini after M9 finishes and the owner confirms quota.
 The ten proposed gold decisions require owner confirmation in `GOLD_REVIEW.json`. See
 [the Phase 7B screening plan](engineering/MODEL_BENCH_7B_PLAN.md).
+
+## DEC-044 — Retire discontinued Cloudflare routes
+
+STATUS: OWNER AUTHORIZED (2026-11-25)
+
+Cloudflare stopped serving Qwen3 30B A3B FP8 and Llama 3.1 8B Instruct FP8 on
+November 20. Remove both from active Workers Free selection and replace the
+Qwen fallback with GLM-4.7-Flash. This updates the operational allowlist,
+benchmark registry and default display. DEC-039 and the original price snapshot
+remain as historical records. The change is separate from Wave 1 evaluation
+and applies only after its own PR review and merge.
+[Provider retirement notice](https://developers.cloudflare.com/changelog/post/2026-11-05-planned-model-deprecations/)

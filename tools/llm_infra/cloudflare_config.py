@@ -5,7 +5,8 @@ import re
 from urllib.parse import quote
 
 from tools.llm_infra.cloudflare_free_models_v1 import (
-    DAILY_FREE_NEURONS, DEFAULT_MODEL_CHAIN, NEURON_PRICES, SOURCE_URL, VERIFICATION_NOTE, VERIFIED_ON,
+    ACTIVE_MODEL_CHAIN, ACTIVE_NEURON_PRICES, ACTIVE_REVIEWED_ON, DAILY_FREE_NEURONS, SOURCE_URL,
+    VERIFICATION_NOTE,
 )
 from tools.llm_infra.cost_policy import _flag, require_free_only
 from tools.llm_infra.gemini_config import merged_settings, state_path
@@ -54,7 +55,7 @@ class CloudflareRoutingConfig:
         if not models or set(models) - self.effective_allowlist:
             raise GeminiConfigError(f"MODEL_NOT_FREE_TIER: {VERIFICATION_NOTE} "
                                     f"Any CLOUDFLARE_FREE_MODELS restriction also applies. "
-                                    f"{SOURCE_URL} ({VERIFIED_ON})")
+                                    f"{SOURCE_URL} ({ACTIVE_REVIEWED_ON})")
 
     def check_eligible(self):
         if not self.slots:
@@ -74,7 +75,7 @@ class CloudflareRoutingConfig:
             "ignored_models": sorted(self.ignored_models),
             "free_model_rule": VERIFICATION_NOTE,
             "free_models_source": SOURCE_URL,
-            "free_models_verified_on": VERIFIED_ON,
+            "free_models_verified_on": ACTIVE_REVIEWED_ON,
             "daily_neuron_budget": self.daily_neuron_budget,
             "max_rate_limit_hops": self.max_rate_limit_hops,
             "notice": NOTICE,
@@ -153,10 +154,10 @@ def inspect_cloudflare_settings(settings, model=None, *, validate_models=True):
             slots.append(CloudflareSlot(f"cloudflare_slot_{number}", scope, account_id, token))
 
     override = settings.get("CLOUDFLARE_FREE_MODELS", "").strip()
-    reviewed = frozenset(NEURON_PRICES)
+    reviewed = frozenset(ACTIVE_NEURON_PRICES)
     local_models = frozenset(part.strip() for part in override.split(",") if part.strip())
     configured = (model or "").strip() or settings.get("CLOUDFLARE_MODEL", "").strip()
-    chain = tuple(part.strip() for part in configured.split(",")) if configured else DEFAULT_MODEL_CHAIN
+    chain = tuple(part.strip() for part in configured.split(",")) if configured else ACTIVE_MODEL_CHAIN
     scopes = tuple(scope for scope, _ in accounts.values())
     public_values = (*chain, *local_models, *reviewed, *scopes, *(slot.slot_id for slot in slots),
                      str(state_path(settings)))

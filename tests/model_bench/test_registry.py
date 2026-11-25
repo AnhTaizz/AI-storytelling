@@ -26,7 +26,9 @@ class RegistryTests(unittest.TestCase):
                 if key != self.GEMMA:
                     self.assertIsNone(entry["context_tokens"])
                     self.assertIsNone(entry["structured_output"])
-        self.assertIsNone(registry["cloudflare", "@cf/qwen/qwen3-30b-a3b-fp8"]["reasoning"])
+        for retired in ("@cf/qwen/qwen3-30b-a3b-fp8", "@cf/meta/llama-3.1-8b-instruct-fp8"):
+            with self.subTest(retired=retired), self.assertRaises(ValueError):
+                select_model("cloudflare", retired)
         self.assertIsNone(registry["cloudflare", "@cf/openai/gpt-oss-120b"]["reasoning"])
         self.assertIsNone(registry["gemini", "gemini-3.8-flash"]["limits"]["tpm"])
         self.assertEqual(registry["groq", "openai/gpt-oss-20b"]["limits"]["tpm"], 8000)
