@@ -214,3 +214,11 @@ class _LiveSnapshot:
         return {"last_data_at": self.latest, "source_states": {
             name: {"code": state, "message": MESSAGES[state]} for name, state in self.states.items()
         }}
+
+    def run_detail(self, ref):
+        runs = read_runs(self.paths.runs_dir, self.paths.seasons_dir, detail_ref=ref)
+        if not runs:
+            return None
+        run = runs[0]
+        self._timestamp(run["updated_at"])
+        return run

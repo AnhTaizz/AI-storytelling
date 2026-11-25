@@ -32,6 +32,13 @@ Dashboard mặc định dùng tiếng Việt và giao diện theo hệ điều h
 **Ngôn ngữ** và **Giao diện** ở đầu trang để đổi lựa chọn. Trên màn hình nhỏ,
 nút **Menu** mở danh sách trang.
 
+Trong **Tiến độ quy trình**, chọn **Xem chi tiết** trên thẻ của một lần chạy
+hoặc một tập. Trang hiển thị phạm vi chương, thời gian lần chạy gần nhất,
+các lần thử theo bước và tên tệp đầu ra đã tạo. Nhật ký phân biệt đầu ra đạt,
+chỉ có cảnh báo và cần sửa sau khi model trả lời. Trang hiển thị tối đa 250
+lần thử từ phần nhật ký đọc được. Dùng **Lịch sử yêu cầu** để xem thêm các lượt
+gửi thất bại hoặc lượt xét chọn bị bỏ qua.
+
 Ở chế độ thật, các trang **Tổng quan**, **Nhà cung cấp** và **Tiến độ quy trình**
 tự cập nhật sau mỗi 30 giây khi tab đang hiển thị. Nút **Làm mới** cập nhật ngay.
 Mốc **Cập nhật lúc** là giờ dashboard lấy dữ liệu.

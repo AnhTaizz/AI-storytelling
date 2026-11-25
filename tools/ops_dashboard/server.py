@@ -4,6 +4,7 @@ import json
 from functools import partial
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+import re
 import socket
 from urllib.parse import parse_qs
 
@@ -28,6 +29,7 @@ API_ROUTES = {
     "/api/requests": view_models.request_history,
     "/api/routing-policy": view_models.routing_policy,
     "/api/pipeline": view_models.pipeline,
+    "/api/pipeline/run": view_models.run_detail,
 }
 
 
@@ -36,10 +38,15 @@ def _query_arguments(path, query, data_mode="mock"):
     allowed = {
         "/api/usage": {"range"},
         "/api/requests": {"limit", "offset", "provider", "stage", "outcome"},
+        "/api/pipeline/run": {"ref"},
     }.get(path, set())
     if values.keys() - allowed or any(len(items) != 1 for items in values.values()):
         raise ValueError("Invalid query parameters.")
     params = {key: items[0] for key, items in values.items()}
+    if path == "/api/pipeline/run":
+        if not re.fullmatch(r"[0-9a-f]{24}", params.get("ref", "")):
+            raise ValueError("Invalid run reference.")
+        return params
     if path == "/api/usage":
         range_name = params.get("range", "24h")
         if range_name not in view_models.USAGE_RANGES:
@@ -97,7 +104,11 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 self._json(400, {"error": str(error)})
                 return
             source = self.source.for_request() if hasattr(self.source, "for_request") else self.source
-            self._json(200, API_ROUTES[path](source, **arguments), source=source)
+            payload = API_ROUTES[path](source, **arguments)
+            if payload is None:
+                self._json(404, {"error": "Run not found."}, source=source)
+            else:
+                self._json(200, payload, source=source)
         else:
             self._json(404, {"error": "Path not found."})
 

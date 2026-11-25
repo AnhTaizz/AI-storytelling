@@ -81,6 +81,16 @@ const STRINGS = {
     EDGE_BLOCKED: "Bị tường lửa của nhà cung cấp chặn",
     RATE_LIMIT: "Bị giới hạn tốc độ, đang chờ", AUTH_FAILURE: "Key không hợp lệ",
     SERVER_FAILURE: "Máy chủ nhà cung cấp quá tải",
+    runDetails: "Chi tiết lần chạy", viewRun: "Xem chi tiết", viewRunNamed: "Xem chi tiết {run}",
+    backToRuns: "← Về danh sách lần chạy", runUnavailable: "Không tìm thấy lần chạy trong danh sách hiện tại.",
+    runChapters: "Chương đã chọn", season: "Mùa", elapsedRun: "Thời gian lần chạy gần nhất",
+    modelCallTime: "Thời gian gọi và kiểm tra đầu ra",
+    runAttempts: "Nhật ký theo bước", attempt: "Lần thử", validation: "Kiểm tra đầu ra", findings: "Vấn đề",
+    validationPassed: "Đạt", validationWarnings: "Chỉ có cảnh báo", validationFailed: "Cần sửa",
+    logCoverage: "Mỗi dòng là một lần model đã trả lời. Cột kiểm tra đầu ra cho biết pipeline đánh giá câu trả lời thế nào.",
+    noRunAttempts: "Chưa có lần thử nào được ghi trong nhật ký.",
+    attemptsTruncated: "Nhật ký hiển thị có giới hạn.",
+    runOutputs: "Tệp đầu ra đã tạo", noRunOutputs: "Chưa có tệp đầu ra để liệt kê.",
   },
   en: {
     brand: "AI Operations", skip: "Skip to content", menu: "Menu", navigation: "Dashboard navigation",
@@ -162,6 +172,16 @@ const STRINGS = {
     EDGE_BLOCKED: "Blocked by the provider's firewall",
     RATE_LIMIT: "Rate limited, waiting", AUTH_FAILURE: "Invalid key",
     SERVER_FAILURE: "Provider server overloaded",
+    runDetails: "Run details", viewRun: "View details", viewRunNamed: "View details for {run}",
+    backToRuns: "← Back to runs", runUnavailable: "This run is unavailable in the current list.",
+    runChapters: "Selected chapters", season: "Season", elapsedRun: "Latest invocation elapsed time",
+    modelCallTime: "Model calls and validation time",
+    runAttempts: "Attempts by stage", attempt: "Attempt", validation: "Output validation", findings: "Findings",
+    validationPassed: "Passed", validationWarnings: "Warnings only", validationFailed: "Needs repair",
+    logCoverage: "Each row is a call that received a model response. The validation column shows how the pipeline assessed it.",
+    noRunAttempts: "No attempts have been recorded in the call log.",
+    attemptsTruncated: "Only part of the call log is shown.",
+    runOutputs: "Output files", noRunOutputs: "No output files to list yet.",
   },
 };
 
@@ -169,7 +189,7 @@ const page = document.querySelector("#page");
 const heading = document.querySelector("#page-title");
 const snapshot = document.querySelector("#snapshot");
 const refresh = document.querySelector("#refresh");
-const refreshPages = new Set(["overview", "providers", "pipeline"]);
+const refreshPages = new Set(["overview", "providers", "pipeline", "runDetails"]);
 const nav = document.querySelector("#navigation");
 const links = [...nav.querySelectorAll("a")];
 const menu = document.querySelector("#menu");
@@ -792,9 +812,17 @@ function routingPolicy(data) {
 }
 
 function pipeline(data) {
+  return runCards(data);
+}
+
+function runCards(data, detailed = false) {
   return [...sourceNotices(data), element("div", {class: "run-list"}, ...data.runs.map(run => {
     const header = element("div", {class: "card-head"}, element("h2", {class: "mono"}, run.label ?? run.id ?? "—"),
-      technical(run.status, outcomeStates[run.status]));
+      element("div", {class: "run-actions"}, technical(run.status, outcomeStates[run.status]),
+        ...(!detailed && run.detail_ref ? [element("a", {
+          class: "run-link", href: "#pipeline/run/" + run.detail_ref,
+          "aria-label": t("viewRunNamed", {run: run.id ?? "—"}),
+        }, t("viewRun"))] : [])));
     if (run.label) return element("article", {class: "panel"}, header);
     const live = data.data_mode === "live";
     return element("article", {class: "panel"}, header,
@@ -809,9 +837,15 @@ function pipeline(data) {
           durationNode(stageInfo.seconds, "durationSecond", stageInfo.source))] : []));
       }))] : []),
       ...(run.totals_scope ? [element("p", {class: "muted"}, t(run.totals_scope))] : []),
-      ...(live ? [element("dl", {class: "detail-list"},
-        ...["calls", "tokens"].map(key => detail(key, sourcedNumber(run[key], run.sources[key]))),
-        detail("runTime", durationNode(run.seconds, "durationSecond", run.sources.seconds)),
+      ...(live ? [element("dl", {class: detailed ? "detail-list run-summary" : "detail-list"},
+        ...(detailed && run.season_id ? [detail("season", element("code", {}, run.season_id))] : []),
+        ...(detailed ? [detail("runChapters", run.chapters.map(value => textNumber(value)).join(", ") || "—")] : []),
+        ...["calls", "tokens"].map(key => detail(key, sourcedNumber(run[key], run.sources[key]),
+          detailed && run.total_scopes[key] && !run.totals_scope ? run.total_scopes[key] : undefined)),
+        ...(detailed ? [
+          detail("elapsedRun", durationNode(run.elapsed_seconds, "durationSecond")),
+          detail("modelCallTime", durationNode(run.call_seconds, "durationSecond")),
+        ] : [detail("runTime", durationNode(run.seconds, "durationSecond", run.sources.seconds))]),
         ...(run.review_reasons_count == null ? [] : [detail("reviewReasons",
           sourcedNumber(run.review_reasons_count, run.sources.review_reasons_count))]),
         ...(run.model || run.provider ? [detail("model", [run.provider, run.model].filter(Boolean).join(" · "))] : []),
@@ -824,6 +858,40 @@ function pipeline(data) {
       ...(run.resume_at ? [element("p", {class: "notice"},
         ...timedSentence("resumeAfter", run.resume_at, {remaining: relativeTime(run.resume_at)}))] : []));
   }))];
+}
+
+function backToRuns() {
+  return element("a", {class: "run-back", href: "#pipeline"}, t("backToRuns"));
+}
+
+function runDetails(data) {
+  const {run} = data;
+  const groups = new Map();
+  for (const call of run.attempts) {
+    const stage = call.stage ?? "unknown";
+    if (!groups.has(stage)) groups.set(stage, []);
+    groups.get(stage).push([
+      element("div", {}, textNumber(call.attempt),
+        ...(call.request_id ? [element("code", {class: "call-id"}, call.request_id)] : [])),
+      element("div", {}, displayProvider(call.provider),
+        ...(call.model ? [element("code", {class: "call-id"}, call.model)] : [])),
+      t(call.validation ?? "unknown"), textNumber(call.findings), durationNode(call.seconds, "durationSecond"),
+      element("div", {}, textNumber(call.input_tokens) + " / " + textNumber(call.output_tokens),
+        ...(call.tokens == null ? [] : [element("small", {class: "call-id"}, t("total") + " " + textNumber(call.tokens))]),
+        ...(call.reasoning_tokens == null ? [] : [element("small", {class: "call-id"},
+          t("reasoning", {count: textNumber(call.reasoning_tokens)}))])),
+    ]);
+  }
+  const headers = ["attempt", "model", "validation", "findings", "runTime", "inOut"].map(key => t(key));
+  const log = section("runAttempts",
+    ...(groups.size ? [element("p", {class: "muted"}, t("logCoverage"))] : [notice("noRunAttempts")]),
+    ...(run.attempts_truncated || run.call_log_scope === "partialCallLog" ? [notice("attemptsTruncated")] : []),
+    ...Array.from(groups, ([stage, rows]) => element("div", {class: "panel run-log"},
+      element("h3", {}, t(stage)), table(headers, rows, t(stage), 3))));
+  const outputs = section("runOutputs",
+    run.outputs.length ? element("ul", {class: "panel run-outputs"},
+      ...run.outputs.map(name => element("li", {}, element("code", {}, name)))) : notice("noRunOutputs"));
+  return [backToRuns(), ...runCards({...data, runs: [run]}, true), log, outputs];
 }
 
 const routes = {
@@ -842,7 +910,8 @@ function showMode(data, key) {
 
 async function route(moveFocus = false, updating = false) {
   const hash = location.hash.slice(1);
-  const key = Object.hasOwn(routes, hash) ? hash : "overview";
+  const runRef = /^pipeline\/run\/([0-9a-f]{24})$/.exec(hash)?.[1];
+  const key = runRef ? "runDetails" : Object.hasOwn(routes, hash) ? hash : "overview";
   const current = ++navigation;
   loading = true;
   refresh.disabled = true;
@@ -850,14 +919,14 @@ async function route(moveFocus = false, updating = false) {
   document.title = t(key) + " | " + t("brand");
   if (!updating) snapshot.textContent = "";
   for (const link of links) {
-    if (link.hash === "#" + key) link.setAttribute("aria-current", "page");
+    if (link.hash === "#" + (runRef ? "pipeline" : key)) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");
   }
   if (moveFocus) heading.focus();
   if (!updating) page.replaceChildren(notice("loading", {role: "status"}));
   try {
     const path = key === "usage" ? "usage?range=" + (usageRange ?? "24h")
-      : key === "requests" ? "requests?" + filters : key;
+      : key === "requests" ? "requests?" + filters : runRef ? "pipeline/run?ref=" + runRef : key;
     const [data, providerData, history] = await Promise.all(key === "overview"
       ? [getData(path), getData("providers"), getData("usage?range=24h")]
       : [getData(path)]);
@@ -865,10 +934,14 @@ async function route(moveFocus = false, updating = false) {
     if (key === "usage") usageRange = data.range;
     showMode(data, key);
     snapshot.replaceChildren(...timedSentence("snapshot", data.generated_at));
-    const content = key === "overview" ? overview(data, providerData, history) : routes[key](data, current);
+    const content = key === "overview" ? overview(data, providerData, history)
+      : runRef ? runDetails(data) : routes[key](data, current);
     page.replaceChildren(...content);
-  } catch {
-    if (current === navigation) problem(page);
+  } catch (error) {
+    if (current === navigation) {
+      if (runRef && error.message === "404") page.replaceChildren(backToRuns(), notice("runUnavailable"));
+      else problem(page);
+    }
   } finally {
     if (current === navigation) {
       loading = false;

@@ -179,6 +179,58 @@ class LiveSourceTests(unittest.TestCase):
         self.assertEqual((run["status"], run["current"], run["tokens"]), ("PAUSED_QUOTA", "plan", 15))
         self.assertEqual(run["stages"]["brief"], {"seconds": 1.5, "status": "COMPLETED", "source": "reported"})
 
+    def test_run_detail_shows_validation_and_outputs_for_the_selected_run(self):
+        run_id = "same-name"
+        filename = "run_manifest.json"
+        standalone = self.paths.runs_dir / run_id
+        season = self.paths.seasons_dir / "season-a"
+        episode = season / run_id
+        self.write_json(season / "season.json", {"episodes": [{"dir": run_id}], "status": "COMPLETED"})
+        self.write_json(episode / filename, {"status": "COMPLETED", "scope": {"chapters": [2]}})
+        self.write_json(standalone / filename, {
+            "status": "STOPPED_AFTER_BRIEF", "scope": {"chapters": [1, True, "3", -4], "label": SECRETS[5]},
+            "seconds": 12, "invocation": {"args": [SECRETS[9]]},
+        })
+        self.write_json(standalone / "story_brief.html", {"body": "artifact text sentinel"})
+        self.write_json(standalone / "unlisted.html", {})
+        calls = [
+            {"stage": "brief", "attempt": 1, "valid": False, "seconds": 5, "model": SECRETS[5],
+             "errors": ["validation text sentinel"], "raw_content": "raw response sentinel"},
+            {"stage": "brief", "attempt": 2, "valid": False, "soft_errors_only": True, "errors": ["warning"],
+             "seconds": 4, "provider": "groq",
+             "usage": {"prompt_tokens": 11, "completion_tokens": 7, "total_tokens": 18}},
+            {"stage": "brief_check", "attempt": 1, "valid": True, "seconds": 2, "errors": []},
+        ]
+        (standalone / "calls.jsonl").write_text(
+            "".join(json.dumps(call) + "\n" for call in calls) + "{\n", encoding="utf-8",
+        )
+
+        runs = self.get("pipeline")["runs"]
+        summaries = {run.get("season_id"): run for run in runs if run.get("id") == run_id}
+        endpoints = {key: "pipeline/run?ref=" + run["detail_ref"] for key, run in summaries.items()}
+        self.assertNotEqual(endpoints[None], endpoints["season-a"])
+        self.assertNotIn("attempts", summaries[None])
+        self.assertNotIn("detail_ref", next(run for run in runs if run.get("kind") == "season"))
+        detail = self.get(endpoints[None], secrets=("artifact text sentinel", "validation text sentinel",
+                                                   "raw response sentinel", "unlisted.html"))["run"]
+        self.assertEqual(detail["chapters"], [1])
+        self.assertEqual(detail["outputs"], ["story_brief.html"])
+        self.assertEqual((detail["elapsed_seconds"], detail["call_seconds"], detail["call_log_scope"]),
+                         (12, 11, "partialCallLog"))
+        self.assertEqual([(call["stage"], call["attempt"], call["validation"], call["findings"])
+                          for call in detail["attempts"]],
+                         [("brief", 1, "validationFailed", 1), ("brief", 2, "validationWarnings", 1),
+                          ("brief_check", 1, "validationPassed", 0)])
+        self.assertEqual([detail["attempts"][1][key] for key in ("input_tokens", "output_tokens", "tokens")],
+                         [11, 7, 18])
+        self.assertEqual(self.get(endpoints["season-a"])["run"]["chapters"], [2])
+        self.write_json(season / "gate_lock.json", {})
+        self.get(endpoints["season-a"], status=404)
+        self.get("pipeline/run?ref=" + "0" * 24, status=404)
+        for query in ("", "?ref=..%2f..%2f", "?ref=" + "0" * 24 + "&ref=" + "1" * 24):
+            with self.subTest(query=query):
+                self.get("pipeline/run" + query, status=400)
+
     def test_missing_sources_are_explained_without_creating_files(self):
         for endpoint, source, code in (
             ("overview", "telemetry", "telemetry_missing"), ("providers", "quota_state", "quota_missing"),

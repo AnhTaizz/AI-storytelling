@@ -1,11 +1,14 @@
 """Read allowlisted run metadata without following links or opening artifacts."""
 
+from collections import deque
 from datetime import datetime, timezone
+from hashlib import sha256
 from heapq import nlargest
 import json
 import re
 
 from tools.llm_infra.routing_policy import PROVIDERS
+from tools.llm_infra.telemetry import usage_counts
 from tools.story_pipeline.llm import QUOTA_PATTERN
 
 from .contract import PIPELINE_STAGES
@@ -17,6 +20,7 @@ RUN_LIMIT = 50
 _JSON_LIMIT = 4 * 1024 * 1024
 _CALL_LOG_LIMIT = 8 * 1024 * 1024
 _CALL_LINE_LIMIT = 10_000
+_DETAIL_CALL_LIMIT = 250
 _LOCK_LABEL = "đợt chạy đã khóa (M9)"
 _STATUSES = (
     "RUNNING", "COMPLETED", "FAILED", "PAUSED_QUOTA", "NEEDS_REVIEW", "NOT_RUN",
@@ -24,6 +28,10 @@ _STATUSES = (
 )
 _STAGE_OUTPUTS = {"brief": "story_brief.json", "plan": "plan.json", "script": "script_v1.json",
                   "critic": "critic_v1.json"}
+_DETAIL_OUTPUTS = (
+    "story_brief.html", "brief_check.md", "plan_review.html", "script_v1.md",
+    "script_final.md", "review.html", "report.md",
+)
 _HINTS = {
     "PAUSED_QUOTA": "Khi hết thời gian chờ, chạy lại với cùng thư mục đầu ra để tiếp tục.",
     "NEEDS_REVIEW": "Kiểm tra các bước được đánh dấu trước khi tiếp tục.",
@@ -76,7 +84,25 @@ def _status(value):
     return value if value in _STATUSES else "UNKNOWN"
 
 
-def _call_metadata(directory):
+def _call_detail(call, usage, tokens, seconds):
+    errors = call.get("errors")
+    valid = call.get("valid")
+    validation = "unknown"
+    if valid is True:
+        validation = "validationPassed"
+    elif valid is False:
+        validation = "validationWarnings" if call.get("soft_errors_only") is True else "validationFailed"
+    return {
+        "stage": label(call.get("stage")) or "unknown", "attempt": number(call.get("attempt")),
+        "request_id": label(call.get("request_id")),
+        "provider": call["provider"] if call.get("provider") in PROVIDERS else None,
+        "model": label(call.get("model")), "seconds": seconds, "validation": validation,
+        "findings": len(errors) if isinstance(errors, list) else None, "tokens": tokens,
+        **usage_counts({"usage_metadata": usage}),
+    }
+
+
+def _call_metadata(directory, attempts=None):
     path = directory / "calls.jsonl"
     stage_seconds = {}
     totals = {"calls": 0, "seconds": None, "tokens": None}
@@ -112,6 +138,8 @@ def _call_metadata(directory):
                     totals["tokens"] = (totals["tokens"] or 0) + tokens
                 seconds = number(call.get("seconds"))
                 stage = call.get("stage")
+                if attempts is not None:
+                    attempts.append(_call_detail(call, usage, tokens, seconds))
                 if stage == "brief":
                     brief_valid = call.get("valid") is True
                 if seconds is not None:
@@ -122,6 +150,8 @@ def _call_metadata(directory):
                 if handle.read(1):
                     scope = "partialCallLog"
     except OSError:
+        if attempts is not None:
+            attempts.clear()
         return {}, {}, None, None, scope, False
     if totals["seconds"] is not None:
         totals["seconds"] = round(totals["seconds"], 3)
@@ -150,8 +180,8 @@ def _error(manifest):
     return None
 
 
-def _run(path, manifest, updated):
-    log_totals, stage_seconds, provider, model, log_scope, brief_valid = _call_metadata(path.parent)
+def _run(path, manifest, updated, *, attempts=None):
+    log_totals, stage_seconds, provider, model, log_scope, brief_valid = _call_metadata(path.parent, attempts)
     status = _status(manifest.get("status"))
     error = manifest.get("error")
     if status == "FAILED" and isinstance(error, str) and QUOTA_PATTERN.search(error):
@@ -192,7 +222,7 @@ def _run(path, manifest, updated):
     if status == "NEEDS_REVIEW":
         values["review_reasons_count"] = len(reasons) if isinstance(reasons, list) else 0
     source_check_incomplete = manifest.get("source_check_failed") or manifest.get("source_check_quota_exhausted")
-    return {
+    run = {
         "id": label(path.parent.name, basename=True), "status": status, "completed": completed,
         "current": current, "stages": stages, "provider": provider, "model": model, "error_code": _error(manifest),
         "note": "Đối chiếu nguồn chưa xong một phần" if source_check_incomplete else None,
@@ -201,6 +231,19 @@ def _run(path, manifest, updated):
         "resume_at": _timestamp(manifest.get("resume_at")), "hint": _HINTS.get(status), **values,
         "sources": {key: "reported" if value is not None else "unknown" for key, value in values.items()},
     }
+    if attempts is not None:
+        chapters = _mapping(manifest.get("scope")).get("chapters")
+        run.update({
+            "chapters": [value for value in chapters[:500] if type(value) is int and number(value) is not None]
+            if isinstance(chapters, list) else [],
+            "elapsed_seconds": number(manifest.get("seconds")),
+            "call_seconds": log_totals.get("seconds"),
+            "call_log_scope": log_scope if log_totals else None,
+            "attempts_truncated": log_totals.get("calls", 0) > len(attempts),
+            "attempts": list(attempts),
+            "outputs": [name for name in _DETAIL_OUTPUTS if _mtime(path.parent / name) is not None],
+        })
+    return run
 
 
 def _candidates(root, filename):
@@ -245,7 +288,13 @@ def _season(path, manifest, updated):
     }
 
 
-def read_runs(runs_dir, seasons_dir):
+def _detail_ref(name, season_id):
+    # Roots and season names are intentionally distinct even when the visible run names match.
+    key = json.dumps([season_id, name], ensure_ascii=True)
+    return sha256(key.encode("ascii")).hexdigest()[:24]
+
+
+def read_runs(runs_dir, seasons_dir, *, detail_ref=None):
     def candidates():
         for mtime, path in nlargest(RUN_LIMIT, _candidates(seasons_dir, "season.json"), key=lambda item: item[0]):
             manifest = _manifest(path)
@@ -268,7 +317,7 @@ def read_runs(runs_dir, seasons_dir):
                         episode = directory / "run_manifest.json"
                         if (_local(directory, path.parent) and not _locked(directory)
                                 and (episode_mtime := _mtime(episode)) is not None):
-                            yield episode_mtime, episode, None, label(path.parent.name, basename=True)
+                            yield episode_mtime, episode, None, path.parent.name
         for mtime, path in _candidates(runs_dir, "run_manifest.json"):
             if not _locked(path.parent):
                 yield mtime, path, None, None
@@ -280,16 +329,24 @@ def read_runs(runs_dir, seasons_dir):
             continue
         seen.add(path)
         if ready is not None:
-            runs.append(ready)
+            if detail_ref is None:
+                runs.append(ready)
             continue
         if _locked(path.parent):
+            continue
+        name = label(path.parent.name, basename=True)
+        ref = _detail_ref(name, season_id) if name else None
+        if detail_ref is not None and ref != detail_ref:
             continue
         manifest = _manifest(path)
         if not manifest:
             continue
         updated = utc_stamp(datetime.fromtimestamp(mtime, timezone.utc))
-        run = _run(path, manifest, updated)
-        if season_id is not None:
-            run["season_id"] = season_id
+        attempts = deque(maxlen=_DETAIL_CALL_LIMIT) if detail_ref is not None else None
+        run = _run(path, manifest, updated, attempts=attempts)
+        if ref is not None:
+            run["detail_ref"] = ref
+        if public_season := label(season_id, basename=True):
+            run["season_id"] = public_season
         runs.append(run)
     return runs

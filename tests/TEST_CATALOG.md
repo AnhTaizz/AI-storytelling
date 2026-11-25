@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 13 — test files: 149 — test functions: 1499
+Suites: 13 — test files: 149 — test functions: 1500
 
 ## canonical_story
 
@@ -566,10 +566,11 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.ops_dashboard.contract`, 
 - `DataSourceTests.test_rows_match_phase_five_shape_and_provenance`
 - `DataSourceTests.test_mock_includes_quota_and_review_scenarios`
 
-### test_live_source (7)
+### test_live_source (8)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.neuron_ledger`, `tools.llm_infra.quota_state`, `tools.llm_infra.telemetry`, `tools.ops_dashboard.live_source`, `tools.ops_dashboard.server`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `LiveSourceTests.test_live_endpoints_aggregate_and_scrub_real_writer_metadata`
+- `LiveSourceTests.test_run_detail_shows_validation_and_outputs_for_the_selected_run`
 - `LiveSourceTests.test_missing_sources_are_explained_without_creating_files`
 - `LiveSourceTests.test_dotenv_configures_all_idle_providers_and_scrubs_telemetry`
 - `LiveSourceTests.test_schema_mismatch_and_refresh`
