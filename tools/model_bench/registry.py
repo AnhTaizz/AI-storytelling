@@ -14,7 +14,7 @@ REGISTRY_PATH = Path(__file__).with_name("model_registry_v1.yaml")
 PROVIDERS = ("gemini", "groq", "openrouter", "cloudflare")
 FREE_LISTS = dict(zip(PROVIDERS, (gemini.FREE_TIER_TEXT_MODELS, groq.FREE_TIER_TEXT_MODELS,
                                 tuple(model for model in openrouter.DEFAULT_MODEL_CHAIN if model.endswith(":free")),
-                                cloudflare.NEURON_PRICES)))
+                                cloudflare.ACTIVE_NEURON_PRICES)))
 UNAVAILABLE_OPENROUTER_MODELS = {"openai/gpt-oss-20b:free": "not in catalog 2026-11-24"}
 QUOTA_SCOPES = dict(zip(PROVIDERS, ("project_model", "organization_model", "account", "account_neurons")))
 LIMITS = ("rpm", "tpm", "rpd", "tpd", "neurons_per_day", "free_requests_per_day")

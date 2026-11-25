@@ -4,7 +4,7 @@ from http.client import HTTPException
 import json
 from urllib.parse import quote
 
-from tools.llm_infra.cloudflare_free_models_v1 import NEURON_PRICES
+from tools.llm_infra.cloudflare_free_models_v1 import ACTIVE_NEURON_PRICES
 from tools.llm_infra.openrouter_transport import (
     USER_AGENT, _json_object, _urllib_http, redact_openrouter_data as redact_cloudflare_data,
 )
@@ -118,7 +118,7 @@ class CloudflareClient:
         raise CloudflareHTTPError(kind="TRANSPORT_FAILURE")
 
     def generate(self, model, system_instruction, user_content, generation_config):
-        if model not in NEURON_PRICES or any(secret in model for secret in self._secrets):
+        if model not in ACTIVE_NEURON_PRICES or any(secret in model for secret in self._secrets):
             raise CloudflareHTTPError(kind="MODEL_NOT_FREE")
         payload = {
             "model": model,
