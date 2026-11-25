@@ -1722,3 +1722,12 @@ checkpointing, deterministic scoring and human-review exports. The draft gold an
 rubrics await owner review. Phase 7B measurements require an owner-approved plan.
 See [DEC-042](DECISIONS.md#dec-042--model-benchmark-framework-phase-7a) and the
 [Vietnamese guide](guides/MODEL_BENCH.md).
+
+## Phase 7B Groq calibration and Brief Repair V2 probe (2026-11-26)
+
+GPT-OSS 120B produced valid JSON on two of the three shared Wave 1 failures with a
+1,024-token cap. Structured Outputs strict mode recovered the remaining case.
+The full Brief probe passed hard validation and retained two soft warnings.
+The two writing scores are pending owner review. The paired C0–C3 pilot awaits
+owner approval with 63 of 64 dispatches available. M9 r2 stays paused.
+[Calibration and probe results](engineering/PHASE_7_GROQ_120B_CALIBRATION_RESULTS.md).
