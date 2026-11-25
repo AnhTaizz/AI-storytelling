@@ -1,0 +1,20 @@
+version: 1
+note: "Tasks marked deterministic_candidate should not default to an LLM."
+pipeline_stages:
+  brief: {tier: quality_critical}
+  brief_check: {tier: quality_critical}
+  plan: {tier: quality_critical}
+  script: {tier: quality_critical}
+  critic: {tier: quality_critical}
+  source_check: {tier: quality_critical}
+  revise: {tier: quality_critical}
+  patch: {tier: quality_critical}
+utility_tasks:
+  local_fact_extraction: {tier: utility}
+  event_dialogue_classification: {tier: utility}
+  normalization: {tier: utility, deterministic_candidate: true, note: "For whitespace, Unicode and known identifier rules."}
+  short_summary: {tier: utility}
+  simple_evidence_check: {tier: utility, deterministic_candidate: true, note: "For exact evidence references and span membership."}
+  json_shape: {tier: utility, deterministic_candidate: true}
+  spoiler_cutoff_by_chapter_index: {tier: utility, deterministic_candidate: true}
+  length: {tier: utility, deterministic_candidate: true}
