@@ -1,0 +1,80 @@
+[
+  {
+    "name": "c4_kite_clean",
+    "title": "Quầy diều",
+    "actor": ["セナ", "Sena"],
+    "source": ["セナは凧の糸を輪に巻いた。", "セナは凧を入口の近くに置いた。"],
+    "events": [
+      {"text": "Sena cuộn dây diều thành vòng.", "epistemic": "EXPLICIT"},
+      {"text": "Sena đặt diều gần lối vào.", "epistemic": "EXPLICIT"}
+    ],
+    "unknown": "Chưa rõ ai sẽ thả diều.",
+    "edits": []
+  },
+  {
+    "name": "c4_archive_wrapper",
+    "title": "Kho lưu trữ",
+    "actor": ["ユウ", "Yū"],
+    "source": ["ユウは封筒を木箱に入れた。", "ユウは箱のふたに赤い封印を貼った。"],
+    "events": [
+      {"text": "Yū bỏ phong bì vào hộp gỗ.", "epistemic": "EXPLICIT"},
+      {"text": "Yū dán niêm phong màu đỏ lên nắp hộp.", "epistemic": "EXPLICIT"}
+    ],
+    "unknown": "Chưa rõ trong phong bì có gì.",
+    "edits": ["/unknowns/0"],
+    "values": [{"text": "Chưa rõ trong phong bì có gì."}]
+  },
+  {
+    "name": "c4_bridge_ambiguous_wrapper",
+    "title": "Chiếc chuông bên cầu",
+    "actor": ["アキ", "Aki"],
+    "source": ["アキは橋の柵に札を結んだ。", "アキは対岸の鐘を一度鳴らした。"],
+    "events": [
+      {"text": "Aki buộc một tấm thẻ vào lan can cầu.", "epistemic": "EXPLICIT"},
+      {"text": "Aki làm chiếc chuông ở bờ đối diện vang lên một lần.", "epistemic": "EXPLICIT"}
+    ],
+    "unknown": "Chưa rõ trên thẻ có ghi gì.",
+    "edits": ["/unknowns/0"],
+    "values": [{"text": "Chưa rõ trên thẻ có ghi gì.", "note": "Đoạn trích cũng không nêu lý do đánh chuông."}]
+  },
+  {
+    "name": "c4_orchard_bad_citation",
+    "title": "Giỏ lê",
+    "actor": ["ノア", "Noa"],
+    "source": ["ノアは梨のかごを日陰に運んだ。", "ノアはかごの取っ手をひもで縛った。"],
+    "events": [
+      {"text": "Noa mang giỏ lê vào bóng râm.", "epistemic": "EXPLICIT"},
+      {"text": "Noa dùng dây buộc quai giỏ.", "epistemic": "EXPLICIT"}
+    ],
+    "unknown": "Chưa rõ Noa buộc quai giỏ để làm gì.",
+    "edits": ["/events/1/evidence"],
+    "values": [["1.1"]]
+  },
+  {
+    "name": "c4_radio_combined",
+    "title": "Máy vô tuyến",
+    "actor": ["マキ", "Maki"],
+    "source": ["マキは無線機の電源を切った。", "マキは予備の電池を注文したらしい。"],
+    "events": [
+      {"text": "Maki tắt máy vô tuyến.", "epistemic": "EXPLICIT"},
+      {"text": "Nghe nói Maki đã đặt mua pin dự phòng.", "epistemic": "REPORTED"}
+    ],
+    "unknown": "Chưa rõ khi nào pin sẽ tới.",
+    "edits": ["/unknowns/0", "/events/1/epistemic", "/events/1/summary"],
+    "values": [{"text": "Chưa rõ khi nào pin sẽ tới."}, "EXPLICIT", "Maki đã đặt mua pin dự phòng."]
+  },
+  {
+    "name": "c4_paper_tags_atomicity",
+    "title": "Thẻ giấy",
+    "actor": ["リク", "Riku"],
+    "source": ["リクは厚紙を切り、穴を開け、ひもを通した。", "リクは机の引き出しを閉めた。"],
+    "events": [
+      {"text": "Riku cắt giấy bìa.", "epistemic": "EXPLICIT"},
+      {"text": "Riku đóng ngăn kéo bàn.", "epistemic": "EXPLICIT"}
+    ],
+    "facts": ["Riku cắt giấy bìa.", "Riku đục lỗ trên giấy bìa.", "Riku luồn dây qua lỗ."],
+    "unknown": "Chưa rõ những chiếc thẻ sẽ dùng để làm gì.",
+    "edits": ["/characters/0/facts"],
+    "values": [[{"text": "Riku cắt giấy bìa, và đục lỗ, và luồn dây.", "evidence": ["1.1"], "quote": "リクは厚紙を切り、穴を開け、ひもを通した。", "epistemic": "EXPLICIT"}]]
+  }
+]

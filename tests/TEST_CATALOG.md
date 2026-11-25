@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 13 — test files: 149 — test functions: 1499
+Suites: 13 — test files: 149 — test functions: 1501
 
 ## canonical_story
 
@@ -805,7 +805,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_benchmark.bm25_lexi
 - `TestBM25LexicalV1.test_global_diagnostic_future_retrieval`
 - `TestBM25LexicalV1.test_determinism_failure_gate`
 
-### test_brief_repair_v2 (6)
+### test_brief_repair_v2 (8)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_benchmark.brief_repair_v2`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `RepairExperimentTests.test_held_back_gold_and_full_repair_preflight`
@@ -814,6 +814,8 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_benchmark.brief_rep
 - `RepairExperimentTests.test_revalidates_evidence_and_preserves_original_candidate`
 - `RepairExperimentTests.test_lossless_structure_repair_does_not_skip_semantic_check`
 - `RepairExperimentTests.test_semantic_and_evidence_metrics_detect_regressions`
+- `RepairExperimentTests.test_c4_validates_clean_and_losslessly_normalized_briefs_without_dispatch`
+- `RepairExperimentTests.test_c4_uses_exact_c0_requests_and_selection_for_remaining_findings`
 
 ### test_dense_e5_large_v1 (21)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_benchmark.dense_e5_large_v1`, `tools.story_benchmark.dense_e5_small_v1`, `tools.story_benchmark.run_bm25_lexical_v1`, `tools.story_benchmark.run_dense_e5_large_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`

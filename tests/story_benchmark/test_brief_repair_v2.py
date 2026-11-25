@@ -92,3 +92,48 @@ class RepairExperimentTests(unittest.TestCase):
         obj["events"][1]["evidence"] = ["1.1"]
         self.assertLess(experiment.score(obj, case)[0], 1)
         self.assertLess(experiment.score(obj, case)[1], 1)
+
+    def test_c4_validates_clean_and_losslessly_normalized_briefs_without_dispatch(self):
+        for kind in ("clean", "structure"):
+            with self.subTest(kind=kind):
+                case = experiment.fixture(kind)
+                original = copy.deepcopy(case["initial"])
+
+                def unexpected(_):
+                    self.fail("A Brief with no findings needs no dispatch")
+
+                selected, row = experiment.compare_c4(case, unexpected)
+                self.assertEqual(selected, case["reference"])
+                self.assertEqual(case["initial"], original)
+                self.assertEqual((row["arm"], row["requests"], row["hard_errors"], row["soft_errors"]),
+                                 ("C4", [], [], []))
+                self.assertEqual(row["normalized"], kind == "structure")
+                self.assertEqual(row["recovered"], True if kind == "structure" else None)
+                self.assertEqual(experiment.summarize([row])[0]["arm"], "C4")
+
+    def test_c4_uses_exact_c0_requests_and_selection_for_remaining_findings(self):
+        for kind in ("ambiguous_wrapper", "uncertainty", "combined", "atomicity"):
+            with self.subTest(kind=kind):
+                case = experiment.fixture("structure" if kind == "ambiguous_wrapper" else kind)
+                if kind == "ambiguous_wrapper":
+                    case["initial"]["unknowns"][0]["note"] = "Keep this extra information."
+                normalized = copy.deepcopy(case["initial"])
+                if kind == "combined":
+                    normalized["unknowns"][0] = normalized["unknowns"][0]["text"]
+                baseline_requests, c4_requests = [], []
+
+                def respond(requests):
+                    def response(request):
+                        requests.append(request)
+                        return {"raw_content": "{}" if len(requests) == 1 else json.dumps(case["reference"])}
+                    return response
+
+                baseline, c0 = experiment.compare({**case, "initial": normalized}, "C0", respond(baseline_requests))
+                selected, c4 = experiment.compare_c4(case, respond(c4_requests))
+                self.assertEqual(c4_requests, baseline_requests)
+                self.assertEqual(len(c4_requests), 2)
+                self.assertEqual(selected, baseline)
+                self.assertEqual(selected, case["reference"])
+                self.assertEqual(c4["normalized"], kind == "combined")
+                self.assertEqual(c4["rollbacks"], c0["rollbacks"])
+                self.assertFalse(c4["early_stop"])

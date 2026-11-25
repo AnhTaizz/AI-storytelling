@@ -40,8 +40,8 @@ def fixture(kind):
     return {**data, "name": kind, "chapter": chapter, "initial": initial}
 
 
-def held_back_cases():
-    rows = json.loads(HELD_BACK.read_text(encoding="utf-8"))
+def held_back_cases(path=None):
+    rows = json.loads((path or HELD_BACK).read_text(encoding="utf-8"))
     template = json.loads(FIXTURE.read_text(encoding="utf-8"))["reference"]
     for row in rows:
         source = row["source"]
@@ -248,9 +248,22 @@ def compare(case, arm, respond):
                       "token_totals": tokens, "tokens": tokens["total"]}
 
 
+def compare_c4(case, respond):
+    """Normalize the starting Brief once, then let C0 validate, repair and select."""
+    started = time.perf_counter()
+    original = case["initial"]
+    initial_hard, _ = validate(original, case["chapter"])
+    normalized = normalize(original)
+    selected, trace = compare({**case, "initial": normalized}, "C0", respond)
+    trace.update(arm="C4", normalized=normalized != original, initial_hard=bool(initial_hard),
+                 recovered=not trace["hard_errors"] if initial_hard else None,
+                 seconds=time.perf_counter() - started)
+    return selected, trace
+
+
 def summarize(rows):
     summary = []
-    for arm in ARMS:
+    for arm in (*ARMS, "C4"):
         cases = [row for row in rows if row["arm"] == arm]
         if not cases:
             continue
