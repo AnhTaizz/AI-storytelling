@@ -1,0 +1,79 @@
+{
+  "source": [
+    "ミナは棚を測り、札を書き、箱を閉じた。",
+    "ミナは予備の棚を注文したらしい。"
+  ],
+  "reference": {
+    "chapter_order": 1,
+    "chapter_summary": "Mina đo kệ.",
+    "characters": [
+      {
+        "id": "CH1",
+        "name": "ミナ",
+        "romanized_name": "Mina",
+        "aliases": [],
+        "facts": [
+          {
+            "text": "Mina đo kệ.",
+            "evidence": [
+              "1.1"
+            ],
+            "quote": "棚を測り",
+            "epistemic": "EXPLICIT"
+          }
+        ]
+      }
+    ],
+    "relationships": [],
+    "events": [
+      {
+        "id": "E1",
+        "summary": "Mina đo kệ.",
+        "participants": [
+          "CH1"
+        ],
+        "location": null,
+        "importance": "CORE",
+        "motivation": {
+          "text": null,
+          "status": "UNKNOWN"
+        },
+        "consequence": null,
+        "evidence": [
+          "1.1"
+        ],
+        "quote": "ミナは棚を測り、札を書き、箱を閉じた。",
+        "epistemic": "EXPLICIT"
+      },
+      {
+        "id": "E2",
+        "summary": "Nghe nói Mina đã đặt một kệ dự phòng.",
+        "participants": [
+          "CH1"
+        ],
+        "location": null,
+        "importance": "CORE",
+        "motivation": {
+          "text": null,
+          "status": "UNKNOWN"
+        },
+        "consequence": null,
+        "evidence": [
+          "1.2"
+        ],
+        "quote": "ミナは予備の棚を注文したらしい。",
+        "epistemic": "REPORTED"
+      }
+    ],
+    "unknowns": [
+      "Chưa biết khi nào kệ tới."
+    ],
+    "forbidden_inferences": [],
+    "ending_state": "Hộp đã đóng.",
+    "closing_hook": {
+      "text": null,
+      "quote": null,
+      "evidence": []
+    }
+  }
+}
