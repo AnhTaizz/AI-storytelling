@@ -16,7 +16,7 @@ from .data_source import utc_stamp
 from .privacy import configured_secrets, label, scrub
 from .provider_reader import configuration_counts, provider_summaries
 from .quota_reader import read_quota
-from .run_reader import read_runs
+from .run_reader import read_result, read_runs
 from .sqlite_reader import SourceUnavailable
 from .telemetry_reader import AGGREGATE_LIMIT, read_history, read_requests
 
@@ -214,3 +214,14 @@ class _LiveSnapshot:
         return {"last_data_at": self.latest, "source_states": {
             name: {"code": state, "message": MESSAGES[state]} for name, state in self.states.items()
         }}
+
+    def stage_result(self, ref, stage):
+        return read_result(self.paths.runs_dir, self.paths.seasons_dir, ref, stage)
+
+    def run_detail(self, ref):
+        runs = read_runs(self.paths.runs_dir, self.paths.seasons_dir, detail_ref=ref)
+        if not runs:
+            return None
+        run = runs[0]
+        self._timestamp(run["updated_at"])
+        return run

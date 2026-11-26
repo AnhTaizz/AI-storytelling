@@ -190,3 +190,9 @@ def routing_policy(source: DataSource):
 
 def pipeline(source: DataSource):
     return {"stages": PIPELINE_STAGES, "runs": source.runs}
+
+
+def run_detail(source: DataSource, ref):
+    if hasattr(source, "run_detail") and (run := source.run_detail(ref)) is not None:
+        return {"stages": PIPELINE_STAGES, "run": run}
+    return None
