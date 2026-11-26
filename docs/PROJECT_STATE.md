@@ -2,7 +2,13 @@
 
 ## Current Milestone
 
-*Header refreshed 2026-11-22; the dated sections below are history.*
+Phase 7C experiments are CLOSED by owner decision. Full Repair C0 and current Source Check
+remain the defaults. C4 wrapper normalization is proposed as an opt-in with the blinded owner
+semantic review pending. Phase 7D's measured operations review and consolidated dashboard
+are prepared for owner review. Product work returns to one Vietnamese script for video.
+[Phase 7 closeout and M9 decision path](engineering/PHASE_7_CLOSEOUT_20261126.md).
+
+*Header refreshed 2026-11-26. The dated sections below are history.*
 
 M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED; holdout closed, predictions NOT RUN. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. Annotation conventions V5: ACCEPTED (DEC-031). See M4-04B3Z (FV3 blind run: recall 0.793, precision 0.782, L1 9/15, full 0/16). FV3 error diagnosis: M4-04B4A. Conventions V5: M4-04B4B (DEC-031).
 
@@ -22,7 +28,7 @@ M7 — Story Brief: ACCEPTED BASELINE (DEC-022, 2026-11-15).
 
 M8 — Narrative Planning: ACCEPTED BASELINE (DEC-023, 2026-11-15).
 
-M9 — Script Generation / Validation: PROTOTYPE EXISTS; M1/M9 Script Quality Gate: NOT YET EVALUATED; protocol v0 and review kit ready, sample not generated (DEC-033; see M9 Script Quality Gate below).
+M9 — Script Generation / Validation: PROTOTYPE EXISTS. M9 r2 is PAUSED and the gate is NOT EVALUATED. Episode 1 has a draft, episode 2 stopped at the Brief, and episodes 3–4 have no script. See the Phase 7 closeout for resume eligibility.
 
 M10 — Advanced Retrieval: GATED behind the Script Quality Gate (DEC-009).
 
@@ -1752,3 +1758,12 @@ on its separate ledger and showed no measured cache benefit on this fixture.
 The minimal C4 integration proposal and blinded semantic review await the owner.
 Production routing stays unchanged and M9 r2 stays paused.
 [Final Phase 7C readout](engineering/PHASE_7C_FINAL_RESULTS_20261126.md).
+
+## Phase 7 research closeout and operational handoff (2026-11-26)
+
+C0 and C4 recovered 4/4 hard-invalid starts on six new held-back DEV cases. C4's
+verified deterministic gain was one avoided full repair. Source Check repeats showed no
+operational cache benefit. Owner semantic review is pending. Prioritize the data integrity
+and M9 protocol reviews ahead of Dashboard integration. M9 r2 remains PAUSED.
+[Final research results](engineering/PHASE_7C_FINAL_RESULTS_20261126.md) ·
+[Phase 7D operations and product handoff](engineering/PHASE_7_CLOSEOUT_20261126.md).
