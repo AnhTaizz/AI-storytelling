@@ -1136,3 +1136,14 @@ benchmark registry and default display. DEC-039 and the original price snapshot
 remain as historical records. The change is separate from Wave 1 evaluation
 and applies only after its own PR review and merge.
 [Provider retirement notice](https://developers.cloudflare.com/changelog/post/2026-11-05-planned-model-deprecations/)
+
+## DEC-045 — Retain C0 after the Brief Repair V2 DEV pilot
+
+STATUS: OWNER DECISION (2026-11-26)
+
+C0 remains the production comparator. C1, C2 and C3 are not accepted as replacements
+because the paired DEV pilot found lower recovery and evidence coverage. The owner
+semantic review remains pending. GPT-OSS 120B is the preferred Phase 7C experimental
+model. The owner requested a separate C0/C4 comparison and a separately approved
+Source Check S0/S1 cache measurement. Each live plan requires its own approval.
+[Pilot results](engineering/BRIEF_REPAIR_V2_PILOT_RESULTS_20261126.md).
