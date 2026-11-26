@@ -3,6 +3,7 @@
 No model, API or network is used: a scripted client returns canned JSON. One test reads
 the tracked sample chapter 1 through the frozen M3 adapter.
 """
+from dataclasses import replace
 import io
 import json
 import re
@@ -17,6 +18,7 @@ import yaml
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
 
+from tools.story_benchmark import brief_repair_v2 as experiment  # noqa: E402
 from tools.story_pipeline import checks, episode_brief, stages  # noqa: E402
 from tools.story_pipeline.facts import FactsError, StoryFacts  # noqa: E402
 from tools.story_pipeline.llm import (  # noqa: E402
@@ -711,6 +713,151 @@ class FactsTests(unittest.TestCase):
 
 
 class EndToEndTests(unittest.TestCase):
+    def test_brief_normalization_is_opt_in_and_preserves_the_original_response(self):
+        scope = load_scope(DEFAULT_MANIFEST, (1, 1))
+        profile = test_profile()
+        clean = brief_json(1) | {"unknowns": ["Chưa rõ"], "forbidden_inferences": ["Chưa kết luận"]}
+        wrapped = clean | {key: [{"text": clean[key][0]}] for key in ("unknowns", "forbidden_inferences")}
+        raw = json.dumps(wrapped, ensure_ascii=False)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            for enabled in (False, True):
+                with self.subTest(enabled=enabled):
+                    out = Path(tmp) / str(enabled)
+                    replies = iter([raw, json.dumps(clean)])
+                    prompts = []
+                    client = ScriptedLLMClient(lambda stage, system, user: (prompts.append(user), next(replies))[1])
+                    options = {"brief_normalization": True} if enabled else {}
+                    result = run(client, scope, profile, out, stop_after="brief", check_briefs=False, **options)
+                    self.assertEqual(result["status"], "STOPPED_AFTER_BRIEF")
+                    self.assertEqual(result["model_calls"], 1 if enabled else 2)
+                    calls = [json.loads(line) for line in (out / "calls.jsonl").read_text(encoding="utf-8").splitlines()]
+                    self.assertEqual(calls[0]["raw_content"], raw)
+                    self.assertEqual(calls[0].get("brief_normalized"), True if enabled else None)
+                    self.assertEqual(calls[0]["valid"], enabled)
+                    if not enabled:
+                        self.assertIn(raw, prompts[1])
+                    self.assertEqual(json.loads((out / "briefs/chapter_001.json").read_text(encoding="utf-8")),
+                                     clean)
+                    self.assertEqual(result["settings"]["brief_normalization"],
+                                     stages.BRIEF_NORMALIZATION_VERSION if enabled else None)
+                    self.assertEqual(result["brief_fingerprint"], stages.brief_fingerprint(
+                        profile, scope.source_language, brief_normalization=enabled))
+
+    def test_brief_normalization_keeps_full_repair_for_hard_and_soft_findings(self):
+        scope = load_scope(DEFAULT_MANIFEST, (1, 1))
+        clean = brief_json(1) | {"unknowns": ["Chưa rõ"]}
+        wrapped = clean | {"unknowns": [{"text": "Chưa rõ"}]}
+        bad_cases = (
+            ([], "schema:"),
+            (wrapped | {"forbidden_inferences": [{"text": "a", "extra": "b"}, {"text": 3}]}, "schema:"),
+            (wrapped | {"events": [{**wrapped["events"][0], "evidence": ["99.1"]}, *wrapped["events"][1:]]},
+             "evidence"),
+            (wrapped | {"characters": [{**wrapped["characters"][0], "facts": [{
+                **wrapped["characters"][0]["facts"][0], "text": "Luôn đứng đầu các kỳ thi, và nghe nói giỏi thể dục, và rất khiêm tốn",
+            }]}, *wrapped["characters"][1:]]}, "joins 3 clauses"),
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            for i, (bad, error) in enumerate(bad_cases):
+                with self.subTest(case=i):
+                    raw = json.dumps(bad, ensure_ascii=False)
+                    replies = iter([raw, json.dumps(clean)])
+                    prompts = []
+                    client = ScriptedLLMClient(lambda stage, system, user: (prompts.append(user), next(replies))[1])
+                    out = Path(tmp) / str(i)
+                    result = run(client, scope, test_profile(), out, stop_after="brief", check_briefs=False,
+                                 brief_normalization=True)
+                    self.assertEqual(result["status"], "STOPPED_AFTER_BRIEF", result.get("error"))
+                    self.assertEqual(result["model_calls"], 2)
+                    previous = bad | {"unknowns": clean["unknowns"]} if isinstance(bad, dict) else bad
+                    self.assertIn(json.dumps(previous, ensure_ascii=False), prompts[1])
+                    self.assertIn(error, prompts[1])
+                    first_attempt = (out / "calls.jsonl").read_text(encoding="utf-8").splitlines()[0]
+                    self.assertEqual(json.loads(first_attempt)["raw_content"], raw)
+
+    def test_brief_normalization_matches_the_experimental_c4_repair_payload(self):
+        case = experiment.fixture("combined")
+        chapter = case["chapter"]
+        scope = StoryScope(chapter.document_id, "ja", (chapter,))
+        raw = "    " + json.dumps(case["initial"], ensure_ascii=False, indent=2)
+        corrected = json.dumps(case["reference"], ensure_ascii=False)
+        expected_requests = []
+
+        def expected(request):
+            expected_requests.append(request)
+            return {"raw_content": corrected}
+
+        experiment.compare_c4(case, expected)
+        production_requests = []
+        self.assertEqual(len(expected_requests), 1)
+
+        def respond(stage, system, user):
+            production_requests.append({"system": system, "user": user})
+            return raw if len(production_requests) == 1 else corrected
+
+        client = ScriptedLLMClient(respond)
+        log = CallLog()
+        selected = stages.run_brief(client, scope, chapter, load_profile(), [], None, log, 2,
+                                    brief_normalization=True)
+        self.assertEqual(production_requests[1:], expected_requests)
+        self.assertEqual(selected, case["reference"])
+        self.assertEqual(log.entries[0]["raw_content"], raw)
+        self.assertTrue(log.entries[0]["brief_normalized"])
+
+    def test_brief_normalization_does_not_normalize_full_repair_responses(self):
+        scope = load_scope(DEFAULT_MANIFEST, (1, 1))
+        clean = brief_json(1) | {"unknowns": ["Chưa rõ"]}
+        wrapped = clean | {"unknowns": [{"text": "Chưa rõ"}]}
+        replies = iter([json.dumps(wrapped | {"chapter_order": 99}), json.dumps(wrapped), json.dumps(clean)])
+        client = ScriptedLLMClient(lambda *args: next(replies))
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "run"
+            result = run(client, scope, test_profile(), out, stop_after="brief", check_briefs=False,
+                         brief_normalization=True)
+            self.assertEqual((result["status"], result["model_calls"]), ("STOPPED_AFTER_BRIEF", 3))
+            calls = [json.loads(line) for line in (out / "calls.jsonl").read_text(encoding="utf-8").splitlines()]
+            self.assertTrue(calls[0]["brief_normalized"])
+            self.assertNotIn("brief_normalized", calls[1])
+            self.assertTrue(calls[1]["errors"][0].startswith("schema:"))
+
+    def test_brief_normalization_separates_memory_and_run_checkpoints(self):
+        scope = load_scope(DEFAULT_MANIFEST, (1, 1))
+        profile = test_profile()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            memory = StoryMemory(root / "memory", scope.story_id)
+            client = ScriptedLLMClient(FakeModel())
+            options = {"stop_after": "brief", "check_briefs": False, "memory": memory}
+            disabled = run(client, scope, profile, root / "off", **options)
+            enabled = run(client, scope, profile, root / "on", brief_normalization=True, **options)
+            self.assertNotEqual(disabled["brief_fingerprint"], enabled["brief_fingerprint"])
+            self.assertEqual([disabled["model_calls"], enabled["model_calls"]], [1, 1])
+            reused = run(client, scope, profile, root / "other", brief_normalization=True, **options)
+            self.assertEqual((reused["model_calls"], reused["brief_sources"]), (0, {"1": "memory"}))
+            resumed = run(client, scope, profile, root / "on", resume=True, brief_normalization=True, **options)
+            self.assertEqual(resumed["model_calls"], 0)
+            saved_path = root / "on" / "run_manifest.json"
+            saved = saved_path.read_bytes()
+            for name, mode in (("off", True), ("on", False), ("missing", True)):
+                with self.subTest(name=name), self.assertRaisesRegex(ValueError, "differs from the saved run"):
+                    run(client, scope, profile, root / name, resume=True, brief_normalization=mode, **options)
+            self.assertEqual(saved_path.read_bytes(), saved)
+            self.assertFalse((root / "missing").exists())
+            stale_mode = resumed["settings"] | {"brief_normalization": "text_wrappers_v1"}
+            saved_path.write_text(json.dumps(resumed | {"settings": stale_mode}), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "brief normalization differs"):
+                run(client, scope, profile, root / "on", resume=True, brief_normalization=True, **options)
+            saved_path.write_text(json.dumps(resumed | {"brief_fingerprint": "obsolete"}), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "Brief fingerprint differs"):
+                run(client, scope, profile, root / "on", resume=True, brief_normalization=True, **options)
+            with self.assertRaisesRegex(ValueError, "unavailable for locked runs"):
+                run(client, scope, profile, root / "locked", locked=True, brief_normalization=True, **options)
+            self.assertFalse((root / "locked").exists())
+            locked = run(client, scope, profile, root / "locked", locked=True, **options)
+            self.assertNotIn("brief_normalization", locked["settings"])
+            self.assertNotIn("brief_fingerprint", locked)
+            self.assertEqual(len(client.calls), 3)
+
     def test_full_pipeline_with_revision(self):
         scope = load_scope(DEFAULT_MANIFEST, (1, 2))
         model = FakeModel()
@@ -748,6 +895,34 @@ class EndToEndTests(unittest.TestCase):
             resumed = run(resumed_client, scope, test_profile(), out, resume=True)
             self.assertEqual(resumed["status"], "COMPLETED")
             self.assertEqual(resumed_client.calls, [])
+
+    def test_resume_refuses_changed_episode_or_recap_source_before_reusing_checkpoints(self):
+        scope, background = run_pipeline.episode_scope(DEFAULT_MANIFEST, 2, 2, recap=True)
+        chapter = scope.chapters[0]
+        cases = {
+            "story": (replace(scope, story_id="different-story"), background),
+            "chapter range": (replace(scope, chapters=(SAMPLE_CHAPTERS[3],)), background),
+            "document": (replace(scope, chapters=(replace(chapter, document_id="other-id"),)), background),
+            "episode bytes": (replace(scope, chapters=(replace(chapter, version="new-version"),)), background),
+            "recap scope": (scope, []),
+            "recap bytes": (scope, [replace(background[0], version="new-version")]),
+            "source language": (replace(scope, source_language="en"), background),
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            manifest = run(ScriptedLLMClient(FakeModel()), scope, test_profile(), out,
+                           background=background, stop_after="script")
+            self.assertEqual(manifest["status"], "STOPPED_AFTER_SCRIPT")
+            manifest_file = out / "run_manifest.json"
+            original = manifest_file.read_bytes()
+            for label, (next_scope, next_background) in cases.items():
+                with self.subTest(label):
+                    client = ScriptedLLMClient(FakeModel())
+                    with self.assertRaisesRegex(ValueError, "source changed"):
+                        run(client, next_scope, test_profile(), out, resume=True,
+                            background=next_background)
+                    self.assertEqual(client.calls, [])
+                    self.assertEqual(manifest_file.read_bytes(), original)
 
     def test_source_check_findings_go_to_revision_and_the_report(self):
         """The second verifier reads the script against the source text (live run 10)."""
@@ -1293,15 +1468,19 @@ class EndToEndTests(unittest.TestCase):
         chapter = scope.chapters[0]
         with tempfile.TemporaryDirectory() as tmp:
             memory = StoryMemory(Path(tmp) / "memory", scope.story_id)
-            stale = brief_json(1)
-            stale["events"] = stale["events"][:2]  # written before the granularity rule existed
-            memory.put_brief(1, chapter.version, stages.brief_fingerprint(test_profile()), stale, "old-model")
-            client = ScriptedLLMClient(FakeModel())
-            manifest = run(client, scope, test_profile(), Path(tmp) / "run", memory=memory)
-            self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
-            self.assertEqual(manifest["brief_sources"], {"1": "model (memory stale)"})
-            self.assertIn("needs at least 5 events", manifest["stale_memory"]["1"][0])
-            self.assertEqual([c["stage"] for c in client.calls][0], "brief")
+            for label, events, problem in (
+                ("old rules", brief_json(1)["events"][:2], "needs at least 5 events"),
+                ("invalid shape", None, "is not of type 'array'"),
+            ):
+                with self.subTest(label):
+                    stale = brief_json(1) | {"events": events}
+                    memory.put_brief(1, chapter.version, stages.brief_fingerprint(test_profile()), stale, "old-model")
+                    client = ScriptedLLMClient(FakeModel())
+                    manifest = run(client, scope, test_profile(), Path(tmp) / "run", memory=memory)
+                    self.assertEqual(manifest["status"], "COMPLETED", manifest.get("error"))
+                    self.assertEqual(manifest["brief_sources"], {"1": "model (memory stale)"})
+                    self.assertIn(problem, manifest["stale_memory"]["1"][0])
+                    self.assertEqual(client.calls[0]["stage"], "brief")
             again = ScriptedLLMClient(FakeModel())  # the regenerated brief is valid and reused
             reused = run(again, scope, test_profile(), Path(tmp) / "run2", memory=memory)
             self.assertEqual(reused["brief_sources"], {"1": "memory"})
@@ -1352,16 +1531,31 @@ class EndToEndTests(unittest.TestCase):
                     if label == "legacy":
                         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
                         del manifest["invocation"]
+                        del manifest["source_identity"]
                         manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
                     code = run_pipeline.main([*dotenv, "--resume", str(Path(tmp) / "run"), "--memory", str(Path(tmp) / "mem")])
                     self.assertEqual((code, clients[-1].calls), (0, []), out.getvalue())
                     self.assertIn("resume: using the run's own chapters, recap", out.getvalue())
+                    self.assertEqual("source_identity" in json.loads(manifest_path.read_bytes()), label != "legacy")
             # An option given again wins over the recorded one.
             args = run_pipeline.build_parser().parse_args(["--resume", "x", "--chapters", "3"])
             restored = run_pipeline.restore_invocation(args, {"resume", "chapters"}, Path(tmp) / "run")
             self.assertEqual(args.chapters, "3")
             self.assertNotIn("chapters", restored)
             self.assertEqual(run_pipeline.restore_invocation(args, set(), Path(tmp) / "missing"), [])
+            original = manifest_path.read_bytes()
+            with mock.patch("sys.stderr", new_callable=io.StringIO) as errors:
+                self.assertEqual(run_pipeline.main([*dotenv, "--resume", str(manifest_path.parent),
+                                                    "--chapters", "3"]), 2)
+            self.assertIn("source changed", errors.getvalue())
+            self.assertEqual(manifest_path.read_bytes(), original)
+            for contents, error in ((b"{broken", "Cannot read saved run manifest"),
+                                    (b"[]", "Saved run manifest must be a JSON object")):
+                with self.subTest(contents=contents), mock.patch("sys.stderr", new_callable=io.StringIO) as errors:
+                    manifest_path.write_bytes(contents)
+                    self.assertEqual(run_pipeline.main([*dotenv, "--resume", str(manifest_path.parent)]), 2)
+                    self.assertIn(error, errors.getvalue())
+                    self.assertEqual(manifest_path.read_bytes(), contents)
 
     def test_provider_error_preserves_checkpoints_and_reported_usage(self):
         scope = load_scope(DEFAULT_MANIFEST, (1, 1))

@@ -60,8 +60,12 @@ class StoreTests(unittest.TestCase):
                     self.assertIsNone(store.get_brief(*args))
             record = json.loads((store.directory / "chapter_002.json").read_text(encoding="utf-8"))
             self.assertEqual((record["format"], record["producer"]), (mem.MEMORY_FORMAT, "fake-model"))
-            (store.directory / "chapter_002.json").write_text("{broken", encoding="utf-8")
-            self.assertIsNone(store.get_brief(2, "src-v1", "fp-1"))
+            no_brief = {key: value for key, value in record.items() if key != "brief"}
+            for invalid in (b"{broken", b"\xff", b"null", json.dumps(no_brief).encode(),
+                            json.dumps(record | {"brief": []}).encode()):
+                with self.subTest(invalid=invalid[:40]):
+                    (store.directory / "chapter_002.json").write_bytes(invalid)
+                    self.assertIsNone(store.get_brief(2, "src-v1", "fp-1"))
             self.assertEqual(list(store.directory.glob("*.tmp")), [])
 
     def test_rejects_bad_ids_and_mismatched_brief(self):

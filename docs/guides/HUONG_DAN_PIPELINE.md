@@ -104,7 +104,7 @@ python -m tools.story_pipeline.run_pipeline --resume <thư mục lần chạy> -
 - Pipeline sửa đúng các câu đó trong một vòng (chỉ sửa câu, không viết lại cả bài), rồi kiểm lại các đoạn vừa đổi.
 - `report.md` có mục "Góp ý của người duyệt" ghi từng lỗi: đã sửa; đã sửa nhưng đoạn vẫn bị báo lỗi (câu mới vẫn có thể sai, hãy xem); câu vẫn còn; hoặc không tìm thấy câu (thường do trích không đúng nguyên văn).
 - Ghi rõ **điều đúng trong nguồn** ở phần lý do (ví dụ "cậu quên đo, chỉ đo sau khi Mahiru gõ cửa nhắc"), không chỉ "sai". Lý do càng cụ thể, câu sửa càng đúng.
-- Không cần gõ lại `--chapters`, `--recap`, model hay các thiết lập kiểm tra: `--resume` tự lấy lại đúng tham số của lần chạy đó (in ra dòng "resume: using the run's own ..."), nên các bước đã có được dùng lại. Tham số nào bạn gõ lại thì dùng giá trị bạn gõ.
+- `--resume` lấy lại tham số của lần chạy trước, nên các bước đã lưu được dùng lại. Nếu đổi truyện, phạm vi chương, phạm vi recap hoặc nội dung nguồn, hãy dùng thư mục đầu ra mới. Các lần chạy cũ chưa lưu phiên bản nguồn chỉ đối chiếu được truyện, chương và mã tài liệu đã ghi trong manifest.
 - Phiếu bạn đã chấm được giữ lại thành `review_form_reviewed_1.md`, và một phiếu trống mới được tạo cho bản đã sửa.
 - Với cả mùa: chạy lại lệnh `run_story` cùng các tham số cũ, thêm `--apply-review`. Chỉ những tập có lỗi chưa sửa mới được chạy lại.
 
@@ -122,6 +122,12 @@ Story Brief là "ranh giới sự thật" của tập: kịch bản chỉ đư�
    - Mục sai: đổi `[ ] sai` thành `[x] sai` và viết nội dung đúng sau `→` ở cuối dòng.
    - Mục thừa hoặc không nên kể: đổi `[ ] bỏ` thành `[x] bỏ`.
    - Mục đúng thì để nguyên.
+   Tùy chọn thử nghiệm `--brief-normalization` mặc định tắt. Với Brief đầu tiên, tùy chọn chỉ lấy chuỗi từ đối tượng có duy nhất
+   trường `text` trong `unknowns` và `forbidden_inferences`. Mọi kiểm tra Brief và sửa lỗi toàn phần vẫn chạy như
+   cũ khi cần. Phản hồi gốc vẫn dùng để chẩn đoán. Nếu đã chuẩn hóa, Full Repair nhận Brief đã chuẩn
+   hóa kèm lỗi còn lại từ validator. `--resume` khôi phục chế độ từ manifest. Để đổi chế độ, dùng một thư mục đầu ra mới. Lượt chạy đã
+   khóa không dùng tùy chọn này.
+
 4. Chạy tiếp, không cần tham số nào khác: `python -m tools.story_pipeline.run_pipeline --resume <thư mục lần chạy>`.
    - Plan, kịch bản và critic dùng brief đã sửa.
    - `run_manifest.json` (mục `brief_review`) ghi lại từng thay đổi. Dòng không áp dụng được (thiếu nội dung sau `→`, hoặc mã mục không tồn tại) cũng được ghi lại, không bị bỏ qua lặng lẽ.

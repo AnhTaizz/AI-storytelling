@@ -1,5 +1,6 @@
 """Tests for tools/story_pipeline/run_story.py (running a story episode by episode)."""
 from contextlib import redirect_stderr, redirect_stdout
+from dataclasses import replace
 from io import StringIO
 import json
 import sys
@@ -18,7 +19,7 @@ from tools.llm_infra import pipeline_clients  # noqa: E402
 from tools.llm_infra.openrouter_router import OpenRouterQuotaPaused  # noqa: E402
 from tools.llm_infra.quota_state import QuotaStateStore  # noqa: E402
 from tools.story_memory.memory_v0 import StoryMemory  # noqa: E402
-from tools.story_pipeline import run_story  # noqa: E402
+from tools.story_pipeline import run_pipeline, run_story  # noqa: E402
 from tools.story_pipeline.llm import GeminiLLMClient, ScriptedLLMClient  # noqa: E402
 from tools.story_pipeline.run_pipeline import DEFAULT_MANIFEST  # noqa: E402
 
@@ -111,6 +112,31 @@ class SeasonTests(unittest.TestCase):
         return run_story.run_season(None, DEFAULT_MANIFEST, self.ranges, test_profile(), self.season_dir,
                                     memory=None, run=stub, **kwargs)
 
+    def test_season_rejects_a_later_incompatible_brief_cache_before_any_call(self):
+        later = run_story.episode_dir(self.season_dir, 3, self.ranges[2])
+        later.mkdir(parents=True)
+        saved = later / "run_manifest.json"
+        saved.write_text(json.dumps({
+            "status": "COMPLETED",
+            "settings": {"brief_normalization": run_pipeline.stages.BRIEF_NORMALIZATION_VERSION},
+            "brief_fingerprint": "old",
+        }), encoding="utf-8")
+        stamp = saved.read_bytes()
+        stub = StubRun({})
+        for enabled, message in ((False, "brief normalization differs"), (True, "Brief fingerprint differs")):
+            with self.subTest(enabled=enabled), self.assertRaisesRegex(ValueError, message):
+                self.season(stub, options={"brief_normalization": enabled})
+        self.assertEqual(stub.calls, [])
+        self.assertEqual(saved.read_bytes(), stamp)
+        self.assertFalse((self.season_dir / "season.json").exists())
+        saved.write_text("{", encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "Cannot read saved run manifest"):
+            self.season(stub, options={"brief_normalization": True})
+        saved.unlink()
+        (later / "script_v1.json").write_text("{}", encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "requires a saved manifest"):
+            self.season(stub, options={"brief_normalization": True})
+
     def test_episodes_run_in_order_with_earlier_chapters_as_background(self):
         stub = StubRun({})
         season = self.season(stub)
@@ -135,6 +161,57 @@ class SeasonTests(unittest.TestCase):
         self.assertEqual([(c["start"], c["resume"]) for c in stub.calls], [(2, True), (4, False)])
         self.assertTrue(season["episodes"][0]["skipped_as_completed"])
         self.assertEqual(season["status"], "COMPLETED")
+
+    def test_rerun_refuses_to_skip_a_completed_episode_after_its_source_changes(self):
+        ranges = [(1, 1)]
+        args = (DEFAULT_MANIFEST, ranges, test_profile(), self.season_dir)
+        first = run_story.run_season(ScriptedLLMClient(FakeModel()), *args, memory=None)
+        self.assertEqual(first["episodes"][0]["status"], "COMPLETED")
+        season_file = self.season_dir / "season.json"
+        original = season_file.read_bytes()
+        scope, background = run_story.run_pipeline.episode_scope(DEFAULT_MANIFEST, 1, 1)
+        updated = replace(scope, chapters=(replace(scope.chapters[0], version="updated-source"),))
+        client = ScriptedLLMClient(FakeModel())
+        with patch.object(run_story.run_pipeline, "episode_scope", return_value=(updated, background)):
+            with self.assertRaisesRegex(ValueError, "source changed"):
+                run_story.run_season(client, *args, memory=None)
+            with patch.object(run_story.run_pipeline, "make_client", return_value=client), \
+                    redirect_stdout(StringIO()), redirect_stderr(StringIO()) as errors:
+                self.assertEqual(run_story.main(["--chapters", "1", "--season-dir", str(self.season_dir),
+                                                 "--no-memory"]), 2)
+            self.assertIn("source changed", errors.getvalue())
+        self.assertEqual(client.calls, [])
+        self.assertEqual(season_file.read_bytes(), original)
+
+    def test_later_source_mismatch_blocks_all_episodes_and_state_writes(self):
+        ranges = [(1, 1), (2, 3)]
+        scope, background = run_story.run_pipeline.episode_scope(DEFAULT_MANIFEST, 2, 3, recap=True)
+        later = run_story.episode_dir(self.season_dir, 2, ranges[1])
+        later.mkdir(parents=True)
+        saved = later / "run_manifest.json"
+        old_scope = replace(scope, chapters=(replace(scope.chapters[0], version="previous"), scope.chapters[1]))
+        saved.write_text(json.dumps({
+            "status": "COMPLETED",
+            "source_identity": run_story.run_pipeline._source_identity(old_scope, background),
+        }), encoding="utf-8")
+        season_file = self.season_dir / "season.json"
+        season_file.write_bytes(b"existing season index")
+        original = saved.read_bytes()
+        first = run_story.episode_dir(self.season_dir, 1, ranges[0])
+        client = ScriptedLLMClient(FakeModel())
+
+        with self.assertRaisesRegex(ValueError, "source changed"):
+            run_story.run_season(client, DEFAULT_MANIFEST, ranges, test_profile(), self.season_dir, memory=None)
+        with patch.object(run_story.run_pipeline, "make_client") as factory, \
+                redirect_stdout(StringIO()), redirect_stderr(StringIO()) as errors:
+            self.assertEqual(run_story.main(["--chapters", "1-3", "--episodes", "1,2-3",
+                                             "--season-dir", str(self.season_dir), "--no-memory"]), 2)
+        factory.assert_not_called()
+        self.assertIn("source changed", errors.getvalue())
+        self.assertEqual(client.calls, [])
+        self.assertFalse(first.exists())
+        self.assertEqual(season_file.read_bytes(), b"existing season index")
+        self.assertEqual(saved.read_bytes(), original)
 
     def test_apply_review_resumes_completed_episodes_with_unapplied_errors(self):
         self.season(StubRun({}))
@@ -233,6 +310,19 @@ class CliTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.season_dir = Path(self.tmp.name) / "season"
+
+    def test_season_cli_restores_brief_normalization_and_rejects_an_explicit_change(self):
+        client = ScriptedLLMClient(FakeModel())
+        arguments = ["--chapters", "1", "--season-dir", str(self.season_dir), "--no-memory",
+                     "--no-source-check", "--min-words", "20", "--max-words", "200"]
+        with patch.object(run_pipeline, "make_client", return_value=client) as factory:
+            self.assertEqual(run_story.main([*arguments, "--brief-normalization"]), 0)
+            self.assertEqual(run_story.main(arguments), 0)
+            self.assertEqual(run_story.main([*arguments, "--no-brief-normalization"]), 2)
+        self.assertEqual(factory.call_count, 2)
+        run_dir = run_story.episode_dir(self.season_dir, 1, (1, 1))
+        saved = json.loads((run_dir / "run_manifest.json").read_text(encoding="utf-8"))
+        self.assertTrue(saved["invocation"]["brief_normalization"])
 
     def test_auto_quota_resumes_the_season_with_saved_policy_and_checkpoints(self):
         now = [1000.0]
