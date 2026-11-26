@@ -33,7 +33,7 @@ from tools.story_pipeline import run_pipeline  # noqa: E402
 from tools.story_pipeline.facts import StoryFacts  # noqa: E402
 from tools.story_pipeline.llm import QUOTA_PATTERN, LLMClient  # noqa: E402
 from tools.story_pipeline.profile import NarrativeProfile, load_profile  # noqa: E402
-from tools.story_pipeline.source import parse_range  # noqa: E402
+from tools.story_pipeline.source import Chapter, StoryScope, parse_range  # noqa: E402
 
 SEASON_VERSION = "STORY_SEASON/v0"
 DEFAULT_SEASON_ROOT = REPO / ".local" / "story_seasons"
@@ -63,13 +63,6 @@ def plan_episodes(first: int, last: int, episodes: Optional[str] = None,
 def episode_dir(season_dir: Path, index: int, chapters: Tuple[int, int]) -> Path:
     start, end = chapters
     return season_dir / (f"ep{index:02d}_ch{start}" if start == end else f"ep{index:02d}_ch{start}-{end}")
-
-
-def _read_manifest(path: Path) -> Optional[Dict[str, Any]]:
-    try:
-        return json.loads((path / "run_manifest.json").read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return None
 
 
 def _episode_row(index: int, chapters: Tuple[int, int], path: Path, manifest: Optional[Dict[str, Any]],
@@ -142,6 +135,21 @@ def season_html(season: Dict[str, Any]) -> str:
             "<p class='muted'>Chấm từng tập trong trang review của tập đó.</p></main></body></html>")
 
 
+def _preflight_episodes(season_dir: Path, ranges: Sequence[Tuple[int, int]], manifest_path: Path | str,
+                        source_root: Optional[str], *, locked: bool):
+    """Read every saved checkpoint and verify source identity before any episode can write or call a model."""
+    manifests = [run_pipeline.read_run_manifest(episode_dir(season_dir, index, chapters))
+                 for index, chapters in enumerate(ranges, start=1)]
+    scopes: Dict[int, Tuple[StoryScope, Sequence[Chapter]]] = {}
+    if not locked:
+        for index, ((start, end), previous) in enumerate(zip(ranges, manifests), start=1):
+            if previous is not None:
+                scope, background = run_pipeline.episode_scope(manifest_path, start, end, source_root, recap=True)
+                run_pipeline.check_resume_source(previous, scope, background)
+                scopes[index] = (scope, background)
+    return manifests, scopes
+
+
 def run_season(client: LLMClient, manifest_path: Path | str, ranges: Sequence[Tuple[int, int]],
                profile: NarrativeProfile, season_dir: Path, *, memory: Optional[StoryMemory],
                source_root: Optional[str] = None, facts: Optional[StoryFacts] = None,
@@ -149,16 +157,20 @@ def run_season(client: LLMClient, manifest_path: Path | str, ranges: Sequence[Tu
                options: Optional[Dict[str, Any]] = None,
                progress: Callable[[str], None] = lambda message: None) -> Dict[str, Any]:
     """Run every episode in order and write season.json and season.md after each one."""
+    options = options or {}
+    manifests, saved_scopes = _preflight_episodes(season_dir, ranges, manifest_path, source_root,
+                                                  locked=bool(options.get("locked")))
     season_dir.mkdir(parents=True, exist_ok=True)
     rows: List[Dict[str, Any]] = []
     status, stop_reason, story_id = "COMPLETED", None, None
     totals = {"calls": 0, "tokens": 0, "seconds": 0.0}
-    options = options or {}
-    for index, chapters in enumerate(ranges, start=1):
+    for index, (chapters, previous) in enumerate(zip(ranges, manifests), start=1):
         path = episode_dir(season_dir, index, chapters)
-        previous = _read_manifest(path)
-        scope, background = run_pipeline.episode_scope(manifest_path, chapters[0], chapters[1], source_root,
-                                                       recap=True)
+        if index in saved_scopes:
+            scope, background = saved_scopes[index]
+        else:
+            scope, background = run_pipeline.episode_scope(manifest_path, chapters[0], chapters[1], source_root,
+                                                           recap=True)
         story_id = scope.story_id
         review = options.get("owner_review")
         if previous and previous.get("status") == "COMPLETED" and not (
@@ -198,9 +210,8 @@ def run_season(client: LLMClient, manifest_path: Path | str, ranges: Sequence[Tu
     else:
         if any(r["status"] == "FAILED" for r in rows):
             status = "COMPLETED_WITH_FAILURES"
-    rows += [_episode_row(i, c, episode_dir(season_dir, i, c), _read_manifest(episode_dir(season_dir, i, c)),
-                          season_dir)
-             for i, c in enumerate(ranges, start=1) if i > len(rows)]
+    rows += [_episode_row(i, chapters, episode_dir(season_dir, i, chapters), previous, season_dir)
+             for i, (chapters, previous) in enumerate(zip(ranges, manifests), start=1) if i > len(rows)]
     return _write_season(season_dir, story_id, ranges, rows, totals, status, stop_reason)
 
 
@@ -251,10 +262,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     scope, _ = run_pipeline.episode_scope(args.manifest, first, first, args.source_root)
     destination = args.season_dir or args.resume
     season_dir = Path(destination) if destination else DEFAULT_SEASON_ROOT / scope.story_id
-    previous = [_read_manifest(episode_dir(season_dir, index, chapters))
-                for index, chapters in enumerate(ranges, start=1)]
-    existing = [manifest for manifest in previous if manifest is not None]
     try:
+        previous, _ = _preflight_episodes(season_dir, ranges, args.manifest, args.source_root,
+                                           locked=run_pipeline.routing_locked(season_dir))
+        existing = [manifest for manifest in previous if manifest is not None]
         run_pipeline.prepare_routing(args, season_dir, existing[0] if existing else None)
         for manifest in existing[1:]:
             run_pipeline.check_routing_identity(args, manifest.get("invocation") or {})
@@ -273,9 +284,13 @@ def main(argv: Optional[List[str]] = None) -> int:
         options["locked"] = True
     else:
         options["invocation"] = run_pipeline.invocation_of(args)
-    season = run_season(client, args.manifest, ranges, profile, season_dir, memory=memory,
-                        source_root=args.source_root, facts=facts, stop_on_failure=not args.keep_going,
-                        options=options, progress=lambda m: print(m, flush=True))
+    try:
+        season = run_season(client, args.manifest, ranges, profile, season_dir, memory=memory,
+                            source_root=args.source_root, facts=facts, stop_on_failure=not args.keep_going,
+                            options=options, progress=lambda m: print(m, flush=True))
+    except ValueError as exc:
+        print(f"run error: {exc}", file=sys.stderr)
+        return 2
     print(f"season: {season['status']}  calls: {season['totals']['calls']}  index: {season_dir / 'season.md'}")
     if season.get("stop_reason"):
         print(f"stopped: {season['stop_reason']}")

@@ -34,7 +34,7 @@ from tools.story_pipeline import plan_review  # noqa: E402
 from tools.story_pipeline import (PIPELINE_VERSION, checks, episode_brief, lexicon, review_page,  # noqa: E402
                                   review_summary, stages)
 from tools.story_pipeline.facts import StoryFacts  # noqa: E402
-from tools.story_pipeline.llm import QUOTA_PATTERN, CallLog, LLMClient, StageFailed  # noqa: E402
+from tools.story_pipeline.llm import QUOTA_PATTERN, CallLog, LLMClient, StageFailed, schema_errors  # noqa: E402
 from tools.story_pipeline.profile import DEFAULT_PROFILE_PATH, NarrativeProfile, load_profile  # noqa: E402
 from tools.story_pipeline.source import Chapter, StoryScope, layout_warnings, load_scope, parse_range  # noqa: E402
 from tools.story_retrieval.brief_retrieval_v1 import build_brief_corpus, callback_candidates  # noqa: E402
@@ -68,6 +68,40 @@ def cached(path: Path, resume: bool, produce: Callable[[], Any]) -> Any:
     obj = produce()
     write_json(path, obj)
     return obj
+
+
+def read_run_manifest(out_dir: Path) -> Optional[Dict[str, Any]]:
+    path = out_dir / "run_manifest.json"
+    try:
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return None
+    except (OSError, ValueError) as exc:
+        raise ValueError(f"Cannot read saved run manifest {path}") from exc
+    if not isinstance(manifest, dict):
+        raise ValueError(f"Saved run manifest must be a JSON object: {path}")
+    return manifest
+
+
+def _source_identity(scope: StoryScope, background: Sequence[Chapter]) -> Dict[str, Any]:
+    return {"language": scope.source_language,
+            "documents": [{"chapter": chapter.order, "document_id": chapter.document_id, "version": chapter.version}
+                          for chapter in (*background, *scope.chapters)]}
+
+
+def check_resume_source(saved: Dict[str, Any], scope: StoryScope, background: Sequence[Chapter]) -> None:
+    # Older run manifests recorded the scope but did not record source versions.
+    saved_scope = saved.get("scope") or {}
+    current_scope = {"story_id": scope.story_id, "chapters": [chapter.order for chapter in scope.chapters],
+                     "document_ids": [chapter.document_id for chapter in scope.chapters]}
+    current_metadata = {"background_chapters": [chapter.order for chapter in background],
+                        "source_identity": _source_identity(scope, background)}
+    changed = (
+        any(key in saved_scope and saved_scope[key] != value for key, value in current_scope.items())
+        or any(key in saved and saved[key] != value for key, value in current_metadata.items())
+    )
+    if changed:
+        raise ValueError("Cannot resume: source changed. Use a new output directory for the changed source.")
 
 
 def script_markdown(script: Dict[str, Any], label: str) -> str:
@@ -516,6 +550,9 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         progress: Callable[[str], None] = lambda message: None) -> Dict[str, Any]:
     """`scope` is the episode. `background` are earlier chapters, summarised from memory as a
     recap (never later chapters). With `memory`, chapter briefs are reused across runs."""
+    saved = read_run_manifest(out_dir) if resume and not locked else None
+    if saved is not None:
+        check_resume_source(saved, scope, background)
     out_dir.mkdir(parents=True, exist_ok=True)
     if hasattr(client, "for_run"):
         client = client.for_run(out_dir.name)
@@ -547,6 +584,9 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         "versions": [],
         "status": "RUNNING",
     }
+    # Unversioned checkpoints cannot establish the provenance of their reused artifacts.
+    if not locked and (saved is None or "source_identity" in saved):
+        manifest["source_identity"] = _source_identity(scope, background)
     write_json(out_dir / "run_manifest.json", manifest)
 
     def finish(status: str, error: Optional[str] = None) -> Dict[str, Any]:
@@ -566,6 +606,7 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
 
     try:
         fingerprint = stages.brief_fingerprint(profile, scope.source_language)
+        brief_schema = stages.load_schema("story_brief_v0") if memory is not None else None
         all_briefs: List[Dict[str, Any]] = []
         for chapter in sorted([*background, *scope.chapters], key=lambda c: c.order):
             progress(f"brief: chapter {chapter.order}")
@@ -576,11 +617,12 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                     stored = memory.get_brief(chapter.order, chapter.version, fingerprint)
                     # A stored brief must still pass today's checks: validators added after it
                     # was written (live run 6 reused a brief the new hedge check would reject).
-                    stale = stages.brief_semantic_errors(stored, chapter, scope.source_language,
-                                                         profile.brief_language) if stored is not None else []
-                    if stored is not None and not stale:
-                        manifest["brief_sources"][str(chapter.order)] = "memory"
-                        return stored
+                    if stored is not None:
+                        stale = schema_errors(brief_schema, stored) or stages.brief_semantic_errors(
+                            stored, chapter, scope.source_language, profile.brief_language)
+                        if not stale:
+                            manifest["brief_sources"][str(chapter.order)] = "memory"
+                            return stored
                     if stale:
                         manifest.setdefault("stale_memory", {})[str(chapter.order)] = stale[:5]
                 brief = stages.run_brief(client, scope, chapter, profile, all_briefs, facts, log, max_repairs)
@@ -1056,8 +1098,7 @@ def _legacy_invocation(manifest: Dict[str, Any]) -> Dict[str, Any]:
 def restore_invocation(args: argparse.Namespace, given: Set[str], run_dir: Path) -> List[str]:
     """Fill the options a resumed run was started with, except those given again; returns
     the names restored. A resume with other check settings would redo stages it has saved."""
-    path = run_dir / "run_manifest.json"
-    manifest = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None
+    manifest = read_run_manifest(run_dir)
     recorded = (manifest.get("invocation") or _legacy_invocation(manifest)) if manifest is not None else {}
     restored = []
     for key, value in recorded.items():
@@ -1098,9 +1139,13 @@ def main(argv: Optional[List[str]] = None) -> int:
     print(f"run dir: {out_dir}", flush=True)
     for warning in layout_warnings([*background, *scope.chapters]):
         print(f"warning: {warning}", flush=True)
-    manifest = run(client, scope, profile, out_dir, facts=facts, resume=resume, background=background,
-                   memory=memory, progress=lambda message: print(f"  ... {message}", flush=True),
-                   invocation=invocation_of(args), locked=args.locked, **run_options(args))
+    try:
+        manifest = run(client, scope, profile, out_dir, facts=facts, resume=resume, background=background,
+                       memory=memory, progress=lambda message: print(f"  ... {message}", flush=True),
+                       invocation=invocation_of(args), locked=args.locked, **run_options(args))
+    except ValueError as exc:
+        print(f"run error: {exc}", file=sys.stderr)
+        return 2
     status = manifest["status"]
     print(f"status: {STATUS_VI.get(status, status)}  calls: {manifest['model_calls']}  seconds: {manifest['seconds']}")
     for reason in manifest.get("review_reasons", []):
