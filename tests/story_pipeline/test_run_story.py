@@ -117,7 +117,7 @@ class SeasonTests(unittest.TestCase):
         saved = later / "run_manifest.json"
         saved.write_text(json.dumps({
             "status": "COMPLETED",
-            "settings": {"brief_normalization": "text_wrappers_v1"},
+            "settings": {"brief_normalization": run_pipeline.stages.BRIEF_NORMALIZATION_VERSION},
             "brief_fingerprint": "old",
         }), encoding="utf-8")
         stamp = saved.read_bytes()

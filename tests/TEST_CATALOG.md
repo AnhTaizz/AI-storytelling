@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 13 — test files: 149 — test functions: 1507
+Suites: 13 — test files: 149 — test functions: 1510
 
 ## canonical_story
 
@@ -566,10 +566,12 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.ops_dashboard.contract`, 
 - `DataSourceTests.test_rows_match_phase_five_shape_and_provenance`
 - `DataSourceTests.test_mock_includes_quota_and_review_scenarios`
 
-### test_live_source (7)
+### test_live_source (9)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.neuron_ledger`, `tools.llm_infra.quota_state`, `tools.llm_infra.telemetry`, `tools.ops_dashboard.live_source`, `tools.ops_dashboard.server`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `LiveSourceTests.test_live_endpoints_aggregate_and_scrub_real_writer_metadata`
+- `LiveSourceTests.test_run_detail_shows_validation_and_outputs_for_the_selected_run`
+- `LiveSourceTests.test_stage_results_are_allowlisted_sandboxed_and_hidden_when_locked`
 - `LiveSourceTests.test_missing_sources_are_explained_without_creating_files`
 - `LiveSourceTests.test_dotenv_configures_all_idle_providers_and_scrubs_telemetry`
 - `LiveSourceTests.test_schema_mismatch_and_refresh`
@@ -2025,8 +2027,8 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.openrouter_rout
 - `CliTests.test_locked_season_refuses_new_providers_and_keeps_legacy_gemini`
 - `CliTests.test_bad_episode_plan_is_rejected_before_any_call`
 
-### test_story_pipeline_v0 (57)
-Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.check_config`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.episode_brief`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
+### test_story_pipeline_v0 (58)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.check_config`, `tools.story_benchmark.brief_repair_v2`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.episode_brief`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
 
 - `test_profile`
 - `SourceTests.test_parse_range`
@@ -2060,6 +2062,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.check_config`, 
 - `FactsTests.test_valid_and_invalid`
 - `EndToEndTests.test_brief_normalization_is_opt_in_and_preserves_the_original_response`
 - `EndToEndTests.test_brief_normalization_keeps_full_repair_for_hard_and_soft_findings`
+- `EndToEndTests.test_brief_normalization_matches_the_experimental_c4_repair_payload`
 - `EndToEndTests.test_brief_normalization_does_not_normalize_full_repair_responses`
 - `EndToEndTests.test_brief_normalization_separates_memory_and_run_checkpoints`
 - `EndToEndTests.test_full_pipeline_with_revision`

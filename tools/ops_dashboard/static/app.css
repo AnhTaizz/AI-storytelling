@@ -321,6 +321,24 @@ tbody tr:last-child td { border-bottom: 0; }
 .duration:focus-visible::after { content: " (" attr(title) ")"; }
 .problem { padding: .75rem; border: 2px solid var(--status-critical); border-radius: .4rem; }
 .run-list { display: grid; gap: .75rem; }
+.run-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem 1rem; }
+.run-link {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 1px solid var(--accent);
+  border-radius: .45rem;
+  padding: .35rem .65rem;
+  font-size: .87rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.run-link:hover { text-decoration: underline; }
+.run-back { display: inline-block; margin-bottom: .75rem; color: var(--accent); }
+.run-summary { grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); }
+.run-log { margin-top: .55rem; }
+.run-log h3 { margin-bottom: .45rem; }
+.call-id { display: block; color: var(--muted); }
+.run-outputs { margin: 0; padding-inline-start: 2rem; }
 .stages {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 7rem), 1fr));

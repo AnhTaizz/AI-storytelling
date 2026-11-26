@@ -133,5 +133,9 @@ class RunReaderTests(unittest.TestCase):
                                                 encoding="utf-8")
             with patch("tools.ops_dashboard.run_reader._CALL_LINE_LIMIT", 2):
                 run, = read_runs(root, root / "absent")
+                with patch("tools.ops_dashboard.run_reader._DETAIL_CALL_LIMIT", 1):
+                    detail, = read_runs(root, root / "absent", detail_ref=run["detail_ref"])
             self.assertEqual((run["calls"], run["seconds"], run["tokens"], run["totals_scope"]),
                              (2, 2, 4, "partialCallLog"))
+            self.assertTrue(detail["attempts_truncated"])
+            self.assertEqual(len(detail["attempts"]), 1)

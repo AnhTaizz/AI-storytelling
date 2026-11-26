@@ -124,7 +124,8 @@ Story Brief là "ranh giới sự thật" của tập: kịch bản chỉ đư�
    - Mục đúng thì để nguyên.
    Tùy chọn thử nghiệm `--brief-normalization` mặc định tắt. Với Brief đầu tiên, tùy chọn chỉ lấy chuỗi từ đối tượng có duy nhất
    trường `text` trong `unknowns` và `forbidden_inferences`. Mọi kiểm tra Brief và sửa lỗi toàn phần vẫn chạy như
-   cũ khi cần. `--resume` khôi phục chế độ từ manifest. Để đổi chế độ, dùng một thư mục đầu ra mới. Lượt chạy đã
+   cũ khi cần. Phản hồi gốc vẫn dùng để chẩn đoán. Nếu đã chuẩn hóa, Full Repair nhận Brief đã chuẩn
+   hóa kèm lỗi còn lại từ validator. `--resume` khôi phục chế độ từ manifest. Để đổi chế độ, dùng một thư mục đầu ra mới. Lượt chạy đã
    khóa không dùng tùy chọn này.
 
 4. Chạy tiếp, không cần tham số nào khác: `python -m tools.story_pipeline.run_pipeline --resume <thư mục lần chạy>`.

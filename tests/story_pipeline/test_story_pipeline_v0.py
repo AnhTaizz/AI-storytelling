@@ -17,6 +17,7 @@ import yaml
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
 
+from tools.story_benchmark import brief_repair_v2 as experiment  # noqa: E402
 from tools.story_pipeline import checks, episode_brief, stages  # noqa: E402
 from tools.story_pipeline.facts import FactsError, StoryFacts  # noqa: E402
 from tools.story_pipeline.llm import (  # noqa: E402
@@ -767,8 +768,40 @@ class EndToEndTests(unittest.TestCase):
                                  brief_normalization=True)
                     self.assertEqual(result["status"], "STOPPED_AFTER_BRIEF", result.get("error"))
                     self.assertEqual(result["model_calls"], 2)
-                    self.assertIn(raw, prompts[1])
+                    previous = bad | {"unknowns": clean["unknowns"]} if isinstance(bad, dict) else bad
+                    self.assertIn(json.dumps(previous, ensure_ascii=False), prompts[1])
                     self.assertIn(error, prompts[1])
+                    first_attempt = (out / "calls.jsonl").read_text(encoding="utf-8").splitlines()[0]
+                    self.assertEqual(json.loads(first_attempt)["raw_content"], raw)
+
+    def test_brief_normalization_matches_the_experimental_c4_repair_payload(self):
+        case = experiment.fixture("combined")
+        chapter = case["chapter"]
+        scope = StoryScope(chapter.document_id, "ja", (chapter,))
+        raw = "    " + json.dumps(case["initial"], ensure_ascii=False, indent=2)
+        corrected = json.dumps(case["reference"], ensure_ascii=False)
+        expected_requests = []
+
+        def expected(request):
+            expected_requests.append(request)
+            return {"raw_content": corrected}
+
+        experiment.compare_c4(case, expected)
+        production_requests = []
+        self.assertEqual(len(expected_requests), 1)
+
+        def respond(stage, system, user):
+            production_requests.append({"system": system, "user": user})
+            return raw if len(production_requests) == 1 else corrected
+
+        client = ScriptedLLMClient(respond)
+        log = CallLog()
+        selected = stages.run_brief(client, scope, chapter, load_profile(), [], None, log, 2,
+                                    brief_normalization=True)
+        self.assertEqual(production_requests[1:], expected_requests)
+        self.assertEqual(selected, case["reference"])
+        self.assertEqual(log.entries[0]["raw_content"], raw)
+        self.assertTrue(log.entries[0]["brief_normalized"])
 
     def test_brief_normalization_does_not_normalize_full_repair_responses(self):
         scope = load_scope(DEFAULT_MANIFEST, (1, 1))
@@ -809,6 +842,10 @@ class EndToEndTests(unittest.TestCase):
                     run(client, scope, profile, root / name, resume=True, brief_normalization=mode, **options)
             self.assertEqual(saved_path.read_bytes(), saved)
             self.assertFalse((root / "missing").exists())
+            stale_mode = resumed["settings"] | {"brief_normalization": "text_wrappers_v1"}
+            saved_path.write_text(json.dumps(resumed | {"settings": stale_mode}), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "brief normalization differs"):
+                run(client, scope, profile, root / "on", resume=True, brief_normalization=True, **options)
             saved_path.write_text(json.dumps(resumed | {"brief_fingerprint": "obsolete"}), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "Brief fingerprint differs"):
                 run(client, scope, profile, root / "on", resume=True, brief_normalization=True, **options)

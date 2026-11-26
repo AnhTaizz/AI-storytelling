@@ -37,7 +37,7 @@ def render(name: str, **values: Any) -> str:
     return Template(load_prompt(name)).substitute(**values)
 
 
-BRIEF_NORMALIZATION_VERSION = "text_wrappers_v1"
+BRIEF_NORMALIZATION_VERSION = "text_wrappers_v2"
 
 
 def brief_fingerprint(profile: NarrativeProfile, source_language: str = "", *,

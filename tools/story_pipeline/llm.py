@@ -320,9 +320,10 @@ def run_json_stage(
             return obj
         if attempt == last_attempt and best_soft is not None:
             return best_soft
+        previous = json.dumps(obj, ensure_ascii=False) if normalized else raw
         prompt = REPAIR_TEMPLATE.format(
             original=user,
-            previous=raw[:60000],
+            previous=previous[:60000],
             errors="\n".join(f"- {e}" for e in errors),
         )
     raise StageFailed(stage, errors, last_attempt)
