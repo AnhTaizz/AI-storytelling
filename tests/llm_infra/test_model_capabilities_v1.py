@@ -9,7 +9,7 @@ class CapabilityTests(unittest.TestCase):
     def test_snapshot_covers_maintained_free_models(self):
         lists = {"gemini": gemini_free_models_v1.FREE_TIER_TEXT_MODELS,
                  "groq": groq_free_models_v1.FREE_TIER_TEXT_MODELS,
-                 "cloudflare": cloudflare_free_models_v1.NEURON_PRICES, "openrouter": DEFAULT_MODEL_CHAIN}
+                 "cloudflare": cloudflare_free_models_v1.ACTIVE_NEURON_PRICES, "openrouter": DEFAULT_MODEL_CHAIN}
         self.assertEqual(set(CAPABILITIES), {(provider, model) for provider, models in lists.items() for model in models})
         for (provider, model), capability in CAPABILITIES.items():
             with self.subTest(provider=provider, model=model):

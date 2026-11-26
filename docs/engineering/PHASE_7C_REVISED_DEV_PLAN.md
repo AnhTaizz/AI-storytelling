@@ -1,0 +1,41 @@
+# Phase 7C · Revised DEV comparisons
+
+Both live plans await separate owner approval. Groq Free `openai/gpt-oss-120b` is the experimental pin. The owner retained C0 after the four-arm pilot, and the independent semantic review of that pilot remains pending. M9 r2 stays paused. [Owner decision and pilot readout](https://github.com/AnhTaizz/AI-storytelling/pull/46)
+
+## Brief Repair V2 · C0 and C4
+
+C4 unwraps a string only when an `unknowns` or `forbidden_inferences` entry is an object containing just that string under `text`. Extra keys and non-string values are preserved for full repair. C4 applies the rule once to the starting Brief and passes the result to the existing C0 comparator. C0 runs the full validator sequence, sends the existing full-object repair for any remaining hard or soft finding, and uses its existing selection and rollback behavior. A fully valid Brief uses zero calls. C4 inherits the two repair opportunities per arm and case. The candidate is available through `compare_c4` in the research module. [Implementation](../../tools/story_benchmark/brief_repair_v2.py)
+
+The six [new held-back DEV cases](../../data/dev/brief_repair_v2/c4_held_back_v1.json) use synthetic Japanese passages and predeclared Vietnamese gold. Candidate development and regression tests used the workshop data. The new set was used only for offline validation, request sizing and affirmative checks of the deterministic path. Freeze the case order and per-case source, initial Brief, normalized Brief and gold hashes, along with the candidate revision, prompts and validator before live approval. Dataset SHA-256 `60138c0322c66f8b6e499d65605555d7e47afdc90bcbb413b3916213de658717`.
+
+| Case in dispatch order | Starting condition | Offline observation |
+| --- | --- | --- |
+| Kite | Clean control | Both select the unchanged Brief with zero calls |
+| Archive | Single-key text wrapper | C4 selects the exact gold with zero calls. C0 enters full repair |
+| Bridge | Wrapper with extra information | C4 preserves the object. Both enter full repair with identical first payloads |
+| Orchard | Wrong evidence ID | Both enter full repair with identical first payloads |
+| Radio | Text wrapper and overstated hearsay | Normalization exposes a remaining hard certainty finding. C4 enters full repair |
+| Paper tags | Soft-only compound character fact | Both enter full repair with identical first payloads |
+
+Use case order above with C0 first in odd rows and C4 first in even rows. Each arm starts from the same frozen Brief. Keep native JSON mode, temperature `0`, default reasoning effort, the 4,500-token estimated-input guard and the 3,072-token completion cap. The largest input estimate with an offline echo was **4,173**. Guard both repair opportunities. Record an overlong prompt as an arm stop, and stop the run on quota refusal, exhausted dispatch budget or ambiguous transport.
+
+Authorize at most **24 new dispatches**, with zero transport retries. The existing pilot ledger contains **34/64** charges, including the initial probe. Reconcile those records before live dispatch and append to the same budget history starting at **35**. At the full extension cap, the cumulative count is **58/64**. Keep the original raw records and summary. The approval should pin the candidate commit, fixture hashes, run window and expiry. [Original pilot protocol](BRIEF_REPAIR_V2_EXPERIMENT.md)
+
+### Readout and attribution
+
+- Record findings before normalization, after normalization and at final selection, along with dispatches, rollbacks and hard-invalid or missing Briefs. Preserve every content failure and keep API, quota and integration outcomes visible.
+- Report exact match separately from blinded source review. Review factual support, epistemic certainty, required passage and verbatim citation coverage, and character-fact atomicity. Include omissions, incorrect actors and retained soft findings. Grade the quality endpoints before comparing tokens or latency.
+- Attribute a repair entirely to normalization when the local output clears all validators and uses zero dispatches. Compare that output directly to the case's gold and count the actual C0 calls. Compare model responses at each byte-identical payload separately from later attempts whose prompts depend on previous responses. Divergent responses to identical requests demonstrate model or serving variation. When normalization changes the payload and both arms call the model, report the observed combined effect and keep the locally measured change separate. A single pair gives no estimate of the size of model variance.
+- Record per-attempt input, output, reasoning, total and cached tokens when reported, plus HTTP latency, local time and quota wait. Report all observed pairs and show the separate subset that passes the prereview quality checks on both arms. Preserve absent counters as unknown. Any hard-error, factual, certainty, evidence or atomicity regression remains visible for owner adjudication before adoption.
+
+## Source Check · S0 and S1
+
+Use the existing Amber Lamp example with the same nine units, three flags and three groups of 4, 4 and 1. Render the existing Source Check schema and prompts with English as the fixture language. S0 sends groups 1–3. S1 repeats the three byte-identical JSON requests in the same order, within Groq's two-hour inactivity window. Native JSON, temperature `0` and the model pin are common. Charge every request, including cache priming, to the separate cap of **six** with zero retries and zero repair attempts. Keep the **2,048** estimated-input and **2,048** completion bounds. [Original S0/S1 plan](SOURCE_CHECK_CONTEXT_DEV.md) · [Groq cache requirements](https://console.groq.com/docs/prompt-caching)
+
+The offline run used the existing Source Check stage and Groq request serializer with a scripted response. It verified the grouping and flag mapping, schema validation, exact equality of each S0/S1 payload, and shared stable prefix SHA-256 `c045692224d05533f8cce655eb42dc26648a6f92d92b66e42648497e0e63365d`. Local `o200k_harmony` tokenization counted **1,039** common content tokens before variable groups and flags, above the largest minimum in Groq's published range. The three request estimates were **1,545**, **1,538** and **1,495**, within the guard. The token count excludes Groq's internal chat framing. Cache eligibility is supported by this local calculation, and a positive live counter will establish an actual hit. [GPT-OSS tokenizer](https://github.com/openai/gpt-oss/blob/main/gpt_oss/tokenizer.py) · [Groq prompt caching](https://console.groq.com/docs/prompt-caching)
+
+Capture `usage.prompt_tokens_details.cached_tokens` from the raw response before telemetry flattening. The scripted Groq adapter preserved it through the Source Check call log. The earlier Brief Repair pilot also supplied two counters of **2,560** and omitted the counter in 31 responses. Those observations establish counter availability for this route. They provide no Source Check hit measurement. Keep absent or invalid fields unknown, label a measured zero as a miss, and report positive counts and cached-input share over only requests with a valid counter. S0 can already hit. Record cache state alongside prompt time, queue time and paired HTTP latency. [Groq response usage fields](https://console.groq.com/docs/prompt-caching#tracking-cache-usage)
+
+Score all nine units and three adjudications within each pass. Retain recall for U4, U5 and U9, false positives, finding and flag citations, and missing groups. U8's two supporting passages are present in the prompt and verified by the reviewer. The current schema emits citations for findings and flagged statements, so U8 has no direct model citation when it is accepted with no finding. For U9, assess the absence claim against the whole scope. Passage IDs carried in the finding identify the scope or contrasting evidence. [Source Check schema](../../schemas/story_pipeline/source_check_v0.schema.json)
+
+Source Check uses its own approval and ledger. Recheck the Free-plan scope, shared quota and exact request fingerprints before live. S0 and S1 preserve the same content. An evidence or recall regression still counts, including any variation on an identical request.

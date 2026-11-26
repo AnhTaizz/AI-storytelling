@@ -1,0 +1,65 @@
+{
+  "dataset_sha256": "1f1caedf1c616119eb5db0b41efe7eaa69e6d4359ca1f0dc923f81a59605b1f1",
+  "cases": {
+    "event_extraction-01": {
+      "status": "approved",
+      "case_sha256": "6eccb67652cac304d92e86f4d5b96cf7474cac2bea7385833a49196969ff0085",
+      "reviewer": "proposed: ChatGPT content review relayed by the Project Owner — pending owner confirmation",
+      "date": "2026-11-24"
+    },
+    "disambiguation-04": {
+      "status": "approved",
+      "case_sha256": "7d03a2cdb29739fe20898ae3c52cd07ef8ef4cce8906835e6a42de132607772c",
+      "reviewer": "proposed: ChatGPT content review relayed by the Project Owner — pending owner confirmation",
+      "date": "2026-11-24"
+    },
+    "causal_relation-07": {
+      "status": "approved",
+      "case_sha256": "851a7250fddaf96a93b754d7160ffecac0f7677e5c37c1a81da71bb80b8d4a82",
+      "reviewer": "proposed: ChatGPT content review relayed by the Project Owner — pending owner confirmation",
+      "date": "2026-11-24"
+    },
+    "event_ordering-04": {
+      "status": "approved",
+      "case_sha256": "c6f0b890a04c1a5acaa08b2a98bc894676fb7e2f64bb6acaf105caf3672994e5",
+      "reviewer": "proposed: ChatGPT content review relayed by the Project Owner — pending owner confirmation",
+      "date": "2026-11-24"
+    },
+    "hallucination_detection-07": {
+      "status": "approved",
+      "case_sha256": "9d71307b462e46ebf868cbbdc0f9d3ebc5113ee423f01ed7a1dce1c0c9bf7fcc",
+      "reviewer": "proposed: ChatGPT content review relayed by the Project Owner — pending owner confirmation",
+      "date": "2026-11-24"
+    },
+    "spoiler_detection-01": {
+      "status": "approved",
+      "case_sha256": "5b15d7d840b79e5acd032092aa114408da80ddadecc27fced8a16ead707a1005",
+      "reviewer": "proposed: ChatGPT content review relayed by the Project Owner — pending owner confirmation",
+      "date": "2026-11-24"
+    },
+    "narrative_plan-02": {
+      "status": "approved",
+      "case_sha256": "0879df8d332e6c4ba1a9a0422b2d548bdbdc0f2f43193126364da6302ee02e6b",
+      "reviewer": "proposed: ChatGPT content review relayed by the Project Owner — pending owner confirmation",
+      "date": "2026-11-24"
+    },
+    "vietnamese_script-03": {
+      "status": "approved",
+      "case_sha256": "cf77af6acdcd21e290e46376af9e8263f63561c12cf9fb6f83960432cad1b717",
+      "reviewer": "proposed: ChatGPT content review relayed by the Project Owner — pending owner confirmation",
+      "date": "2026-11-24"
+    },
+    "script_correction-07": {
+      "status": "approved",
+      "case_sha256": "aff0132e3613672870d348955373661f534071e152230740c9ba31d60ecc81ce",
+      "reviewer": "proposed: ChatGPT content review relayed by the Project Owner — pending owner confirmation",
+      "date": "2026-11-24"
+    },
+    "structured_output-01": {
+      "status": "approved",
+      "case_sha256": "15c9a15a87a230af8ce4e6cecf1431652aabd54a9011fc5fa0e1628ea700f02c",
+      "reviewer": "proposed: ChatGPT content review relayed by the Project Owner — pending owner confirmation",
+      "date": "2026-11-24"
+    }
+  }
+}

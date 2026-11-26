@@ -86,6 +86,8 @@ class CloudflareTransportTests(unittest.TestCase):
         http = FakeOpenRouterHTTP()
         for operation, kind in [
             (partial(self.generate, self.client(http), "test/paid"), "MODEL_NOT_FREE"),
+            (partial(self.generate, self.client(http), "@cf/qwen/qwen3-30b-a3b-fp8"), "MODEL_NOT_FREE"),
+            (partial(self.generate, self.client(http), "@cf/meta/llama-3.1-8b-instruct-fp8"), "MODEL_NOT_FREE"),
             (partial(self.client, http, token=CF_TOKEN + "\n"), "AUTH_FAILURE"),
             (partial(self.client, http, account=""), "AUTH_FAILURE"),
         ]:

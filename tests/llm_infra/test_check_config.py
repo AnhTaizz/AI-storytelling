@@ -89,7 +89,7 @@ class CheckTests(unittest.TestCase):
                                                                        "cloudflare_account_2": 0})
                         self.assertEqual((report["keys_configured"], report["key_scopes"]), (2, 2))
                         self.assertEqual(report["model_chain"][0], CF_MODEL)
-                        self.assertEqual(len(report["effective_allowlist"]), 8)
+                        self.assertEqual(len(report["effective_allowlist"]), 6)
                         self.assertEqual(report["daily_neuron_budget"], 9000)
                         self.assertIn("A token cannot show the Workers plan.", report["notice"])
 

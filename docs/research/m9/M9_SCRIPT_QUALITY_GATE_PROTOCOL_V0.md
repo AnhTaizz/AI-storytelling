@@ -12,9 +12,8 @@ The protocol turns those verdicts into one gate result.
   The commit and the prompt fingerprints are recorded in the lock (section 3).
 - **Request:** Narrative Profile `VI_YOUTUBE_CASUAL_V0` (Vietnamese, 900–1,100 words an episode,
   no spoilers beyond the episode), with the recap of earlier chapters on.
-- **Model:** the single model `gemini-3.6-flash` (DEC-043; originally `gemini-3.8-flash`), with no
-  fallback chain, so that every script comes from the same model. Each call's model is recorded in
-  `calls.jsonl`.
+- **Model:** the single model `gemini-3.8-flash`, with no fallback chain, so that every script
+  comes from the same model. Each call's model is recorded in `calls.jsonl`.
 - **Settings:** the guide's season settings, `--revision-rounds 3`, with every other option at its
   default.
 
@@ -118,3 +117,22 @@ Script text, source text and quotes stay under `.local/`. The result is recorded
   `m9_gate_v0_aborted_3_8flash`. The sample was re-locked before any new generation with the same
   commit, profile, manifest, chapters, settings and command, changing only the model. No script was
   generated, so chapters 6–17 had not been seen by any reviewer and stay the sample.
+
+## 10. Operational status of r2 · 2026-11-26
+
+M9 r2 is **PAUSED** and the gate is **NOT EVALUATED**. Episode 1 has a script.
+Episode 2 stopped in the chapter 10 Brief. Episodes 3 and 4 have no scripts.
+The locked revision, model, inputs, settings, outputs and official scoring rule
+remain as recorded by the lock and DEC-043.
+
+On 2026-11-24 at 19:29 Bangkok time, the chapter 10 Brief exhausted its repairs
+on a hard epistemic validation error. The owner authorized continuing the Brief
+stage. The deviation log records the content retry separately from quota and
+transport interruptions. The permission to continue the stage did not decide
+whether r2 remains eligible for the gate under the one-attempt rule in section 3.
+That decision belongs to the owner. Keep r2 paused pending that decision and
+confirmation that the exact locked model and revision can resume.
+
+If r2 is ineligible or cannot resume under the lock, submit a new independent
+sample plan for approval. Keep all r2 evidence in its original cohort.
+[Phase 7 closeout](../../engineering/PHASE_7_CLOSEOUT_20261126.md).

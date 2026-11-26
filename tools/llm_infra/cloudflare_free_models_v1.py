@@ -15,3 +15,9 @@ NEURON_PRICES = {
 }
 DEFAULT_MODEL_CHAIN = ("@cf/openai/gpt-oss-120b", "@cf/qwen/qwen3-30b-a3b-fp8")
 DAILY_FREE_NEURONS = 10000
+
+# Retain the original prices and chain for reading historical records.
+RETIRED_MODELS = frozenset(("@cf/qwen/qwen3-30b-a3b-fp8", "@cf/meta/llama-3.1-8b-instruct-fp8"))
+ACTIVE_NEURON_PRICES = {model: price for model, price in NEURON_PRICES.items() if model not in RETIRED_MODELS}
+ACTIVE_MODEL_CHAIN = ("@cf/openai/gpt-oss-120b", "@cf/zai-org/glm-4.7-flash")
+ACTIVE_REVIEWED_ON = "2026-11-25"

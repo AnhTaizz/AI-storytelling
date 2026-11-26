@@ -6,7 +6,7 @@ import time
 
 from tools.llm_infra.cloudflare_config import CREDENTIAL_PATTERN, inspect_cloudflare_settings
 from tools.llm_infra.cloudflare_router import CloudflareRouter, CloudflareTransportError
-from tools.llm_infra.cloudflare_transport import CloudflareClient
+from tools.llm_infra.cloudflare_transport import CloudflareClient, CloudflareHTTPError
 from tools.llm_infra.gemini_config import inspect_settings
 from tools.llm_infra.gemini_router import GeminiRouter
 from tools.llm_infra.groq_config import GROQ_KEY_PATTERN, inspect_groq_settings
@@ -16,7 +16,7 @@ from tools.llm_infra.model_capabilities_v1 import model_capability
 from tools.llm_infra.neuron_ledger import estimate_prompt_neurons
 from tools.llm_infra.openrouter_config import OPENROUTER_KEY_PATTERN, inspect_openrouter_settings
 from tools.llm_infra.openrouter_router import OpenRouterRouter, OpenRouterTransportError
-from tools.llm_infra.openrouter_transport import OpenRouterClient
+from tools.llm_infra.openrouter_transport import OpenRouterClient, OpenRouterHTTPError
 from tools.llm_infra.routing_policy import DEFAULT_OUTPUT_TOKENS
 from tools.llm_infra.telemetry import public_counters, usage_counts
 from tools.llm_infra.token_estimate import estimate_input_tokens
@@ -97,6 +97,51 @@ def normalized_record(provider, record, counters=None):
                      "quota_remaining": counters or {}}
 
 
+def _object(value):
+    return value if isinstance(value, dict) else {}
+
+
+def _failure_diagnostics(error):
+    """Project a provider failure onto fields safe to keep in a benchmark checkpoint."""
+    if not isinstance(error, (CloudflareHTTPError, OpenRouterHTTPError)) or error.status is None:
+        return {}
+    body = _object(error.body)
+    data = _object(body.get("result")) if "result" in body else body
+    details = {"http_status": error.status, "response_shape": "object" if body else "empty_or_nonobject"}
+    native_errors = body.get("errors")
+    provider_error = _object(body.get("error")) or _object(data.get("error"))
+    if not provider_error and isinstance(native_errors, list):
+        provider_error = next((item for item in native_errors if isinstance(item, dict)), {})
+    if provider_error or "error" in body or native_errors or body.get("success") is False:
+        details["response_shape"] = "error"
+        if type(code := provider_error.get("code")) is int and 0 <= code <= 999999:
+            details["provider_error_code"] = code
+        if (param := provider_error.get("param")) in (
+                "response_format", "max_tokens", "temperature", "model", "messages", "provider", "reasoning"):
+            details["error_parameter"] = param
+
+    choices = data.get("choices")
+    if "choices" in data:
+        details["response_shape"] = "result_choices" if data is not body else "choices"
+        choice = _object(choices[0]) if isinstance(choices, list) and choices else {}
+        if (reason := choice.get("finish_reason")) in ("stop", "length", "tool_calls", "content_filter", "error"):
+            details["finish_reason"] = reason
+        message = _object(choice.get("message"))
+        content = message.get("content")
+        state = "missing"
+        if "content" in message:
+            state = "null" if content is None else "other"
+            if isinstance(content, str):
+                state = "text" if content.strip() else "empty"
+        details["content_state"] = state
+    elif "response" in data:
+        details["response_shape"] = "result_response" if data is not body else "response"
+    usage = _object(data.get("usage")) or _object(body.get("usage"))
+    details.update({key: value for key, value in usage_counts({"usage_metadata": usage}).items()
+                    if value is not None})
+    return details
+
+
 class ProviderAdapter:
     def __init__(self, provider, router, models, check_models, *, temperature=0.4, clock=time.time, secrets=()):
         self.provider = provider
@@ -163,8 +208,11 @@ class ProviderAdapter:
                 code = "QUOTA_EXHAUSTED"
             elif code not in _ERROR_CODES:
                 code = "PROVIDER_FAILURE"
+            metadata = {"quota_scope": _QUOTA_SCOPES[self.provider]}
+            if diagnostics := _failure_diagnostics(error.__cause__):
+                metadata["provider_diagnostics"] = diagnostics
             raise ProviderFailure(code, getattr(error, "resume_after", None),
-                                  metadata={"quota_scope": _QUOTA_SCOPES[self.provider]}) from None
+                                  metadata=metadata) from None
         except _DispatchLimit:
             raise ProviderFailure("DISPATCH_LIMIT") from None
         finally:

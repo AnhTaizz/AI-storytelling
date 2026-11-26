@@ -1103,7 +1103,27 @@ LIMITS: 6A numbers are synthetic. Mobile layout was checked by test and an ifram
 
 2026-11-24 — Phase 6B implemented (PR #33) and accepted by the Project Owner ("oke rồi đấy merge đi"). The dashboard defaults to local, read-only data and retains the Phase 6A mock mode.
 
----
+## DEC-042 — Model Benchmark Framework (Phase 7A)
+
+STATUS: PROPOSED (awaiting Project Owner review in the PR)
+
+Phase 7A introduces an offline-first free-model registry, stage taxonomy, synthetic DEV
+cases and a reproducible benchmark runner. The registry derives capabilities and coded
+quotas from the maintained provider snapshots and retains provenance for unknown fields.
+DEV gold remains draft pending owner review. Deterministic cases use evidence-based
+scores, and reviewers apply a human rubric to narrative plans and Vietnamese scripts.
+
+The DEV set is independent of the M9 gate sample and M4 holdouts. Phase 7B requires
+gold decisions bound to the dataset and case hashes, plus an expiring, content-hashed
+owner plan. Every invocation pins a provider and model. Per-model caps include every
+transport attempt and use a durable approval ledger shared across runs and resumes.
+Gemini checks M9 season activity before dispatch, with an explicit owner attestation
+recorded for overrides. A self-contained review sheet exports the gold decisions.
+Phase 7B starts with one screening run per model on ten shared DEV cases, capped at
+40 requests per model. Wave 1 covers Groq, Cloudflare and a named OpenRouter free
+variant. Wave 2 covers Gemini after M9 finishes and the owner confirms quota.
+The ten proposed gold decisions require owner confirmation in `GOLD_REVIEW.json`. See
+[the Phase 7B screening plan](engineering/MODEL_BENCH_7B_PLAN.md).
 
 ## DEC-043 — M9 Gate Sample Re-Locked on gemini-3.6-flash
 
@@ -1121,3 +1141,26 @@ LIMITS:
 - The gate result applies to `gemini-3.6-flash`, not to `gemini-3.8-flash`.
 - `gemini-3.6-flash` is slower (about 1.5–2 minutes a call in the owner's runs on 2026-11-24), so the sample takes several hours.
 
+
+## DEC-044 — Retire discontinued Cloudflare routes
+
+STATUS: OWNER AUTHORIZED (2026-11-25)
+
+Cloudflare stopped serving Qwen3 30B A3B FP8 and Llama 3.1 8B Instruct FP8 on
+November 20. Remove both from active Workers Free selection and replace the
+Qwen fallback with GLM-4.7-Flash. This updates the operational allowlist,
+benchmark registry and default display. DEC-039 and the original price snapshot
+remain as historical records. The change is separate from Wave 1 evaluation
+and applies only after its own PR review and merge.
+[Provider retirement notice](https://developers.cloudflare.com/changelog/post/2026-11-05-planned-model-deprecations/)
+
+## DEC-045 — Retain C0 after the Brief Repair V2 DEV pilot
+
+STATUS: OWNER DECISION (2026-11-26)
+
+C0 remains the production comparator. C1, C2 and C3 are not accepted as replacements
+because the paired DEV pilot found lower recovery and evidence coverage. The owner
+semantic review remains pending. GPT-OSS 120B is the preferred Phase 7C experimental
+model. The owner requested a separate C0/C4 comparison and a separately approved
+Source Check S0/S1 cache measurement. Each live plan requires its own approval.
+[Pilot results](engineering/BRIEF_REPAIR_V2_PILOT_RESULTS_20261126.md).

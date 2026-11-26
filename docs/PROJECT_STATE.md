@@ -2,7 +2,13 @@
 
 ## Current Milestone
 
-*Header refreshed 2026-11-22; the dated sections below are history.*
+Phase 7C experiments are CLOSED by owner decision. Full Repair C0 and current Source Check
+remain the defaults. C4 wrapper normalization is proposed as an opt-in with the blinded owner
+semantic review pending. Phase 7D's measured operations review and consolidated dashboard
+are prepared for owner review. Product work returns to one Vietnamese script for video.
+[Phase 7 closeout and M9 decision path](engineering/PHASE_7_CLOSEOUT_20261126.md).
+
+*Header refreshed 2026-11-26. The dated sections below are history.*
 
 M4 — Story Extraction: IN PROGRESS. M4-01 and M4-02: ACCEPTED. M4-03: FRESH HOLDOUT V1 SEALED; holdout closed, predictions NOT RUN. Extractor/model: NOT SELECTED. Nothing in M4 is frozen. Annotation conventions V5: ACCEPTED (DEC-031). See M4-04B3Z (FV3 blind run: recall 0.793, precision 0.782, L1 9/15, full 0/16). FV3 error diagnosis: M4-04B4A. Conventions V5: M4-04B4B (DEC-031).
 
@@ -22,7 +28,7 @@ M7 — Story Brief: ACCEPTED BASELINE (DEC-022, 2026-11-15).
 
 M8 — Narrative Planning: ACCEPTED BASELINE (DEC-023, 2026-11-15).
 
-M9 — Script Generation / Validation: PROTOTYPE EXISTS; M1/M9 Script Quality Gate: NOT YET EVALUATED; protocol v0 and review kit ready; sample re-locked on `gemini-3.6-flash` and generating (DEC-033, DEC-043; see M9 Script Quality Gate below).
+M9 — Script Generation / Validation: PROTOTYPE EXISTS. M9 r2 is PAUSED and the gate is NOT EVALUATED. Episode 1 has a draft, episode 2 stopped at the Brief, and episodes 3–4 have no script. See the Phase 7 closeout for resume eligibility.
 
 M10 — Advanced Retrieval: GATED behind the Script Quality Gate (DEC-009).
 
@@ -1669,7 +1675,7 @@ The owner has yet to choose or authorize any of these candidates.
 
 The project owner asked for the gate to be prepared and chose the sample and the pass rule (DEC-033). Nothing has been generated or reviewed yet, so the gate is still NOT YET EVALUATED.
 
-- **Protocol:** `docs/research/m9/M9_SCRIPT_QUALITY_GATE_PROTOCOL_V0.md`. Four season episodes, chapters 6–8, 9–11, 12–14 and 15–17, with recap. They use profile `VI_YOUTUBE_CASUAL_V0`, the single model `gemini-3.6-flash` (re-locked by DEC-043 after `gemini-3.8-flash` stayed overloaded) and three revision rounds. The configuration is frozen in `gate_lock.json` before generation, and each episode gets one attempt.
+- **Protocol:** `docs/research/m9/M9_SCRIPT_QUALITY_GATE_PROTOCOL_V0.md`. Four season episodes, chapters 6–8, 9–11, 12–14 and 15–17, with recap. They use profile `VI_YOUTUBE_CASUAL_V0`, the single model `gemini-3.8-flash` and three revision rounds. The configuration is frozen in `gate_lock.json` before generation, and each episode gets one attempt.
 - **Review kit:** `tools/story_pipeline/gate_review.py`.
   - `lock` freezes the commit and the hashes.
   - `form` writes a contract-complete Vietnamese form per episode, with the request record filled in and the critic's findings as candidates to confirm or reject.
@@ -1713,3 +1719,62 @@ The dashboard connects Phase 5 telemetry and quota SQLite, the routing policy, o
 provider summaries, and pipeline and season metadata through read-only sources. The
 live interface preserves numeric provenance and limits locked M9 seasons to their status.
 Phase 6A mock data remains available with `--mock`. See [DEC-041](DECISIONS.md#dec-041--ai-operations-dashboard-foundation-phase-6a).
+
+## Model Benchmark Framework, Phase 7A (2026-11-24) — MODEL_BENCH_7A_PENDING_REVIEW
+
+Phase 7A adds an offline registry, task taxonomy, synthetic DEV dataset and runner.
+The default invocation prints a quota and token estimate. The fake runner exercises
+checkpointing, deterministic scoring and human-review exports. The draft gold and
+rubrics await owner review. Phase 7B measurements require an owner-approved plan.
+See [DEC-042](DECISIONS.md#dec-042--model-benchmark-framework-phase-7a) and the
+[Vietnamese guide](guides/MODEL_BENCH.md).
+
+## Phase 7B Groq calibration and Brief Repair V2 probe (2026-11-26)
+
+GPT-OSS 120B produced valid JSON on two of the three shared Wave 1 failures with a
+1,024-token cap. Structured Outputs strict mode recovered the remaining case.
+The full Brief probe passed hard validation and retained two soft warnings.
+The two writing scores are pending owner review. The paired C0–C3 pilot awaits
+owner approval with 63 of 64 dispatches available. M9 r2 stays paused.
+[Calibration and probe results](engineering/PHASE_7_GROQ_120B_CALIBRATION_RESULTS.md).
+
+## Brief Repair V2 · paired DEV pilot (2026-11-26)
+
+The approved GPT-OSS 120B pilot completed all 32 case–arm runs on Groq Free.
+The pilot used 33 repair calls and one earlier capacity probe. C0 recovered 6/6
+hard-invalid starts. C1 recovered 4/6, and C2 and C3 each recovered 5/6. All
+three targeted arms retained one compound fact. Blinded owner review is pending.
+The owner retained C0 for production based on recovery and evidence coverage.
+GPT-OSS 120B remains the preferred Phase 7C experimental model. C4 and Source Check
+S0/S1 are pending separate live approvals. M9 r2 stays paused.
+[Pilot results](engineering/BRIEF_REPAIR_V2_PILOT_RESULTS_20261126.md).
+
+## Phase 7C · final DEV comparisons (2026-11-26)
+
+Both owner-approved runs completed on Groq Free GPT-OSS 120B. C0 and C4 recovered
+all four hard-invalid starts. C4 avoided one full repair by deterministic
+normalization. The Brief Repair ledger closed at 45/64. Source Check used 6/6
+on its separate ledger and showed no measured cache benefit on this fixture.
+The minimal C4 integration proposal and blinded semantic review await the owner.
+Production routing stays unchanged and M9 r2 stays paused.
+[Final Phase 7C readout](engineering/PHASE_7C_FINAL_RESULTS_20261126.md).
+
+## Phase 7 research closeout and operational handoff (2026-11-26)
+
+C0 and C4 recovered 4/4 hard-invalid starts on six new held-back DEV cases. C4's
+verified deterministic gain was one avoided full repair. Source Check repeats showed no
+operational cache benefit. Owner semantic review is pending. Prioritize the data integrity
+and M9 protocol reviews ahead of Dashboard integration. M9 r2 remains PAUSED.
+[Final research results](engineering/PHASE_7C_FINAL_RESULTS_20261126.md) ·
+[Phase 7D operations and product handoff](engineering/PHASE_7_CLOSEOUT_20261126.md).
+
+## M9 r2 · DEC-043 continuity and content retry (2026-11-26)
+
+DEC-043 records the owner-approved re-lock to the single model gemini-3.6-flash
+at revision 840b6a4. The initial gemini-3.8-flash attempt remains archived
+separately. During r2, a hard content-validation stop in the chapter 10 Brief
+was retried with owner permission to continue the stage. Its effect on gate
+eligibility remains an owner decision under the one-attempt rule.
+M9 r2 is PAUSED and the gate is NOT EVALUATED.
+[DEC-043](DECISIONS.md#dec-043--m9-gate-sample-re-locked-on-gemini-36-flash) ·
+[Protocol and operational status](research/m9/M9_SCRIPT_QUALITY_GATE_PROTOCOL_V0.md#10-operational-status-of-r2--2026-11-26).

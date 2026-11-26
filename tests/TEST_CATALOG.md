@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 12 — test files: 139 — test functions: 1463
+Suites: 13 — test files: 149 — test functions: 1503
 
 ## canonical_story
 
@@ -474,6 +474,74 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.media_ingest.ingest_local
 - `CliTests.test_protected_tree_is_pruned_without_listing_it`
 - `CliTests.test_no_network_modules_in_tool_source`
 
+## model_bench
+
+### test_approval (2)
+Covers: `tools.canonical_story.conformance_v0`, `tools.model_bench.approval`, `tools.model_bench.planning`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `ApprovalTests.test_content_binding_expiry_and_selection`
+- `ApprovalTests.test_ledger_binds_rehashed_plan_and_keeps_unsettled_reservation`
+
+### test_dataset (5)
+Covers: `tools.canonical_story.conformance_v0`, `tools.model_bench.dataset`, `tools.model_bench.planning`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `DatasetTests.test_manifest_and_synthetic_evidence`
+- `DatasetTests.test_changed_file_rejected`
+- `DatasetTests.test_gold_review_requires_unchanged_case_and_dataset`
+- `DatasetTests.test_screening_proposal_requires_owner_confirmation`
+- `DatasetTests.test_taxonomy_covers_pipeline_stage_calls_and_cli`
+
+### test_m9 (1)
+Covers: `tools.canonical_story.conformance_v0`, `tools.model_bench.approval`, `tools.model_bench.m9`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `M9Tests.test_m9_lock_and_recent_season_file`
+
+### test_planning (3)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.model_capabilities_v1`, `tools.llm_infra.pipeline_clients`, `tools.llm_infra.token_estimate`, `tools.model_bench.dataset`, `tools.model_bench.planning`, `tools.model_bench.registry`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `PlanningTests.test_estimates_include_provider_prompt_and_output_reserve`
+- `PlanningTests.test_known_limits_and_unknown_adapter_context`
+- `PlanningTests.test_plan_fingerprint_and_daily_floor`
+
+### test_registry (4)
+Covers: `tools.canonical_story.conformance_v0`, `tools.model_bench.registry`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `RegistryTests.test_snapshot_matches_code_and_preserves_unknowns`
+- `RegistryTests.test_openrouter_catalog_snapshot_and_quota_status`
+- `RegistryTests.test_registry_refuses_drift_and_malformed_values`
+- `RegistryTests.test_openrouter_named_variant_and_invalid_models`
+
+### test_reporting (1)
+Covers: `tools.canonical_story.conformance_v0`, `tools.model_bench.reporting`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `ReportingTests.test_unknown_efficiency_is_not_zero_and_true_zero_is_preserved`
+
+### test_review_sheet (1)
+Covers: `tools.canonical_story.conformance_v0`, `tools.model_bench.dataset`, `tools.model_bench.review_sheet`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `ReviewSheetTests.test_standalone_html_includes_all_case_hashes_and_review_controls`
+
+### test_run (11)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.cloudflare_transport`, `tools.llm_infra.openrouter_transport`, `tools.llm_infra.pipeline_clients`, `tools.llm_infra.quota_state`, `tools.model_bench.approval`, `tools.model_bench.dataset`, `tools.model_bench.planning`, `tools.model_bench.registry`, `tools.model_bench.run`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `RunnerTests.test_default_dry_run_math_and_markdown`
+- `RunnerTests.test_offline_end_to_end_and_completed_resume`
+- `RunnerTests.test_resume_after_interruption_restores_checkpoint_order`
+- `RunnerTests.test_pinned_client_and_safe_errors`
+- `RunnerTests.test_live_failure_checkpoint_keeps_only_safe_provider_diagnostics`
+- `RunnerTests.test_screening_plan_matches_individual_run_configuration`
+- `RunnerTests.test_refuses_unpinned_openrouter_plan`
+- `RunnerTests.test_live_refuses_before_any_dispatch_without_approval`
+- `RunnerTests.test_live_refuses_proposed_gold_before_dispatch`
+- `RunnerTests.test_live_budget_counts_retries_and_refuses_reuse_or_resume`
+- `RunnerTests.test_live_gold_selection_and_draft_labels`
+
+### test_scoring (2)
+Covers: `tools.canonical_story.conformance_v0`, `tools.model_bench.scoring`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `ScoringTests.test_deterministic_scores`
+- `ScoringTests.test_human_row_remains_unscored`
+
 ## ops_dashboard
 
 ### test___main__ (6)
@@ -498,10 +566,12 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.ops_dashboard.contract`, 
 - `DataSourceTests.test_rows_match_phase_five_shape_and_provenance`
 - `DataSourceTests.test_mock_includes_quota_and_review_scenarios`
 
-### test_live_source (7)
+### test_live_source (9)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.neuron_ledger`, `tools.llm_infra.quota_state`, `tools.llm_infra.telemetry`, `tools.ops_dashboard.live_source`, `tools.ops_dashboard.server`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `LiveSourceTests.test_live_endpoints_aggregate_and_scrub_real_writer_metadata`
+- `LiveSourceTests.test_run_detail_shows_validation_and_outputs_for_the_selected_run`
+- `LiveSourceTests.test_stage_results_are_allowlisted_sandboxed_and_hidden_when_locked`
 - `LiveSourceTests.test_missing_sources_are_explained_without_creating_files`
 - `LiveSourceTests.test_dotenv_configures_all_idle_providers_and_scrubs_telemetry`
 - `LiveSourceTests.test_schema_mismatch_and_refresh`
@@ -736,6 +806,18 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_benchmark.bm25_lexi
 - `TestBM25LexicalV1.test_spoiler_violation`
 - `TestBM25LexicalV1.test_global_diagnostic_future_retrieval`
 - `TestBM25LexicalV1.test_determinism_failure_gate`
+
+### test_brief_repair_v2 (8)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_benchmark.brief_repair_v2`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `RepairExperimentTests.test_held_back_gold_and_full_repair_preflight`
+- `RepairExperimentTests.test_matched_offline_arms_and_full_validation`
+- `RepairExperimentTests.test_bad_patch_cannot_escape_scope_or_replace_usable_prior`
+- `RepairExperimentTests.test_revalidates_evidence_and_preserves_original_candidate`
+- `RepairExperimentTests.test_lossless_structure_repair_does_not_skip_semantic_check`
+- `RepairExperimentTests.test_semantic_and_evidence_metrics_detect_regressions`
+- `RepairExperimentTests.test_c4_validates_clean_and_losslessly_normalized_briefs_without_dispatch`
+- `RepairExperimentTests.test_c4_uses_exact_c0_requests_and_selection_for_remaining_findings`
 
 ### test_dense_e5_large_v1 (21)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_benchmark.dense_e5_large_v1`, `tools.story_benchmark.dense_e5_small_v1`, `tools.story_benchmark.run_bm25_lexical_v1`, `tools.story_benchmark.run_dense_e5_large_v1`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`
