@@ -1,6 +1,7 @@
 import unittest
 
 from tools.llm_infra.cloudflare_free_models_v1 import (
+    ACTIVE_MODEL_CHAIN, ACTIVE_NEURON_PRICES, RETIRED_MODELS,
     DAILY_FREE_NEURONS, DEFAULT_MODEL_CHAIN, NEURON_PRICES, SOURCE_URL, VERIFIED_ON,
 )
 
@@ -12,6 +13,9 @@ class CloudflareFreeModelsTests(unittest.TestCase):
         self.assertEqual(DAILY_FREE_NEURONS, 10000)
         self.assertEqual(DEFAULT_MODEL_CHAIN, ("@cf/openai/gpt-oss-120b", "@cf/qwen/qwen3-30b-a3b-fp8"))
         self.assertEqual(len(NEURON_PRICES), 8)
+        self.assertEqual(set(NEURON_PRICES) - set(ACTIVE_NEURON_PRICES), RETIRED_MODELS)
+        self.assertEqual(ACTIVE_MODEL_CHAIN, ("@cf/openai/gpt-oss-120b", "@cf/zai-org/glm-4.7-flash"))
+        self.assertEqual(ACTIVE_NEURON_PRICES["@cf/zai-org/glm-4.7-flash"], (5500, 36400))
         for model, price in NEURON_PRICES.items():
             with self.subTest(model=model):
                 self.assertTrue(model.startswith("@cf/"))

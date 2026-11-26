@@ -6,7 +6,7 @@ from fixtures import CF_ACCOUNT, CF_MODEL, CF_OTHER_ACCOUNT, CF_TOKEN, cloudflar
 from tools.llm_infra.cloudflare_config import (
     GeminiConfigError, inspect_cloudflare_settings, load_cloudflare_routing_config,
 )
-from tools.llm_infra.cloudflare_free_models_v1 import DEFAULT_MODEL_CHAIN, NEURON_PRICES
+from tools.llm_infra.cloudflare_free_models_v1 import ACTIVE_MODEL_CHAIN, ACTIVE_NEURON_PRICES
 
 
 class CloudflareConfigTests(unittest.TestCase):
@@ -22,8 +22,8 @@ class CloudflareConfigTests(unittest.TestCase):
             ("cloudflare_slot_1", "cloudflare_account_1"), ("cloudflare_slot_2", "cloudflare_account_2"),
             ("cloudflare_slot_3", "cloudflare_account_1"), ("cloudflare_slot_8", "cloudflare_account_2"),
         ])
-        self.assertEqual(config.model_chain, DEFAULT_MODEL_CHAIN)
-        self.assertEqual(config.effective_allowlist, set(NEURON_PRICES))
+        self.assertEqual(config.model_chain, ACTIVE_MODEL_CHAIN)
+        self.assertEqual(config.effective_allowlist, set(ACTIVE_NEURON_PRICES))
         self.assertEqual((config.daily_neuron_budget, config.max_rate_limit_hops), (9000, 2))
         summary = config.public_summary()
         self.assertEqual((summary["keys_configured"], summary["keys_eligible"], summary["duplicates_dropped"],
@@ -108,6 +108,8 @@ class CloudflareConfigTests(unittest.TestCase):
         for changes, message in [
             (narrow, "MODEL_NOT_FREE_TIER"), ({"CLOUDFLARE_MODEL": "preview"}, "MODEL_NOT_FREE_TIER"),
             ({"CLOUDFLARE_MODEL": f"{CF_MODEL},"}, "MODEL_NOT_FREE_TIER"),
+            ({"CLOUDFLARE_MODEL": "@cf/qwen/qwen3-30b-a3b-fp8"}, "MODEL_NOT_FREE_TIER"),
+            ({"CLOUDFLARE_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8"}, "MODEL_NOT_FREE_TIER"),
             ({"LLM_ALLOW_PAID": "true"}, "Paid use"), ({"LLM_FREE_ONLY": "false"}, "Paid use"),
             ({"MAX_PAID_SPEND_USD": "0.01"}, "Paid use"),
         ]:
