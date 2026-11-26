@@ -107,3 +107,32 @@ Script text, source text and quotes stay under `.local/`. The result is recorded
 - **Reviewer.** One reviewer, so inter-reviewer agreement is not measured.
 - **Coverage.** The coverage gate depends on the reviewer's judgement, because the contract has no
   procedure for listing necessary items (contract section 20).
+
+## 9. Amendments
+
+- **2026-11-24, DEC-043 — model `gemini-3.8-flash` → `gemini-3.6-flash`.** The first lock
+  (2026-11-23, commit `840b6a4`) never produced an episode: `gemini-3.8-flash` returned 503 or 429
+  for more than a day and episode 1 stopped at its first stages. That attempt is discarded whole,
+  including its stage cache and story memory, and kept under `.local/` as
+  `m9_gate_v0_aborted_3_8flash`. The sample was re-locked before any new generation with the same
+  commit, profile, manifest, chapters, settings and command, changing only the model. No script was
+  generated, so chapters 6–17 had not been seen by any reviewer and stay the sample.
+
+## 10. Operational status of r2 · 2026-11-26
+
+M9 r2 is **PAUSED** and the gate is **NOT EVALUATED**. Episode 1 has a script.
+Episode 2 stopped in the chapter 10 Brief. Episodes 3 and 4 have no scripts.
+The locked revision, model, inputs, settings, outputs and official scoring rule
+remain as recorded by the lock and DEC-043.
+
+On 2026-11-24 at 19:29 Bangkok time, the chapter 10 Brief exhausted its repairs
+on a hard epistemic validation error. The owner authorized continuing the Brief
+stage. The deviation log records the content retry separately from quota and
+transport interruptions. The permission to continue the stage did not decide
+whether r2 remains eligible for the gate under the one-attempt rule in section 3.
+That decision belongs to the owner. Keep r2 paused pending that decision and
+confirmation that the exact locked model and revision can resume.
+
+If r2 is ineligible or cannot resume under the lock, submit a new independent
+sample plan for approval. Keep all r2 evidence in its original cohort.
+[Phase 7 closeout](../../engineering/PHASE_7_CLOSEOUT_20261126.md).

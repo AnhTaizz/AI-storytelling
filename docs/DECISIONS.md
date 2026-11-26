@@ -1125,6 +1125,23 @@ variant. Wave 2 covers Gemini after M9 finishes and the owner confirms quota.
 The ten proposed gold decisions require owner confirmation in `GOLD_REVIEW.json`. See
 [the Phase 7B screening plan](engineering/MODEL_BENCH_7B_PLAN.md).
 
+## DEC-043 — M9 Gate Sample Re-Locked on gemini-3.6-flash
+
+STATUS: ACCEPTED (Project Owner, 2026-11-24: "oke theo ý bạn đi", relayed by a parallel session, then confirmed directly: "Đồng ý, khóa lại 3.6-flash")
+
+CONTEXT:
+DEC-033 fixed the gate sample to the single model `gemini-3.8-flash`, and the first lock (2026-11-23) pinned commit `840b6a4`. From 2026-11-23 to 2026-11-24 that model answered with 503 SERVER_FAILURE, and later also 429, on every key for more than a day. Episode 1 stopped after its first calls, so no script was generated. `gemini-3.6-flash` answered normally in the same period.
+
+DECISION:
+1. Discard the first attempt whole: its partial stages, its calls and its story memory are not reused. They are kept under `.local/` for the record only.
+2. Re-lock before any new generation with the same commit `840b6a4`, profile, manifest, chapter hashes, settings and command, changing only the model to `gemini-3.6-flash`. The protocol gains an amendment section recording this.
+3. The pass rule, the review and the one-attempt-per-episode rule are unchanged. Chapters 6–17 stay the sample, because no reviewer has seen a script from them.
+
+LIMITS:
+- The gate result applies to `gemini-3.6-flash`, not to `gemini-3.8-flash`.
+- `gemini-3.6-flash` is slower (about 1.5–2 minutes a call in the owner's runs on 2026-11-24), so the sample takes several hours.
+
+
 ## DEC-044 — Retire discontinued Cloudflare routes
 
 STATUS: OWNER AUTHORIZED (2026-11-25)

@@ -1767,3 +1767,14 @@ operational cache benefit. Owner semantic review is pending. Prioritize the data
 and M9 protocol reviews ahead of Dashboard integration. M9 r2 remains PAUSED.
 [Final research results](engineering/PHASE_7C_FINAL_RESULTS_20261126.md) ·
 [Phase 7D operations and product handoff](engineering/PHASE_7_CLOSEOUT_20261126.md).
+
+## M9 r2 · DEC-043 continuity and content retry (2026-11-26)
+
+DEC-043 records the owner-approved re-lock to the single model gemini-3.6-flash
+at revision 840b6a4. The initial gemini-3.8-flash attempt remains archived
+separately. During r2, a hard content-validation stop in the chapter 10 Brief
+was retried with owner permission to continue the stage. Its effect on gate
+eligibility remains an owner decision under the one-attempt rule.
+M9 r2 is PAUSED and the gate is NOT EVALUATED.
+[DEC-043](DECISIONS.md#dec-043--m9-gate-sample-re-locked-on-gemini-36-flash) ·
+[Protocol and operational status](research/m9/M9_SCRIPT_QUALITY_GATE_PROTOCOL_V0.md#10-operational-status-of-r2--2026-11-26).
