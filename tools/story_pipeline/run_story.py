@@ -158,14 +158,25 @@ def run_season(client: LLMClient, manifest_path: Path | str, ranges: Sequence[Tu
                progress: Callable[[str], None] = lambda message: None) -> Dict[str, Any]:
     """Run every episode in order and write season.json and season.md after each one."""
     options = options or {}
-    manifests, saved_scopes = _preflight_episodes(season_dir, ranges, manifest_path, source_root,
-                                                  locked=bool(options.get("locked")))
+    enabled = options.get("brief_normalization", False)
+    locked = options.get("locked", False)
+    run_pipeline.check_brief_normalization(enabled, locked)
+    manifests, saved_scopes = _preflight_episodes(season_dir, ranges, manifest_path, source_root, locked=locked)
+    directories = [episode_dir(season_dir, index, chapters) for index, chapters in enumerate(ranges, start=1)]
+    fingerprint = None
+    if enabled and saved_scopes:
+        scope, _ = next(iter(saved_scopes.values()))
+        fingerprint = run_pipeline.stages.brief_fingerprint(profile, scope.source_language, brief_normalization=True)
+    for directory, previous in zip(directories, manifests):
+        if enabled and previous is None and directory.is_dir() and any(directory.iterdir()):
+            raise ValueError("brief normalization requires a saved manifest for an existing episode")
+        run_pipeline.check_brief_normalization(enabled, locked, previous=previous, fingerprint=fingerprint)
+
     season_dir.mkdir(parents=True, exist_ok=True)
     rows: List[Dict[str, Any]] = []
     status, stop_reason, story_id = "COMPLETED", None, None
     totals = {"calls": 0, "tokens": 0, "seconds": 0.0}
-    for index, (chapters, previous) in enumerate(zip(ranges, manifests), start=1):
-        path = episode_dir(season_dir, index, chapters)
+    for index, (chapters, path, previous) in enumerate(zip(ranges, directories, manifests), start=1):
         if index in saved_scopes:
             scope, background = saved_scopes[index]
         else:
@@ -210,8 +221,9 @@ def run_season(client: LLMClient, manifest_path: Path | str, ranges: Sequence[Tu
     else:
         if any(r["status"] == "FAILED" for r in rows):
             status = "COMPLETED_WITH_FAILURES"
-    rows += [_episode_row(i, chapters, episode_dir(season_dir, i, chapters), previous, season_dir)
-             for i, (chapters, previous) in enumerate(zip(ranges, manifests), start=1) if i > len(rows)]
+    rows += [_episode_row(i, chapters, directory, previous, season_dir)
+             for i, (chapters, directory, previous) in enumerate(zip(ranges, directories, manifests), start=1)
+             if i > len(rows)]
     return _write_season(season_dir, story_id, ranges, rows, totals, status, stop_reason)
 
 
@@ -266,7 +278,12 @@ def main(argv: Optional[List[str]] = None) -> int:
         previous, _ = _preflight_episodes(season_dir, ranges, args.manifest, args.source_root,
                                            locked=run_pipeline.routing_locked(season_dir))
         existing = [manifest for manifest in previous if manifest is not None]
+        if existing and "brief_normalization" not in run_pipeline.given_options(build_parser(), argv):
+            args.brief_normalization = run_pipeline.saved_brief_normalization(existing[0]) is not None
         run_pipeline.prepare_routing(args, season_dir, existing[0] if existing else None)
+        run_pipeline.check_brief_normalization(args.brief_normalization, args.locked)
+        for manifest in existing:
+            run_pipeline.check_brief_normalization(args.brief_normalization, args.locked, previous=manifest)
         for manifest in existing[1:]:
             run_pipeline.check_routing_identity(args, manifest.get("invocation") or {})
     except ValueError as exc:
