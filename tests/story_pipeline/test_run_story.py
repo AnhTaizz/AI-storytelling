@@ -19,7 +19,7 @@ from tools.llm_infra import pipeline_clients  # noqa: E402
 from tools.llm_infra.openrouter_router import OpenRouterQuotaPaused  # noqa: E402
 from tools.llm_infra.quota_state import QuotaStateStore  # noqa: E402
 from tools.story_memory.memory_v0 import StoryMemory  # noqa: E402
-from tools.story_pipeline import run_story  # noqa: E402
+from tools.story_pipeline import run_pipeline, run_story  # noqa: E402
 from tools.story_pipeline.llm import GeminiLLMClient, ScriptedLLMClient  # noqa: E402
 from tools.story_pipeline.run_pipeline import DEFAULT_MANIFEST  # noqa: E402
 
@@ -111,6 +111,31 @@ class SeasonTests(unittest.TestCase):
     def season(self, stub, **kwargs):
         return run_story.run_season(None, DEFAULT_MANIFEST, self.ranges, test_profile(), self.season_dir,
                                     memory=None, run=stub, **kwargs)
+
+    def test_season_rejects_a_later_incompatible_brief_cache_before_any_call(self):
+        later = run_story.episode_dir(self.season_dir, 3, self.ranges[2])
+        later.mkdir(parents=True)
+        saved = later / "run_manifest.json"
+        saved.write_text(json.dumps({
+            "status": "COMPLETED",
+            "settings": {"brief_normalization": run_pipeline.stages.BRIEF_NORMALIZATION_VERSION},
+            "brief_fingerprint": "old",
+        }), encoding="utf-8")
+        stamp = saved.read_bytes()
+        stub = StubRun({})
+        for enabled, message in ((False, "brief normalization differs"), (True, "Brief fingerprint differs")):
+            with self.subTest(enabled=enabled), self.assertRaisesRegex(ValueError, message):
+                self.season(stub, options={"brief_normalization": enabled})
+        self.assertEqual(stub.calls, [])
+        self.assertEqual(saved.read_bytes(), stamp)
+        self.assertFalse((self.season_dir / "season.json").exists())
+        saved.write_text("{", encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "Cannot read saved run manifest"):
+            self.season(stub, options={"brief_normalization": True})
+        saved.unlink()
+        (later / "script_v1.json").write_text("{}", encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "requires a saved manifest"):
+            self.season(stub, options={"brief_normalization": True})
 
     def test_episodes_run_in_order_with_earlier_chapters_as_background(self):
         stub = StubRun({})
@@ -285,6 +310,19 @@ class CliTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.season_dir = Path(self.tmp.name) / "season"
+
+    def test_season_cli_restores_brief_normalization_and_rejects_an_explicit_change(self):
+        client = ScriptedLLMClient(FakeModel())
+        arguments = ["--chapters", "1", "--season-dir", str(self.season_dir), "--no-memory",
+                     "--no-source-check", "--min-words", "20", "--max-words", "200"]
+        with patch.object(run_pipeline, "make_client", return_value=client) as factory:
+            self.assertEqual(run_story.main([*arguments, "--brief-normalization"]), 0)
+            self.assertEqual(run_story.main(arguments), 0)
+            self.assertEqual(run_story.main([*arguments, "--no-brief-normalization"]), 2)
+        self.assertEqual(factory.call_count, 2)
+        run_dir = run_story.episode_dir(self.season_dir, 1, (1, 1))
+        saved = json.loads((run_dir / "run_manifest.json").read_text(encoding="utf-8"))
+        self.assertTrue(saved["invocation"]["brief_normalization"])
 
     def test_auto_quota_resumes_the_season_with_saved_policy_and_checkpoints(self):
         now = [1000.0]
