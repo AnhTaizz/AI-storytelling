@@ -1742,3 +1742,13 @@ The owner retained C0 for production based on recovery and evidence coverage.
 GPT-OSS 120B remains the preferred Phase 7C experimental model. C4 and Source Check
 S0/S1 are pending separate live approvals. M9 r2 stays paused.
 [Pilot results](engineering/BRIEF_REPAIR_V2_PILOT_RESULTS_20261126.md).
+
+## Phase 7C · final DEV comparisons (2026-11-26)
+
+Both owner-approved runs completed on Groq Free GPT-OSS 120B. C0 and C4 recovered
+all four hard-invalid starts. C4 avoided one full repair by deterministic
+normalization. The Brief Repair ledger closed at 45/64. Source Check used 6/6
+on its separate ledger and showed no measured cache benefit on this fixture.
+The minimal C4 integration proposal and blinded semantic review await the owner.
+Production routing stays unchanged and M9 r2 stays paused.
+[Final Phase 7C readout](engineering/PHASE_7C_FINAL_RESULTS_20261126.md).
