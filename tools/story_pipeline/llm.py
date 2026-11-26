@@ -252,6 +252,7 @@ def run_json_stage(
     max_repairs: int = 2,
     log: Optional[CallLog] = None,
     request_suffix: str = "",
+    normalize_initial_object: Optional[Callable[[Any], Any]] = None,
 ) -> Any:
     """Call the model until it returns a schema-valid, semantically valid object.
 
@@ -262,6 +263,7 @@ def run_json_stage(
     splitting facts for the soft check introduced a hard error), so when the last attempt
     has hard errors, the latest attempt that had only soft errors is returned instead.
     """
+    # Only the first candidate is eligible. Repair responses use the original validators directly.
     prompt = user
     errors: List[str] = []
     best_soft: Any = None
@@ -277,7 +279,12 @@ def run_json_stage(
             obj = parse_json_object(raw)
         except (json.JSONDecodeError, ValueError) as exc:
             errors = [f"json: response is not a valid JSON object ({exc})"]
+        normalized = False
         if not errors:
+            if attempt == 1 and normalize_initial_object is not None:
+                original = obj
+                obj = normalize_initial_object(original)
+                normalized = obj is not original
             errors = schema_errors(schema, obj)
         if not errors and semantic_check is not None:
             errors = semantic_check(obj)
@@ -305,6 +312,7 @@ def run_json_stage(
                 "soft_errors_only": soft_only,
                 "errors": errors,
                 "raw_content": raw,
+                **({"brief_normalized": True} if normalized else {}),
             })
         if soft_only:
             best_soft = obj

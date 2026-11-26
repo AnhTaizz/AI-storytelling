@@ -65,13 +65,6 @@ def episode_dir(season_dir: Path, index: int, chapters: Tuple[int, int]) -> Path
     return season_dir / (f"ep{index:02d}_ch{start}" if start == end else f"ep{index:02d}_ch{start}-{end}")
 
 
-def _read_manifest(path: Path) -> Optional[Dict[str, Any]]:
-    try:
-        return json.loads((path / "run_manifest.json").read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return None
-
-
 def _episode_row(index: int, chapters: Tuple[int, int], path: Path, manifest: Optional[Dict[str, Any]],
                  season_dir: Path, skipped: bool = False) -> Dict[str, Any]:
     row: Dict[str, Any] = {"episode": index, "chapters": list(chapters),
@@ -149,14 +142,27 @@ def run_season(client: LLMClient, manifest_path: Path | str, ranges: Sequence[Tu
                options: Optional[Dict[str, Any]] = None,
                progress: Callable[[str], None] = lambda message: None) -> Dict[str, Any]:
     """Run every episode in order and write season.json and season.md after each one."""
+    options = options or {}
+    directories = [episode_dir(season_dir, index, chapters) for index, chapters in enumerate(ranges, start=1)]
+    previous_runs = [run_pipeline.read_run_manifest(directory) for directory in directories]
+    enabled = options.get("brief_normalization", False)
+    locked = options.get("locked", False)
+    run_pipeline.check_brief_normalization(enabled, locked)
+    fingerprint = None
+    if enabled and any(previous is not None for previous in previous_runs):
+        first, last = ranges[0]
+        scope, _ = run_pipeline.episode_scope(manifest_path, first, last, source_root)
+        fingerprint = run_pipeline.stages.brief_fingerprint(profile, scope.source_language, brief_normalization=True)
+    for directory, previous in zip(directories, previous_runs):
+        if enabled and previous is None and directory.is_dir() and any(directory.iterdir()):
+            raise ValueError("brief normalization requires a saved manifest for an existing episode")
+        run_pipeline.check_brief_normalization(enabled, locked, previous=previous, fingerprint=fingerprint)
+
     season_dir.mkdir(parents=True, exist_ok=True)
     rows: List[Dict[str, Any]] = []
     status, stop_reason, story_id = "COMPLETED", None, None
     totals = {"calls": 0, "tokens": 0, "seconds": 0.0}
-    options = options or {}
-    for index, chapters in enumerate(ranges, start=1):
-        path = episode_dir(season_dir, index, chapters)
-        previous = _read_manifest(path)
+    for index, (chapters, path, previous) in enumerate(zip(ranges, directories, previous_runs), start=1):
         scope, background = run_pipeline.episode_scope(manifest_path, chapters[0], chapters[1], source_root,
                                                        recap=True)
         story_id = scope.story_id
@@ -198,9 +204,9 @@ def run_season(client: LLMClient, manifest_path: Path | str, ranges: Sequence[Tu
     else:
         if any(r["status"] == "FAILED" for r in rows):
             status = "COMPLETED_WITH_FAILURES"
-    rows += [_episode_row(i, c, episode_dir(season_dir, i, c), _read_manifest(episode_dir(season_dir, i, c)),
-                          season_dir)
-             for i, c in enumerate(ranges, start=1) if i > len(rows)]
+    rows += [_episode_row(i, chapters, directory, previous, season_dir)
+             for i, (chapters, directory, previous) in enumerate(zip(ranges, directories, previous_runs), start=1)
+             if i > len(rows)]
     return _write_season(season_dir, story_id, ranges, rows, totals, status, stop_reason)
 
 
@@ -251,11 +257,16 @@ def main(argv: Optional[List[str]] = None) -> int:
     scope, _ = run_pipeline.episode_scope(args.manifest, first, first, args.source_root)
     destination = args.season_dir or args.resume
     season_dir = Path(destination) if destination else DEFAULT_SEASON_ROOT / scope.story_id
-    previous = [_read_manifest(episode_dir(season_dir, index, chapters))
-                for index, chapters in enumerate(ranges, start=1)]
-    existing = [manifest for manifest in previous if manifest is not None]
     try:
+        previous = [run_pipeline.read_run_manifest(episode_dir(season_dir, index, chapters))
+                    for index, chapters in enumerate(ranges, start=1)]
+        existing = [manifest for manifest in previous if manifest is not None]
+        if existing and "brief_normalization" not in run_pipeline.given_options(build_parser(), argv):
+            args.brief_normalization = run_pipeline.saved_brief_normalization(existing[0]) is not None
         run_pipeline.prepare_routing(args, season_dir, existing[0] if existing else None)
+        run_pipeline.check_brief_normalization(args.brief_normalization, args.locked)
+        for manifest in existing:
+            run_pipeline.check_brief_normalization(args.brief_normalization, args.locked, previous=manifest)
         for manifest in existing[1:]:
             run_pipeline.check_routing_identity(args, manifest.get("invocation") or {})
     except ValueError as exc:
@@ -273,9 +284,13 @@ def main(argv: Optional[List[str]] = None) -> int:
         options["locked"] = True
     else:
         options["invocation"] = run_pipeline.invocation_of(args)
-    season = run_season(client, args.manifest, ranges, profile, season_dir, memory=memory,
-                        source_root=args.source_root, facts=facts, stop_on_failure=not args.keep_going,
-                        options=options, progress=lambda m: print(m, flush=True))
+    try:
+        season = run_season(client, args.manifest, ranges, profile, season_dir, memory=memory,
+                            source_root=args.source_root, facts=facts, stop_on_failure=not args.keep_going,
+                            options=options, progress=lambda m: print(m, flush=True))
+    except ValueError as exc:
+        print(f"config error: {exc}", file=sys.stderr)
+        return 2
     print(f"season: {season['status']}  calls: {season['totals']['calls']}  index: {season_dir / 'season.md'}")
     if season.get("stop_reason"):
         print(f"stopped: {season['stop_reason']}")

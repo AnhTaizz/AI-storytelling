@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 13 — test files: 149 — test functions: 1501
+Suites: 13 — test files: 149 — test functions: 1507
 
 ## canonical_story
 
@@ -2008,22 +2008,24 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `ReviewSummaryTests.test_forms_are_parsed_and_owner_and_agent_kept_apart`
 - `ReviewSummaryTests.test_quoted_errors_are_read_from_the_form`
 
-### test_run_story (11)
+### test_run_story (13)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.openrouter_router`, `tools.llm_infra.pipeline_clients`, `tools.llm_infra.quota_state`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.llm`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.run_story`
 
 - `PlanTests.test_episodes_cover_the_range_in_order`
 - `SeasonTests.test_daily_quota_pauses_plan_and_resume_reuses_brief`
+- `SeasonTests.test_season_rejects_a_later_incompatible_brief_cache_before_any_call`
 - `SeasonTests.test_episodes_run_in_order_with_earlier_chapters_as_background`
 - `SeasonTests.test_rerun_skips_completed_episodes_and_resumes_the_rest`
 - `SeasonTests.test_apply_review_resumes_completed_episodes_with_unapplied_errors`
 - `SeasonTests.test_quota_pauses_and_failures_stop_unless_told_to_keep_going`
 - `SeasonTests.test_season_with_the_real_pipeline_and_shared_memory`
 - `SeasonTests.test_source_check_quota_saves_the_draft_and_resumes_before_next_episode`
+- `CliTests.test_season_cli_restores_brief_normalization_and_rejects_an_explicit_change`
 - `CliTests.test_auto_quota_resumes_the_season_with_saved_policy_and_checkpoints`
 - `CliTests.test_locked_season_refuses_new_providers_and_keeps_legacy_gemini`
 - `CliTests.test_bad_episode_plan_is_rejected_before_any_call`
 
-### test_story_pipeline_v0 (53)
+### test_story_pipeline_v0 (57)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.check_config`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.episode_brief`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
 
 - `test_profile`
@@ -2056,6 +2058,10 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.check_config`, 
 - `SemanticValidationTests.test_strength_audit_flags_intensifiers_missing_from_cited_brief`
 - `SemanticValidationTests.test_critic_unit_mismatch`
 - `FactsTests.test_valid_and_invalid`
+- `EndToEndTests.test_brief_normalization_is_opt_in_and_preserves_the_original_response`
+- `EndToEndTests.test_brief_normalization_keeps_full_repair_for_hard_and_soft_findings`
+- `EndToEndTests.test_brief_normalization_does_not_normalize_full_repair_responses`
+- `EndToEndTests.test_brief_normalization_separates_memory_and_run_checkpoints`
 - `EndToEndTests.test_full_pipeline_with_revision`
 - `EndToEndTests.test_source_check_findings_go_to_revision_and_the_report` — The second verifier reads the script against the source text (live run 10).
 - `EndToEndTests.test_incomplete_source_check_saves_the_draft_and_reports_why_it_needs_review`

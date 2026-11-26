@@ -37,7 +37,11 @@ def render(name: str, **values: Any) -> str:
     return Template(load_prompt(name)).substitute(**values)
 
 
-def brief_fingerprint(profile: NarrativeProfile, source_language: str = "") -> str:
+BRIEF_NORMALIZATION_VERSION = "text_wrappers_v1"
+
+
+def brief_fingerprint(profile: NarrativeProfile, source_language: str = "", *,
+                      brief_normalization: bool = False) -> str:
     """Identity of everything that shapes a chapter brief except the model and the source.
     A name-reading rule counts only for the language it applies to, so adding one for
     Chinese does not invalidate stored Japanese briefs."""
@@ -49,6 +53,8 @@ def brief_fingerprint(profile: NarrativeProfile, source_language: str = "") -> s
     reading = profile.name_reading(source_language)
     if reading:
         digest.update(b"\0name reading\0" + reading.encode("utf-8"))
+    if brief_normalization:
+        digest.update(b"\0brief normalization\0" + BRIEF_NORMALIZATION_VERSION.encode("utf-8"))
     return digest.hexdigest()
 
 
@@ -368,9 +374,28 @@ def known_characters_text(briefs: Sequence[Dict[str, Any]]) -> str:
                      for c in seen.values())
 
 
+def normalize_brief_wrappers(brief: Any) -> Any:
+    """Unwrap the unambiguous string wrappers before validation."""
+    if not isinstance(brief, dict):
+        return brief
+    updates = {}
+    for key in ("unknowns", "forbidden_inferences"):
+        values = brief.get(key)
+        if not isinstance(values, list):
+            continue
+        normalized = [
+            value["text"] if isinstance(value, dict) and value.keys() == {"text"}
+            and isinstance(value["text"], str) else value
+            for value in values
+        ]
+        if normalized != values:
+            updates[key] = normalized
+    return brief | updates if updates else brief
+
+
 def run_brief(client: LLMClient, scope: StoryScope, chapter: Chapter, profile: NarrativeProfile,
               earlier_briefs: Sequence[Dict[str, Any]], facts: Optional[StoryFacts],
-              log: CallLog, max_repairs: int) -> Dict[str, Any]:
+              log: CallLog, max_repairs: int, *, brief_normalization: bool = False) -> Dict[str, Any]:
     schema = load_schema("story_brief_v0")
     facts_block = ""
     if facts is not None:
@@ -388,7 +413,8 @@ def run_brief(client: LLMClient, scope: StoryScope, chapter: Chapter, profile: N
                                                                          profile.brief_language),
                           soft_check=lambda b: (brief_atomicity_errors(b, profile.brief_language)
                                                + brief_script_errors(b, profile.brief_language)),
-                          max_repairs=max_repairs, log=log, request_suffix=f"ch{chapter.order}")
+                          max_repairs=max_repairs, log=log, request_suffix=f"ch{chapter.order}",
+                          normalize_initial_object=normalize_brief_wrappers if brief_normalization else None)
 
 
 def briefs_for_prompt(briefs: Sequence[Dict[str, Any]]) -> str:
