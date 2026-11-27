@@ -129,6 +129,42 @@ class RetrievalTests(unittest.TestCase):
                 retriever.index([Passage("c1.E1", "真昼 傘 Mahiru"), Passage("c1.E2", "別")])  # reused
                 self.assertEqual(retriever.search("Mahiru 真昼", {"c1.E1", "c1.E2"}, 2)[0][0], "c1.E1")
 
+    def test_hybrid_brief_retriever_and_passage_rrf_fuse_cross_lingual_and_respect_cutoff(self):
+        class FakeDense:
+            name, version = "fake_dense", "0"
+
+            def __init__(self, ranked):
+                self._ranked = ranked
+                self.indexed = None
+
+            def index(self, passages):
+                self.indexed = [p.passage_id for p in passages]
+
+            def search(self, query, allowed, k):
+                return [(ref, score) for ref, score in self._ranked if ref in allowed][:k]
+
+        c = corpus(cutoff=2)
+        hybrid = br.BriefHybridRetrieverV1("vi", FakeDense([("c2.E1", 0.9), ("c1.E1", 0.7), ("c3.E1", 0.99)]))
+        # Cross-lingual query has zero Vietnamese lexical hits, so dense bridges it without leaking c3.E1.
+        ja_hits = br.retrieve_briefs("傘を返した", c, k=5, retriever=hybrid)
+        self.assertEqual([h.item.ref for h in ja_hits], ["c2.E1", "c1.E1"])
+        # Vietnamese query fuses lexical and dense rankings.
+        vi_hits = br.retrieve_briefs("Mahiru trả lại chiếc ô", c, k=5, retriever=hybrid)
+        self.assertEqual(vi_hits[0].item.ref, "c2.E1")
+        self.assertIn("fake_dense", vi_hits[0].retriever)
+
+        # Passage-level RRF deduplicates within each list, breaks ties deterministically and enforces budget.
+        fused = br.rrf_fuse_passages([["2.1", "2.1", "1.1"], ["1.1", "2.2"]], budget=2)
+        self.assertEqual(fused, ["1.1", "2.1"])
+        self.assertEqual(br.rrf_fuse_passages([[], ["1.2", "1.10", "1.2"]]), ["1.2", "1.10"])
+        for label, fn in {
+            "bad hybrid k_rrf": lambda: br.BriefHybridRetrieverV1("vi", FakeDense([]), k_rrf=0),
+            "bad rrf k_rrf": lambda: br.rrf_fuse_passages([["1.1"]], k_rrf=0),
+            "negative budget": lambda: br.rrf_fuse_passages([["1.1"]], budget=-1),
+        }.items():
+            with self.subTest(label), self.assertRaises(ValueError):
+                fn()
+
 
 class EvaluationTests(unittest.TestCase):
     def test_pinned_briefs_beat_passage_bm25_on_vietnamese_probes_without_leaks(self):
