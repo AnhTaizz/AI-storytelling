@@ -83,6 +83,23 @@ def read_run_manifest(out_dir: Path) -> Optional[Dict[str, Any]]:
     return manifest
 
 
+def read_source_check_checkpoint(path: Path, scope: StoryScope, units: List[Dict[str, str]],
+                                 flags: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    """Reuse a saved answer only if it passes the same checks as a new answer."""
+    try:
+        result = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise StageFailed("source_check", [f"Cannot read checkpoint {path.name}: {exc}"], 0) from exc
+    if result is None and len(stages.source_check_text(scope.chapters)) > stages.SOURCE_CHECK_MAX_CHARS:
+        return None  # Older runs cached a null when the source was too long.
+    passage_ids = {p.passage_id for chapter in scope.chapters for p in chapter.passages}
+    errors = (schema_errors(stages.load_schema("source_check_v0"), result)
+              or stages.source_check_errors(result, units, passage_ids, flags))
+    if errors:
+        raise StageFailed("source_check", [f"Invalid checkpoint {path.name}: {errors[0]}"], 0)
+    return result
+
+
 def _source_identity(scope: StoryScope, background: Sequence[Chapter]) -> Dict[str, Any]:
     return {"language": scope.source_language,
             "documents": [{"chapter": chapter.order, "document_id": chapter.document_id, "version": chapter.version}
@@ -763,11 +780,14 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
                         for sample in range(1, max(1, source_check_samples) + 1):
                             name = (f"source_check_v{version}" + (f"_c{part}" if part else "")
                                     + (f"_s{sample}" if sample > 1 else "") + ".json")
+                            checkpoint = out_dir / name
                             try:
-                                result = cached(out_dir / name, resume,
-                                                lambda: stages.run_source_check(client, scope, chunk, profile, log,
-                                                                                max_repairs, version, sample,
-                                                                                chunk_flags, part))
+                                if resume and checkpoint.is_file():
+                                    result = read_source_check_checkpoint(checkpoint, scope, chunk, chunk_flags)
+                                else:
+                                    result = stages.run_source_check(client, scope, chunk, profile, log, max_repairs,
+                                                                     version, sample, chunk_flags, part)
+                                    write_json(checkpoint, result)
                             except RuntimeError as exc:
                                 # Validation and provider failures leave the draft available for review.
                                 error = str(exc) or type(exc).__name__
@@ -887,6 +907,13 @@ def run(client: LLMClient, scope: StoryScope, profile: NarrativeProfile, out_dir
         if quota_exhausted:
             manifest["source_check_quota_exhausted"] = True
         review_reasons = []
+        if report["undetermined"]:
+            unit_ids = sorted({claim["unit_id"] for claim in report["undetermined"]})
+            review_reasons.append(f"Critic còn {len(report['undetermined'])} claim chưa xác định "
+                                  f"ở {', '.join(unit_ids)}.")
+        if critic is not None:
+            review_reasons.extend(f"Critic tách thiếu claim ở {error}" for error in
+                                  stages.critic_density_errors(critic, final_units, brief_gaps))
         if critic is not None and not source_check:
             review_reasons.append("Bỏ qua đối chiếu nguyên tác vì bước này đã tắt (--no-source-check).")
         if manifest.get("source_check_skipped"):

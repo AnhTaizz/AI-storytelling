@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 13 — test files: 149 — test functions: 1513
+Suites: 13 — test files: 149 — test functions: 1515
 
 ## canonical_story
 
@@ -2029,7 +2029,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.openrouter_rout
 - `CliTests.test_locked_season_refuses_new_providers_and_keeps_legacy_gemini`
 - `CliTests.test_bad_episode_plan_is_rejected_before_any_call`
 
-### test_story_pipeline_v0 (59)
+### test_story_pipeline_v0 (61)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.check_config`, `tools.story_benchmark.brief_repair_v2`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_memory.memory_v0`, `tools.story_pipeline.checks`, `tools.story_pipeline.episode_brief`, `tools.story_pipeline.facts`, `tools.story_pipeline.llm`, `tools.story_pipeline.profile`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`, `tools.story_pipeline.stages`
 
 - `test_profile`
@@ -2071,6 +2071,8 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.check_config`, 
 - `EndToEndTests.test_resume_refuses_changed_episode_or_recap_source_before_reusing_checkpoints`
 - `EndToEndTests.test_source_check_findings_go_to_revision_and_the_report` — The second verifier reads the script against the source text (live run 10).
 - `EndToEndTests.test_incomplete_source_check_saves_the_draft_and_reports_why_it_needs_review`
+- `EndToEndTests.test_unresolved_or_under_extracted_critic_needs_review_even_with_a_clean_source_check`
+- `EndToEndTests.test_resume_rejects_unusable_source_check_checkpoints_without_redoing_other_calls`
 - `EndToEndTests.test_later_versions_recheck_only_the_paragraphs_that_changed` — Patch rounds left 60-97% of paragraphs byte-identical in saved runs, yet every
 - `EndToEndTests.test_critic_findings_the_source_supports_become_brief_gaps` — Season S2 episode 2: the critic flagged four details that the brief had left out
 - `EndToEndTests.test_source_check_answers_are_validated`

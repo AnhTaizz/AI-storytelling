@@ -1020,6 +1020,13 @@ class EndToEndTests(unittest.TestCase):
                 else:
                     self.assertEqual(manifest["source_check_failed"][0]["chunk"], 1)
                     self.assertTrue((out / "source_check_v1_c2.json").is_file())
+                if mode == "too_long":
+                    resumed_client = ScriptedLLMClient(FakeModel())
+                    with mock.patch.object(stages, "SOURCE_CHECK_MAX_CHARS", limit):
+                        resumed = run(resumed_client, scope, test_profile(), out, resume=True, source_check_chunk=1)
+                    self.assertEqual(resumed_client.calls, [])
+                    self.assertEqual(resumed["status"], "NEEDS_REVIEW")
+                    self.assertEqual(resumed["review_reasons"], manifest["review_reasons"])
                 if mode == "transport_error":
                     recovered_client = ScriptedLLMClient(FakeModel())
                     recovered = run(recovered_client, scope, test_profile(), out, source_check_chunk=1, resume=True)
@@ -1027,6 +1034,80 @@ class EndToEndTests(unittest.TestCase):
                     self.assertEqual([call["stage"] for call in recovered_client.calls], ["source_check"])
                     recovered_report = json.loads((out / "report.json").read_text(encoding="utf-8"))
                     self.assertEqual(recovered_report["review_reasons"], [])
+
+    def test_unresolved_or_under_extracted_critic_needs_review_even_with_a_clean_source_check(self):
+        scope = load_scope(DEFAULT_MANIFEST, (1, 1))
+        cases = (
+            ("unresolved", [claim("UNDETERMINED")], "chưa xác định"),
+            ("under-extracted", [claim("SUPPORTED_FACT")], "P001:"),
+            ("complete", [claim("SUPPORTED_FACT"), claim("SUPPORTED_FACT")], None),
+            ("adjudicated", [claim("SUPPORTED_FACT"),
+                            claim("UNSUPPORTED_STORY_CLAIM", "MEDIUM", "UNSUPPORTED_INVENTION")], None),
+        )
+        for label, claims, reason in cases:
+            with self.subTest(label=label), tempfile.TemporaryDirectory() as tmp:
+                model = FakeModel()
+                if label == "adjudicated":
+                    model.flag_verdict = "IN_SOURCE"
+
+                def respond(stage, system, user):
+                    if stage == "script" and label != "unresolved":
+                        script = {**SCRIPT, "sections": [
+                            {**SCRIPT["sections"][0], "text": " ".join([SECTION_1] * 3)},
+                            SCRIPT["sections"][1],
+                        ]}
+                        return json.dumps(script)
+                    if stage == "critic":
+                        result = critic_json(user, False)
+                        result["units"][0]["claims"] = claims
+                        return json.dumps(result)
+                    return model(stage, system, user)
+
+                out = Path(tmp) / "run"
+                manifest = run(ScriptedLLMClient(respond), scope, test_profile(), out,
+                               max_repairs=0, stop_after="critic")
+                report = json.loads((out / "report.json").read_text(encoding="utf-8"))
+                self.assertFalse(manifest.get("source_check_failed"))
+                self.assertEqual(report["findings"], [])
+                self.assertEqual(manifest["status"], "NEEDS_REVIEW" if reason else "COMPLETED")
+                self.assertEqual(report["gates"]["GATE_FACTUAL_GROUNDING"]["status"],
+                                 "NEEDS_REVIEW" if reason else "PASS")
+                if reason:
+                    self.assertIn(reason, " ".join(report["review_reasons"]))
+                    self.assertIn(reason, (out / "review.html").read_text(encoding="utf-8"))
+
+    def test_resume_rejects_unusable_source_check_checkpoints_without_redoing_other_calls(self):
+        scope = load_scope(DEFAULT_MANIFEST, (1, 1))
+        cases = (
+            ("truncated JSON", "{", "checkpoint"),
+            ("null result for a short source", "null", "checkpoint"),
+            ("missing paragraph", '{"paragraphs": []}', "list every paragraph"),
+            ("incompatible flags", '{"paragraphs": [{"unit_id": "P001", "findings": []}]}',
+             "answer each flagged statement exactly once"),
+            ("wrong passage scope", json.dumps({"paragraphs": [{"unit_id": "P002", "findings": [
+                {"script_quote": "chiếc ô", "kind": "WRONG_CAUSE", "passage_ids": ["2.1"],
+                 "explanation": "claimed cause in the next chapter"}]}]}), "not in this episode's source"),
+        )
+        for label, payload, reason in cases:
+            with self.subTest(label=label), tempfile.TemporaryDirectory() as tmp:
+                model = FakeModel()
+                group = 1 if label == "incompatible flags" else 2
+                if group == 2:
+                    model.critic_calls = 1
+                out = Path(tmp) / "run"
+                run(ScriptedLLMClient(model), scope, test_profile(), out, stop_after="critic", source_check_chunk=1)
+                path = out / f"source_check_v1_c{group}.json"
+                path.write_text(payload, encoding="utf-8")
+                client = ScriptedLLMClient(FakeModel())
+                manifest = run(client, scope, test_profile(), out, resume=True, stop_after="critic", source_check_chunk=1)
+                self.assertEqual(client.calls, [])
+                self.assertEqual(path.read_text(encoding="utf-8"), payload)
+                self.assertEqual(manifest["status"], "NEEDS_REVIEW", manifest.get("error"))
+                self.assertEqual(manifest["source_check_failed"][0]["chunk"], group)
+                self.assertIn(reason, manifest["source_check_failed"][0]["error"])
+                report = json.loads((out / "report.json").read_text(encoding="utf-8"))
+                self.assertFalse(report["brief_gaps"])
+                self.assertFalse(any(f.get("source") == "source_check" for f in report["findings"]))
 
     def test_later_versions_recheck_only_the_paragraphs_that_changed(self):
         """Patch rounds left 60-97% of paragraphs byte-identical in saved runs, yet every

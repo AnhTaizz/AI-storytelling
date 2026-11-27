@@ -6,6 +6,7 @@ import copy
 import hashlib
 import json
 import re
+from collections import Counter
 from pathlib import Path
 from string import Template
 from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Set, Tuple
@@ -655,17 +656,20 @@ def critic_semantic_errors(critic: Dict[str, Any], units: List[Dict[str, str]]) 
 WORDS_PER_CLAIM = 30
 
 
-def critic_density_errors(critic: Dict[str, Any], units: List[Dict[str, str]]) -> List[str]:
+def critic_density_errors(critic: Dict[str, Any], units: List[Dict[str, str]],
+                          overturned: Sequence[Dict[str, Any]] = ()) -> List[str]:
     """Flag units the critic under-extracted. In the first live run it took about one claim
     per paragraph and passed strengthened and invented details it never isolated."""
     words = {u["unit_id"]: checks.count_words(u["text"]) for u in units}
+    overturned_counts = Counter(f["unit_id"] for f in overturned)
     errors = []
     for unit in critic["units"]:
         if unit["no_claim_reason"]:
             continue
         needed = words.get(unit["unit_id"], 0) // WORDS_PER_CLAIM
-        if len(unit["claims"]) < needed:
-            errors.append(f"{unit['unit_id']}: {words[unit['unit_id']]} words but only {len(unit['claims'])} "
+        count = len(unit["claims"]) + overturned_counts[unit["unit_id"]]
+        if count < needed:
+            errors.append(f"{unit['unit_id']}: {words[unit['unit_id']]} words but only {count} "
                           f"claims; extract every atomic claim separately (expected at least {needed}). "
                           f"Check each intensifier, frequency word, physical or emotional state and "
                           f"reported fact on its own")
