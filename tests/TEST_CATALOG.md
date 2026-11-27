@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 13 — test files: 150 — test functions: 1523
+Suites: 13 — test files: 150 — test functions: 1524
 
 ## canonical_story
 
@@ -2108,7 +2108,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.check_config`, 
 
 ## story_retrieval
 
-### test_brief_retrieval_v1 (8)
+### test_brief_retrieval_v1 (9)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.source`, `tools.story_retrieval.brief_retrieval_v1`, `tools.story_retrieval.evaluate_brief_v1`
 
 - `BriefCorpusTests.test_items_have_snapshot_bound_refs_and_their_own_words`
@@ -2118,6 +2118,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 - `RetrievalTests.test_an_unsafe_retriever_cannot_leak_later_content`
 - `RetrievalTests.test_delivery_dossier_and_callbacks`
 - `RetrievalTests.test_tokenizers_follow_the_brief_language`
+- `RetrievalTests.test_hybrid_brief_retriever_and_passage_rrf_fuse_cross_lingual_and_respect_cutoff`
 - `EvaluationTests.test_pinned_briefs_beat_passage_bm25_on_vietnamese_probes_without_leaks`
 
 ### test_cjk_lexical_v1 (2)
