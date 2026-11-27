@@ -16,7 +16,7 @@ from collections import Counter
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from tools.story_pipeline import stages
-from tools.story_pipeline.llm import CallLog, LLMClient, run_json_stage
+from tools.story_pipeline.llm import CallLog, LLMClient, run_json_stage, schema_errors
 from tools.story_pipeline.profile import LANGUAGE_NAMES, NarrativeProfile
 from tools.story_pipeline.source import Chapter
 from tools.story_retrieval.brief_retrieval_v1 import render_items
@@ -25,10 +25,49 @@ VERDICT_VI = {"NOT_SUPPORTED": "nguồn không có", "CONTRADICTS_SOURCE": "trá
               "STRONGER_THAN_SOURCE": "mạnh hơn nguồn", "WRONG_LABEL": "sai nhãn",
               "WRONG_SPEAKER": "sai người nói"}
 
+COVERAGE_GAPS_DEV = {
+    "type": "array",
+    "items": {
+        "type": "object", "additionalProperties": False,
+        "required": ["kind", "ref", "claim", "epistemic", "evidence"],
+        "properties": {
+            "kind": {"enum": ["MISSING_CORE", "MISSING_CLAIM", "MISSING_EVIDENCE", "CORE_PRIORITY", "REVIEW"]},
+            "ref": {"type": ["string", "null"]},
+            "claim": {"type": "string", "pattern": r"\S"},
+            "epistemic": {"enum": list(stages.EPISTEMIC_LABELS)},
+            "evidence": {"type": "array", "minItems": 1, "uniqueItems": True, "items": {
+                "type": "object", "additionalProperties": False, "required": ["passage_id", "quote"],
+                "properties": {"passage_id": {"type": "string"}, "quote": {"type": "string", "minLength": 1}},
+            }},
+        },
+    },
+}
 
-def item_lines(brief: Dict[str, Any]) -> List[str]:
+COVERAGE_INSTRUCTIONS_DEV = """The instruction to leave omissions unreported applies to findings.
+Return coverage_gaps as a separate advisory list. Read the chapter in order and identify
+source-supported central story events and their necessary atomic claims before comparing them
+with the entire Brief. A paraphrase or combination of items with the same meaning is sufficient.
+Skip incidental and repeated details.
+
+Report MISSING_CORE for a central event missing as an event, even when another event alludes to it.
+Report MISSING_CLAIM for each other necessary claim that is absent or materially incomplete,
+MISSING_EVIDENCE when a claim is present but its citations do not jointly support it, and
+CORE_PRIORITY for a central event present as a lower-priority event. Give the affected item ref
+where one exists. For MISSING_CORE use null. For MISSING_EVIDENCE and CORE_PRIORITY use an existing ref.
+Use REVIEW when the source or the match is ambiguous or the claim relies on inference. Check the
+neighboring passages for an omitted subject, speaker, or antecedent and cite the passages that
+establish it. Do not count a wrong actor, reversed sequence, changed cause, or stronger certainty
+as equivalent. Keep speech and thoughts attributed to the right character and uncertainty in
+both the text and epistemic label. Write one claim per row in the Brief language. Cite verbatim
+source spans under their own passage IDs. Include all jointly necessary spans, such as both sides
+of a causal or order relation, using one sufficient set when
+alternatives exist. Repeated mentions do not require duplicate findings. Return [] if no gap exists."""
+
+
+def item_lines(brief: Dict[str, Any], *, coverage_dev: bool = False) -> List[str]:
     return [f"- {i.ref} [{i.kind}, {i.epistemic}{', ' + i.importance if i.importance else ''}] "
-            f"(cites {', '.join(i.evidence)}): {i.summary}" for i in render_items(brief)]
+            f"(cites {', '.join(i.evidence)}): "
+            + (f"{i.text} [quote: {i.quote}]" if coverage_dev else i.summary) for i in render_items(brief)]
 
 
 def brief_check_errors(result: Dict[str, Any], brief: Dict[str, Any]) -> List[str]:
@@ -48,18 +87,58 @@ def brief_check_errors(result: Dict[str, Any], brief: Dict[str, Any]) -> List[st
     return errors
 
 
+def coverage_gap_errors(result: Dict[str, Any], brief: Dict[str, Any], chapter: Chapter) -> List[str]:
+    items = {item.ref: item for item in render_items(brief)}
+    source = {passage.passage_id: passage.text for passage in chapter.passages}
+    errors = []
+    for index, gap in enumerate(result["coverage_gaps"]):
+        where = f"coverage_gaps[{index}]"
+        kind, ref = gap["kind"], gap["ref"]
+        if (ref is not None and ref not in items or kind == "MISSING_CORE" and ref is not None
+                or kind in ("CORE_PRIORITY", "MISSING_EVIDENCE") and ref is None):
+            errors.append(f"{where}: invalid Brief ref for {kind}")
+        elif kind == "CORE_PRIORITY" and (items[ref].kind != "event" or items[ref].importance == "CORE"):
+            errors.append(f"{where}: CORE_PRIORITY needs a lower-priority event")
+        for evidence in gap["evidence"]:
+            passage = source.get(evidence["passage_id"])
+            quote = evidence["quote"]
+            if passage is None or not quote.strip() or not stages.quote_in_passages(quote, [passage]):
+                errors.append(f"{where}: quote must appear in its cited chapter passage")
+    return errors
+
+
 def run_brief_check(client: LLMClient, chapter: Chapter, brief: Dict[str, Any], profile: NarrativeProfile,
-                    source_language: str, log: CallLog, max_repairs: int) -> Dict[str, Any]:
-    schema = stages.load_schema("brief_check_v0")
+                    source_language: str, log: CallLog, max_repairs: int, *, coverage_dev: bool = False
+                    ) -> Dict[str, Any]:
+    """In DEV, report advisory errors in the result. CallLog records fidelity validation."""
+    response_schema = stages.load_schema("brief_check_v0")
+    prompt_schema = response_schema
+    if coverage_dev:
+        prompt_schema = {**response_schema, "required": [*response_schema["required"], "coverage_gaps"],
+                         "properties": {**response_schema["properties"], "coverage_gaps": COVERAGE_GAPS_DEV}}
+        # Accept the envelope first so an invalid advisory cannot discard the findings.
+        response_schema = {**response_schema, "properties": {**response_schema["properties"], "coverage_gaps": {}}}
     language = LANGUAGE_NAMES.get(source_language, source_language)
     system = stages.render("brief_check_system", brief_language_name=profile.brief_language_name,
-                           source_language_name=language, schema=stages.dump(schema))
-    lines = item_lines(brief)
+                           source_language_name=language, schema=stages.dump(prompt_schema))
+    lines = item_lines(brief, coverage_dev=coverage_dev)
     user = stages.render("brief_check_user", chapter_order=chapter.order, source_language_name=language,
                          source=stages.source_check_text([chapter]), item_count=len(lines), items="\n".join(lines))
-    return run_json_stage(client, stage="brief_check", system=system, user=user, schema=schema,
-                          semantic_check=lambda r: brief_check_errors(r, brief), max_repairs=max_repairs, log=log,
-                          request_suffix=f"ch{chapter.order}")
+    if coverage_dev:
+        system += "\n\n" + COVERAGE_INSTRUCTIONS_DEV
+        user += (f"\n\nBrief chapter summary: {brief['chapter_summary']}"
+                 f"\nBrief ending state: {brief['ending_state']}")
+
+    result = run_json_stage(client, stage="brief_check", system=system, user=user, schema=response_schema,
+                            semantic_check=lambda r: brief_check_errors(r, brief),
+                            max_repairs=0 if coverage_dev else max_repairs, log=log,
+                            request_suffix=f"ch{chapter.order}")
+    if coverage_dev:
+        errors = schema_errors(prompt_schema, result) or coverage_gap_errors(result, brief, chapter)
+        if errors:
+            result.pop("coverage_gaps", None)
+            result["coverage_errors"] = errors
+    return result
 
 
 def _locate(brief: Dict[str, Any], ref: str) -> Optional[Tuple[Dict[str, Any], str, List[Dict[str, Any]]]]:

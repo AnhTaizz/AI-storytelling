@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_story_pipeline_v0 import FakeModel, brief_json, test_profile  # noqa: E402  (shared fixtures)
 
 from tools.story_pipeline import brief_check  # noqa: E402
-from tools.story_pipeline.llm import CallLog, ScriptedLLMClient  # noqa: E402
+from tools.story_pipeline.llm import CallLog, ScriptedLLMClient, StageFailed  # noqa: E402
 from tools.story_pipeline.run_pipeline import DEFAULT_MANIFEST, run  # noqa: E402
 from tools.story_pipeline.source import load_scope  # noqa: E402
 
@@ -114,6 +114,78 @@ class BriefCheckTests(unittest.TestCase):
                            stop_after="plan", max_repairs=0)
             self.assertEqual(manifest["status"], "STOPPED_AFTER_PLAN")
             self.assertIn("failed", manifest["brief_check"]["1"])
+
+    def test_coverage_dev_checks_gaps_in_the_same_call_with_source_evidence(self):
+        quote = self.brief["events"][0]["quote"]
+        gap = {"kind": "MISSING_CORE", "ref": None, "claim": "Amane thấy Mahiru ngồi ở công viên",
+               "epistemic": "EXPLICIT", "evidence": [{"passage_id": "1.2", "quote": quote}]}
+        self.brief["events"].pop(0)
+        self.brief["events"][0]["importance"] = "CORE"
+        self.brief["events"][0]["motivation"].update(text="Amane thấy áy náy", status="EXPLICIT")
+        findings = [finding("c1.E2")]
+        bad_quote = "quote must appear in its cited chapter passage"
+        bad_priority = "CORE_PRIORITY needs a lower-priority event"
+        cases = (
+            ({}, None),
+            ({"claim": "   "}, "schema: at coverage_gaps/0/claim"),
+            ({"evidence": [{"passage_id": "2.2", "quote": quote}]}, bad_quote),
+            ({"evidence": [{"passage_id": "1.2", "quote": "không có"}]}, bad_quote),
+            ({"evidence": [{"passage_id": "1.2", "quote": "   "}]}, bad_quote),
+            ({"ref": "c1.E2"}, "invalid Brief ref for MISSING_CORE"),
+            ({"kind": "MISSING_EVIDENCE"}, "invalid Brief ref for MISSING_EVIDENCE"),
+            ({"kind": "CORE_PRIORITY", "ref": "c1.CH1.F1"}, bad_priority),
+            ({"kind": "CORE_PRIORITY", "ref": "c1.E2"}, bad_priority),
+            ({"kind": "REVIEW", "ref": "c1.E99"}, "invalid Brief ref for REVIEW"),
+            ({"kind": "MISSING_CLAIM", "ref": "c1.E2"}, None),
+            ({"kind": "CORE_PRIORITY", "ref": "c1.E3"}, None),
+        )
+        for changes, error in cases:
+            with self.subTest(changes=changes):
+                response = {"findings": findings, "coverage_gaps": [gap | changes]}
+                prompts = []
+
+                def respond(stage, system, user):
+                    prompts.append((stage, system, user))
+                    return json.dumps(response)
+
+                client = ScriptedLLMClient(respond)
+                args = (client, self.chapter, self.brief, test_profile(), "ja", CallLog(), 2)
+                result = brief_check.run_brief_check(*args, coverage_dev=True)
+                self.assertEqual(result["findings"], findings)
+                if error is None:
+                    self.assertEqual(result, response)
+                else:
+                    self.assertNotIn("coverage_gaps", result)
+                    self.assertEqual(len(result["coverage_errors"]), 1)
+                    self.assertIn(error, result["coverage_errors"][0])
+                self.assertEqual(len(client.calls), 1)
+                stage, system, user = prompts[0]
+                self.assertEqual(stage, "brief_check")
+                self.assertIn("leave omissions unreported applies to findings", system)
+                self.assertIn("neighboring passages", system)
+                self.assertIn("Brief ending state", user)
+                self.assertIn("[1.2]", user)
+                self.assertIn("Động cơ", user)
+
+        for coverage in ({}, {"coverage_gaps": 1}, {"coverage_gaps": []}):
+            with self.subTest(coverage=coverage):
+                client = ScriptedLLMClient(lambda *_: json.dumps({"findings": findings, **coverage}))
+                result = brief_check.run_brief_check(client, self.chapter, self.brief, test_profile(),
+                                                     "ja", CallLog(), 2, coverage_dev=True)
+                self.assertEqual(result["findings"], findings)
+                if coverage.get("coverage_gaps") == []:
+                    self.assertEqual(result, {"findings": findings, "coverage_gaps": []})
+                else:
+                    self.assertNotIn("coverage_gaps", result)
+                    self.assertIn("coverage_gaps", result["coverage_errors"][0])
+                self.assertEqual(len(client.calls), 1)
+
+        invalid = ScriptedLLMClient(lambda *_: json.dumps({"findings": [finding("c1.E99")],
+                                                          "coverage_gaps": [gap]}))
+        with self.assertRaisesRegex(StageFailed, "no such item"):
+            brief_check.run_brief_check(invalid, self.chapter, self.brief, test_profile(),
+                                        "ja", CallLog(), 2, coverage_dev=True)
+        self.assertEqual(len(invalid.calls), 1)
 
     def test_correcting_a_compound_fact_must_preserve_its_hedge(self):
         original = "Nghe nói Itsuki đã lo lắng cho Amane và gửi tin nhắn hỏi thăm cậu"
