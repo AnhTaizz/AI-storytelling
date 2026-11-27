@@ -5,6 +5,7 @@ Start with the current milestone and latest relevant entry in [Project State](do
 - Identify the requested outcome, affected modules and acceptance criteria. Check the [decision register](docs/DECISIONS.md) and [roadmap](docs/ROADMAP.md) before choosing an implementation.
 - Work on a dedicated branch from current `main`. Inspect existing code, callers and the [test catalog](tests/TEST_CATALOG.md) before adding anything. Prefer the smallest change that demonstrates the requested behavior.
 - Preserve frozen contracts, research locks and benchmark history. Take changes to architecture, scope or success criteria to the owner.
+- Reuse valid local owner attestations across sessions and agents. For approved one-shot Gemini DEV runs, follow the [DEV preflight workflow](docs/engineering/AGENT_WORKFLOW.md#gemini-dev-preflight) and check provider and execution requirements separately.
 - Run `python -m tools.ci.check` and `python -m tools.ci.check --coverage --base origin/main` before committing. Report failures, gated checks and uncertainty with the observed evidence.
 - Push the feature branch and open a PR against `main`. Leave approval and merge to the owner.
 
