@@ -54,6 +54,10 @@ test imports, a stale catalog, and environment gates that break the gate rules.
 - Never push to `main` or force-push; work on a branch and open a pull request.
 - Never merge a pull request unless the project owner explicitly asks.
 
+## Owner attestations for Gemini DEV
+
+Reuse the scoped record in the [DEV preflight workflow](docs/engineering/AGENT_WORKFLOW.md#gemini-dev-preflight) across sessions. Update it when the facts it covers change or conflict with other information. The record covers project declarations. Check provider terms, execution policy and approval for the specific run independently.
+
 ## Project map
 
 - `docs/PROJECT_STATE.md` — current status; `docs/ROADMAP.md`; `docs/DECISIONS.md`.

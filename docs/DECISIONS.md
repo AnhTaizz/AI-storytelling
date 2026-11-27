@@ -1164,3 +1164,11 @@ semantic review remains pending. GPT-OSS 120B is the preferred Phase 7C experime
 model. The owner requested a separate C0/C4 comparison and a separately approved
 Source Check S0/S1 cache measurement. Each live plan requires its own approval.
 [Pilot results](engineering/BRIEF_REPAIR_V2_PILOT_RESULTS_20261126.md).
+
+## DEC-046 — Reuse owner declarations for one-shot Gemini DEV preflight
+
+STATUS: OWNER AUTHORIZED (2026-11-27), pending review of the implementation.
+
+Record scoped, dated project declarations locally and reuse them while applicable. For an approved one-shot DEV run, select a single eligible Free Tier credential using the existing model, billing and cost controls. Pin model, payload hashes and dispatch budget. Require no probe request or key rotation. Distinguish local evidence and configuration from provider responses and execution restrictions.
+
+This decision authorizes the governance additions in `AGENTS.md`, `CLAUDE.md` and the [shared workflow](engineering/AGENT_WORKFLOW.md#gemini-dev-preflight). It preserves run-specific approvals and plan amendments with parent hashes. The production router, protected research artifacts, official benchmark gates, M9 and the sealed holdout stay under their existing rules.

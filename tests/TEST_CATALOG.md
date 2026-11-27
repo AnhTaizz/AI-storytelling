@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 13 — test files: 149 — test functions: 1517
+Suites: 13 — test files: 150 — test functions: 1524
 
 ## canonical_story
 
@@ -231,6 +231,17 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.cost_policy`, `
 - `CostTests.test_closed_configuration`
 - `CostTests.test_eligible_slots_and_all_missing_models`
 - `CostTests.test_override_only_narrows_reviewed_models`
+
+### test_dev_gemini_preflight (7)
+Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.dev_gemini_preflight`, `tools.llm_infra.quota_state`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.gemini_key_pool_v1`, `tools.story_ingestion.light_novel_adapter_v0`
+
+- `DevGeminiPreflightTests.test_cli_redacts_settings_and_reports_offline_only`
+- `DevGeminiPreflightTests.test_binds_model_budget_and_locked_payload`
+- `DevGeminiPreflightTests.test_attestation_reuses_valid_record_and_blocks_changes`
+- `DevGeminiPreflightTests.test_honors_billing_and_free_model_exclusions`
+- `DevGeminiPreflightTests.test_known_quota_block_does_not_switch_slots`
+- `DevGeminiPreflightTests.test_duplicate_with_conflicting_project_billing_excludes_the_billed_project`
+- `DevGeminiPreflightTests.test_duplicate_with_conflicting_project_labels_blocks_selection`
 
 ### test_gemini_config (1)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.gemini_config`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.gemini_key_pool_v1`, `tools.story_ingestion.light_novel_adapter_v0`
