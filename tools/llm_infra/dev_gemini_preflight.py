@@ -104,10 +104,18 @@ def preflight(request_lock, expected_hash, model, dispatch_budget, output_cap, *
         settings.setdefault("GEMINI_KEYS_FREE_TIER_CONFIRMED", "true")
         config = inspect_settings(settings, model=model)
         config.policy.check_models((model,))
-        # The loader keeps the first copy of a key. Honor billing exclusions on its other copies.
-        excluded = {value.strip() for name, value in settings.items() if (match := _KEY_PATTERN.fullmatch(name))
-                    and settings.get(f"GEMINI_PROJECT_BILLING_{int(match[1])}", "").strip()
-                    not in ("", "FREE_TIER_CONFIRMED")}
+        # Deduplication keeps the first copy of a key. Preserve billing exclusions from every declaration.
+        declarations = []
+        for name, value in settings.items():
+            match = _KEY_PATTERN.fullmatch(name)
+            if match and value.strip():
+                number = int(match[1])
+                declarations.append((value.strip(), settings.get(f"GEMINI_PROJECT_LABEL_{number}", "").strip(),
+                                     settings.get(f"GEMINI_PROJECT_BILLING_{number}", "").strip()))
+        denied = [(key, label) for key, label, billing in declarations if billing not in ("", "FREE_TIER_CONFIRMED")]
+        denied_projects = {label for _, label in denied if label}
+        excluded = {key for key, _ in denied}
+        excluded.update(key for key, label, _ in declarations if label in denied_projects)
         credential = next((slot for slot in config.credentials if slot._api_key not in excluded
                            and config.policy.billing[slot.slot_id] == "FREE_TIER_CONFIRMED"), None)
         if credential is None:

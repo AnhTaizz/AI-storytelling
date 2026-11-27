@@ -124,3 +124,21 @@ class DevGeminiPreflightTests(unittest.TestCase):
         report = self.report()
         self.assertEqual(report["status"], "BLOCKED_LOCAL_QUOTA")
         self.assertNotIn("selected_slot", report)
+
+    def test_duplicate_with_conflicting_project_billing_excludes_the_billed_project(self):
+        declarations = (
+            "GEMINI_PROJECT_LABEL_1=declared-free\n"
+            "GEMINI_PROJECT_BILLING_1=FREE_TIER_CONFIRMED\n"
+            "GEMINI_PROJECT_LABEL_2=billed-project\n"
+            "GEMINI_PROJECT_BILLING_2=BILLING_ENABLED\n"
+            "GEMINI_PROJECT_LABEL_3=billed-project\n"
+        )
+        for backup in (False, True):
+            with self.subTest(backup=backup):
+                self.write_config(declarations + ("GEMINI_API_KEY_4=fake-slot-safe\n" if backup else ""))
+                report = self.report()
+                if backup:
+                    self.assertEqual(report["selected_slot"], "gemini_slot_4")
+                else:
+                    self.assertEqual(report["status"], "BLOCKED_CREDENTIAL_OR_CONFIG")
+                    self.assertEqual(report["reason"], "NO_ELIGIBLE_KEY")
