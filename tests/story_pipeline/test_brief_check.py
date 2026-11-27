@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_story_pipeline_v0 import FakeModel, brief_json, test_profile  # noqa: E402  (shared fixtures)
 
 from tools.story_pipeline import brief_check  # noqa: E402
-from tools.story_pipeline.llm import CallLog, ScriptedLLMClient  # noqa: E402
+from tools.story_pipeline.llm import CallLog, ScriptedLLMClient, StageFailed  # noqa: E402
 from tools.story_pipeline.run_pipeline import DEFAULT_MANIFEST, run  # noqa: E402
 from tools.story_pipeline.source import load_scope  # noqa: E402
 
@@ -114,6 +114,41 @@ class BriefCheckTests(unittest.TestCase):
                            stop_after="plan", max_repairs=0)
             self.assertEqual(manifest["status"], "STOPPED_AFTER_PLAN")
             self.assertIn("failed", manifest["brief_check"]["1"])
+
+    def test_coverage_dev_checks_gaps_in_the_same_call_with_source_evidence(self):
+        quote = self.brief["events"][0]["quote"]
+        gap = {"kind": "MISSING_CORE", "ref": None, "claim": "Amane thấy Mahiru ngồi ở công viên",
+               "epistemic": "EXPLICIT", "evidence": [{"passage_id": "1.2", "quote": quote}]}
+        self.brief["events"].pop(0)
+        self.brief["events"][0]["motivation"].update(text="Amane thấy áy náy", status="EXPLICIT")
+        for changes, valid in (({}, True), ({"evidence": [{"passage_id": "2.2", "quote": quote}]}, False),
+                               ({"evidence": [{"passage_id": "1.2", "quote": "không có"}]}, False),
+                               ({"ref": "c1.E2"}, False), ({"kind": "MISSING_EVIDENCE"}, False),
+                               ({"kind": "CORE_PRIORITY", "ref": "c1.CH1.F1"}, False),
+                               ({"kind": "MISSING_CLAIM", "ref": "c1.E2"}, True),
+                               ({"kind": "CORE_PRIORITY", "ref": "c1.E3"}, True)):
+            with self.subTest(changes=changes):
+                response = {"findings": [], "coverage_gaps": [gap | changes]}
+                prompts = []
+
+                def respond(stage, system, user):
+                    prompts.append((stage, system, user))
+                    return json.dumps(response)
+
+                client = ScriptedLLMClient(respond)
+                args = (client, self.chapter, self.brief, test_profile(), "ja", CallLog(), 2)
+                if valid:
+                    self.assertEqual(brief_check.run_brief_check(*args, coverage_dev=True), response)
+                else:
+                    with self.assertRaises(StageFailed):
+                        brief_check.run_brief_check(*args, coverage_dev=True)
+                self.assertEqual(len(client.calls), 1)
+                stage, system, user = prompts[0]
+                self.assertEqual(stage, "brief_check")
+                self.assertIn("reversed sequence", system)
+                self.assertIn("Brief ending state", user)
+                self.assertIn("[1.2]", user)
+                self.assertIn("Động cơ", user)
 
     def test_correcting_a_compound_fact_must_preserve_its_hedge(self):
         original = "Nghe nói Itsuki đã lo lắng cho Amane và gửi tin nhắn hỏi thăm cậu"
