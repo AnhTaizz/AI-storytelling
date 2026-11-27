@@ -102,16 +102,21 @@ def preflight(request_lock, expected_hash, model, dispatch_budget, output_cap, *
             return {**report, "status": "BLOCKED_OWNER_ATTESTATION", "reason": "POOL_CHANGED"}
 
         settings.setdefault("GEMINI_KEYS_FREE_TIER_CONFIRMED", "true")
-        config = inspect_settings(settings, model=model)
-        config.policy.check_models((model,))
-        # Deduplication keeps the first copy of a key. Preserve billing exclusions from every declaration.
+        # Deduplication keeps the first copy. Check project and billing declarations before that happens.
         declarations = []
+        project_by_key = {}
         for name, value in settings.items():
             match = _KEY_PATTERN.fullmatch(name)
-            if match and value.strip():
-                number = int(match[1])
-                declarations.append((value.strip(), settings.get(f"GEMINI_PROJECT_LABEL_{number}", "").strip(),
-                                     settings.get(f"GEMINI_PROJECT_BILLING_{number}", "").strip()))
+            key = value.strip()
+            if not match or not key:
+                continue
+            number = int(match[1])
+            label = settings.get(f"GEMINI_PROJECT_LABEL_{number}", "").strip()
+            if label and project_by_key.setdefault(key, label) != label:
+                return {**report, "status": "BLOCKED_CREDENTIAL_OR_CONFIG", "reason": "CONFLICTING_PROJECT_LABELS"}
+            declarations.append((key, label, settings.get(f"GEMINI_PROJECT_BILLING_{number}", "").strip()))
+        config = inspect_settings(settings, model=model)
+        config.policy.check_models((model,))
         denied = [(key, label) for key, label, billing in declarations if billing not in ("", "FREE_TIER_CONFIRMED")]
         denied_projects = {label for _, label in denied if label}
         excluded = {key for key, _ in denied}

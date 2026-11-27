@@ -12,6 +12,7 @@ Item refs follow the retrieval scheme (c3.E2, c3.CH1.F2, c3.R1).
 from __future__ import annotations
 
 import copy
+from collections import Counter
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from tools.story_pipeline import stages
@@ -90,13 +91,13 @@ def apply_corrections(brief: Dict[str, Any], findings: Sequence[Dict[str, Any]],
                       ) -> Tuple[Dict[str, Any], List[Dict[str, Any]], List[Dict[str, Any]]]:
     """Apply each correction that keeps the brief valid; returns (brief, applied, rejected).
 
-    A correction is kept only if the corrected brief has no more brief-check errors than
-    before it. A CORE event is never removed; removals happen last, so refs stay valid."""
+    A text or label correction is kept only if it introduces no new brief-check finding.
+    A CORE event is never removed. Removals happen last so refs stay valid."""
     fixed = copy.deepcopy(brief)
     applied: List[Dict[str, Any]] = []
     rejected: List[Dict[str, Any]] = []
     removals = []
-    baseline = len(_errors(fixed, chapter, source_language, brief_language))
+    baseline = Counter(_errors(fixed, chapter, source_language, brief_language))
     for finding in findings:
         located = _locate(fixed, finding["ref"])
         if located is None:
@@ -114,12 +115,12 @@ def apply_corrections(brief: Dict[str, Any], findings: Sequence[Dict[str, Any]],
             item[field] = finding["corrected_text"]
         if finding["corrected_label"]:
             item["epistemic"] = finding["corrected_label"]
-        now = len(_errors(fixed, chapter, source_language, brief_language))
-        if now > baseline:
+        current = Counter(_errors(fixed, chapter, source_language, brief_language))
+        if current - baseline:
             item[field], item["epistemic"] = before
             rejected.append({**finding, "reason": "the corrected item fails the brief checks"})
             continue
-        baseline = now
+        baseline = current
         applied.append({**finding, "before": before[0], "before_label": before[1]})
     for finding, item, container in removals:
         container.remove(item)

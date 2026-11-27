@@ -127,7 +127,6 @@ class DevGeminiPreflightTests(unittest.TestCase):
 
     def test_duplicate_with_conflicting_project_billing_excludes_the_billed_project(self):
         declarations = (
-            "GEMINI_PROJECT_LABEL_1=declared-free\n"
             "GEMINI_PROJECT_BILLING_1=FREE_TIER_CONFIRMED\n"
             "GEMINI_PROJECT_LABEL_2=billed-project\n"
             "GEMINI_PROJECT_BILLING_2=BILLING_ENABLED\n"
@@ -142,3 +141,15 @@ class DevGeminiPreflightTests(unittest.TestCase):
                 else:
                     self.assertEqual(report["status"], "BLOCKED_CREDENTIAL_OR_CONFIG")
                     self.assertEqual(report["reason"], "NO_ELIGIBLE_KEY")
+
+    def test_duplicate_with_conflicting_project_labels_blocks_selection(self):
+        declarations = ("GEMINI_PROJECT_LABEL_1=declared-free\n"
+                        "GEMINI_PROJECT_LABEL_2=another-project\n"
+                        "GEMINI_API_KEY_4=fake-slot-safe\n")
+        for billing in ("FREE_TIER_CONFIRMED", "BILLING_ENABLED"):
+            with self.subTest(billing=billing):
+                self.write_config(declarations + f"GEMINI_PROJECT_BILLING_2={billing}\n")
+                report = self.report()
+                self.assertEqual(report["status"], "BLOCKED_CREDENTIAL_OR_CONFIG")
+                self.assertEqual(report["reason"], "CONFLICTING_PROJECT_LABELS")
+                self.assertNotIn("selected_slot", report)

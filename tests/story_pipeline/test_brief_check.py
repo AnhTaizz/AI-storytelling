@@ -115,6 +115,22 @@ class BriefCheckTests(unittest.TestCase):
             self.assertEqual(manifest["status"], "STOPPED_AFTER_PLAN")
             self.assertIn("failed", manifest["brief_check"]["1"])
 
+    def test_correcting_a_compound_fact_must_preserve_its_hedge(self):
+        original = "Nghe nói Itsuki đã lo lắng cho Amane và gửi tin nhắn hỏi thăm cậu"
+        fact = self.brief["characters"][0]["facts"][0]
+        fact.update(text=original, epistemic="REPORTED")
+        for text, accepted in (("Itsuki đã lo lắng cho Amane", False),
+                               ("Nghe nói Itsuki đã lo lắng cho Amane", True)):
+            with self.subTest(text=text):
+                proposal = finding("c1.CH1.F1", text=text)
+                fixed, applied, rejected = brief_check.apply_corrections(
+                    self.brief, [proposal], self.chapter, "ja", "vi"
+                )
+                fixed_fact = fixed["characters"][0]["facts"][0]
+                self.assertEqual(fixed_fact, {**fact, "text": text if accepted else original})
+                self.assertEqual([item["ref"] for item in applied], [proposal["ref"]] if accepted else [])
+                self.assertEqual([item["ref"] for item in rejected], [] if accepted else [proposal["ref"]])
+
 
 if __name__ == "__main__":
     unittest.main()

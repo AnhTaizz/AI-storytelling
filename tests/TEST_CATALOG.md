@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 13 — test files: 150 — test functions: 1521
+Suites: 13 — test files: 150 — test functions: 1523
 
 ## canonical_story
 
@@ -232,7 +232,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.cost_policy`, `
 - `CostTests.test_eligible_slots_and_all_missing_models`
 - `CostTests.test_override_only_narrows_reviewed_models`
 
-### test_dev_gemini_preflight (6)
+### test_dev_gemini_preflight (7)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.dev_gemini_preflight`, `tools.llm_infra.quota_state`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.gemini_key_pool_v1`, `tools.story_ingestion.light_novel_adapter_v0`
 
 - `DevGeminiPreflightTests.test_cli_redacts_settings_and_reports_offline_only`
@@ -241,6 +241,7 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.dev_gemini_pref
 - `DevGeminiPreflightTests.test_honors_billing_and_free_model_exclusions`
 - `DevGeminiPreflightTests.test_known_quota_block_does_not_switch_slots`
 - `DevGeminiPreflightTests.test_duplicate_with_conflicting_project_billing_excludes_the_billed_project`
+- `DevGeminiPreflightTests.test_duplicate_with_conflicting_project_labels_blocks_selection`
 
 ### test_gemini_config (1)
 Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.gemini_config`, `tools.story_extraction.extraction_contract_v0`, `tools.story_extraction.gemini_key_pool_v1`, `tools.story_ingestion.light_novel_adapter_v0`
@@ -1947,13 +1948,14 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extracti
 
 ## story_pipeline
 
-### test_brief_check (4)
+### test_brief_check (5)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.brief_check`, `tools.story_pipeline.llm`, `tools.story_pipeline.run_pipeline`, `tools.story_pipeline.source`
 
 - `BriefCheckTests.test_items_are_listed_with_refs_labels_and_evidence`
 - `BriefCheckTests.test_answers_are_validated`
 - `BriefCheckTests.test_corrections_apply_only_when_the_brief_stays_valid`
 - `BriefCheckTests.test_the_stage_and_its_place_in_the_pipeline`
+- `BriefCheckTests.test_correcting_a_compound_fact_must_preserve_its_hedge`
 
 ### test_episode_brief (4)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.episode_brief`
