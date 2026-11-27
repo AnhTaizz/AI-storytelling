@@ -22,3 +22,44 @@ Agents may choose implementation details, extend relevant tests, update in-scope
 Get an explicit owner decision before changing accepted architecture, milestones, success criteria, locked protocols or existing protected files. For an authorized protected edit, the owner decision must be recorded in the [register](../DECISIONS.md) and cover the proposed change. A passing guard cannot establish consent. Append new versioned artifacts only within approved scope. Preserve earlier results, sealed data boundaries and baseline history. Keep local corpus, generated private results and credentials out of commits and PR evidence.
 
 Repository settings, exceptions to established policy and merge are owner actions unless explicitly delegated for the specific task. Recommend an alternative or record an open question when a decision is pending. Continue independent work inside scope.
+
+### Gemini DEV preflight
+
+This workflow applies to owner-approved, one-shot Gemini DEV request sets. The run approval identifies the plan, the request lock, the model, and the dispatch and output budgets. Reuse standing declarations as input to preflight. Keep the approval for each run separate. For official benchmarks, M9 and sealed holdouts, use their own protocols.
+
+Record project declarations in the git-ignored `.local/gemini-dev-owner-attestation.json` alongside the workspace's `.env` directory. Use only the following fields. The example uses fictional declarations.
+
+```json
+{
+  "scope": "ai-storytelling:gemini-dev",
+  "source": "owner_project_chat",
+  "confirmed_on": "2025-06-01",
+  "pool_revision": "1",
+  "credential_access": "active",
+  "free_tier": "active",
+  "operator_eligibility": "unverified"
+}
+```
+
+Use `owner_project_chat` or `owner_project_review` for the source category and the actual owner confirmation date. Set a claim to `active` when it is applicable and undisputed, `unverified` when its applicability is unresolved, or `revoked` when withdrawn. `operator_eligibility` records only the status of an internal declaration for the current operator. Keep API keys, personal documents, dates of birth and chat transcripts out of the record. Keep it out of commits and PRs.
+
+Reuse an active record across sessions, agent handoffs and worktrees using the same project config. Review the affected declaration when usage rights, billing, credentials, the operator or relevant conditions change, or when evidence conflicts. The pool revision defaults to `1`. When editing the credential inventory or billing in `.env`, increment `GEMINI_DEV_POOL_REVISION` there and update the local record once the changed pool is covered. This revision is maintained with the configuration. The preflight also detects process overrides that would change the credential or billing inputs. It never saves a key or a credential fingerprint.
+
+```powershell
+python -m tools.llm_infra.dev_gemini_preflight <requests.lock.json> --requests-sha256 <approved-sha256> --model <approved-model> --dispatch-budget <approved-budget> --output-cap <approved-cap> --dotenv <workspace-dotenv>
+```
+
+Use the values from the owner-approved plan. The command verifies the lock and each payload, applies the existing zero-spend and free-model checks, and selects the lowest-numbered eligible credential from the deduplicated pool. It reports only the slot name. It checks known local quota blocks for that choice and stops if blocked. Provider headroom remains unknown unless independently established. Request dashboard, project ID or manual slot details only when required by the approved plan or to resolve a material discrepancy. Preflight sends zero requests.
+
+| Finding | Meaning |
+| --- | --- |
+| `BLOCKED_OWNER_ATTESTATION` | The internal record is missing, invalid, inactive or stale for the current pool. Reuse the claims that still apply. |
+| `BLOCKED_CREDENTIAL_OR_CONFIG` | A local credential, billing, endpoint, model or cost configuration prevented selection. Fix the relevant configuration. |
+| `BLOCKED_PLAN` | The approved hash, request package or one-shot budget failed validation. Use the approved artifacts. |
+| `BLOCKED_LOCAL_QUOTA` | The selected credential's scope has a known cooldown. Close or defer the run per its plan. |
+| Provider rejection | A dispatched request received an actual provider refusal. Record the sanitized category and stop the run on access, billing, quota or terms rejection. |
+| Execution environment restriction | The agent environment or provider's applicable usage terms prevent dispatch. Record this separately from local declarations and configuration. |
+
+`PASSED_OFFLINE` describes only project checks. The report always marks provider contact and environment verification separately. An authorized live runner must independently satisfy provider terms and execution policy, including any stricter plan requirement. Pin the selected credential for the entire run. Reserve each scene once before its physical dispatch, count all attempts, and stop on transport failure or provider refusal. Record remaining scenes as not dispatched according to the plan. Sending a smoke request, retrying, invoking LLM repair, switching credentials and falling back are outside the one-shot budget. Lock predictions before giving a scorer access to gold.
+
+When an approved internal preflight changes for a locked run, add a revision record with the parent lock hash and the changed rule. Keep the original lock, request payloads, scorer, criteria and denominators. Carry forward all unchanged conditions. An offline preflight result cannot supersede an approved plan or clear a provider or environment restriction.
