@@ -16,7 +16,7 @@ from collections import Counter
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from tools.story_pipeline import stages
-from tools.story_pipeline.llm import CallLog, LLMClient, run_json_stage
+from tools.story_pipeline.llm import CallLog, LLMClient, run_json_stage, schema_errors
 from tools.story_pipeline.profile import LANGUAGE_NAMES, NarrativeProfile
 from tools.story_pipeline.source import Chapter
 from tools.story_retrieval.brief_retrieval_v1 import render_items
@@ -33,7 +33,7 @@ COVERAGE_GAPS_DEV = {
         "properties": {
             "kind": {"enum": ["MISSING_CORE", "MISSING_CLAIM", "MISSING_EVIDENCE", "CORE_PRIORITY", "REVIEW"]},
             "ref": {"type": ["string", "null"]},
-            "claim": {"type": "string", "minLength": 1},
+            "claim": {"type": "string", "pattern": r"\S"},
             "epistemic": {"enum": list(stages.EPISTEMIC_LABELS)},
             "evidence": {"type": "array", "minItems": 1, "uniqueItems": True, "items": {
                 "type": "object", "additionalProperties": False, "required": ["passage_id", "quote"],
@@ -43,21 +43,24 @@ COVERAGE_GAPS_DEV = {
     },
 }
 
-COVERAGE_INSTRUCTIONS_DEV = """Also return coverage_gaps as a separate advisory list. Keep findings for
-problems in existing items. Read the chapter in order and identify source-supported central story
-events and their necessary atomic claims before comparing them with the entire Brief. A paraphrase
-or combination of items with the same meaning is sufficient. Skip incidental and repeated details.
+COVERAGE_INSTRUCTIONS_DEV = """The instruction to leave omissions unreported applies to findings.
+Return coverage_gaps as a separate advisory list. Read the chapter in order and identify
+source-supported central story events and their necessary atomic claims before comparing them
+with the entire Brief. A paraphrase or combination of items with the same meaning is sufficient.
+Skip incidental and repeated details.
 
 Report MISSING_CORE for a central event missing as an event, even when another event alludes to it.
 Report MISSING_CLAIM for each other necessary claim that is absent or materially incomplete,
 MISSING_EVIDENCE when a claim is present but its citations do not jointly support it, and
 CORE_PRIORITY for a central event present as a lower-priority event. Give the affected item ref
 where one exists. For MISSING_CORE use null. For MISSING_EVIDENCE and CORE_PRIORITY use an existing ref.
-If the source or the match is ambiguous, use REVIEW. Do not count a wrong actor, reversed sequence,
-changed cause, or stronger certainty as equivalent. Keep speech and thoughts attributed to the
-right character and uncertainty in both the text and epistemic label. Write one claim per row in
-the Brief language. Cite verbatim source spans under their own passage IDs. Include all jointly
-necessary spans, such as both sides of a causal or order relation, using one sufficient set when
+Use REVIEW when the source or the match is ambiguous or the claim relies on inference. Check the
+neighboring passages for an omitted subject, speaker, or antecedent and cite the passages that
+establish it. Do not count a wrong actor, reversed sequence, changed cause, or stronger certainty
+as equivalent. Keep speech and thoughts attributed to the right character and uncertainty in
+both the text and epistemic label. Write one claim per row in the Brief language. Cite verbatim
+source spans under their own passage IDs. Include all jointly necessary spans, such as both sides
+of a causal or order relation, using one sufficient set when
 alternatives exist. Repeated mentions do not require duplicate findings. Return [] if no gap exists."""
 
 
@@ -107,13 +110,17 @@ def coverage_gap_errors(result: Dict[str, Any], brief: Dict[str, Any], chapter: 
 def run_brief_check(client: LLMClient, chapter: Chapter, brief: Dict[str, Any], profile: NarrativeProfile,
                     source_language: str, log: CallLog, max_repairs: int, *, coverage_dev: bool = False
                     ) -> Dict[str, Any]:
-    schema = stages.load_schema("brief_check_v0")
+    """In DEV, report advisory errors in the result. CallLog records fidelity validation."""
+    response_schema = stages.load_schema("brief_check_v0")
+    prompt_schema = response_schema
     if coverage_dev:
-        schema = {**schema, "required": [*schema["required"], "coverage_gaps"],
-                  "properties": {**schema["properties"], "coverage_gaps": COVERAGE_GAPS_DEV}}
+        prompt_schema = {**response_schema, "required": [*response_schema["required"], "coverage_gaps"],
+                         "properties": {**response_schema["properties"], "coverage_gaps": COVERAGE_GAPS_DEV}}
+        # Accept the envelope first so an invalid advisory cannot discard the findings.
+        response_schema = {**response_schema, "properties": {**response_schema["properties"], "coverage_gaps": {}}}
     language = LANGUAGE_NAMES.get(source_language, source_language)
     system = stages.render("brief_check_system", brief_language_name=profile.brief_language_name,
-                           source_language_name=language, schema=stages.dump(schema))
+                           source_language_name=language, schema=stages.dump(prompt_schema))
     lines = item_lines(brief, coverage_dev=coverage_dev)
     user = stages.render("brief_check_user", chapter_order=chapter.order, source_language_name=language,
                          source=stages.source_check_text([chapter]), item_count=len(lines), items="\n".join(lines))
@@ -122,13 +129,16 @@ def run_brief_check(client: LLMClient, chapter: Chapter, brief: Dict[str, Any], 
         user += (f"\n\nBrief chapter summary: {brief['chapter_summary']}"
                  f"\nBrief ending state: {brief['ending_state']}")
 
-    def semantic_errors(result):
-        errors = brief_check_errors(result, brief)
-        return errors + coverage_gap_errors(result, brief, chapter) if coverage_dev else errors
-
-    return run_json_stage(client, stage="brief_check", system=system, user=user, schema=schema,
-                          semantic_check=semantic_errors, max_repairs=0 if coverage_dev else max_repairs, log=log,
-                          request_suffix=f"ch{chapter.order}")
+    result = run_json_stage(client, stage="brief_check", system=system, user=user, schema=response_schema,
+                            semantic_check=lambda r: brief_check_errors(r, brief),
+                            max_repairs=0 if coverage_dev else max_repairs, log=log,
+                            request_suffix=f"ch{chapter.order}")
+    if coverage_dev:
+        errors = schema_errors(prompt_schema, result) or coverage_gap_errors(result, brief, chapter)
+        if errors:
+            result.pop("coverage_gaps", None)
+            result["coverage_errors"] = errors
+    return result
 
 
 def _locate(brief: Dict[str, Any], ref: str) -> Optional[Tuple[Dict[str, Any], str, List[Dict[str, Any]]]]:
