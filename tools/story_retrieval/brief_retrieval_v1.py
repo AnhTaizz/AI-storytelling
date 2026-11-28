@@ -29,7 +29,7 @@ from typing import AbstractSet, Any, Dict, Iterable, List, Mapping, Optional, Se
 from tools.story_benchmark.bm25_lexical_v1 import BM25LexicalV1
 from tools.story_pipeline.source import Passage
 from tools.story_retrieval.cjk_lexical_v1 import CjkBm25V1
-from tools.story_retrieval.retrieval_v0 import natural_key, passage_chapter
+from tools.story_retrieval.retrieval_v0 import StoryCorpus, natural_key, passage_chapter
 
 RENDERER = "brief_render_v1"
 KINDS = ("event", "fact", "relationship")
@@ -206,6 +206,62 @@ def _ref_key(ref: str) -> Tuple:
     return tuple(int(part) if part.isdigit() else part for part in re.findall(r"\d+|\D+", ref))
 
 
+class BriefHybridRetrieverV1:
+    """Equal-weight RRF over lexical and dense retrieval on rendered brief items.
+
+    When a cross-lingual query yields no lexical matches on the brief language, the dense
+    component supplies the ranking cleanly without changing the `retrieve_briefs` contract.
+    """
+
+    version = "1"
+
+    def __init__(self, language: str, dense_retriever: Any, *, k_rrf: int = 60):
+        if k_rrf < 1:
+            raise ValueError("k_rrf must be >= 1")
+        self.language = language
+        self.lexical = BriefLexicalRetrieverV1(language)
+        self.dense = dense_retriever
+        self.k_rrf = k_rrf
+        self.name = f"brief_hybrid_rrf_v1({self.lexical.name}+{dense_retriever.name})"
+
+    def index(self, passages: Sequence[Passage]) -> None:
+        self.lexical.index(passages)
+        self.dense.index(passages)
+
+    def search(self, query: str, allowed_ids: AbstractSet[str], k: int) -> List[Tuple[str, float]]:
+        depth = max(k, 30)
+        scores: Dict[str, float] = {}
+        for component in (self.lexical, self.dense):
+            for rank, (ref, score) in enumerate(component.search(query, allowed_ids, depth), start=1):
+                if ref in allowed_ids and score > 0:
+                    scores[ref] = scores.get(ref, 0.0) + 1.0 / (self.k_rrf + rank)
+        return sorted(scores.items(), key=lambda x: (-x[1], _ref_key(x[0])))[:k]
+
+
+def rrf_fuse_passages(rankings: Sequence[Sequence[str]], *, k_rrf: int = 60,
+                      budget: Optional[int] = None) -> List[str]:
+    """Deterministic equal-weight Reciprocal Rank Fusion over passage-ID rankings."""
+    if k_rrf < 1:
+        raise ValueError("k_rrf must be >= 1")
+    if budget is not None and budget < 0:
+        raise ValueError("budget must be >= 0")
+    scores: Dict[str, float] = {}
+    best_rank: Dict[str, int] = {}
+    for ranking in rankings:
+        seen: set[str] = set()
+        rank = 0
+        for pid in ranking:
+            if pid in seen:
+                continue
+            seen.add(pid)
+            rank += 1
+            scores[pid] = scores.get(pid, 0.0) + 1.0 / (k_rrf + rank)
+            if pid not in best_rank or rank < best_rank[pid]:
+                best_rank[pid] = rank
+    ordered = [pid for pid, _ in sorted(scores.items(), key=lambda x: (-x[1], best_rank[x[0]], natural_key(x[0])))]
+    return ordered[:budget] if budget is not None else ordered
+
+
 # --------------------------------------------------------------------------- requests
 
 def expand_evidence(item: BriefItem, corpus: BriefCorpus) -> Tuple[Tuple[str, str], ...]:
@@ -237,7 +293,16 @@ def retrieve_briefs(query: str, corpus: BriefCorpus, *, cutoff_chapter: Optional
     retriever = retriever or BriefLexicalRetrieverV1(corpus.language)
     by_ref = {item.ref: item for item in corpus.items}
     allowed = {i.ref for i in corpus.items if i.kind in kinds and start <= i.chapter <= end}
-    retriever.index([Passage(i.ref, i.text) for i in corpus.items])
+    item_passages = [Passage(i.ref, i.text) for i in corpus.items]
+    try:
+        scoped_items: Sequence[Passage] = StoryCorpus(
+            item_passages,
+            story_id=f"{corpus.story_id}__brief_{corpus.language}",
+            source_language=corpus.language,
+        )
+    except ValueError:
+        scoped_items = item_passages
+    retriever.index(scoped_items)
     ranked = [(ref, score) for ref, score in retriever.search(query, allowed, k) if ref in allowed and score > 0]
     ranked = sorted(ranked, key=lambda x: (-x[1], _ref_key(x[0])))[:k]
     hits = [BriefHit(by_ref[ref], score, rank, retriever.name, expand_evidence(by_ref[ref], corpus))
