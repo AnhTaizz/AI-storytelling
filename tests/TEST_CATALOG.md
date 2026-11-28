@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 13 — test files: 150 — test functions: 1524
+Suites: 13 — test files: 151 — test functions: 1527
 
 ## canonical_story
 
@@ -2107,6 +2107,13 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.check_config`, 
 - `GeminiClientTests.test_model_fallback_chain`
 
 ## story_retrieval
+
+### test_adaptive_evidence_v1 (3)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.source`, `tools.story_retrieval.adaptive_evidence_v1`, `tools.story_retrieval.retrieval_v0`
+
+- `AdaptiveSelectionTests.test_complementary_selection_recovers_non_brief_source_and_packs_knapsack_budget`
+- `AdaptiveSelectionTests.test_cross_lingual_japanese_source_uses_single_shared_query_encode`
+- `AdaptiveSelectionTests.test_adversarial_narrative_scenarios_and_abstention`
 
 ### test_brief_retrieval_v1 (9)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.source`, `tools.story_retrieval.brief_retrieval_v1`, `tools.story_retrieval.evaluate_brief_v1`

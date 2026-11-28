@@ -29,7 +29,7 @@ from typing import AbstractSet, Any, Dict, Iterable, List, Mapping, Optional, Se
 from tools.story_benchmark.bm25_lexical_v1 import BM25LexicalV1
 from tools.story_pipeline.source import Passage
 from tools.story_retrieval.cjk_lexical_v1 import CjkBm25V1
-from tools.story_retrieval.retrieval_v0 import natural_key, passage_chapter
+from tools.story_retrieval.retrieval_v0 import StoryCorpus, natural_key, passage_chapter
 
 RENDERER = "brief_render_v1"
 KINDS = ("event", "fact", "relationship")
@@ -293,7 +293,16 @@ def retrieve_briefs(query: str, corpus: BriefCorpus, *, cutoff_chapter: Optional
     retriever = retriever or BriefLexicalRetrieverV1(corpus.language)
     by_ref = {item.ref: item for item in corpus.items}
     allowed = {i.ref for i in corpus.items if i.kind in kinds and start <= i.chapter <= end}
-    retriever.index([Passage(i.ref, i.text) for i in corpus.items])
+    item_passages = [Passage(i.ref, i.text) for i in corpus.items]
+    try:
+        scoped_items: Sequence[Passage] = StoryCorpus(
+            item_passages,
+            story_id=f"{corpus.story_id}__brief_{corpus.language}",
+            source_language=corpus.language,
+        )
+    except ValueError:
+        scoped_items = item_passages
+    retriever.index(scoped_items)
     ranked = [(ref, score) for ref, score in retriever.search(query, allowed, k) if ref in allowed and score > 0]
     ranked = sorted(ranked, key=lambda x: (-x[1], _ref_key(x[0])))[:k]
     hits = [BriefHit(by_ref[ref], score, rank, retriever.name, expand_evidence(by_ref[ref], corpus))

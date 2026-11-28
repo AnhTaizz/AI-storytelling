@@ -136,18 +136,22 @@ class RetrievalTests(unittest.TestCase):
             def __init__(self, ranked):
                 self._ranked = ranked
                 self.indexed = None
+                self.indexed_story_id = None
 
             def index(self, passages):
                 self.indexed = [p.passage_id for p in passages]
+                self.indexed_story_id = getattr(passages, "story_id", None)
 
             def search(self, query, allowed, k):
                 return [(ref, score) for ref, score in self._ranked if ref in allowed][:k]
 
         c = corpus(cutoff=2)
-        hybrid = br.BriefHybridRetrieverV1("vi", FakeDense([("c2.E1", 0.9), ("c1.E1", 0.7), ("c3.E1", 0.99)]))
+        fake = FakeDense([("c2.E1", 0.9), ("c1.E1", 0.7), ("c3.E1", 0.99)])
+        hybrid = br.BriefHybridRetrieverV1("vi", fake)
         # Cross-lingual query has zero Vietnamese lexical hits, so dense bridges it without leaking c3.E1.
         ja_hits = br.retrieve_briefs("傘を返した", c, k=5, retriever=hybrid)
         self.assertEqual([h.item.ref for h in ja_hits], ["c2.E1", "c1.E1"])
+        self.assertEqual(fake.indexed_story_id, "story-x__brief_vi")
         # Vietnamese query fuses lexical and dense rankings.
         vi_hits = br.retrieve_briefs("Mahiru trả lại chiếc ô", c, k=5, retriever=hybrid)
         self.assertEqual(vi_hits[0].item.ref, "c2.E1")
