@@ -6,8 +6,10 @@ Addresses two structural limitations of independent top-k and naive RRF over Sto
 2. Silent partial/unanswerable delivery (assuming top-k similarity hits always form complete evidence).
 
 All components are deterministic, strictly cutoff-bounded (zero post-cutoff content or BM25 IDF leak),
-require zero external LLM calls, and reuse at most one local query embedding per query when dense
-retrieval is enabled. Existing v0 and Phase 2 default routes remain unchanged.
+require zero external LLM calls, and reuse at most one local query embedding per query by default when
+dense retrieval is enabled. Completeness and insufficiency signals (`COMPLETE_CANDIDATE`, `PARTIAL`,
+`CONFLICTING_OR_HEDGED`, `ABSTAIN`) are strictly advisory (`advisory_only=True`) and never trigger hard
+abstention or drop retrieved passages. Existing v0 and Phase 2 default routes remain unchanged.
 """
 
 from __future__ import annotations
@@ -65,14 +67,18 @@ FLASHBACK_MARKERS = (
     "以前", "数ヶ月前", "昔", "あの日",
 )
 
+TOKEN_BUDGET_EXACT = "exact_tokenizer"
+TOKEN_BUDGET_ESTIMATED = "utf8_heuristic_estimate"
+
 
 @dataclass(frozen=True)
 class CompletenessReport:
-    status: str  # COMPLETE_CANDIDATE | PARTIAL | CONFLICTING_OR_HEDGED | ABSTAIN
+    status: str  # COMPLETE_CANDIDATE | PARTIAL | CONFLICTING_OR_HEDGED | ABSTAIN (advisory)
     sufficient: bool
     flags: Tuple[str, ...]
     facet_coverage: float
     content_overlap: float
+    advisory_only: bool = True
 
 
 @dataclass(frozen=True)
@@ -83,6 +89,7 @@ class AdaptiveRetrievalResult:
     completeness: CompletenessReport
     tokens_used: int
     query_encodes: int
+    token_budget_mode: str = TOKEN_BUDGET_ESTIMATED
 
 
 def _dot(a: Sequence[float], b: Sequence[float]) -> float:
@@ -113,11 +120,23 @@ def has_antonym_contrast(words_a: Set[str], words_b: Set[str]) -> bool:
                for left, right in CONTRAST_GROUPS)
 
 
+def render_delivery_context(rows: Sequence[Tuple[str, str, None]], passages_by_id: Mapping[str, str]) -> str:
+    """Canonical context wire format shared by exact model tokenizers and heuristic estimators."""
+    if not rows:
+        return ""
+    return "\n\n".join(f"[{pid}] {kind}\n{passages_by_id[pid]}" for pid, kind, _ in rows)
+
+
 def default_token_estimator(rows: Sequence[Tuple[str, str, None]], passages_by_id: Mapping[str, str]) -> int:
-    """Fast deterministic UTF-8 token estimator when no model tokenizer is supplied."""
+    """Deterministic UTF-8 byte heuristic `(utf8_bytes + 2) // 3` when no model tokenizer is supplied.
+
+    This is an offline approximation (`TOKEN_BUDGET_ESTIMATED`), NOT an exact subword count: on CJK
+    and Vietnamese diacritic text it overestimates relative to `multilingual-e5-large` SentencePiece.
+    Callers enforcing exact model context windows or running paired benchmarks must pass `token_counter`.
+    """
     if not rows:
         return 0
-    rendered = "\n\n".join(f"[{pid}] {kind}\n{passages_by_id[pid]}" for pid, kind, _ in rows)
+    rendered = render_delivery_context(rows, passages_by_id)
     return max(1, (len(rendered.encode("utf-8")) + 2) // 3)
 
 
@@ -252,8 +271,9 @@ def assess_evidence_completeness(
     has_content_lexical_hit: bool = False,
     overflow_count: int = 0,
     dense_floor: float = 0.80,
+    facet_dense_scores: Optional[Mapping[str, float]] = None,
 ) -> CompletenessReport:
-    """Estimate evidence completeness, ambiguity, epistemic status, and abstention without gold."""
+    """Advisory-only completeness, ambiguity, epistemic, and insufficiency check without gold."""
     q_terms = content_tokens(query)
     pid_terms = {pid: content_tokens(passages_by_id.get(pid, "")) for pid in delivered_ids}
     delivered_terms: Set[str] = set().union(*pid_terms.values()) if pid_terms else set()
@@ -362,31 +382,30 @@ def assess_evidence_completeness(
                 if any(m in low_txt for m in FLASHBACK_MARKERS):
                     flags.append(f"NON_MONOTONIC_FLASHBACK_CHRONOLOGY:{pid}")
 
-    # Facet coverage
+    # Facet coverage: never let a single high-dense facet mask ungrounded sibling facets
     facets = split_query_facets(query)
     covered_f = 0
     uncovered_f = 0
     same_script_query = bool(q_terms & delivered_terms)
+    b_terms = set().union(*(content_tokens(h.item.text) for h in relevant_hits)) if relevant_hits else set()
     for f in facets:
         ft = content_tokens(f)
         if not ft:
             covered_f += 1
             continue
-        if same_script_query:
-            best_f = max((len(ft & pid_terms[p]) / len(ft) for p in delivered_ids), default=0.0)
-            if best_f >= 0.34:
+        src_cov = max((len(ft & pid_terms[p]) / len(ft) for p in delivered_ids), default=0.0)
+        brf_cov = (len(ft & b_terms) / len(ft)) if b_terms else 0.0
+        if src_cov >= 0.34 or brf_cov >= 0.34:
+            covered_f += 1
+        elif facet_dense_scores is not None and f in facet_dense_scores:
+            if facet_dense_scores[f] >= dense_floor and not unknown_matched:
                 covered_f += 1
             else:
                 uncovered_f += 1
+        elif len(facets) == 1 and not same_script_query and dense_grounded and not unknown_matched:
+            covered_f += 1
         else:
-            # Cross-lingual query: rely on brief lexical match or dense floor per facet
-            b_terms = set().union(*(content_tokens(h.item.text) for h in relevant_hits)) if relevant_hits else set()
-            if (ft & b_terms) and len(ft & b_terms) / len(ft) >= 0.34:
-                covered_f += 1
-            elif max_dense_score >= dense_floor and not unknown_matched:
-                covered_f += 1
-            else:
-                uncovered_f += 1
+            uncovered_f += 1
 
     facet_cov = (covered_f / len(facets)) if facets else 0.0
     if uncovered_f > 0:
@@ -447,9 +466,11 @@ class AdaptiveEvidenceEngineV1:
         if self._dense is not None:
             self._dense.index(story_corpus)
             self._passage_vecs = dict(self._dense._vectors)
-            max_brief_ch = max(self._briefs_by_ch.keys(), default=0)
-            if max_brief_ch >= 1:
-                full_bc = build_brief_corpus(self.story_id, briefs, self._all_passages, max_brief_ch, brief_language)
+            contiguous_max = 0
+            while (contiguous_max + 1) <= self._max_chapter and (contiguous_max + 1) in self._briefs_by_ch:
+                contiguous_max += 1
+            if contiguous_max >= 1:
+                full_bc = build_brief_corpus(self.story_id, briefs, self._all_passages, contiguous_max, brief_language)
                 brief_sc = StoryCorpus(
                     [Passage(it.ref, it.text) for it in full_bc.items],
                     story_id=f"{self.story_id}__brief_{brief_language}",
@@ -468,7 +489,7 @@ class AdaptiveEvidenceEngineV1:
         max_passages: int = 10,
         token_cap: int = 400,
         pool_depth: int = 30,
-        abstain_on_insufficient: bool = False,
+        verify_uncovered_facets_dense: bool = False,
     ) -> AdaptiveRetrievalResult:
         if not query or not query.strip():
             raise ValueError("query must not be empty")
@@ -516,27 +537,27 @@ class AdaptiveEvidenceEngineV1:
             self._last_query_vec = q_vec
             query_encodes = 1
 
-            p_scored = [(pid, _dot(q_vec, self._passage_vecs[pid])) for pid in elig_by_id if pid in self._passage_vecs]
-            p_scored = [(pid, s) for pid, s in p_scored if s > 0]
-            p_scored.sort(key=lambda x: (-x[1], natural_key(x[0])))
+            raw_p = [(pid, _dot(q_vec, self._passage_vecs[pid])) for pid in elig_by_id if pid in self._passage_vecs]
+            raw_p.sort(key=lambda x: (-x[1], natural_key(x[0])))
+            p_scored = [(pid, s) for pid, s in raw_p if s > 0]
             if p_scored:
                 max_dense_score = p_scored[0][1]
-                med_p = p_scored[len(p_scored) // 2][1]
+                med_p = raw_p[len(raw_p) // 2][1]
                 dense_margin = max_dense_score - med_p
                 p_cut = min(self._dense_floor, max_dense_score - 0.05)
                 s_dense_ids = [pid for pid, s in p_scored if s >= p_cut][:pool_depth]
 
             if bc is not None:
-                b_dense_scored = [
+                raw_b = [
                     (it.ref, _dot(q_vec, self._brief_vecs[it.ref]))
                     for it in bc.items if it.ref in self._brief_vecs
                 ]
-                b_dense_scored = [(ref, s) for ref, s in b_dense_scored if s > 0]
-                b_dense_scored.sort(key=lambda x: (-x[1], _ref_key(x[0])))
+                raw_b.sort(key=lambda x: (-x[1], _ref_key(x[0])))
+                b_dense_scored = [(ref, s) for ref, s in raw_b if s > 0]
                 b_dense_kept = b_dense_scored
                 if b_dense_scored:
                     top_b = b_dense_scored[0][1]
-                    med_b = b_dense_scored[len(b_dense_scored) // 2][1]
+                    med_b = raw_b[len(raw_b) // 2][1]
                     b_margin = top_b - med_b
                     if top_b > max_dense_score:
                         max_dense_score = top_b
@@ -589,6 +610,23 @@ class AdaptiveEvidenceEngineV1:
             co_cited_groups=co_groups,
         )
 
+        facet_dense_scores: Optional[Dict[str, float]] = None
+        if verify_uncovered_facets_dense and self._dense is not None and selected_ids:
+            facets = split_query_facets(query)
+            if len(facets) >= 2:
+                facet_dense_scores = {}
+                f_vecs = self._dense._encode(["query: " + f for f in facets])
+                query_encodes += len(facets)
+                for f, fv in zip(facets, f_vecs):
+                    all_f = [_dot(fv, self._passage_vecs[p]) for p in elig_by_id if p in self._passage_vecs]
+                    all_f.sort(reverse=True)
+                    med_f = all_f[len(all_f) // 2] if all_f else 0.0
+                    deliv_f = max((_dot(fv, self._passage_vecs[p]) for p in selected_ids if p in self._passage_vecs), default=0.0)
+                    grounded_f = deliv_f >= (self._dense_floor + 0.03) or (
+                        deliv_f >= self._dense_floor and (deliv_f - med_f) >= 0.025
+                    )
+                    facet_dense_scores[f] = deliv_f if grounded_f else 0.0
+
         comp = assess_evidence_completeness(
             query,
             selected_ids,
@@ -600,15 +638,17 @@ class AdaptiveEvidenceEngineV1:
             has_content_lexical_hit=has_content_lex,
             overflow_count=len(b_deliv["overflow"]),
             dense_floor=self._dense_floor,
+            facet_dense_scores=facet_dense_scores,
         )
 
-        final_ids = () if (abstain_on_insufficient and comp.status == "ABSTAIN") else tuple(selected_ids)
-        final_tokens = 0 if not final_ids else used_tokens
+        budget_mode = TOKEN_BUDGET_EXACT if self._token_counter is not None else TOKEN_BUDGET_ESTIMATED
+        delivered = tuple(selected_ids)
         return AdaptiveRetrievalResult(
-            passage_ids=final_ids,
-            candidate_ids=tuple(selected_ids),
+            passage_ids=delivered,
+            candidate_ids=delivered,
             brief_item_refs=tuple(h.item.ref for h in bhits_final[:max_passages]),
             completeness=comp,
-            tokens_used=final_tokens,
+            tokens_used=used_tokens,
             query_encodes=query_encodes,
+            token_budget_mode=budget_mode,
         )

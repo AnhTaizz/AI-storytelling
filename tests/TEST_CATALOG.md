@@ -5,7 +5,7 @@
 Read this before writing a test: find the file that already covers the module or
 behaviour and extend it. New files are for new modules only.
 
-Suites: 13 — test files: 151 — test functions: 1527
+Suites: 13 — test files: 151 — test functions: 1530
 
 ## canonical_story
 
@@ -2108,12 +2108,15 @@ Covers: `tools.canonical_story.conformance_v0`, `tools.llm_infra.check_config`, 
 
 ## story_retrieval
 
-### test_adaptive_evidence_v1 (3)
-Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.source`, `tools.story_retrieval.adaptive_evidence_v1`, `tools.story_retrieval.retrieval_v0`
+### test_adaptive_evidence_v1 (6)
+Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.source`, `tools.story_retrieval.adaptive_evidence_v1`, `tools.story_retrieval.evaluate_adaptive_v1`, `tools.story_retrieval.retrieval_v0`
 
 - `AdaptiveSelectionTests.test_complementary_selection_recovers_non_brief_source_and_packs_knapsack_budget`
 - `AdaptiveSelectionTests.test_cross_lingual_japanese_source_uses_single_shared_query_encode`
 - `AdaptiveSelectionTests.test_adversarial_narrative_scenarios_and_abstention`
+- `AdaptiveSelectionTests.test_high_dense_facet_never_masks_ungrounded_second_facet`
+- `AdaptiveSelectionTests.test_future_chapters_never_alter_pre_cutoff_retrieval`
+- `AdaptiveSelectionTests.test_committed_benchmark_runner_and_pareto_frontiers`
 
 ### test_brief_retrieval_v1 (9)
 Covers: `tools.canonical_story.conformance_v0`, `tools.story_extraction.extraction_contract_v0`, `tools.story_ingestion.light_novel_adapter_v0`, `tools.story_pipeline.source`, `tools.story_retrieval.brief_retrieval_v1`, `tools.story_retrieval.evaluate_brief_v1`
